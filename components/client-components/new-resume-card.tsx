@@ -11,12 +11,13 @@ import {
   DialogTrigger
 } from "../ui/dialog"
 import {defineStepper} from "@/components/stepper";
-import JobInformationForm, {formSchema} from "@/components/client-components/job-information-form";
+import JobInformationForm, {formSchema, JobInfoFormType} from "@/components/client-components/job-information-form";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {z} from "zod";
 import ResumeUpload from "@/components/client-components/resume-upload";
+import {saveJobInfoAndUploadResume} from "@/server/resume";
+import {toast} from "sonner";
 
 const {Stepper} = defineStepper(
   {id: "step-1", title: "Job Information"},
@@ -26,7 +27,7 @@ const {Stepper} = defineStepper(
 const NewResumeCard = () => {
   const [cardOpen, setCardOpen] = useState<boolean>(false)
   const [resumeFile, setResumeFile] = useState<File>()
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -39,10 +40,17 @@ const NewResumeCard = () => {
     setCardOpen(open)
   }
 
-  const handleSubmit = () => {
-    console.log(form.getValues())
-    console.log(resumeFile)
-    // TODO save file and job info
+  const handleSubmit = async () => {
+    if (!resumeFile) {
+      toast.warning('Please upload one resume when goto next step.')
+      return
+    }
+    try {
+      await saveJobInfoAndUploadResume(form.getValues(), resumeFile)
+    } catch (e: any) {
+      toast.error(e.toString())
+      return
+    }
     setCardOpen(false)
   }
 
@@ -78,14 +86,14 @@ const NewResumeCard = () => {
             <>
               <Stepper.Navigation>
                 {methods.all.map((step) => (
-                  <Stepper.Step of={step.id} onClick={() => methods.goTo(step.id)}>
+                  <Stepper.Step key={step.id} of={step.id} onClick={() => methods.goTo(step.id)}>
                     <Stepper.Title>{step.title}</Stepper.Title>
                   </Stepper.Step>
                 ))}
               </Stepper.Navigation>
               {methods.switch({
-                "step-1": (step) => <JobInformationForm form={form}/>,
-                "step-2": (step) => <ResumeUpload file={resumeFile} onSelectFile={setResumeFile}/>
+                "step-1": () => <JobInformationForm form={form}/>,
+                "step-2": () => <ResumeUpload file={resumeFile} onSelectFile={setResumeFile}/>
               })}
               <Stepper.Controls>
                 <Button

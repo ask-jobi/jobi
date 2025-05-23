@@ -13,8 +13,10 @@ export const formSchema = z.object({
 })
 
 type JobInformationFormProps = {
-  form: UseFormReturn<z.infer<typeof formSchema>>;
+  form: UseFormReturn<JobInfoFormType>;
 }
+
+export type JobInfoFormType = z.infer<typeof formSchema>
 
 function JobInformationForm({ form }: JobInformationFormProps) {
   return (
