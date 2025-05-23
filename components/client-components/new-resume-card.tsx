@@ -11,18 +11,12 @@ import {
   DialogTrigger
 } from "../ui/dialog"
 import {defineStepper} from "@/components/stepper";
-import JobInformationForm from "@/components/client-components/job-information-form";
+import JobInformationForm, {formSchema} from "@/components/client-components/job-information-form";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import ResumeUpload from "@/components/client-components/resume-upload";
-
-const formSchema = z.object({
-  name: z.string().nonempty("Job name must not empty"),
-  company: z.string().nonempty("Job company must not empty"),
-  description: z.string().nonempty("Job description must not empty"),
-})
 
 const {Stepper} = defineStepper(
   {id: "step-1", title: "Job Information"},

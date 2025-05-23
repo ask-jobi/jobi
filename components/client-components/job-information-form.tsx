@@ -6,7 +6,7 @@ import {z} from "zod";
 import {Textarea} from "@/components/ui/textarea";
 import {UseFormReturn} from "react-hook-form";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   name: z.string().nonempty("Job name must not empty"),
   company: z.string().nonempty("Job company must not empty"),
   description: z.string().nonempty("Job description must not empty"),
