@@ -30,7 +30,7 @@ function ResumeUpload(props: ResumeUploadProps) {
   return (
     <FileUpload
       maxSize={5 * 1024 * 1024}
-      className="w-full max-w-md"
+      className="w-full"
       value={props.file ? [props.file]: []}
       onValueChange={handleSelectFile}
       onFileReject={onFileReject}

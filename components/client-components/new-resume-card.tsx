@@ -16,16 +16,20 @@ import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import ResumeUpload from "@/components/client-components/resume-upload";
-import {saveJobInfoAndUploadResume} from "@/server/resume";
 import {toast} from "sonner";
+import ResumeAnalyzeProgress, {ProgressType} from "@/components/client-components/resume-analyze-progress";
+import {createResumeRecord, uploadResumeFile} from "@/server/resume";
 
 const {Stepper} = defineStepper(
   {id: "step-1", title: "Job Information"},
-  {id: "step-2", title: "Upload Resume"}
+  {id: "step-2", title: "Select Resume"},
+  {id: "step-3", title: "Analyze Resume"},
 );
 
 const NewResumeCard = () => {
   const [cardOpen, setCardOpen] = useState<boolean>(false)
+  const [progress, setProgress] = useState<ProgressType>([0, "Ready to analyze"]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeFile, setResumeFile] = useState<File>()
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
@@ -37,21 +41,12 @@ const NewResumeCard = () => {
   })
 
   const handleOpenDialog = (open: boolean) => {
+    if (!open) {
+      // 重置表单和文件状态
+      form.reset();
+      setResumeFile(undefined);
+    }
     setCardOpen(open)
-  }
-
-  const handleSubmit = async () => {
-    if (!resumeFile) {
-      toast.warning('Please upload one resume when goto next step.')
-      return
-    }
-    try {
-      await saveJobInfoAndUploadResume(form.getValues(), resumeFile)
-    } catch (e: any) {
-      toast.error(e.toString())
-      return
-    }
-    setCardOpen(false)
   }
 
   const handleNext = async (methods: any) => {
@@ -61,8 +56,42 @@ const NewResumeCard = () => {
         return
       }
     }
+    if (methods.current.id === "step-2") {
+      if (!resumeFile) {
+        toast.warning("Please upload one resume when goto next step.")
+        return
+      }
+    }
     methods.next()
   }
+
+  const analyzeResume = async () => {
+    if (isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    try {
+      setProgress([10, "Uploading resume file..."]);
+      const uploadResult = await uploadResumeFile(resumeFile!!);
+
+      setProgress([50, "Prepare resume data..."]);
+      await createResumeRecord(form.getValues(), uploadResult);
+
+      setProgress([75, "Analyzing resume content..."]);
+      // TODO AI generation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setProgress([100, "Analysis completed!"]);
+
+    } catch (error: any) {
+      toast.error(error.toString());
+      setProgress([0, "Analysis failed"]);
+    } finally {
+      setIsAnalyzing(false);
+      setTimeout(() => {
+        setCardOpen(false)
+      }, 500)
+    }
+  };
 
   return (
     <Dialog open={cardOpen} onOpenChange={handleOpenDialog}>
@@ -76,7 +105,7 @@ const NewResumeCard = () => {
         </Card>
       </DialogTrigger>
       <DialogContent
-        className="sm:max-w-[425px]">
+        className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Create New Resume</DialogTitle>
           <DialogDescription/>
@@ -93,28 +122,32 @@ const NewResumeCard = () => {
               </Stepper.Navigation>
               {methods.switch({
                 "step-1": () => <JobInformationForm form={form}/>,
-                "step-2": () => <ResumeUpload file={resumeFile} onSelectFile={setResumeFile}/>
+                "step-2": () => <ResumeUpload file={resumeFile} onSelectFile={setResumeFile}/>,
+                "step-3": () => <ResumeAnalyzeProgress
+                  progress={progress}
+                />
               })}
               <Stepper.Controls>
-                <Button
-                  variant="secondary"
-                  onClick={methods.prev}
-                  disabled={methods.isFirst}
-                >
-                  Previous
-                </Button>
                 {
-                  methods.isLast ?
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!resumeFile}
-                    >
-                      Done
-                    </Button> :
-                    <Button onClick={() => handleNext(methods)}>
-                      Next
-                    </Button>
+                  !methods.isLast &&
+                  <Button
+                    variant="secondary"
+                    onClick={methods.prev}
+                    disabled={methods.isFirst}
+                  >
+                    Previous
+                  </Button>
                 }
+                {methods.switch({
+                "step-1": () => <Button onClick={() => handleNext(methods)}>Next</Button>,
+                "step-2": () => <Button onClick={() => handleNext(methods)}>Next</Button>,
+                "step-3": () => <Button
+                    onClick={analyzeResume}
+                    disabled={!resumeFile || isAnalyzing}
+                >
+                    Start Analysis
+                </Button>
+              })}
               </Stepper.Controls>
             </>
           )}

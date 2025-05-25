@@ -31,9 +31,6 @@ function JobInformationForm({ form }: JobInformationFormProps) {
               <FormControl>
                 <Input placeholder="job name" {...field} />
               </FormControl>
-              <FormDescription>
-                This is the name of your position.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -47,9 +44,6 @@ function JobInformationForm({ form }: JobInformationFormProps) {
               <FormControl>
                 <Input placeholder="company name" {...field} />
               </FormControl>
-              <FormDescription>
-                This is the name of your target company.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -63,9 +57,6 @@ function JobInformationForm({ form }: JobInformationFormProps) {
               <FormControl>
                 <Textarea placeholder="job description" {...field} />
               </FormControl>
-              <FormDescription>
-                This is the description of your job.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
