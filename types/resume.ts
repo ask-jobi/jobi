@@ -30,7 +30,7 @@ export interface EducationBlock {
 export interface EmploymentBlock {
   content: string;
   company: string;
-  position: string;
+  jobTitle: string;
   start: string;
   end: string;
 }
@@ -57,4 +57,4 @@ export interface ResumeData {
   educationHistory: EducationHistory
   employmentHistory: EmploymentHistory
   skills: Skill[]
-} 
+}

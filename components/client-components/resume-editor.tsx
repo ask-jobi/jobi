@@ -23,14 +23,17 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {restrictToVerticalAxis} from "@dnd-kit/modifiers";
+import {useSidebar} from "@/components/ui/sidebar";
+import {Textarea} from "@/components/ui/textarea";
 
 interface ResumeEditorProps {
   initialData: ResumeData;
 }
 
 export default function ResumeEditor({initialData}: ResumeEditorProps) {
+  const sidebar = useSidebar()
   const form = useForm<ResumeData>({
     defaultValues: initialData,
   });
@@ -42,6 +45,11 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
   ]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [collapsedStates, setCollapsedStates] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    sidebar.setOpen(false)
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,12 +68,12 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const {active, over} = event;
-    
+
     if (over && active.id !== over.id) {
       setSections((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
-        
+
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -83,12 +91,129 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
   }
   const dubouncedChange = useDebouncedCallback(handleChange, 3000);
 
+  const handleTitleChange = (sectionId: string, newTitle: string) => {
+    if (sectionId === "education") {
+      form.setValue("educationHistory.title", newTitle);
+    } else if (sectionId === "employment") {
+      form.setValue("employmentHistory.title", newTitle);
+    }
+    setSections(prev => prev.map(section =>
+      section.id === sectionId ? { ...section, title: newTitle } : section
+    ));
+  };
+
+  const renderCardContent = (sectionId: string) => {
+    if (sectionId === "education") {
+      return form.watch("educationHistory.blocks").map((block, blockIndex) => (
+        <div key={blockIndex} className="space-y-4 p-4 border rounded-lg">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">School</label>
+              <Input
+                {...form.register(`educationHistory.blocks.${blockIndex}.school`)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Degree</label>
+              <Input
+                {...form.register(`educationHistory.blocks.${blockIndex}.degree`)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Start Date</label>
+              <Input
+                {...form.register(`educationHistory.blocks.${blockIndex}.start`)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">End Date</label>
+              <Input
+                {...form.register(`educationHistory.blocks.${blockIndex}.end`)}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Content</label>
+            <Textarea
+              {...form.register(`educationHistory.blocks.${blockIndex}.content`)}
+            />
+          </div>
+        </div>
+      ));
+    }
+
+    if (sectionId === "employment") {
+      return form.watch("employmentHistory.blocks").map((block, blockIndex) => (
+        <div key={blockIndex} className="space-y-4 p-4 border rounded-lg">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Company</label>
+              <Input
+                {...form.register(`employmentHistory.blocks.${blockIndex}.company`)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Job Title</label>
+              <Input
+                {...form.register(`employmentHistory.blocks.${blockIndex}.jobTitle`)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Start Date</label>
+              <Input
+                {...form.register(`employmentHistory.blocks.${blockIndex}.start`)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">End Date</label>
+              <Input
+                {...form.register(`employmentHistory.blocks.${blockIndex}.end`)}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Content</label>
+            <Textarea
+              {...form.register(`employmentHistory.blocks.${blockIndex}.content`)}
+            />
+          </div>
+        </div>
+      ));
+    }
+
+    if (sectionId === "skills") {
+      return form.watch("skills").map((skill, skillIndex) => (
+        <div key={skillIndex} className="space-y-4 p-4 border rounded-lg">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Group</label>
+            <Input
+              {...form.register(`skills.${skillIndex}.group`)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Content</label>
+            <Input
+              {...form.register(`skills.${skillIndex}.content`)}
+            />
+          </div>
+        </div>
+      ));
+    }
+
+    return null;
+  };
+
   return (
     <form className="space-y-6" onChange={dubouncedChange}>
-      <CollapsibleCard 
+      <CollapsibleCard
         title="Personal Information"
         id="personal"
         draggable={false}
+        editable={false}
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -129,137 +254,25 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
           items={sections.map(section => section.id)}
           strategy={verticalListSortingStrategy}
         >
-          {sections.map((section) => {
-            if (section.id === "education") {
-              return (
-                <CollapsibleCard
-                  key={section.id}
-                  id={section.id}
-                  title={section.title}
-                  draggable={true}
-                >
-                  {form.watch("educationHistory.blocks").map((block, blockIndex) => (
-                    <div key={blockIndex} className="space-y-4 p-4 border rounded-lg">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">School</label>
-                          <Input
-                            {...form.register(`educationHistory.blocks.${blockIndex}.school`)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Degree</label>
-                          <Input
-                            {...form.register(`educationHistory.blocks.${blockIndex}.degree`)}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Start Date</label>
-                          <Input
-                            {...form.register(`educationHistory.blocks.${blockIndex}.start`)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">End Date</label>
-                          <Input
-                            {...form.register(`educationHistory.blocks.${blockIndex}.end`)}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Content</label>
-                        <Input
-                          {...form.register(`educationHistory.blocks.${blockIndex}.content`)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </CollapsibleCard>
-              );
-            }
-            
-            if (section.id === "employment") {
-              return (
-                <CollapsibleCard
-                  key={section.id}
-                  id={section.id}
-                  title={section.title}
-                  draggable={true}
-                >
-                  {form.watch("employmentHistory.blocks").map((block, blockIndex) => (
-                    <div key={blockIndex} className="space-y-4 p-4 border rounded-lg">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Company</label>
-                          <Input
-                            {...form.register(`employmentHistory.blocks.${blockIndex}.company`)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Position</label>
-                          <Input
-                            {...form.register(`employmentHistory.blocks.${blockIndex}.position`)}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Start Date</label>
-                          <Input
-                            {...form.register(`employmentHistory.blocks.${blockIndex}.start`)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">End Date</label>
-                          <Input
-                            {...form.register(`employmentHistory.blocks.${blockIndex}.end`)}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Content</label>
-                        <Input
-                          {...form.register(`employmentHistory.blocks.${blockIndex}.content`)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </CollapsibleCard>
-              );
-            }
-            
-            if (section.id === "skills") {
-              return (
-                <CollapsibleCard
-                  key={section.id}
-                  id={section.id}
-                  title={section.title}
-                  draggable={true}
-                >
-                  {form.watch("skills").map((skill, skillIndex) => (
-                    <div key={skillIndex} className="space-y-4 p-4 border rounded-lg">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Group</label>
-                        <Input
-                          {...form.register(`skills.${skillIndex}.group`)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Content</label>
-                        <Input
-                          {...form.register(`skills.${skillIndex}.content`)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </CollapsibleCard>
-              );
-            }
-            
-            return null;
-          })}
+          {sections.map((section) => (
+            <CollapsibleCard
+              key={section.id}
+              id={section.id}
+              title={section.title}
+              draggable={true}
+              defaultCollapsed={collapsedStates[section.id]}
+              onCollapseChange={(collapsed) => {
+                setCollapsedStates(prev => ({
+                  ...prev,
+                  [section.id]: collapsed
+                }));
+              }}
+              onTitleChange={(newTitle) => handleTitleChange(section.id, newTitle)}
+              editable={true}
+            >
+              {renderCardContent(section.id)}
+            </CollapsibleCard>
+          ))}
         </SortableContext>
         <DragOverlay>
           {activeId ? (
@@ -267,12 +280,14 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
               id={activeId}
               title={sections.find(section => section.id === activeId)?.title || ""}
               draggable={true}
+              defaultCollapsed={collapsedStates[activeId]}
+              editable={true}
             >
-              <div className="h-32" />
+              {renderCardContent(activeId)}
             </CollapsibleCard>
           ) : null}
         </DragOverlay>
       </DndContext>
     </form>
   );
-} 
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Input } from "./input";
 
 interface CollapsibleCardProps {
   title: string;
@@ -12,6 +13,9 @@ interface CollapsibleCardProps {
   className?: string;
   id: string;
   draggable?: boolean;
+  onCollapseChange?: (collapsed: boolean) => void;
+  onTitleChange?: (newTitle: string) => void;
+  editable?: boolean;
 }
 
 export function CollapsibleCard({
@@ -21,8 +25,13 @@ export function CollapsibleCard({
   className,
   id,
   draggable = false,
+  onCollapseChange,
+  onTitleChange,
+  editable = false,
 }: CollapsibleCardProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
   
   const {
     attributes,
@@ -42,6 +51,41 @@ export function CollapsibleCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleCollapse = () => {
+    const newCollapsed = !isCollapsed;
+    setIsCollapsed(newCollapsed);
+    onCollapseChange?.(newCollapsed);
+  };
+
+  const handleTitleClick = () => {
+    if (editable && !isEditing) {
+      setIsEditing(true);
+    }
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedTitle(e.target.value);
+  };
+
+  const handleTitleBlur = () => {
+    setIsEditing(false);
+    if (editedTitle !== title) {
+      onTitleChange?.(editedTitle || "Untitled");
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setIsEditing(false);
+      if (editedTitle !== title) {
+        onTitleChange?.(editedTitle || "Untitled");
+      }
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+      setEditedTitle(title);
+    }
+  };
+
   return (
     <Card 
       ref={setNodeRef}
@@ -50,7 +94,6 @@ export function CollapsibleCard({
     >
       <CardHeader
         className={cn(
-          "cursor-pointer",
           draggable && "flex items-center gap-2"
         )}
       >
@@ -63,19 +106,39 @@ export function CollapsibleCard({
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
         )}
-        <div 
-          className="flex items-center justify-between flex-1"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          <CardTitle>{title}</CardTitle>
-          {isCollapsed ? (
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center justify-between flex-1">
+          {isEditing ? (
+            <Input
+              value={editedTitle}
+              onChange={handleTitleChange}
+              onBlur={handleTitleBlur}
+              onKeyDown={handleTitleKeyDown}
+              className="h-8 text-lg font-semibold"
+              autoFocus
+              placeholder="Enter title..."
+            />
           ) : (
-            <ChevronUp className="h-5 w-5 text-muted-foreground" />
+            <CardTitle 
+              className={cn(
+                "text-lg font-semibold min-w-[100px]",
+                editable && "cursor-text hover:text-primary/80",
+                !title && "text-muted-foreground italic"
+              )}
+              onClick={handleTitleClick}
+            >
+              {title || "Untitled"}
+            </CardTitle>
           )}
+          <div className="cursor-pointer" onClick={handleCollapse}>
+            {isCollapsed ? (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
         </div>
       </CardHeader>
       {!isCollapsed && <CardContent>{children}</CardContent>}
     </Card>
   );
-} 
+}

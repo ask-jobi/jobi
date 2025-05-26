@@ -5,8 +5,7 @@ import Link from "next/link";
 
 export default async function Dashboard() {
   const data = await fetchJobApplication()
-  console.log(data);
-  
+
   return (
     <div className="p-6">
       <div className="grid xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
