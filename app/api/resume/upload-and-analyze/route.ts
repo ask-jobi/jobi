@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
+import { ResumeParser } from "@/server/langchain/resume-parser";
 
 const processingStatus = new Map<
   string,
@@ -79,7 +80,9 @@ async function processFile(
       progress: 30,
       message: "Creating resume record...",
     });
-    const { jobData, resumeData } = await createResumeRecord(
+
+    // 创建了整个job_applications
+    await createResumeRecord(
       jobInfo,
       uploadResult
     );
@@ -96,13 +99,16 @@ async function processFile(
     });
 
     const docs = await loader.load();
-
     console.log(docs);
+    const resumeData = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
 
     // AI 分析
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 更新简历数据到表单
+    
+    console.log(resumeData);
+
+    // 更新简历数据到表单, 数据落库
     processingStatus.set(processId, {
       progress: 90,
       message: "Updating resume data...",
@@ -113,7 +119,7 @@ async function processFile(
     processingStatus.set(processId, {
       progress: 100,
       message: "Analysis completed!",
-      data: "resumeContent",
+      data: resumeData,
     });
   } catch (error: any) {
     processingStatus.set(processId, {
