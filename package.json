@@ -16,6 +16,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@langchain/community": "^0.3.44",
     "@langchain/core": "^0.3.57",
+    "@langchain/google-genai": "^0.2.9",
     "@langchain/openai": "^0.5.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",

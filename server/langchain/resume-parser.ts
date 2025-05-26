@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -69,15 +69,14 @@ const RESUME_PARSE_PROMPT = `你是一个专业的简历解析专家。请将以
 
 export class ResumeParser {
   private static instance: ResumeParser;
-  private model: ChatOpenAI;
+  private model: ChatGoogleGenerativeAI;
   private parser: StructuredOutputParser<typeof resumeSchema>;
   private chain: RunnableSequence;
 
   private constructor() {
-    this.model = new ChatOpenAI({
-      modelName: "gpt-4",
+    this.model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash-8b",
       temperature: 0,
-      openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
     this.parser = StructuredOutputParser.fromZodSchema(resumeSchema);
