@@ -5,6 +5,7 @@ import {ResumeData} from "@/types/resume";
 
 export default async function ResumePage({params}: { params: { id: string } }) {
   const supabase = await createClient()
+  const { id } = await params
 
   const {data: jobApplication, error} = await supabase
     .from('job_applications')
@@ -20,7 +21,7 @@ export default async function ResumePage({params}: { params: { id: string } }) {
         company
       )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !jobApplication) {
