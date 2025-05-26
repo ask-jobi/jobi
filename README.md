@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## 开发指南
+
+如果你在supabase中添加了新的表或者字段，你需要重新生成types/supabase.ts文件可以通过生成
+```shell
+npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > supabase.ts
+```
+或者访问这个地址手动生成
+https://supabase.com/docs/reference/cli/supabase-gen-types

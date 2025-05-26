@@ -3,17 +3,21 @@
 import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
 
-export async function fetchResume() {
+export async function fetchJobApplication() {
   const supabase = await createClient()
 
-  const {data: resumes, error} = await supabase
-    .from('resumes')
+  const {data: jobApplications, error} = await supabase
+    .from('job_applications')
     .select(`
             id,
-            resume_json,
-            upload_url,
+            optimized_resume_url,
             created_at,
-            jobs (
+            resumes:resume_id (
+                id,
+                upload_url,
+                resume_json
+            ),
+            jobs:job_id (
                 id,
                 name,
                 company,
@@ -21,7 +25,7 @@ export async function fetchResume() {
             )
         `)
 
-  return resumes;
+  return jobApplications;
 }
 
 const BUCKET_NAME = 'upload-resumes'
