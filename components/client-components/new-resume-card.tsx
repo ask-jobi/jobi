@@ -24,6 +24,7 @@ import ResumeAnalyzeProgress, {
   ProgressType,
 } from "@/components/client-components/resume-analyze-progress";
 import {fetchEventSource} from "@microsoft/fetch-event-source";
+import { useRouter } from "next/navigation";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information" },
@@ -48,6 +49,8 @@ const NewResumeCard = () => {
       description: "",
     },
   });
+
+  const router = useRouter();
 
   const handleOpenDialog = (open: boolean) => {
     if (!open) {
@@ -95,9 +98,11 @@ const NewResumeCard = () => {
           setProgress([data.progress, data.message]);
 
           if (data.progress === 100) {
-
-            setIsAnalyzing(false);
-            setCardOpen(false);
+            setTimeout(() => {
+              setIsAnalyzing(false);
+              setCardOpen(false);
+              router.refresh();
+            }, 1200);
           }
         },
         onerror(err) {
