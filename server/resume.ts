@@ -2,6 +2,7 @@
 
 import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
+import {ResumeData} from "@/types/resume";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -95,7 +96,7 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
   fileName: string,
   publicUrl: string,
   userId: string
-}) {
+}, resumeJsonData: ResumeData) {
   const supabase = await createClient()
   const createdIds: { jobId?: string, resumeId?: string } = {}
 
@@ -115,7 +116,7 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
         user_id: uploadResult.userId,
         job_id: jobData.id,
         upload_url: uploadResult.publicUrl,
-        resume_json: null
+        resume_json: resumeJsonData
       })
       .select()
       .single()

@@ -70,14 +70,16 @@ const RESUME_PARSE_PROMPT = `你是一个专业的简历解析专家。请将以
 
 export class ResumeParser {
   private static instance: ResumeParser;
-  private model: ChatGoogleGenerativeAI;
-  private parser: StructuredOutputParser<typeof resumeSchema>;
+  private readonly model: ChatGoogleGenerativeAI;
+  private readonly parser: StructuredOutputParser<typeof resumeSchema>;
   private chain: RunnableSequence;
 
   private constructor() {
     this.model = new ChatGoogleGenerativeAI({
       model: "gemini-1.5-flash-8b",
       temperature: 0,
+      streaming: false,
+      maxRetries: 0
     });
 
     this.parser = StructuredOutputParser.fromZodSchema(resumeSchema);
@@ -97,30 +99,22 @@ export class ResumeParser {
   }
 
   async parseResume(resumeText: string): Promise<ResumeData> {
-    try {
-      const result = await this.chain.invoke({
-        resumeText: resumeText,
-        format_instructions: this.parser.getFormatInstructions(),
-      });
+    const result = await this.chain.invoke({
+      resumeText: resumeText,
+      format_instructions: this.parser.getFormatInstructions(),
+    });
 
-      // 验证并转换结果
-      const validatedData = resumeSchema.parse(result);
+    // 验证并转换结果
+    const validatedData = resumeSchema.parse(result);
 
-      // 转换为 ResumeData 类型
-      const resumeData: ResumeData = {
-        personalInfo: validatedData.personalInfo,
-        educationHistory: validatedData.educationHistory,
-        employmentHistory: validatedData.employmentHistory,
-        skills: validatedData.skills,
-      };
+    // 转换为 ResumeData 类型
+    const resumeData: ResumeData = {
+      personalInfo: validatedData.personalInfo,
+      educationHistory: validatedData.educationHistory,
+      employmentHistory: validatedData.employmentHistory,
+      skills: validatedData.skills,
+    };
 
-      return resumeData;
-    } catch (error: unknown) {
-      console.error("Resume parsing failed:", error);
-      if (error instanceof Error) {
-        throw new Error(`Failed to parse resume: ${error.message}`);
-      }
-      throw new Error("Failed to parse resume: Unknown error occurred");
-    }
+    return resumeData;
   }
 }

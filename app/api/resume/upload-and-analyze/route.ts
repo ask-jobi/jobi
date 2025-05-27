@@ -4,17 +4,46 @@ import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
 import { ResumeParser } from "@/server/langchain/resume-parser";
 
-const processingStatus = new Map<
-  string,
-  {
-    progress: number;
-    message: string;
-    data?: any;
-    error?: string;
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+const writers: Record<string, WritableStreamDefaultWriter> = {};
+
+function sendData(processId: string, data: any) {
+  const encoder = new TextEncoder();
+  const writer = writers[processId];
+
+  if (!writer) {
+    console.error('Writer is not initialized for client:', processId);
+    return;
   }
->();
+
+  const formattedData = `data: ${JSON.stringify(data)}\n\n`;
+  writer.write(encoder.encode(formattedData));
+}
+
+function closeWriter(processId: string) {
+  const writer = writers[processId];
+  if (!writer) {
+    console.warn(`Writer not found for processId: ${processId}`);
+    return;
+  }
+
+  try {
+    writer.close();
+  } catch (error) {
+    console.error(`Error closing writer for processId: ${processId}`, error);
+  } finally {
+    delete writers[processId];
+  }
+}
 
 export async function POST(request: NextRequest) {
+  const processId = Date.now().toString();
+  let responseStream = new TransformStream();
+  const writer = responseStream.writable.getWriter();
+  writers[processId] = writer;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -26,43 +55,32 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // 生成处理 ID
-    const processId = Date.now().toString();
-    processingStatus.set(processId, { progress: 0, message: "Starting..." });
+    request.signal.onabort = async () => {
+      await writer.ready;
+      await writer.abort();
+      delete writers[processId];
+    };
 
-    // 开始处理
-    processFile(processId, file, jobInfo).catch((error) => {
-      processingStatus.set(processId, {
-        progress: 0,
-        message: "Failed",
-        error: error.message,
-      });
+    processFile(processId, file, jobInfo)
+
+    return new Response(responseStream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        Connection: 'keep-alive',
+        'Cache-Control': 'no-cache, no-transform',
+      },
     });
-
-    return Response.json({ processId });
   } catch (error: any) {
+    sendData(processId, {
+      progress: 0,
+      message: "Failed",
+      error: error.message,
+    })
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
-// 状态查询接口
-export async function GET(request: NextRequest) {
-  const processId = request.nextUrl.searchParams.get("processId");
 
-  if (!processId) {
-    return Response.json({ error: "No process ID provided" }, { status: 400 });
-  }
-
-  const status = processingStatus.get(processId);
-
-  if (!status) {
-    return Response.json({ error: "Process not found" }, { status: 404 });
-  }
-
-  return Response.json(status);
-}
-
-// 处理文件
 async function processFile(
   processId: string,
   file: File,
@@ -70,62 +88,55 @@ async function processFile(
 ) {
   try {
     // 更新状态
-    processingStatus.set(processId, {
+    sendData(processId, {
       progress: 10,
       message: "Uploading file...",
     });
     const uploadResult = await uploadResumeFile(file);
 
-    processingStatus.set(processId, {
+    sendData(processId, {
       progress: 30,
-      message: "Creating resume record...",
+      message: "Analyzing resume file...",
     });
 
-    // 创建了整个job_applications
-    await createResumeRecord(
-      jobInfo,
-      uploadResult
-    );
-
-    processingStatus.set(processId, {
-      progress: 60,
-      message: "Analyzing PDF content...",
-    });
-
-    // 解析 PDF
     const arrayBuffer = await file.arrayBuffer();
     const loader = new PDFLoader(new Blob([arrayBuffer]), {
       splitPages: false,
     });
 
     const docs = await loader.load();
-    console.log(docs);
-    const resumeData = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
 
-    // AI 分析
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    
-    console.log(resumeData);
-
-    // 更新简历数据到表单, 数据落库
-    processingStatus.set(processId, {
-      progress: 90,
-      message: "Updating resume data...",
+    sendData(processId, {
+      progress: 50,
+      message: "AI processing...",
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const resumeData = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
 
-    processingStatus.set(processId, {
+    sendData(processId, {
+      progress: 80,
+      message: "Prepare resume data...",
+    });
+
+    await createResumeRecord(
+      jobInfo,
+      uploadResult,
+      resumeData
+    );
+
+    sendData(processId, {
       progress: 100,
       message: "Analysis completed!",
       data: resumeData,
     });
   } catch (error: any) {
-    processingStatus.set(processId, {
+    console.error(error)
+    sendData(processId, {
       progress: 0,
       message: "Failed",
       error: error.message,
     });
+  } finally {
+    closeWriter(processId);
   }
 }

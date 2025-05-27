@@ -35,6 +35,9 @@ importers:
       '@langchain/openai':
         specifier: ^0.5.11
         version: 0.5.11(@langchain/core@0.3.57(openai@4.103.0(ws@8.18.2)(zod@3.25.23)))(ws@8.18.2)
+      '@microsoft/fetch-event-source':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -874,6 +877,9 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.21 <0.4.0'
+
+  '@microsoft/fetch-event-source@2.0.1':
+    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@napi-rs/wasm-runtime@0.2.10':
     resolution: {integrity: sha512-bCsCyeZEwVErsGmyPNSzwfwFn4OdxBj0mmv6hOFucB/k81Ojdu68RbZdxYsRQUPc9l6SU5F/cG+bXgWs3oUgsQ==}
@@ -3831,6 +3837,8 @@ snapshots:
       weaviate-client: 3.5.5
     transitivePeerDependencies:
       - encoding
+
+  '@microsoft/fetch-event-source@2.0.1': {}
 
   '@napi-rs/wasm-runtime@0.2.10':
     dependencies:

@@ -1,3 +1,5 @@
+import {ResumeData} from "@/types/resume";
+
 export type Json =
   | string
   | number
@@ -105,7 +107,7 @@ export type Database = {
           created_at: string
           id: string
           job_id: string | null
-          resume_json: Json | null
+          resume_json: ResumeData | null
           upload_url: string | null
           user_id: string | null
         }
@@ -113,7 +115,7 @@ export type Database = {
           created_at?: string
           id?: string
           job_id?: string | null
-          resume_json?: Json | null
+          resume_json?: ResumeData | null
           upload_url?: string | null
           user_id?: string | null
         }
@@ -121,7 +123,7 @@ export type Database = {
           created_at?: string
           id?: string
           job_id?: string | null
-          resume_json?: Json | null
+          resume_json?: ResumeData | null
           upload_url?: string | null
           user_id?: string | null
         }

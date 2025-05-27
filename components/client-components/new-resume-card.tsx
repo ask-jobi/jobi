@@ -15,7 +15,7 @@ import JobInformationForm, {
   formSchema,
   JobInfoFormType,
 } from "@/components/client-components/job-information-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ResumeUpload from "@/components/client-components/resume-upload";
@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import ResumeAnalyzeProgress, {
   ProgressType,
 } from "@/components/client-components/resume-analyze-progress";
+import {fetchEventSource} from "@microsoft/fetch-event-source";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information" },
@@ -38,6 +39,7 @@ const NewResumeCard = () => {
   ]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeFile, setResumeFile] = useState<File>();
+  const [controller, setController] = useState<AbortController | null>(null);
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,58 +74,53 @@ const NewResumeCard = () => {
     methods.next();
   };
 
-  const checkStatus = async (processId: string) => {
-    const statusResponse = await fetch(
-      `/api/resume/upload-and-analyze?processId=${processId}`
-    );
-    const status = await statusResponse.json();
-
-    if (status.error) {
-      throw new Error(status.error);
-    }
-
-    setProgress([status.progress, status.message]);
-
-    if (status.progress < 100) {
-      setTimeout(() => checkStatus(processId), 1000); // 每秒检查一次
-    } else {
-      console.log("Analysis result:", status.data);
-      setIsAnalyzing(false);
-      setCardOpen(false);
-    }
-  };
-
   const analyzeResume = async () => {
     if (isAnalyzing) return;
 
     setIsAnalyzing(true);
+    const newController = new AbortController();
+    setController(newController);
+
     try {
       const formData = new FormData();
       formData.append("file", resumeFile!!);
       formData.append("jobInfo", JSON.stringify(form.getValues()));
 
-      // 开始处理
-      const response = await fetch("/api/resume/upload-and-analyze", {
+      await fetchEventSource("/api/resume/upload-and-analyze", {
         method: "POST",
         body: formData,
+        signal: newController.signal,
+        onmessage(event) {
+          const data = JSON.parse(event.data);
+          setProgress([data.progress, data.message]);
+
+          if (data.progress === 100) {
+
+            setIsAnalyzing(false);
+            setCardOpen(false);
+          }
+        },
+        onerror(err) {
+          console.error("Event source error:", err);
+          toast.error("Analyze Failed: ", err);
+          setIsAnalyzing(false);
+        }
       });
-
-      if (!response.ok) {
-        throw new Error("Analysis failed");
-      }
-
-      const { processId } = await response.json();
-
-      console.log("processId", processId);
-
-      // 轮询状态
-      checkStatus(processId);
-
     } catch (error: any) {
-      toast.error(error.toString());
-      setProgress([0, "Analysis failed"]);
+      if (error.name === 'AbortError') {
+        console.log('Fetch aborted');
+        return;
+      }
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (controller) {
+        controller.abort();
+      }
+    };
+  }, [controller]);
 
   return (
     <Dialog open={cardOpen} onOpenChange={handleOpenDialog}>
