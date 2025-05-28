@@ -3,7 +3,7 @@ import {notFound} from "next/navigation";
 import ResumeEditor from "@/components/client-components/resume-editor";
 import {ResumeData} from "@/types/resume";
 
-export default async function ResumePage({params}: { params: { id: string } }) {
+export default async function ResumePage({params}: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
   const { id } = await params
 
@@ -28,9 +28,10 @@ export default async function ResumePage({params}: { params: { id: string } }) {
     notFound()
   }
 
-  const resumeData: ResumeData = jobApplication.resume?.resume_json as unknown as ResumeData || {
+  const resumeData: ResumeData = jobApplication.resume.resume_json || {
     personalInfo: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: ""
     },
@@ -47,28 +48,14 @@ export default async function ResumePage({params}: { params: { id: string } }) {
     skills: []
   };
 
-  console.log(resumeData);
-
-  const handleSave = async (data: ResumeData) => {
-    // "use server"
-    // const supabase = await createClient()
-    // await supabase
-    //   .from('resumes')
-    //   .update({ resume_json: data })
-    //   .eq('id', jobApplication.resume.id)
-  };
-
   return (
     <div className="flex h-screen">
       <div className="w-1/2 p-6 border-r overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-4">
-          {jobApplication.job?.name} - {jobApplication.job?.company}
-        </h1>
-        <ResumeEditor initialData={resumeData} />
+        <ResumeEditor resumeId={jobApplication.resume.id} initialData={resumeData} />
       </div>
       <div className="w-1/2 p-6">
         {/* 这里后续会添加PDF预览 */}
       </div>
     </div>
   )
-} 
+}

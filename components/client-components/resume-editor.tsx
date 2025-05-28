@@ -29,6 +29,7 @@ import {useSidebar} from "@/components/ui/sidebar";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {Plus} from "lucide-react";
+import {saveResumeChange} from "@/server/resume";
 
 interface EducationFormProps {
   control: any;
@@ -229,10 +230,11 @@ function SkillsForm({ control, register }: SkillsFormProps) {
 }
 
 interface ResumeEditorProps {
-  initialData: ResumeData;
+  initialData: ResumeData
+  resumeId: string
 }
 
-export default function ResumeEditor({initialData}: ResumeEditorProps) {
+export default function ResumeEditor({initialData, resumeId}: ResumeEditorProps) {
   const sidebar = useSidebar()
   const form = useForm<ResumeData>({
     defaultValues: initialData,
@@ -282,13 +284,13 @@ export default function ResumeEditor({initialData}: ResumeEditorProps) {
 
   const handleChange = async () => {
     try {
-      // await onSave(form.getValues());
+      await saveResumeChange(resumeId, form.getValues());
       toast.success("Auto saved");
     } catch (error) {
       console.error("Auto save failed:", error);
       toast.error("Auto save failed");
     }
-  }
+  };
   const dubouncedChange = useDebouncedCallback(handleChange, 3000);
 
   const handleTitleChange = (sectionId: string, newTitle: string) => {

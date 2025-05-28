@@ -71,6 +71,7 @@ const RESUME_PARSE_PROMPT = `你是一个专业的简历解析专家。请将以
 export class ResumeParser {
   private static instance: ResumeParser;
   private readonly model: ChatGoogleGenerativeAI;
+  // @ts-ignore
   private readonly parser: StructuredOutputParser<typeof resumeSchema>;
   private chain: RunnableSequence;
 
@@ -82,6 +83,7 @@ export class ResumeParser {
       maxRetries: 0
     });
 
+    // @ts-ignore
     this.parser = StructuredOutputParser.fromZodSchema(resumeSchema);
 
     this.chain = RunnableSequence.from([

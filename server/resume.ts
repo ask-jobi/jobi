@@ -157,3 +157,13 @@ async function rollbackChanges(
   }
   await supabase.storage.from(BUCKET_NAME).remove([fileName])
 }
+
+export async function saveResumeChange(resumeId: string, data: ResumeData) {
+  const supabase = await createClient()
+  const {error} = await supabase
+    .from('resumes')
+    .update({ resume_json: data })
+    .eq('id', resumeId)
+
+  if (error) throw error;
+}
