@@ -7,7 +7,7 @@ export default async function Dashboard() {
   const data = await fetchJobApplication()
 
   return (
-    <div className="p-6">
+    <div className="h-[calc(100vh-3rem)] p-6 overflow-y-auto">
       <div className="grid xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {
           data?.map(it => {

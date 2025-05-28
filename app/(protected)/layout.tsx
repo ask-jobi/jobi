@@ -17,10 +17,12 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar/>
-      <SidebarInset>
-        {children}
-      </SidebarInset>
+      <div className="flex h-screen">
+        <AppSidebar/>
+        <SidebarInset className="flex-1 overflow-hidden">
+          {children}
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

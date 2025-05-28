@@ -49,11 +49,11 @@ export default async function ResumePage({params}: { params: Promise<{ id: strin
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-3rem)]">
       <div className="w-1/2 p-6 border-r overflow-y-auto">
         <ResumeEditor resumeId={jobApplication.resume.id} initialData={resumeData} />
       </div>
-      <div className="w-1/2 p-6">
+      <div className="w-1/2 p-6 overflow-y-auto">
         {/* 这里后续会添加PDF预览 */}
       </div>
     </div>
