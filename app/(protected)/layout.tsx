@@ -16,13 +16,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen">
-        <AppSidebar/>
-        <SidebarInset className="flex-1 overflow-hidden">
-          {children}
-        </SidebarInset>
-      </div>
+    <SidebarProvider className="flex">
+      <AppSidebar/>
+      <SidebarInset className="flex-1 overflow-hidden">
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }
