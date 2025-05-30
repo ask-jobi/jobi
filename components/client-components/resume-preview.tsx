@@ -1,12 +1,11 @@
 "use client";
 
-import { ResumeData } from "@/types/resume";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateResumePdf } from "../resume-pdf-template";
 import dynamic from 'next/dynamic';
-
+import { useResume } from "./resume-context";
 
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer/lib/react-pdf.browser').then(mod => mod.PDFDownloadLink),
@@ -18,16 +17,13 @@ const ResumePdfRenderer = dynamic(
   { ssr: false }
 );
 
-interface ResumePreviewProps {
-  data: ResumeData;
-}
-
-export default function ResumePreview({ data }: ResumePreviewProps) {
+export default function ResumePreview() {
+  const { resumeData } = useResume();
   const [isLoading, setIsLoading] = useState(true);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const pdf = useMemo(() => generateResumePdf(data), [data]);
+  const pdf = useMemo(() => generateResumePdf(resumeData), [resumeData]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setIsLoading(false);
@@ -86,7 +82,7 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
         <div className="ml-4">
           <PDFDownloadLink
             document={pdf}
-            fileName={`${data.personalInfo.firstName}_${data.personalInfo.lastName}_Resume.pdf`}
+            fileName={`${resumeData.personalInfo.firstName}_${resumeData.personalInfo.lastName}_Resume.pdf`}
             className="flex items-center gap-2"
           >
             {({ loading }) => (

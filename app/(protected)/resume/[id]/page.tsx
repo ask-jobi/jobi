@@ -5,6 +5,7 @@ import ResumeEditor from "@/components/client-components/resume-editor";
 import {ResumeData} from "@/types/resume";
 import ResumePreview from "@/components/client-components/resume-preview";
 import ClientOnly from "@/components/client-components/client-only";
+import {ResumeProvider} from "@/components/client-components/resume-context";
 
 export default async function ResumePage({params}: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -52,15 +53,17 @@ export default async function ResumePage({params}: { params: Promise<{ id: strin
   };
 
   return (
-    <div className="flex h-[calc(100vh-3rem)]">
-      <div className="w-1/2 p-6 border-r overflow-y-auto">
-        <ResumeEditor resumeId={jobApplication.resume.id} initialData={resumeData} />
+    <ResumeProvider initialData={resumeData}>
+      <div className="flex h-[calc(100vh-3rem)]">
+        <div className="w-1/2 p-6 border-r overflow-y-auto">
+          <ResumeEditor resumeId={jobApplication.resume.id} />
+        </div>
+        <div className="w-1/2 p-6 overflow-y-auto">
+          <ClientOnly>
+            <ResumePreview />
+          </ClientOnly>
+        </div>
       </div>
-      <div className="w-1/2 p-6 overflow-y-auto">
-        <ClientOnly>
-          <ResumePreview data={resumeData}/>
-        </ClientOnly>
-      </div>
-    </div>
+    </ResumeProvider>
   )
 }

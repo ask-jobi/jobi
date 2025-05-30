@@ -30,6 +30,7 @@ import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {Plus} from "lucide-react";
 import {saveResumeChange} from "@/server/resume";
+import { useResume } from "./resume-context";
 
 interface EducationFormProps {
   control: any;
@@ -230,14 +231,14 @@ function SkillsForm({ control, register }: SkillsFormProps) {
 }
 
 interface ResumeEditorProps {
-  initialData: ResumeData
-  resumeId: string
+  resumeId: string;
 }
 
-export default function ResumeEditor({initialData, resumeId}: ResumeEditorProps) {
-  const sidebar = useSidebar()
+export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
+  const { resumeData, updateResumeData } = useResume();
+  const sidebar = useSidebar();
   const form = useForm<ResumeData>({
-    defaultValues: initialData,
+    defaultValues: resumeData,
   });
 
   const [sections, setSections] = useState([
@@ -284,7 +285,9 @@ export default function ResumeEditor({initialData, resumeId}: ResumeEditorProps)
 
   const handleChange = async () => {
     try {
-      await saveResumeChange(resumeId, form.getValues());
+      const formData = form.getValues();
+      await saveResumeChange(resumeId, formData);
+      updateResumeData(formData);
       toast.success("Auto saved");
     } catch (error) {
       console.error("Auto save failed:", error);
