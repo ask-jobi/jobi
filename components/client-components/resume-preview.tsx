@@ -5,24 +5,16 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateResumePdf } from "../resume-pdf-template";
-import { Document, Page, pdfjs } from 'react-pdf';
 import dynamic from 'next/dynamic';
 
-// 设置 PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
 
-
-// 动态导入客户端组件
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer/lib/react-pdf.browser').then(mod => mod.PDFDownloadLink),
   { ssr: false }
 );
 
-const BlobProvider = dynamic(
-  () => import('@react-pdf/renderer/lib/react-pdf.browser').then(mod => mod.BlobProvider),
+const ResumePdfRenderer = dynamic(
+  () => import('@/components/client-components/resume-pdf-renderer').then(mod => mod.default),
   { ssr: false }
 );
 
@@ -60,43 +52,11 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
                 <p className="text-gray-400">Loading File</p>
               </div>
             )}
-            <BlobProvider document={pdf}>
-              {({ blob, url, loading }) => {
-                console.log(blob, url, loading)
-                return (
-                  <>
-                    {loading && (
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-400">Loading...</p>
-                      </div>
-                    )}
-                    {url && (
-                      <Document
-                        file={url}
-                        onLoadSuccess={onDocumentLoadSuccess}
-                        loading={
-                          <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-400">Loading...</p>
-                          </div>
-                        }
-                        error={
-                          <div className="flex items-center justify-center h-full">
-                            <p className="text-red-400">Failed to load PDF</p>
-                          </div>
-                        }
-                      >
-                        <Page
-                          pageNumber={currentPage}
-                          width={595}
-                          renderAnnotationLayer={false}
-                          renderTextLayer={false}
-                        />
-                      </Document>
-                    )}
-                  </>
-                )
-              }}
-            </BlobProvider>
+            <ResumePdfRenderer
+              pdf={pdf}
+              onDocumentLoadSuccess={onDocumentLoadSuccess}
+              currentPage={currentPage}
+            />
           </div>
 
           <div className="w-full flex items-center justify-between mt-4 px-4">

@@ -4,7 +4,7 @@ import {notFound} from "next/navigation";
 import ResumeEditor from "@/components/client-components/resume-editor";
 import {ResumeData} from "@/types/resume";
 import ResumePreview from "@/components/client-components/resume-preview";
-import {Suspense} from "react";
+import ClientOnly from "@/components/client-components/client-only";
 
 export default async function ResumePage({params}: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -57,9 +57,9 @@ export default async function ResumePage({params}: { params: Promise<{ id: strin
         <ResumeEditor resumeId={jobApplication.resume.id} initialData={resumeData} />
       </div>
       <div className="w-1/2 p-6 overflow-y-auto">
-        <Suspense>
+        <ClientOnly>
           <ResumePreview data={resumeData}/>
-        </Suspense>
+        </ClientOnly>
       </div>
     </div>
   )
