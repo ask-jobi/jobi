@@ -43,61 +43,62 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
   };
 
   return (
-    <div className="relative">
-      <div className="space-y-4 bg-white shadow-lg rounded-lg overflow-hidden p-4">
-        <div className="flex flex-col items-center">
-          <div className="w-full">
-            {isLoading && (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-400">Loading File</p>
-              </div>
-            )}
+    <div className="flex flex-col items-center gap-6">
+      <div className="relative w-[420px] h-[595px] bg-white shadow-2xl rounded-sm overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-50"></div>
+        <div className="relative z-0 w-full h-full">
+          {isLoading && (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-gray-400">Loading File</p>
+            </div>
+          )}
+          <div className="w-full h-full flex items-center justify-center">
             <ResumePdfRenderer
               pdf={pdf}
               onDocumentLoadSuccess={onDocumentLoadSuccess}
               currentPage={currentPage}
             />
           </div>
+        </div>
+      </div>
 
-          <div className="w-full flex items-center justify-between mt-4 px-4">
-            <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handlePrevPage}
+          disabled={currentPage <= 1}
+          className="bg-white hover:bg-gray-50"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-gray-600 bg-white px-3 py-1 rounded">
+          Page {currentPage} of {numPages || 1}
+        </span>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleNextPage}
+          disabled={currentPage >= (numPages || 1)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <div className="ml-4">
+          <PDFDownloadLink
+            document={pdf}
+            fileName={`${data.personalInfo.firstName}_${data.personalInfo.lastName}_Resume.pdf`}
+            className="flex items-center gap-2"
+          >
+            {({ loading }) => (
               <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePrevPage}
-                disabled={currentPage <= 1}
+                disabled={loading}
+                className="flex items-center gap-2"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <Download className="h-4 w-4" />
+                {loading ? 'Generating PDF...' : 'Export PDF'}
               </Button>
-              <span className="text-sm text-gray-600">
-                Page {currentPage} of {numPages || 1}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleNextPage}
-                disabled={currentPage >= (numPages || 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <PDFDownloadLink
-              document={pdf}
-              fileName={`${data.personalInfo.firstName}_${data.personalInfo.lastName}_Resume.pdf`}
-              className="flex items-center gap-2"
-            >
-              {({ loading }) => (
-                <Button
-                  disabled={loading}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  {loading ? 'Generating PDF...' : 'Export PDF'}
-                </Button>
-              )}
-            </PDFDownloadLink>
-          </div>
+            )}
+          </PDFDownloadLink>
         </div>
       </div>
     </div>

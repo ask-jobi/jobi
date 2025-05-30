@@ -9,6 +9,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 function ResumePdfRenderer(props: any) {
+  const [scale, setScale] = useState(1);
 
   return (
     <BlobProvider document={props.pdf}>
@@ -33,6 +34,8 @@ function ResumePdfRenderer(props: any) {
                 pageNumber={props.currentPage}
                 renderAnnotationLayer={false}
                 renderTextLayer={false}
+                scale={0.7}
+                className="max-w-full max-h-full"
               />
             </Document>
           )
