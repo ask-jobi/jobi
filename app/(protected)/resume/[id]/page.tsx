@@ -46,10 +46,14 @@ export default async function ResumePage({params}: { params: Promise<{ id: strin
     },
     employmentHistory: {
       title: "",
-      order: 0,
+      order: 1,
       blocks: []
     },
-    skills: []
+    skills: {
+      title: "",
+      order: 2,
+      blocks: []
+    }
   };
 
   return (

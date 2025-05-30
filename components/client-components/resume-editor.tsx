@@ -188,11 +188,10 @@ interface SkillsFormProps {
 function SkillsForm({ control, register }: SkillsFormProps) {
   const { fields, append } = useFieldArray({
     control,
-    name: "skills",
+    name: "skills.blocks",
   });
 
   const handleAddBlock = useCallback(() => {
-
     append({
       group: "",
       content: [""],
@@ -201,18 +200,18 @@ function SkillsForm({ control, register }: SkillsFormProps) {
 
   return (
     <>
-      {fields.map((field, skillIndex) => (
+      {fields.map((field, blockIndex) => (
         <div key={field.id} className="space-y-4 p-4 border rounded-lg mb-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Group</label>
             <Input
-              {...register(`skills.${skillIndex}.group`)}
+              {...register(`skills.blocks.${blockIndex}.group`)}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Content</label>
             <Input
-              {...register(`skills.${skillIndex}.content`)}
+              {...register(`skills.blocks.${blockIndex}.content`)}
             />
           </div>
         </div>
@@ -241,11 +240,19 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
     defaultValues: resumeData,
   });
 
-  const [sections, setSections] = useState([
-    { id: "education", title: form.watch("educationHistory.title") },
-    { id: "employment", title: form.watch("employmentHistory.title") },
-    { id: "skills", title: "Skills" },
-  ]);
+  const [sections, setSections] = useState(() => {
+    const educationOrder = form.watch("educationHistory.order") ?? 0;
+    const employmentOrder = form.watch("employmentHistory.order") ?? 1;
+    const skillsOrder = form.watch("skills.order") ?? 2;
+    
+    const sections = [
+      { id: "education", title: form.watch("educationHistory.title"), order: educationOrder },
+      { id: "employment", title: form.watch("employmentHistory.title"), order: employmentOrder },
+      { id: "skills", title: form.watch("skills.title"), order: skillsOrder },
+    ];
+    
+    return sections.sort((a, b) => a.order - b.order);
+  });
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [collapsedStates, setCollapsedStates] = useState<Record<string, boolean>>({});
@@ -273,12 +280,22 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
     const {active, over} = event;
 
     if (over && active.id !== over.id) {
-      setSections((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
+      const oldIndex = sections.findIndex((item) => item.id === active.id);
+      const newIndex = sections.findIndex((item) => item.id === over.id);
+      const newSections = arrayMove(sections, oldIndex, newIndex);
+      
+      newSections.forEach((section, index) => {
+        if (section.id === "education") {
+          form.setValue("educationHistory.order", index);
+        } else if (section.id === "employment") {
+          form.setValue("employmentHistory.order", index);
+        } else if (section.id === "skills") {
+          form.setValue("skills.order", index);
+        }
+        section.order = index;
       });
+      setSections(newSections);
+      dubouncedChange()
     }
     setActiveId(null);
   };
@@ -301,6 +318,8 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
       form.setValue("educationHistory.title", newTitle);
     } else if (sectionId === "employment") {
       form.setValue("employmentHistory.title", newTitle);
+    }else if (sectionId === "skills") {
+      form.setValue("skills.title", newTitle);
     }
     setSections(prev => prev.map(section =>
       section.id === sectionId ? { ...section, title: newTitle } : section

@@ -48,13 +48,19 @@ export interface EmploymentHistory {
 }
 
 export interface Skill {
-  group: string,
-  content: string[]
+  title: string,
+  order: number;
+  blocks: SkillBlock[],
+}
+
+export interface SkillBlock {
+  group: string;
+  content: string[];
 }
 
 export interface ResumeData {
   personalInfo: PersonalInfo
   educationHistory: EducationHistory
   employmentHistory: EmploymentHistory
-  skills: Skill[]
+  skills: Skill
 }

@@ -6,19 +6,18 @@ import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateResumePdf } from "../resume-pdf-template";
 import dynamic from 'next/dynamic';
 import { useResume } from "./resume-context";
+import ResumePdfRenderer from "./resume-pdf-renderer";
+import { PDFViewer } from "@react-pdf/renderer";
 
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer/lib/react-pdf.browser').then(mod => mod.PDFDownloadLink),
   { ssr: false }
 );
 
-const ResumePdfRenderer = dynamic(
-  () => import('@/components/client-components/resume-pdf-renderer').then(mod => mod.default),
-  { ssr: false }
-);
 
 export default function ResumePreview() {
   const { resumeData } = useResume();
+
   const [isLoading, setIsLoading] = useState(true);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);

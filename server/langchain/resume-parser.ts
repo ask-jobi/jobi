@@ -39,12 +39,16 @@ const resumeSchema = z.object({
       })
     ),
   }),
-  skills: z.array(
-    z.object({
-      group: z.string().describe("Category of skills"),
-      content: z.array(z.string()).describe("List of skills in this category"),
-    })
-  ),
+  skills: z.object({
+    title: z.string().describe("Title of the skills section"),
+    order: z.number().describe("Order of the skills section"),
+    blocks: z.array(
+      z.object({
+        group: z.string().describe("Category of skills"),
+        content: z.array(z.string()).describe("List of skills in this category"),
+      })
+    ),
+  })
 });
 
 const RESUME_PARSE_PROMPT = `你是一个专业的简历解析专家。请将以下简历内容解析成指定的JSON格式。
