@@ -5,6 +5,8 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 interface ResumeContextType {
   resumeData: ResumeData;
+  isLoading: boolean;
+  setLoading: (loading: boolean) => void;
   updateResumeData: (data: ResumeData) => void;
 }
 
@@ -25,13 +27,14 @@ interface ResumeProviderProps {
 
 export function ResumeProvider({ children, initialData }: ResumeProviderProps) {
   const [resumeData, setResumeData] = useState<ResumeData>(initialData);
+  const [isLoading, setLoading] = useState<boolean>(false);
 
   const updateResumeData = (data: ResumeData) => {
     setResumeData(data);
   };
 
   return (
-    <ResumeContext.Provider value={{ resumeData, updateResumeData }}>
+    <ResumeContext.Provider value={{ resumeData, isLoading, setLoading, updateResumeData }}>
       {children}
     </ResumeContext.Provider>
   );

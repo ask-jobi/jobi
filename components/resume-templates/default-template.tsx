@@ -71,7 +71,7 @@ export class DefaultTemplate implements ResumeTemplate {
           </View>
         );
       default:
-        return null;
+        return <View></View>;
     }
   }
 

@@ -15,16 +15,16 @@ const PDFDownloadLink = dynamic(
 
 
 export default function ResumePreview() {
-  const { resumeData } = useResume();
+  const { resumeData, isLoading } = useResume();
 
-  const [isLoading, setIsLoading] = useState(true);
+  console.log(isLoading);
+  
   const [numPages, setNumPages] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const pdf = useMemo(() => generateResumePdf(resumeData), [resumeData]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setIsLoading(false);
     setNumPages(numPages);
   };
 
@@ -41,11 +41,6 @@ export default function ResumePreview() {
       <div className="relative w-[420px] h-[595px] bg-white shadow-2xl rounded-sm overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-50"></div>
         <div className="relative z-0 w-full h-full">
-          {isLoading && (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-400">Loading File</p>
-            </div>
-          )}
           <div className="w-full h-full flex items-center justify-center">
             <ResumePdfRenderer
               key={Date.now()}
@@ -54,6 +49,11 @@ export default function ResumePreview() {
               currentPage={currentPage}
             />
           </div>
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center backdrop-blur-md bg-white/30">
+              <p className="text-gray-600 font-medium">Loading...</p>
+            </div>
+          )}
         </div>
       </div>
 

@@ -234,7 +234,7 @@ interface ResumeEditorProps {
 }
 
 export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
-  const { resumeData, updateResumeData } = useResume();
+  const { resumeData, updateResumeData, setLoading } = useResume();
   const sidebar = useSidebar();
   const form = useForm<ResumeData>({
     defaultValues: resumeData,
@@ -305,6 +305,7 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
       const formData = form.getValues();
       await saveResumeChange(resumeId, formData);
       updateResumeData(formData);
+      setLoading(false);
       toast.success("Auto saved");
     } catch (error) {
       console.error("Auto save failed:", error);
@@ -342,8 +343,13 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
     return null;
   };
 
+  const handleFormChange = () => {
+    setLoading(true)
+    dubouncedChange()
+  }
+
   return (
-    <form className="space-y-6" onChange={dubouncedChange}>
+    <form className="space-y-6" onChange={handleFormChange}>
       <CollapsibleCard
         title="Personal Information"
         id="personal"
