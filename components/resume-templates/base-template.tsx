@@ -1,12 +1,13 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { StyleSheet } from '@react-pdf/renderer';
 import { ResumeData } from "@/types/resume";
+import {ReactElement} from "react";
 
 export interface ResumeTemplate {
   name: string;
   styles: any;
-  renderHeader: (data: ResumeData) => JSX.Element;
-  renderSection: (sectionId: string, data: ResumeData) => JSX.Element;
-  renderDocument: (data: ResumeData) => JSX.Element;
+  renderHeader: (data: ResumeData) => ReactElement;
+  renderSection: (sectionId: string, data: ResumeData) => ReactElement;
+  renderDocument: (data: ResumeData) => ReactElement;
 }
 
 export const createBaseStyles = () => StyleSheet.create({
@@ -85,4 +86,4 @@ export const getOrderedSections = (data: ResumeData) => {
     { id: "employment", order: data.employmentHistory.order },
     { id: "skills", order: data.skills.order }
   ].sort((a, b) => a.order - b.order);
-}; 
+};

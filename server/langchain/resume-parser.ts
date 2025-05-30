@@ -8,14 +8,14 @@ import { ResumeData } from "@/types/resume";
 
 const resumeSchema = z.object({
   personalInfo: z.object({
-    firstName: z.string().describe("First name of the candidate"),
-    lastName: z.string().describe("Last name of the candidate"),
-    email: z.string().email().describe("Email address of the candidate"),
-    phone: z.string().describe("Phone number of the candidate"),
+    firstName: z.string().describe("First name of the candidate").default(""),
+    lastName: z.string().describe("Last name of the candidate").default(""),
+    email: z.string().describe("Email address of the candidate").default(""),
+    phone: z.string().describe("Phone number of the candidate").default(""),
   }),
   educationHistory: z.object({
-    title: z.string().describe("Title of the education section"),
-    order: z.number().describe("Order of the education section"),
+    title: z.string().describe("Title of the education section").default("Education"),
+    order: z.number().describe("Order of the education section").default(0),
     blocks: z.array(
       z.object({
         content: z.string().describe("Description of the education experience"),
@@ -27,8 +27,8 @@ const resumeSchema = z.object({
     ),
   }),
   employmentHistory: z.object({
-    title: z.string().describe("Title of the employment section"),
-    order: z.number().describe("Order of the employment section"),
+    title: z.string().describe("Title of the employment section").default("Employments"),
+    order: z.number().describe("Order of the employment section").default(1),
     blocks: z.array(
       z.object({
         content: z.string().describe("Description of the work experience"),
@@ -40,8 +40,8 @@ const resumeSchema = z.object({
     ),
   }),
   skills: z.object({
-    title: z.string().describe("Title of the skills section"),
-    order: z.number().describe("Order of the skills section"),
+    title: z.string().describe("Title of the skills section").default("Skills"),
+    order: z.number().describe("Order of the skills section").default(2),
     blocks: z.array(
       z.object({
         group: z.string().describe("Category of skills"),
@@ -84,7 +84,9 @@ export class ResumeParser {
       temperature: 0,
       streaming: false,
       maxRetries: 0,
+      json: true,
     });
+    this.model.withStructuredOutput(resumeSchema)
 
     this.parser = StructuredOutputParser.fromZodSchema(resumeSchema);
 

@@ -40,7 +40,7 @@ function closeWriter(processId: string) {
 
 export async function POST(request: NextRequest) {
   const processId = Date.now().toString();
-  let responseStream = new TransformStream();
+  const responseStream = new TransformStream();
   const writer = responseStream.writable.getWriter();
   writers[processId] = writer;
 
