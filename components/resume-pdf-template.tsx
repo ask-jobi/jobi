@@ -1,10 +1,31 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import { ResumeData } from "@/types/resume";
+import {Document, Page, Text, View, StyleSheet, Font} from '@react-pdf/renderer';
+import {ResumeData} from "@/types/resume";
+
+
+Font.register({
+  family: 'SourceHanSerifSC',
+  src: '/fonts/SourceHanSerifSC-SemiBold.otf',
+});
+
+Font.registerHyphenationCallback(word => {
+  if (word.length === 1) {
+    return [word];
+  }
+
+  return Array.from(word)
+    .map((char) => [char, ''])
+    .reduce((arr, current) => {
+      arr.push(...current);
+      return arr;
+    }, []);
+});
+
 
 // 创建样式
 const styles = StyleSheet.create({
   page: {
     padding: 30,
+    fontFamily: ['Helvetica', 'SourceHanSerifSC'],
     backgroundColor: '#ffffff'
   },
   section: {
@@ -24,7 +45,7 @@ const styles = StyleSheet.create({
     marginBottom: 3
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10
   },
@@ -37,7 +58,7 @@ const styles = StyleSheet.create({
     marginBottom: 3
   },
   company: {
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: 'bold'
   },
   date: {
@@ -118,7 +139,7 @@ export function generateResumePdf(data: ResumeData) {
           {data.skills.map((skill, index) => (
             <View key={index} style={styles.skillsGroup}>
               <Text style={styles.skillGroupTitle}>{skill.group}</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
                 {skill.content.map((item, itemIndex) => (
                   <Text key={itemIndex} style={styles.skillTag}>
                     {item}

@@ -8,6 +8,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+
 function ResumePdfRenderer(props: any) {
   const [scale, setScale] = useState(1);
 
