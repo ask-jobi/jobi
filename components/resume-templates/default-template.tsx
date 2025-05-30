@@ -77,7 +77,7 @@ export class DefaultTemplate implements ResumeTemplate {
 
   renderDocument(data: ResumeData) {
     const sections = getOrderedSections(data);
-    
+
     return (
       <Document>
         <Page size="A4" style={this.styles.page}>
@@ -87,4 +87,4 @@ export class DefaultTemplate implements ResumeTemplate {
       </Document>
     );
   }
-} 
+}

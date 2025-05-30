@@ -7,7 +7,6 @@ import { generateResumePdf } from "../resume-pdf-template";
 import dynamic from 'next/dynamic';
 import { useResume } from "./resume-context";
 import ResumePdfRenderer from "./resume-pdf-renderer";
-import { PDFViewer } from "@react-pdf/renderer";
 
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer/lib/react-pdf.browser').then(mod => mod.PDFDownloadLink),
@@ -49,6 +48,7 @@ export default function ResumePreview() {
           )}
           <div className="w-full h-full flex items-center justify-center">
             <ResumePdfRenderer
+              key={Date.now()}
               pdf={pdf}
               onDocumentLoadSuccess={onDocumentLoadSuccess}
               currentPage={currentPage}
@@ -80,6 +80,7 @@ export default function ResumePreview() {
         </Button>
         <div className="ml-4">
           <PDFDownloadLink
+            key={Date.now()}
             document={pdf}
             fileName={`${resumeData.personalInfo.firstName}_${resumeData.personalInfo.lastName}_Resume.pdf`}
             className="flex items-center gap-2"
