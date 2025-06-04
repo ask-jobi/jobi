@@ -29,6 +29,44 @@ export async function fetchJobApplication() {
   return jobApplications;
 }
 
+export async function getJobApplication(jobApplicationId: string) {
+  const supabase = await createClient()
+
+  const {data: jobApplications, error} = await supabase
+  .from('job_applications')
+  .select(`
+          id,
+          optimized_resume_url,
+          created_at,
+          resumes:resume_id (
+              id,
+              upload_url,
+              resume_json
+          ),
+          jobs:job_id (
+              id,
+              name,
+              company,
+              description
+          )
+      `)
+    .eq('id', jobApplicationId)
+  
+  if (error) {
+    throw new Error(`Failed to fetch job application: ${error.message}`)
+  }
+
+  if (!jobApplications || jobApplications.length === 0) {
+    throw new Error(`No job application found with id: ${jobApplicationId}`)
+  }
+
+  if (jobApplications.length > 1) {
+    throw new Error(`Multiple job applications found with id: ${jobApplicationId}`)
+  }
+  return jobApplications[0]
+}
+
+
 const BUCKET_NAME = 'upload-resumes'
 
 async function getUniqueFileName(supabase: any, userId: string, originalFileName: string): Promise<string> {
