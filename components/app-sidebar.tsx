@@ -10,7 +10,31 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "./ui/sidebar";
+import { Progress } from "./ui/progress";
+import {getQuotas} from "@/server/quota";
 
+const QuotaCard = async () => {
+  const quotaData= await getQuotas();
+
+  return (
+    <div className="mx-4 my-2">
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Credits</span>
+          <span className="text-gray-900">{quotaData.credits.used}/{quotaData.credits.total}</span>
+        </div>
+        <Progress value={(quotaData.credits.used / quotaData.credits.total) * 100}/>
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Overall Optimize</span>
+          <span className="text-gray-900">{quotaData.overallOptimize.used}/{quotaData.overallOptimize.total}</span>
+        </div>
+        <Progress value={(quotaData.overallOptimize.used / quotaData.overallOptimize.total) * 100}/>
+      </div>
+    </div>
+  );
+};
 
 const items = [
   {
@@ -18,13 +42,7 @@ const items = [
     url: "/dashboard",
     icon: LayoutDashboard,
   },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-]
-
+];
 
 export default function AppSidebar() {
   return (
@@ -42,7 +60,9 @@ export default function AppSidebar() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-      <SidebarFooter/>
+
+      <QuotaCard />
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -61,6 +81,19 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a href="#">
+                <Settings />
+                <span>设置</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

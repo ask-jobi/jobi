@@ -244,13 +244,13 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
     const educationOrder = form.watch("educationHistory.order") ?? 0;
     const employmentOrder = form.watch("employmentHistory.order") ?? 1;
     const skillsOrder = form.watch("skills.order") ?? 2;
-    
+
     const sections = [
       { id: "education", title: form.watch("educationHistory.title"), order: educationOrder },
       { id: "employment", title: form.watch("employmentHistory.title"), order: employmentOrder },
       { id: "skills", title: form.watch("skills.title"), order: skillsOrder },
     ];
-    
+
     return sections.sort((a, b) => a.order - b.order);
   });
 
@@ -283,7 +283,7 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
       const oldIndex = sections.findIndex((item) => item.id === active.id);
       const newIndex = sections.findIndex((item) => item.id === over.id);
       const newSections = arrayMove(sections, oldIndex, newIndex);
-      
+
       newSections.forEach((section, index) => {
         if (section.id === "education") {
           form.setValue("educationHistory.order", index);
@@ -295,7 +295,7 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
         section.order = index;
       });
       setSections(newSections);
-      dubouncedChange()
+      handleFormChange()
     }
     setActiveId(null);
   };

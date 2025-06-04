@@ -11,11 +11,11 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    serverComponentsExternalPackages: ['@react-pdf/renderer'],
     serverActions: {
       bodySizeLimit: '10mb',
     },
   },
+  serverExternalPackages: ['@react-pdf/renderer'],
   turbopack: {
     resolveAlias: {
       html2canvas: "html2canvas-pro",
