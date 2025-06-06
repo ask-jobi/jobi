@@ -9,10 +9,9 @@ interface ResumeAnalyzeProps {
 }
 
 export default function ResumeAnalyzeProgress({ progress }: ResumeAnalyzeProps) {
-
   return (
-    <div className="space-y-4">
-      <Progress value={progress[0]} />
+    <div className="space-y-4 relative">
+      <Progress showAnimate={true} value={progress[0]} />
       <p className="text-sm text-muted-foreground text-center">{progress[1]}</p>
     </div>
   );

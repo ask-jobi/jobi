@@ -1,8 +1,9 @@
-import { NextRequest } from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
 import { ResumeParser } from "@/server/langchain/resume-parser";
+import {consumeQuota} from "@/server/quota";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
   writers[processId] = writer;
 
   try {
+    await consumeQuota("credits")
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const jobInfo = JSON.parse(
@@ -52,32 +55,32 @@ export async function POST(request: NextRequest) {
     ) as JobInfoFormType;
 
     if (!file) {
-      return Response.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     request.signal.onabort = async () => {
-      await writer.ready;
-      await writer.abort();
-      delete writers[processId];
+      closeWriter(processId)
     };
 
     processFile(processId, file, jobInfo)
 
-    return new Response(responseStream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        Connection: 'keep-alive',
-        'Cache-Control': 'no-cache, no-transform',
-      },
-    });
   } catch (error: any) {
+    console.log('error', error)
     sendData(processId, {
       progress: 0,
       message: "Failed",
       error: error.message,
     })
-    return Response.json({ error: error.message }, { status: 500 });
+    closeWriter(processId)
   }
+
+  return new NextResponse(responseStream.readable, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache, no-transform',
+    },
+  });
 }
 
 

@@ -32,12 +32,11 @@ const { Stepper } = defineStepper(
   { id: "step-3", title: "Analyze Resume" }
 );
 
+const initialProgress: ProgressType = [0, "Ready to analyze"]
+
 const NewResumeCard = () => {
   const [cardOpen, setCardOpen] = useState<boolean>(false);
-  const [progress, setProgress] = useState<ProgressType>([
-    0,
-    "Ready to analyze",
-  ]);
+  const [progress, setProgress] = useState<ProgressType>(initialProgress);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeFile, setResumeFile] = useState<File>();
   const [controller, setController] = useState<AbortController | null>(null);
@@ -54,9 +53,7 @@ const NewResumeCard = () => {
 
   const handleOpenDialog = (open: boolean) => {
     if (!open) {
-      // 重置表单和文件状态
-      form.reset();
-      setResumeFile(undefined);
+      resetForm()
     }
     setCardOpen(open);
   };
@@ -73,9 +70,17 @@ const NewResumeCard = () => {
         toast.warning("Please upload one resume when goto next step.");
         return;
       }
+      analyzeResume()
     }
     methods.next();
   };
+
+  const resetForm = () => {
+    form.reset()
+    setProgress(initialProgress)
+    setResumeFile(undefined)
+    setIsAnalyzing(false);
+  }
 
   const analyzeResume = async () => {
     if (isAnalyzing) return;
@@ -95,20 +100,23 @@ const NewResumeCard = () => {
         signal: newController.signal,
         onmessage(event) {
           const data = JSON.parse(event.data);
+          if (data.error) {
+            toast.error(data.error);
+            setIsAnalyzing(false);
+          }
           setProgress([data.progress, data.message]);
 
           if (data.progress === 100) {
             setTimeout(() => {
-              setIsAnalyzing(false);
+              resetForm()
               setCardOpen(false);
               router.refresh();
             }, 1200);
           }
         },
         onerror(err) {
-          console.error("Event source error:", err);
-          toast.error("Analyze Failed: ", err);
           setIsAnalyzing(false);
+          throw err;
         }
       });
     } catch (error: any) {
@@ -182,15 +190,7 @@ const NewResumeCard = () => {
                     <Button onClick={() => handleNext(methods)}>Next</Button>
                   ),
                   "step-2": () => (
-                    <Button onClick={() => handleNext(methods)}>Next</Button>
-                  ),
-                  "step-3": () => (
-                    <Button
-                      onClick={analyzeResume}
-                      disabled={!resumeFile || isAnalyzing}
-                    >
-                      Start Analysis
-                    </Button>
+                    <Button onClick={() => handleNext(methods)} disabled={!resumeFile || isAnalyzing}>Start Analysis</Button>
                   ),
                 })}
               </Stepper.Controls>

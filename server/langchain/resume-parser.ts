@@ -51,25 +51,28 @@ const resumeSchema = z.object({
   })
 });
 
-const RESUME_PARSE_PROMPT = `你是一个专业的简历解析专家。请将以下简历内容解析成指定的JSON格式。
+const RESUME_PARSE_PROMPT = `
+You are a professional resume parsing expert. Please parse the following resume content into the specified JSON format.
+Resume content:
 
-简历内容：
 {resumeText}
 
-请仔细分析简历内容，提取以下信息：
-1. 个人信息：姓名、邮箱、电话
-2. 教育经历：学校、学位、时间段、描述
-3. 工作经历：公司、职位、时间段、描述
-4. 技能：按类别分组
+Please analyze the resume content carefully and extract the following information:
 
+1. Personal information: name, email, phone number
+2. Education experience: school, degree, time period, description
+3. Work experience: company, position, time period, description
+4. Skills: grouped by category
+
+Make sure return data as following formats
 {format_instructions}
 
-注意事项：
-1. 确保所有日期格式为 YYYY-MM
-2. 如果某些信息在简历中未找到，使用空字符串或空数组
-3. 保持JSON格式的完整性
-4. 确保提取的信息准确无误
-5. 永远确保输出的内容是英文
+Notes:
+1. Make sure all dates are in YYYY-MM format
+2. If some information is not found in the resume, use an empty string or empty array
+3. Keep the integrity of the JSON format
+4. Make sure the extracted information is accurate
+5. Always make sure the output is in English
 `;
 
 export class ResumeParser {
@@ -80,7 +83,7 @@ export class ResumeParser {
 
   private constructor() {
     this.model = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash-8b",
+      model: "gemini-2.0-flash-lite",
       temperature: 0,
       streaming: false,
       maxRetries: 0,
