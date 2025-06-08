@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { generateAISuggestionQueue } from "@/server/langchain/optimize";
+import { generateAISuggestionQueue } from "@/server/langchain/full-optimize";
 import { getJobApplication } from "@/server/resume";
 import { ResumeData } from "@/types/resume";
 

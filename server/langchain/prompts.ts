@@ -41,3 +41,32 @@ export const AI_OPTIMIZE_PROMPT = `
 【现在请分析如下简历片段】：
 {content}
 `;
+
+
+export const REWRITE_PROMPT = `
+你是一名资深的简历优化专家。请根据以下要求对简历内容进行改写：
+
+【输入信息】
+1. 原始内容：{originalContent}
+2. 简历摘要：{resumeSummary}
+3. 简历目标：{resumeGoal}
+4. 职位描述：{jd}
+5. 相关技能：{relatedSkills}
+6. 改写指令：{instruction}
+
+【任务要求】
+1. 根据改写指令对内容进行优化
+2. 保持与整体简历风格的一致性
+3. 确保内容与职位描述相关
+4. 突出相关技能和经验
+5. 使用专业、简洁的语言
+6. 使用 {language} 输出
+
+请以如下 JSON 格式输出：
+{format_instructions}
+
+注意：
+1. 确保输出格式严格符合要求
+2. 优化理由要简明扼要
+3. 高亮内容应该是具体的短语或关键词
+`;

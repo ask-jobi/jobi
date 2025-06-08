@@ -88,3 +88,4 @@ export async function generateAISuggestionQueue(
   ) as AISuggestionQueue;
   return results;
 }
+
