@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Input } from "./input";
+import Image from "next/image";
+import { Button } from "./button";
 
 interface CollapsibleCardProps {
   title: string;
@@ -12,10 +14,9 @@ interface CollapsibleCardProps {
   defaultCollapsed?: boolean;
   className?: string;
   id: string;
-  draggable?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;
   onTitleChange?: (newTitle: string) => void;
-  editable?: boolean;
+  onAssistantAction?: () => void;
 }
 
 export function CollapsibleCard({
@@ -24,10 +25,9 @@ export function CollapsibleCard({
   defaultCollapsed = false,
   className,
   id,
-  draggable = false,
   onCollapseChange,
   onTitleChange,
-  editable = false,
+  onAssistantAction,
 }: CollapsibleCardProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [isEditing, setIsEditing] = useState(false);
@@ -42,7 +42,6 @@ export function CollapsibleCard({
     isDragging,
   } = useSortable({
     id,
-    disabled: !draggable,
   });
 
   const style = {
@@ -58,7 +57,7 @@ export function CollapsibleCard({
   };
 
   const handleTitleClick = () => {
-    if (editable && !isEditing) {
+    if (!isEditing) {
       setIsEditing(true);
     }
   };
@@ -90,22 +89,16 @@ export function CollapsibleCard({
     <Card 
       ref={setNodeRef}
       style={style}
-      className={cn("transition-all", className)}
+      className={cn("transition-all group", className)}
     >
-      <CardHeader
-        className={cn(
-          draggable && "flex items-center gap-2"
-        )}
-      >
-        {draggable && (
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical className="h-5 w-5 text-muted-foreground" />
-          </div>
-        )}
+      <CardHeader className="flex items-center gap-2">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </div>
         <div className="flex items-center justify-between flex-1">
           {isEditing ? (
             <Input
@@ -120,8 +113,7 @@ export function CollapsibleCard({
           ) : (
             <CardTitle 
               className={cn(
-                "text-lg font-semibold min-w-[100px]",
-                editable && "cursor-text hover:text-primary/80",
+                "text-lg font-semibold min-w-[100px] cursor-text hover:text-primary/80",
                 !title && "text-muted-foreground italic"
               )}
               onClick={handleTitleClick}
@@ -129,12 +121,30 @@ export function CollapsibleCard({
               {title || "Untitled"}
             </CardTitle>
           )}
-          <div className="cursor-pointer" onClick={handleCollapse}>
-            {isCollapsed ? (
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            ) : (
-              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center gap-2">
+            {onAssistantAction && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onAssistantAction}
+                className="opacity-0 group-hover:opacity-100"
+              >
+                <Image
+                  src="/gemini-color.svg"
+                  alt="Assistant"
+                  width={20}
+                  height={20}
+                />
+              </Button>
             )}
+            <div className="cursor-pointer" onClick={handleCollapse}>
+              {isCollapsed ? (
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>

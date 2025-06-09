@@ -6,6 +6,7 @@ import {Input} from "../ui/input";
 import {useDebouncedCallback} from "use-debounce";
 import {toast} from "sonner";
 import {CollapsibleCard} from "../ui/collapsible-card";
+import {StaticCard} from "../ui/static-card";
 import {
   DndContext,
   closestCenter,
@@ -350,11 +351,9 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
 
   return (
     <form className="space-y-6" onChange={handleFormChange}>
-      <CollapsibleCard
+      <StaticCard
         title="Personal Information"
         id="personal"
-        draggable={false}
-        editable={false}
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -382,7 +381,7 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
             />
           </div>
         </div>
-      </CollapsibleCard>
+      </StaticCard>
 
       <DndContext
         sensors={sensors}
@@ -401,7 +400,6 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
               key={section.id}
               id={section.id}
               title={section.title}
-              draggable={true}
               defaultCollapsed={collapsedStates[section.id]}
               onCollapseChange={(collapsed) => {
                 setCollapsedStates(prev => ({
@@ -410,7 +408,10 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
                 }));
               }}
               onTitleChange={(newTitle) => handleTitleChange(section.id, newTitle)}
-              editable={true}
+              onAssistantAction={() => {
+                // TODO: 实现 Assistant 按钮的点击处理逻辑
+                console.log(`Assistant action clicked for ${section.id}`);
+              }}
             >
               {renderCardContent(section.id)}
             </CollapsibleCard>
@@ -421,9 +422,7 @@ export default function ResumeEditor({ resumeId }: ResumeEditorProps) {
             <CollapsibleCard
               id={activeId}
               title={sections.find(section => section.id === activeId)?.title || ""}
-              draggable={true}
               defaultCollapsed={collapsedStates[activeId]}
-              editable={true}
             >
               {renderCardContent(activeId)}
             </CollapsibleCard>
