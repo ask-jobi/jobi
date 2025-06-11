@@ -16,10 +16,8 @@ export async function POST(request: Request) {
     const rewriter = ResumeRewriter.getInstance();
     const response = await rewriter.rewriteBlock({
       originalContent: body.originalContent,
-      resumeSummary: body.context.resumeSummary,
-      resumeGoal: body.context.resumeGoal,
+      section: body.context.sectionType,
       jd: body.context.jd,
-      relatedSkills: body.context.relatedSkills,
       instruction: body.instruction,
       language: body.language === "zh" ? "zh" : "en",
     });

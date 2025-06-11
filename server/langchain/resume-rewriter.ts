@@ -47,10 +47,8 @@ export class ResumeRewriter {
 
   async rewriteBlock(params: {
     originalContent: string;
-    resumeSummary?: string;
-    resumeGoal?: string;
+    section: string;
     jd: string;
-    relatedSkills?: string[];
     instruction: string;
     language: Language;
   }) {
@@ -58,10 +56,8 @@ export class ResumeRewriter {
 
     const result = await this.chain.invoke({
       originalContent: params.originalContent,
-      resumeSummary: params.resumeSummary || "",
-      resumeGoal: params.resumeGoal || "",
+      section: params.section,
       jd: params.jd,
-      relatedSkills: params.relatedSkills?.join(", ") || "",
       instruction: params.instruction,
       language: validatedLanguage === "zh" ? "中文" : "英文",
       format_instructions: this.parser.getFormatInstructions(),
