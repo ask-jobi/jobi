@@ -15,11 +15,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  serverExternalPackages: ['@react-pdf/renderer'],
   turbopack: {
     resolveAlias: {
       html2canvas: "html2canvas-pro",
-      canvas: './empty-module.ts',
     },
   }
 };

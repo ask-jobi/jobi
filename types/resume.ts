@@ -2,13 +2,9 @@ export type JobApplication = {
   id: string;
     resume: {
         id: string;
-        resume_json: ResumeData;
     }
     job: {
         id: string;
-        name: string;
-        company: string;
-        description: string
     }
 }
 
@@ -74,8 +70,8 @@ export interface AISuggestion {
   blockIndex: number;    // 在 blocks 数组中的下标
   suggestionType: string;    // 例如 "简洁表达/量化成果/突出技术栈/精炼语言/去除重复/英文表达/突出领导力/突出影响力/结构优化"
   reason: string;            // 为什么需要修改
-  originalContent: string;  
-  optimizedContent: string;  
+  originalContent: string;
+  optimizedContent: string;
   highlight?: string[];      // 可选：高亮提示关键点
 }
 

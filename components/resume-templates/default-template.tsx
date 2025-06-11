@@ -1,90 +1,93 @@
-import { Document, Page, Text, View } from '@react-pdf/renderer';
 import { ResumeData } from "@/types/resume";
-import { ResumeTemplate, createBaseStyles, getOrderedSections } from './base-template';
+import { ResumeTemplate, getOrderedSections } from './base-template';
 
 export class DefaultTemplate implements ResumeTemplate {
   name = 'Default';
-  styles = createBaseStyles();
+  styles = {}; // No longer using styles object directly
 
   renderHeader(data: ResumeData) {
     return (
-      <View style={this.styles.header}>
-        <Text style={this.styles.name}>
+      <div className="">
+        <h1 className="text-2xl font-bold mb-1">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
-        </Text>
-        <Text style={this.styles.contactInfo}>{data.personalInfo.email}</Text>
-        <Text style={this.styles.contactInfo}>{data.personalInfo.phone}</Text>
-      </View>
+        </h1>
+        <p className="text-sm text-gray-600 mb-0.5">{data.personalInfo.email}</p>
+        <p className="text-sm text-gray-600 mb-0.5">{data.personalInfo.phone}</p>
+      </div>
     );
   }
 
-  renderSection(sectionId: string, data: ResumeData) {
+  renderSection(sectionId: string, data: ResumeData, onSectionClick?: (id: string) => void) {
+    const handleClick = () => {
+      if (onSectionClick) {
+        onSectionClick(sectionId);
+      }
+    };
+
     switch (sectionId) {
       case "education":
         return (
-          <View key={sectionId} style={this.styles.section}>
-            <Text style={this.styles.sectionTitle}>{data.educationHistory.title}</Text>
+          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+            <h2 className="text-lg font-bold mb-2">{data.educationHistory.title}</h2>
             {data.educationHistory.blocks.map((block, index) => (
-              <View key={index} style={this.styles.block}>
-                <View style={this.styles.blockHeader}>
-                  <Text style={this.styles.company}>{block.school}</Text>
-                  <Text style={this.styles.date}>{block.start} - {block.end}</Text>
-                </View>
-                <Text style={this.styles.jobTitle}>{block.degree}</Text>
-                <Text style={this.styles.content}>{block.content}</Text>
-              </View>
+              <div key={index} className="mb-4">
+                <div className="flex justify-between mb-0.5">
+                  <h3 className="text-base font-bold">{block.school}</h3>
+                  <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
+                <p className="text-sm mt-1">{block.content}</p>
+              </div>
             ))}
-          </View>
+          </div>
         );
       case "employment":
         return (
-          <View key={sectionId} style={this.styles.section}>
-            <Text style={this.styles.sectionTitle}>{data.employmentHistory.title}</Text>
+          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+            <h2 className="text-lg font-bold mb-2">{data.employmentHistory.title}</h2>
             {data.employmentHistory.blocks.map((block, index) => (
-              <View key={index} style={this.styles.block}>
-                <View style={this.styles.blockHeader}>
-                  <Text style={this.styles.company}>{block.company}</Text>
-                  <Text style={this.styles.date}>{block.start} - {block.end}</Text>
-                </View>
-                <Text style={this.styles.jobTitle}>{block.jobTitle}</Text>
-                <Text style={this.styles.content}>{block.content}</Text>
-              </View>
+              <div key={index} className="mb-4">
+                <div className="flex justify-between mb-0.5">
+                  <h3 className="text-base font-bold">{block.company}</h3>
+                  <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
+                <p className="text-sm mt-1">{block.content}</p>
+              </div>
             ))}
-          </View>
+          </div>
         );
       case "skills":
         return (
-          <View key={sectionId} style={this.styles.section}>
-            <Text style={this.styles.sectionTitle}>{data.skills.title}</Text>
+          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+            <h2 className="text-lg font-bold mb-2">{data.skills.title}</h2>
             {data.skills.blocks.map((block, index) => (
-              <View key={index} style={this.styles.skillsGroup}>
-                <Text style={this.styles.skillGroupTitle}>{block.group}</Text>
-                <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+              <div key={index} className="mb-2">
+                <h3 className="text-sm font-bold mb-1">{block.group}</h3>
+                <div className="flex flex-wrap">
                   {block.content.map((item, itemIndex) => (
-                    <Text key={`tag-${itemIndex}`} style={this.styles.skillTag}>
+                    <span key={`tag-${itemIndex}`} className="text-xs bg-gray-100 px-2 py-1 rounded-full mr-1 mb-1">
                       {item}
-                    </Text>
+                    </span>
                   ))}
-                </View>
-              </View>
+                </div>
+              </div>
             ))}
-          </View>
+          </div>
         );
       default:
-        return <View></View>;
+        return <div className="hidden"></div>; // Use hidden to avoid rendering empty divs
     }
   }
 
-  renderDocument(data: ResumeData) {
+  renderDocument(data: ResumeData, onSectionClick?: (id: string) => void) {
     const sections = getOrderedSections(data);
 
     return (
-      <Document>
-        <Page size="A4" style={this.styles.page}>
+      <div className="bg-white p-8">
           {this.renderHeader(data)}
-          {sections.map(({ id }) => this.renderSection(id, data))}
-        </Page>
-      </Document>
+          {sections.map(({ id }) => this.renderSection(id, data, onSectionClick))}
+      </div>
     );
   }
 }
