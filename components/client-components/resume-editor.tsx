@@ -5,9 +5,8 @@ import {useSidebar} from "@/components/ui/sidebar";
 import { useResume } from "./resume-context";
 import { DefaultTemplate } from "@/components/resume-templates/default-template";
 
-
 export default function ResumeEditor() {
-  const { resumeData, setSelectedSectionId } = useResume();
+  const { resumeData, handleSectionClick } = useResume();
   const sidebar = useSidebar();
 
   useEffect(() => {
@@ -17,9 +16,9 @@ export default function ResumeEditor() {
   const defaultTemplate = new DefaultTemplate();
 
   return (
-    <div className="w-full h-full flex justify-center items-start">
+    <div className="w-full flex justify-center items-start">
       <div className="w-[210mm] bg-white shadow-lg border border-gray-200 overflow-y-auto">
-        {defaultTemplate.renderDocument(resumeData, setSelectedSectionId)}
+        {defaultTemplate.renderDocument(resumeData, handleSectionClick)}
       </div>
     </div>
   );

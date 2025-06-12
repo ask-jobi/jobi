@@ -27,7 +27,7 @@ export function EmploymentForm() {
   return (
     <div className="space-y-4">
       {fields.map((field, blockIndex) => (
-        <div key={field.id} className="space-y-4 p-4 border rounded-lg">
+        <div key={field.id} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Company</label>
@@ -75,4 +75,4 @@ export function EmploymentForm() {
       </Button>
     </div>
   );
-} 
+}

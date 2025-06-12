@@ -27,7 +27,7 @@ export class DefaultTemplate implements ResumeTemplate {
     switch (sectionId) {
       case "education":
         return (
-          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+          <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.educationHistory.title}</h2>
             {data.educationHistory.blocks.map((block, index) => (
               <div key={index} className="mb-4">
@@ -43,7 +43,7 @@ export class DefaultTemplate implements ResumeTemplate {
         );
       case "employment":
         return (
-          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+          <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.employmentHistory.title}</h2>
             {data.employmentHistory.blocks.map((block, index) => (
               <div key={index} className="mb-4">
@@ -59,7 +59,7 @@ export class DefaultTemplate implements ResumeTemplate {
         );
       case "skills":
         return (
-          <div key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
+          <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.skills.title}</h2>
             {data.skills.blocks.map((block, index) => (
               <div key={index} className="mb-2">

@@ -25,7 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
-import { Download } from "lucide-react";
+import { Download, GripVertical } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 
@@ -70,13 +70,14 @@ function SortableSectionItem({ id, title, onClick, isSelected }: SortableSection
       className={`mb-2 p-2 rounded-md cursor-grab flex justify-between items-center ${isSelected ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
       onClick={() => onClick(id)}
     >
-      {title}
+      <span>{title}</span>
+      <GripVertical className="h-4 w-4 text-gray-400" />
     </li>
   );
 }
 
-export default function InteractiveResumeContent() {
-  const { updateResumeData, setLoading, selectedSectionId, setSelectedSectionId, resumeData, application } = useResume();
+export default function ResumePage() {
+  const { updateResumeData, setLoading, selectedSectionId, handleSectionClick, resumeData, application } = useResume();
   const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
@@ -211,7 +212,7 @@ export default function InteractiveResumeContent() {
               <ul>
                 <li
                   className={`mb-2 p-2 rounded-md flex justify-between items-center cursor-pointer ${selectedSectionId === "personalInfo" ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
-                  onClick={() => setSelectedSectionId("personalInfo")}
+                  onClick={() => handleSectionClick("personalInfo")}
                 >
                   Personal Info
                 </li>
@@ -220,7 +221,7 @@ export default function InteractiveResumeContent() {
                     key={section.id}
                     id={section.id}
                     title={section.title}
-                    onClick={setSelectedSectionId}
+                    onClick={handleSectionClick}
                     isSelected={selectedSectionId === section.id}
                   />
                 ))}
@@ -236,7 +237,7 @@ export default function InteractiveResumeContent() {
           </DndContext>
         </div>
 
-        <div className="w-full p-6">
+        <div className="w-full p-6 overflow-y-scroll">
           <ResumeEditor />
         </div>
 

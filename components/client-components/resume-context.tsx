@@ -10,7 +10,7 @@ interface ResumeContextType {
   setLoading: (loading: boolean) => void;
   updateResumeData: (data: ResumeData) => void;
   selectedSectionId: string | null;
-  setSelectedSectionId: (id: string | null) => void;
+  handleSectionClick: (id: string) => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -39,6 +39,14 @@ export function ResumeProvider({ children, initialData, jobApplication }: Resume
     setResumeData(data);
   };
 
+  const handleSectionClick = (id: string) => {
+    setSelectedSectionId(id);
+    const sectionElement = document.getElementById(`section-${id}`);
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <ResumeContext.Provider value={{
       resumeData,
@@ -47,7 +55,7 @@ export function ResumeProvider({ children, initialData, jobApplication }: Resume
       setLoading,
       updateResumeData,
       selectedSectionId,
-      setSelectedSectionId
+      handleSectionClick
     }}>
       {children}
     </ResumeContext.Provider>

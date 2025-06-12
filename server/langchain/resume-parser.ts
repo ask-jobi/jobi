@@ -18,7 +18,7 @@ const resumeSchema = z.object({
     order: z.number().describe("Order of the education section").default(0),
     blocks: z.array(
       z.object({
-        content: z.string().describe("Description of the education experience"),
+        content: z.string().describe("Description of the education experience, return markdown formatted"),
         school: z.string().describe("Name of the school"),
         degree: z.string().describe("Degree obtained"),
         start: z.string().describe("Start date in YYYY-MM format"),
@@ -31,7 +31,7 @@ const resumeSchema = z.object({
     order: z.number().describe("Order of the employment section").default(1),
     blocks: z.array(
       z.object({
-        content: z.string().describe("Description of the work experience"),
+        content: z.string().describe("Description of the work experience, return markdown formatted"),
         company: z.string().describe("Name of the company"),
         jobTitle: z.string().describe("Job title"),
         start: z.string().describe("Start date in YYYY-MM format"),
@@ -73,6 +73,7 @@ Notes:
 3. Keep the integrity of the JSON format
 4. Make sure the extracted information is accurate
 5. Always make sure the output is in English
+6. Make sure the extracted description is Markdown format
 `;
 
 export class ResumeParser {

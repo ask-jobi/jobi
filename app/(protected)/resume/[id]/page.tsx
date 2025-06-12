@@ -1,8 +1,8 @@
 import "server-only"
-import InteractiveResumeContent from "@/components/client-components/interactive-resume-content";
+import ResumePage from "@/components/client-components/resume-page";
 
-export default function ResumePage() {
+export default function Page() {
   return (
-      <InteractiveResumeContent />
+      <ResumePage />
   )
 }
