@@ -37,7 +37,7 @@ const promptTemplate = new PromptTemplate({
   template: AI_OPTIMIZE_PROMPT,
   inputVariables: ["content", "section"],
 });
-
+// TODO: 修改控制返回结构化的代码，使用 zod 解析校验
 async function callLangChainLLM(section: string, content: string) {
   const prompt = await promptTemplate.format({ content, section });
   const model = new ChatGoogleGenerativeAI({

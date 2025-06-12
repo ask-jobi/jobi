@@ -14,7 +14,8 @@ export const AI_OPTIMIZE_PROMPT = `
   "optimizedContent": "优化后的完整英文内容",
   "highlight": ["修改或新增的重点短语、关键词"]
 }}
-5. 请直接返回 Json 对象，不要添加多余的信息！
+5. 对于 optimizedContent 的值，可以使用 markdown 格式输出
+6. 请直接返回 Json 对象，不要添加多余的信息！
 
 【判断标准】
 - 如果原内容已准确、清晰表达，不要建议无谓修改。
@@ -55,7 +56,8 @@ export const REWRITE_PROMPT = `
 1. 根据改写指令对内容进行优化，确保内容与职位描述相关
 2. 保持与整体简历风格的一致性
 3. 使用专业、简洁的语言
-4. 使用 {language} 输出
+4. 使用 markdown 格式输出
+5. 使用 {language} 输出
 
 请以如下 JSON 格式输出：
 {format_instructions}
@@ -64,4 +66,30 @@ export const REWRITE_PROMPT = `
 1. 确保输出格式严格符合要求
 2. 优化理由要简明扼要
 3. 高亮内容应该是具体的短语或关键词
+`;
+
+
+export const RESUME_PARSE_PROMPT = `
+You are a professional resume parsing expert. Please parse the following resume content into the specified JSON format.
+Resume content:
+
+{resumeText}
+
+Please analyze the resume content carefully and extract the following information:
+
+1. Personal information: name, email, phone number
+2. Education experience: school, degree, time period, description
+3. Work experience: company, position, time period, description
+4. Skills: grouped by category
+
+Make sure return data as following formats
+{format_instructions}
+
+Notes:
+1. Make sure all dates are in YYYY-MM format
+2. If some information is not found in the resume, use an empty string or empty array
+3. Keep the integrity of the JSON format
+4. Make sure the extracted information is accurate
+5. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
+6. Always make sure the language of the output content is consistent with the original text.
 `;

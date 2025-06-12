@@ -5,6 +5,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ResumeData } from "@/types/resume";
+import { RESUME_PARSE_PROMPT } from "./prompts";
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -50,30 +51,6 @@ const resumeSchema = z.object({
     ),
   })
 });
-
-const RESUME_PARSE_PROMPT = `
-You are a professional resume parsing expert. Please parse the following resume content into the specified JSON format.
-Resume content:
-
-{resumeText}
-
-Please analyze the resume content carefully and extract the following information:
-
-1. Personal information: name, email, phone number
-2. Education experience: school, degree, time period, description
-3. Work experience: company, position, time period, description
-4. Skills: grouped by category
-
-Make sure return data as following formats
-{format_instructions}
-
-Notes:
-1. Make sure all dates are in YYYY-MM format
-2. If some information is not found in the resume, use an empty string or empty array
-3. Keep the integrity of the JSON format
-4. Make sure the extracted information is accurate
-5. Always make sure the output is in English
-`;
 
 export class ResumeParser {
   private static instance: ResumeParser;
