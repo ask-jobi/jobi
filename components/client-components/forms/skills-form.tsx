@@ -1,13 +1,15 @@
 "use client"
 
-import { useFormContext, useFieldArray } from "react-hook-form";
+import {useFormContext, useFieldArray, Controller} from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ResumeData } from "@/types/resume";
+import {InputTags} from "@/components/ui/input-tags";
+import React from "react";
 
 export function SkillsForm() {
-  const { control, register, getValues, setValue } = useFormContext<ResumeData>();
+  const { control, register } = useFormContext<ResumeData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "skills.blocks",
@@ -16,26 +18,8 @@ export function SkillsForm() {
   const handleAddBlock = () => {
     append({
       group: "",
-      content: [""],
+      content: [],
     });
-  };
-
-  const handleAddSkill = (blockIndex: number) => {
-    const currentContent = getValues(`skills.blocks.${blockIndex}.content`);
-    append({
-      group: fields[blockIndex].group,
-      content: [...currentContent, ""],
-    });
-  };
-
-  const handleRemoveSkill = (blockIndex: number, skillIndex: number) => {
-    const currentContent = getValues(`skills.blocks.${blockIndex}.content`);
-    const newContent = currentContent.filter((_: string, index: number) => index !== skillIndex);
-    if (newContent.length === 0) {
-      remove(blockIndex);
-    } else {
-      setValue(`skills.blocks.${blockIndex}.content`, newContent);
-    }
   };
 
   return (
@@ -49,33 +33,17 @@ export function SkillsForm() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Content</label>
-            {
-              Array.isArray(field.content) && field.content.map((skill: string, skillIndex: number) => (
-                <div key={skillIndex} className="flex items-center space-x-2">
-                  <Input
-                    {...register(`skills.blocks.${blockIndex}.content.${skillIndex}`)}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveSkill(blockIndex, skillIndex)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))
-            }
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full mt-2"
-              onClick={() => handleAddSkill(blockIndex)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Skill
-            </Button>
+            <label className="text-sm font-medium">Skills</label>
+            <Controller
+              control={control}
+              name={`skills.blocks.${blockIndex}.content`}
+              render={({field}) => {
+                return <InputTags
+                  {...field}
+                  placeholder="Input skill and press Enter or comma to add"
+                />
+              }}
+            />
           </div>
           <Button
             type="button"
@@ -98,4 +66,4 @@ export function SkillsForm() {
       </Button>
     </div>
   );
-} 
+}
