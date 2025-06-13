@@ -153,6 +153,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior-y: none;
   }
 
   :root {
@@ -175,5 +176,33 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@media print {
+  [class*="header"]{
+    display: none;
+  }
+
+  [class*="w-full"] {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  [class*="w-full"] > div {
+    page-break-inside: auto;
+  }
+
+  [class*="shadow-lg"] {
+    box-shadow: none !important;
   }
 }

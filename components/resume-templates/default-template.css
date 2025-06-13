@@ -1,0 +1,11 @@
+.pdf {
+    margin: 0;
+}
+
+.pdf ul, ol {
+    list-style-type: disc;
+}
+
+.pdf li {
+    margin: 0 16px;
+}
