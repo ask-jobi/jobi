@@ -65,7 +65,6 @@ function SortableSectionItem({ id, title, onClick, isSelected }: SortableSection
     <li
       ref={setNodeRef}
       style={style}
-      {...attributes}
       {...listeners}
       className={`mb-2 p-2 rounded-md cursor-grab flex justify-between items-center ${isSelected ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
       onClick={() => onClick(id)}

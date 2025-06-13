@@ -2,13 +2,13 @@
 
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ResumeData } from "@/types/resume";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 export function EmploymentForm() {
-  const { control, register } = useFormContext<ResumeData>();
+  const { control, register, setValue } = useFormContext<ResumeData>();
   const { fields, append } = useFieldArray({
     control,
     name: "employmentHistory.blocks",
@@ -58,8 +58,11 @@ export function EmploymentForm() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Content</label>
-            <Textarea
-              {...register(`employmentHistory.blocks.${blockIndex}.content`)}
+            <Editor
+              markdown={field.content || ""}
+              onChange={(md) => {
+                setValue(`employmentHistory.blocks.${blockIndex}.content`, md);
+              }}
             />
           </div>
         </div>

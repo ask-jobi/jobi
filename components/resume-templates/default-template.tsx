@@ -1,9 +1,10 @@
 import { ResumeData } from "@/types/resume";
 import { ResumeTemplate, getOrderedSections } from './base-template';
+import Markdown from "react-markdown";
+import "./default-template.css"
 
 export class DefaultTemplate implements ResumeTemplate {
   name = 'Default';
-  styles = {}; // No longer using styles object directly
 
   renderHeader(data: ResumeData) {
     return (
@@ -36,9 +37,11 @@ export class DefaultTemplate implements ResumeTemplate {
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
-                <p className="text-sm mt-1">{block.content}</p>
+                <Markdown>
+                  {block.content}
+                </Markdown>
               </div>
-            ))}
+              ))}
           </div>
         );
       case "employment":
@@ -52,7 +55,9 @@ export class DefaultTemplate implements ResumeTemplate {
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
-                <p className="text-sm mt-1">{block.content}</p>
+                <Markdown>
+                  {block.content}
+                </Markdown>
               </div>
             ))}
           </div>
@@ -84,10 +89,10 @@ export class DefaultTemplate implements ResumeTemplate {
     const sections = getOrderedSections(data);
 
     return (
-      <div className="bg-white p-8">
+      <article className="bg-white p-8 pdf">
           {this.renderHeader(data)}
           {sections.map(({ id }) => this.renderSection(id, data, onSectionClick))}
-      </div>
+      </article>
     );
   }
 }

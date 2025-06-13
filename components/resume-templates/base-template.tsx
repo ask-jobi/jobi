@@ -3,7 +3,6 @@ import { ResumeData } from "@/types/resume";
 
 export interface ResumeTemplate {
   name: string;
-  styles: any;
   renderHeader: (data: ResumeData) => ReactElement;
   renderSection: (sectionId: string, data: ResumeData) => ReactElement;
   renderDocument: (data: ResumeData) => ReactElement;
