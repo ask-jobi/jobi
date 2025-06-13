@@ -117,13 +117,13 @@ export default function ResumePage() {
 
   useEffect(() => {
     const subscription = watch((data) => {
-      if (data) {
+      if (data && methods.formState.isDirty) {
         updateResumeData(data as ResumeData);
         debouncedSave();
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch, debouncedSave, updateResumeData]);
+  }, [watch, debouncedSave, updateResumeData, methods.formState.isDirty]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

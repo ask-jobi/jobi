@@ -180,7 +180,8 @@
 }
 
 @media print {
-  [class*="header"]{
+  [class*="header"],
+  .toaster{
     display: none;
   }
 
