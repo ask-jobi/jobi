@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogFooter, DialogDescription,
 } from "@/components/ui/dialog"
 import { Editor } from "@/components/blocks/editor-00/editor"
 import { Button } from "@/components/ui/button"
@@ -48,7 +48,10 @@ export function MarkdownModal({
     <Dialog open={isOpen} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>
+            {title}
+            <DialogDescription/>
+          </DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           <Editor

@@ -38,9 +38,6 @@ import {
   ListOrderedIcon,
   QuoteIcon,
   StrikethroughIcon,
-  SubscriptIcon,
-  SuperscriptIcon,
-  UnderlineIcon,
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from '@/components/ui/select';
@@ -229,13 +226,13 @@ const ToolbarPlugin: FC = () => {
         >
           <ItalicIcon/>
         </Toggle>
-        <Toggle
-          aria-label="Underline"
-          pressed={isUnderline}
-          onPressedChange={() => formatText('underline')}
-        >
-          <UnderlineIcon/>
-        </Toggle>
+        {/*<Toggle*/}
+        {/*  aria-label="Underline"*/}
+        {/*  pressed={isUnderline}*/}
+        {/*  onPressedChange={() => formatText('underline')}*/}
+        {/*>*/}
+        {/*  <UnderlineIcon/>*/}
+        {/*</Toggle>*/}
         <Toggle
           aria-label="Strikethrough"
           pressed={isStrikethrough}
