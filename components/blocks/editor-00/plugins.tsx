@@ -6,6 +6,7 @@ import { ContentEditable } from "@/components/editor/editor-ui/content-editable"
 import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
+import ToolbarPlugin from "@/components/blocks/editor-00/plugins/ToolbarPlugin";
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -19,7 +20,7 @@ export function Plugins() {
 
   return (
     <div className="relative">
-      {/* toolbar plugins */}
+      <ToolbarPlugin/>
       <div className="relative">
         <RichTextPlugin
           contentEditable={
