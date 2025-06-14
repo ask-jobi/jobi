@@ -3,16 +3,18 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { ResumeData } from "@/types/resume";
-import { Editor } from "@/components/blocks/editor-00/editor";
+import { MarkdownModal } from "@/components/ui/markdown-modal";
+import { useState } from "react";
 
 export function EmploymentForm() {
-  const { control, register, setValue } = useFormContext<ResumeData>();
+  const { control, register, setValue, getValues } = useFormContext<ResumeData>();
   const { fields, append } = useFieldArray({
     control,
     name: "employmentHistory.blocks",
   });
+  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
 
   const handleAddBlock = () => {
     append({
@@ -22,6 +24,16 @@ export function EmploymentForm() {
       end: "",
       content: "",
     });
+  };
+
+  const handleContentChange = (md: string) => {
+    if (editingBlockIndex !== null) {
+      setValue(`employmentHistory.blocks.${editingBlockIndex}.content`, md, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      });
+    }
   };
 
   return (
@@ -57,13 +69,18 @@ export function EmploymentForm() {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Content</label>
-            <Editor
-              markdown={field.content || ""}
-              onChange={(md) => {
-                setValue(`employmentHistory.blocks.${blockIndex}.content`, md);
-              }}
-            />
+            <div className="flex flex-col justify-between">
+              <label className="text-sm font-medium">Content</label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingBlockIndex(blockIndex)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Content
+              </Button>
+            </div>
           </div>
         </div>
       ))}
@@ -76,6 +93,14 @@ export function EmploymentForm() {
         <Plus className="h-4 w-4 mr-2" />
         Add Experience
       </Button>
+
+      <MarkdownModal
+        isOpen={editingBlockIndex !== null}
+        onClose={() => setEditingBlockIndex(null)}
+        markdown={editingBlockIndex !== null ? getValues(`employmentHistory.blocks.${editingBlockIndex}.content`) || "" : ""}
+        onChange={handleContentChange}
+        title="Edit Experience Content"
+      />
     </div>
   );
 }
