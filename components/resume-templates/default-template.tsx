@@ -1,7 +1,7 @@
 import { ResumeData } from "@/types/resume";
 import { ResumeTemplate, getOrderedSections } from './base-template';
-import Markdown from "react-markdown";
 import "./default-template.css"
+import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender";
 
 export class DefaultTemplate implements ResumeTemplate {
   name = 'Default';
@@ -37,9 +37,9 @@ export class DefaultTemplate implements ResumeTemplate {
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
-                <Markdown>
-                  {block.content}
-                </Markdown>
+                <MarkdownRender
+                  markdown={block.content}
+                />
               </div>
               ))}
           </div>
@@ -55,9 +55,9 @@ export class DefaultTemplate implements ResumeTemplate {
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
-                <Markdown>
-                  {block.content}
-                </Markdown>
+                <MarkdownRender
+                  markdown={block.content}
+                />
               </div>
             ))}
           </div>
