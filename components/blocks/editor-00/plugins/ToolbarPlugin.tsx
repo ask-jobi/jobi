@@ -189,7 +189,7 @@ const ToolbarPlugin: FC = () => {
   };
 
   return (
-    <div className="flex items-center px-2 py-1.5 border-b border-gray-200 bg-white">
+    <div className="sticky top-0 z-10 flex items-center px-2 py-1.5 border-b border-gray-200 bg-white">
       <Select value={blockType} onValueChange={handleBlockTypeChange}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="" />

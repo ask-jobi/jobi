@@ -29,7 +29,7 @@ export function Editor({
   onChange?: (md: string) => void
 }) {
   return (
-    <div className="bg-background overflow-hidden rounded-lg border shadow">
+    <div className="h-full bg-background overflow-y-scroll rounded-lg border shadow">
       <LexicalComposer
         initialConfig={{
           ...editorConfig,

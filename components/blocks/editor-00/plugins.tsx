@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
-import {ELEMENT_TRANSFORMERS, TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS, TRANSFORMERS} from "@lexical/markdown"
+import {ELEMENT_TRANSFORMERS, TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS} from "@lexical/markdown"
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable"
 import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
@@ -19,15 +19,13 @@ export function Plugins() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <ToolbarPlugin/>
-      <div className="relative">
+      <div className="relative h-full">
         <RichTextPlugin
           contentEditable={
-            <div className="">
-              <div className="" ref={onRef}>
-                <ContentEditable placeholder={"Start typing ..."} />
-              </div>
+            <div className="h-full" ref={onRef}>
+              <ContentEditable placeholder={"Start typing ..."} />
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}
