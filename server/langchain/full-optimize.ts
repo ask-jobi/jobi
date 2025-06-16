@@ -1,60 +1,38 @@
-import { AISuggestion, AISuggestionQueue, ResumeData } from "@/types/resume";
+import { AISuggestionQueue, ResumeData } from "@/types/resume";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { AI_OPTIMIZE_PROMPT } from "./prompts";
+import { FULL_RESUME_OPTIMIZE_PROMPT } from "./prompts";
 import z from "zod";
 
-const optimizeSuggestionSchema = z.object({
-  shouldOptimize: z.boolean(),
-  suggestionType: z.string().optional(),
-  reason: z.string().optional(),
-  optimizedContent: z.string().optional(),
-  highlight: z.array(z.string()).optional()
+const fullOptimizeSuggestionSchema = z.object({
+  suggestions: z.array(z.object({
+    section: z.enum(["education", "employment", "skills"]),
+    blockIndex: z.number(),
+    suggestionType: z.string(),
+    reason: z.string(),
+    optimizedContent: z.string().nullable(),
+    highlight: z.array(z.string())
+  }))
 });
-
-// 模拟 AI 分析（LangChain/LLM Prompt 封装后调用）
-async function analyzeBlock(
-  section: string,
-  blockIndex: number,
-  content: string
-): Promise<AISuggestion | null> {
-  // 调用 LLM，生成分析结果
-  // 若无需优化，返回 null；若需要，返回建议结构
-  const aiResult = await callLangChainLLM(section, content);
-  if (!aiResult?.shouldOptimize) return null;
-  return {
-    section: section as "education" | "employment" | "skill",
-    blockIndex,
-    suggestionType: aiResult.suggestionType || "",
-    reason: aiResult?.reason || "",
-    originalContent: content,
-    optimizedContent: aiResult?.optimizedContent || "",
-    highlight: aiResult?.highlight,
-  };
-}
 
 const promptTemplate = new PromptTemplate({
-  template: AI_OPTIMIZE_PROMPT,
-  inputVariables: ["content", "section"],
+  template: FULL_RESUME_OPTIMIZE_PROMPT,
+  inputVariables: ["content"],
 });
-// TODO: 修改控制返回结构化的代码，使用 zod 解析校验
-async function callLangChainLLM(section: string, content: string) {
-  const prompt = await promptTemplate.format({ content, section });
+
+async function callLangChainLLM(content: string) {
+  const prompt = await promptTemplate.format({ content });
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash-lite",
     temperature: 0.3,
+    json: true,
+    maxRetries: 3
   });
-  model.withStructuredOutput(optimizeSuggestionSchema);
+  model.withStructuredOutput(fullOptimizeSuggestionSchema);
   const response = await model.invoke(prompt);
   let parsed;
   try {
-    // 确保返回的是有效的 JSON 字符串
-    const jsonStr = response.content.toString().trim()
-      .replace(/^```json\n/, '')
-      .replace(/```$/, '')
-      .trim();
-    const jsonObj = JSON.parse(jsonStr);
-    parsed = optimizeSuggestionSchema.parse(jsonObj);
+    parsed = fullOptimizeSuggestionSchema.parse(JSON.parse(response.content.toString()));
   } catch (err) {
     console.error("AI 输出解析错误:", err);
     throw new Error("AI 输出格式异常：" + response.content);
@@ -65,27 +43,37 @@ async function callLangChainLLM(section: string, content: string) {
 export async function generateAISuggestionQueue(
   resume: ResumeData
 ): Promise<AISuggestionQueue> {
-  const tasks: Promise<AISuggestion | null>[] = [];
+  // 构建完整的简历内容字符串
+  const content = {
+    education: resume.educationHistory.blocks.map((block, idx) => ({
+      section: "education",
+      blockIndex: idx,
+      content: block.content
+    })),
+    employment: resume.employmentHistory.blocks.map((block, idx) => ({
+      section: "employment",
+      blockIndex: idx,
+      content: block.content
+    })),
+    skills: resume.skills.blocks.flatMap((block, idx) =>
+      block.content.map((skillContent, subIdx) => ({
+        section: "skills",
+        blockIndex: idx,
+        content: skillContent
+      }))
+    )
+  };
 
-  // 教育
-  resume.educationHistory.blocks.forEach((block, idx) => {
-    tasks.push(analyzeBlock("education", idx, block.content));
-  });
-  // 工作
-  resume.employmentHistory.blocks.forEach((block, idx) => {
-    tasks.push(analyzeBlock("employment", idx, block.content));
-  });
-  // 技能（每组技能也可以分块分析）
-  resume.skills.blocks.forEach((block, idx) => {
-    block.content.forEach((skillContent, subIdx) => {
-      tasks.push(analyzeBlock("skill", idx, skillContent));
-    });
-  });
+  const result = await callLangChainLLM(JSON.stringify(content, null, 2));
 
-  // 并行处理，过滤 null（无建议）
-  const results = (await Promise.all(tasks)).filter(
-    Boolean
-  ) as AISuggestionQueue;
-  return results;
+  return result.suggestions.map(suggestion => ({
+    section: suggestion.section,
+    blockIndex: suggestion.blockIndex,
+    suggestionType: suggestion.suggestionType,
+    reason: suggestion.reason,
+    originalContent: content[suggestion.section][suggestion.blockIndex].content,
+    optimizedContent: suggestion.optimizedContent,
+    highlight: suggestion.highlight
+  }));
 }
 

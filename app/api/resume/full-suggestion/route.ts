@@ -21,10 +21,10 @@ export async function GET(request: NextRequest) {
     }
 
     const resumeData = jobApplication.resumes.resume_json as ResumeData;
-    
+
     const suggestions = await generateAISuggestionQueue(resumeData);
 
-    return Response.json({ suggestions });
+    return Response.json(suggestions);
   } catch (error: any) {
     console.error('生成简历优化建议失败:', error);
     return Response.json({ error: error.message }, { status: 500 });

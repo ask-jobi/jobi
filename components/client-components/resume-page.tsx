@@ -28,14 +28,16 @@ import { CSS } from "@dnd-kit/utilities";
 import { Download, GripVertical } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import { PersonalInfoForm } from "./forms/personal-info-form";
 import { EducationForm } from "./forms/education-form";
 import { EmploymentForm } from "./forms/employment-form";
 import { SkillsForm } from "./forms/skills-form";
-import { ResumeData } from "@/types/resume";
+import {AISuggestionQueue, ResumeData} from "@/types/resume";
 import { useResume } from "./resume-context";
 import ResumeEditor from "./resume-editor";
+import { Separator } from "../ui/separator";
 
 interface SortableSectionItemProps {
   id: string;
@@ -178,25 +180,47 @@ export default function ResumePage() {
     }
   };
 
+  const handleExport = () => {
+    const currentResumeData = getValues();
+    sessionStorage.setItem('printResumeData', JSON.stringify(currentResumeData));
+    router.push(`/resume-print`);
+  }
+
+  const handleFullResumeOptimizing = async () => {
+    try {
+      const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`)
+      const suggestions = (await result.json()) as AISuggestionQueue
+      console.log(suggestions)
+    } catch (e: any) {
+      toast.error(e.toString())
+    }
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="flex h-[calc(100vh-4rem)]">
         <div className="left w-1/5 p-6 border-r">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-2">
             <Button
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
-              onClick={() => {
-                const currentResumeData = getValues();
-                sessionStorage.setItem('printResumeData', JSON.stringify(currentResumeData));
-                router.push(`/resume-print`);
-              }}
+              onClick={handleExport}
             >
               <Download className="h-4 w-4" />
               Export
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={handleFullResumeOptimizing}
+            >
+              <Image src="/gemini-color.svg" alt="Gemini" width={16} height={16} />
+              AI Optimize
+            </Button>
           </div>
+          <Separator className="my-4"/>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
