@@ -2,10 +2,23 @@
     margin: 0;
 }
 
-.pdf ul, ol {
+.pdf ul {
     list-style-type: disc;
+}
+
+.pdf ol {
+    list-style-type: decimal;
 }
 
 .pdf li {
     margin: 0 16px;
 }
+
+/*.pdf blockquote {*/
+/*    !*mt-6 border-l-2 pl-6 italic text-left*!*/
+/*    margin-top: 8px;*/
+/*    border-left: 2px;*/
+/*    padding-left: 8px;*/
+/*    font-style: italic;*/
+/*    text-align: left;*/
+/*}*/

@@ -50,11 +50,12 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
     "react-markdown": "^10.1.0",
-    "remark-flexible-markers": "^1.3.0",
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
+    "unist-builder": "^4.0.0",
+    "unist-util-visit": "^5.0.0",
     "use-debounce": "^10.0.4",
     "zod": "^3.25.23"
   },
@@ -62,14 +63,17 @@
     "@eslint/eslintrc": "^3",
     "@next/eslint-plugin-next": "^15.3.2",
     "@tailwindcss/postcss": "^4",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/unist": "^3.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vfile": "^6.0.3"
   }
 }

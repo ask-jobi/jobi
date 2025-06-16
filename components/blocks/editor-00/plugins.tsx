@@ -1,12 +1,36 @@
-import { useState } from "react"
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
-import {ELEMENT_TRANSFORMERS, TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS} from "@lexical/markdown"
-import { ContentEditable } from "@/components/editor/editor-ui/content-editable"
+import {useState} from "react"
+import {LexicalErrorBoundary} from "@lexical/react/LexicalErrorBoundary"
+import {RichTextPlugin} from "@lexical/react/LexicalRichTextPlugin"
+import {
+  BOLD_ITALIC_STAR,
+  BOLD_ITALIC_UNDERSCORE,
+  BOLD_STAR,
+  BOLD_UNDERSCORE,
+  HEADING, INLINE_CODE, ITALIC_STAR,
+  ITALIC_UNDERSCORE, LINK, ORDERED_LIST,
+  STRIKETHROUGH,
+  UNORDERED_LIST
+} from "@lexical/markdown"
+import {ContentEditable} from "@/components/editor/editor-ui/content-editable"
 import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
 import ToolbarPlugin from "@/components/blocks/editor-00/plugins/ToolbarPlugin";
+
+export const SUPPORT_TRANSFORMER = [
+  HEADING,
+  UNORDERED_LIST,
+  ORDERED_LIST,
+  INLINE_CODE,
+  BOLD_ITALIC_STAR,
+  BOLD_ITALIC_UNDERSCORE,
+  BOLD_STAR,
+  BOLD_UNDERSCORE,
+  ITALIC_STAR,
+  ITALIC_UNDERSCORE,
+  STRIKETHROUGH,
+  LINK
+]
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -25,16 +49,13 @@ export function Plugins() {
         <RichTextPlugin
           contentEditable={
             <div className="h-full" ref={onRef}>
-              <ContentEditable placeholder={"Start typing ..."} />
+              <ContentEditable placeholder={"Start typing ..."}/>
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
         <MarkdownShortcutPlugin
-          transformers={[
-            ...ELEMENT_TRANSFORMERS,
-            ...TEXT_FORMAT_TRANSFORMERS,
-            ...TEXT_MATCH_TRANSFORMERS]}
+          transformers={SUPPORT_TRANSFORMER}
         />
         <TabIndentationPlugin/>
         <ListPlugin/>

@@ -32,7 +32,6 @@ import {
   Heading4Icon,
   Heading5Icon,
   Heading6Icon,
-  HighlighterIcon,
   ItalicIcon,
   ListIcon,
   ListOrderedIcon,
@@ -204,8 +203,6 @@ const ToolbarPlugin: FC = () => {
           <SelectItem value="h5" icon={Heading5Icon} >Heading 5</SelectItem>
           <SelectItem value="h6" icon={Heading6Icon} >Heading 6</SelectItem>
           <SelectSeparator />
-          <SelectItem value="quote" icon={QuoteIcon} >Quote</SelectItem>
-          <SelectSeparator />
           <SelectItem value="bullet" icon={ListIcon} >Bullet List</SelectItem>
           <SelectItem value="number" icon={ListOrderedIcon} >Ordered List</SelectItem>
         </SelectContent>
@@ -247,13 +244,13 @@ const ToolbarPlugin: FC = () => {
         >
           <CodeIcon/>
         </Toggle>
-        <Toggle
-          aria-label="Hilight"
-          pressed={isHighlighter}
-          onPressedChange={() => formatText('highlight')}
-        >
-          <HighlighterIcon/>
-        </Toggle>
+        {/*<Toggle*/}
+        {/*  aria-label="Hilight"*/}
+        {/*  pressed={isHighlighter}*/}
+        {/*  onPressedChange={() => formatText('highlight')}*/}
+        {/*>*/}
+        {/*  <HighlighterIcon/>*/}
+        {/*</Toggle>*/}
         {/*<Toggle*/}
         {/*  aria-label="上标"*/}
         {/*  pressed={isSuperscript}*/}

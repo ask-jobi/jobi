@@ -26,7 +26,7 @@ export const editorTheme: EditorThemeClasses = {
     nested: {
       listitem: "list-none before:hidden after:hidden",
     },
-    ol: "my-6 ml-6 list-decimal [&>li]:mt-2",
+    ol: "m-0 p-0 list-decimal [&>li]:mt-2",
     olDepth: [
       "list-outside !list-decimal",
       "list-outside !list-[upper-roman]",
