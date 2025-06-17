@@ -38,6 +38,7 @@ import {AISuggestionQueue, ResumeData} from "@/types/resume";
 import { useResume } from "./resume-context";
 import ResumeEditor from "./resume-editor";
 import { Separator } from "../ui/separator";
+import {TourAlertDialog, TourProvider, TourStep, useTour} from "@/components/tour";
 
 interface SortableSectionItemProps {
   id: string;
@@ -86,6 +87,8 @@ export default function ResumePage() {
   });
   const { watch, getValues, setValue } = methods;
   const router = useRouter();
+  const [tourOpen, setTourOpen] = useState<boolean>(false)
+  const { setSteps } = useTour();
 
   const [sections, setSections] = useState(() => {
     const educationOrder = watch("educationHistory.order") ?? 0;
@@ -188,13 +191,30 @@ export default function ResumePage() {
 
   const handleFullResumeOptimizing = async () => {
     try {
-      const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`)
-      const suggestions = (await result.json()) as AISuggestionQueue
-      console.log(suggestions)
+      // const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`)
+      // const suggestions = (await result.json()) as AISuggestionQueue
+      // console.log(suggestions)
+      setSteps(steps)
+      setTourOpen(true)
     } catch (e: any) {
       toast.error(e.toString())
     }
   }
+
+  const steps: TourStep[] = [
+    {
+      content: <div>Team Switcher</div>,
+      selectorId: "education-0",
+      onClickWithinArea: () => {
+        console.log("education-0")
+      },
+    },
+    {
+      content: <div>Writing Area</div>,
+      selectorId: "employment-0",
+      onClickWithinArea: () => { },
+    }
+  ];
 
   return (
     <FormProvider {...methods}>
@@ -261,6 +281,10 @@ export default function ResumePage() {
         </div>
 
         <div className="w-full p-6 overflow-y-scroll">
+          <TourAlertDialog
+            isOpen={tourOpen}
+            setIsOpen={setTourOpen}
+          />
           <ResumeEditor />
         </div>
 

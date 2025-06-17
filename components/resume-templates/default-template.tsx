@@ -31,7 +31,7 @@ export class DefaultTemplate implements ResumeTemplate {
           <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.educationHistory.title}</h2>
             {data.educationHistory.blocks.map((block, index) => (
-              <div key={index} className="mb-4">
+              <div id={`${sectionId}-${index}`} key={index} className="mb-4">
                 <div className="flex justify-between mb-0.5">
                   <h3 className="text-base font-bold">{block.school}</h3>
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
@@ -49,7 +49,7 @@ export class DefaultTemplate implements ResumeTemplate {
           <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.employmentHistory.title}</h2>
             {data.employmentHistory.blocks.map((block, index) => (
-              <div key={index} className="mb-4">
+              <div id={`${sectionId}-${index}`} key={index} className="mb-4">
                 <div className="flex justify-between mb-0.5">
                   <h3 className="text-base font-bold">{block.company}</h3>
                   <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
@@ -67,7 +67,7 @@ export class DefaultTemplate implements ResumeTemplate {
           <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
             <h2 className="text-lg font-bold mb-2">{data.skills.title}</h2>
             {data.skills.blocks.map((block, index) => (
-              <div key={index} className="mb-2">
+              <div id={`${sectionId}-${index}`} key={index} className="mb-2">
                 <h3 className="text-sm font-bold mb-1">{block.group}</h3>
                 <div className="flex flex-wrap">
                   {block.content.map((item, itemIndex) => (
