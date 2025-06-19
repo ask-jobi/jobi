@@ -1,3 +1,5 @@
+'use client'
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +9,14 @@ import {
   Sparkles, 
   Zap, 
   Shield, 
-  ArrowRight,
+  ArrowRight
 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function LandingPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
@@ -23,14 +29,15 @@ export default function LandingPage() {
             <span className="text-xl font-bold">Jobi</span>
           </div>
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <Link href="/pricing">
-              <Button variant="ghost">定价</Button>
+              <Button variant="ghost">{t('pricing')}</Button>
             </Link>
             <Link href="/auth/login">
-              <Button variant="ghost">登录</Button>
+              <Button variant="ghost">{t('login')}</Button>
             </Link>
             <Link href="/auth/sign-up">
-              <Button>免费注册</Button>
+              <Button>{t('signUp')}</Button>
             </Link>
           </div>
         </div>
@@ -41,27 +48,26 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <Badge variant="secondary" className="mb-6">
             <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
-            AI 驱动的简历优化
+            {t('aiDriven')}
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            打造完美简历
+            {t('heroTitle')}
             <br />
-            <span className="text-primary">获得理想工作</span>
+            <span className="text-primary">{t('heroSubtitle')}</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            使用先进的 AI 技术，智能分析您的简历，提供个性化建议，
-            让您的简历在众多求职者中脱颖而出。
+            {t('heroDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/sign-up">
               <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-                开始免费试用
+                {t('startFreeTrial')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="#features">
               <Button variant="outline" size="lg" className="text-lg px-8">
-                了解更多
+                {t('learnMore')}
               </Button>
             </Link>
           </div>
@@ -72,10 +78,10 @@ export default function LandingPage() {
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            为什么选择 Jobi？
+            {t('whyChooseJobi')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            我们提供最先进的 AI 技术，帮助您创建专业、有竞争力的简历
+            {t('featuresDescription')}
           </p>
         </div>
         
@@ -85,9 +91,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-blue-600" />
               </div>
-              <CardTitle>AI 智能分析</CardTitle>
+              <CardTitle>{t('aiAnalysis')}</CardTitle>
               <CardDescription>
-                先进的 AI 算法深度分析您的简历，识别改进空间并提供具体建议
+                {t('aiAnalysisDesc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -97,9 +103,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-purple-600" />
               </div>
-              <CardTitle>个性化优化</CardTitle>
+              <CardTitle>{t('personalizedOptimization')}</CardTitle>
               <CardDescription>
-                根据目标职位和行业特点，提供量身定制的简历优化建议
+                {t('personalizedOptimizationDesc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -109,9 +115,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-green-600" />
               </div>
-              <CardTitle>隐私保护</CardTitle>
+              <CardTitle>{t('privacyProtection')}</CardTitle>
               <CardDescription>
-                您的个人信息和简历内容完全加密，确保数据安全
+                {t('privacyProtectionDesc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -124,19 +130,19 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-purple-700 mb-2">10,000+</div>
-              <div className="text-muted-foreground">成功案例</div>
+              <div className="text-muted-foreground">{t('successCases')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-600 mb-2">95%</div>
-              <div className="text-muted-foreground">面试通过率</div>
+              <div className="text-muted-foreground">{t('interviewRate')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-500 mb-2">50+</div>
-              <div className="text-muted-foreground">行业模板</div>
+              <div className="text-muted-foreground">{t('templates')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-              <div className="text-muted-foreground">AI 支持</div>
+              <div className="text-muted-foreground">{t('aiSupport')}</div>
             </div>
           </div>
         </div>
@@ -146,14 +152,14 @@ export default function LandingPage() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            准备好提升您的职业发展了吗？
+            {t('readyToStart')}
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            加入数千名成功求职者的行列，让 AI 帮助您打造完美简历
+            {t('ctaDescription')}
           </p>
           <Link href="/auth/sign-up">
             <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-              立即开始
+              {t('getStarted')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
@@ -171,7 +177,7 @@ export default function LandingPage() {
               <span className="font-bold">Jobi</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2025 Jobi. 保留所有权利。
+              {t('copyright')}
             </div>
           </div>
         </div>
