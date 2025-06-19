@@ -40,12 +40,12 @@ async function Layout(props: {
       email: "",
       phone: ""
     },
-    educationHistory: {
+    education: {
       title: "Education History",
       order: 0,
       blocks: []
     },
-    employmentHistory: {
+    employment: {
       title: "Employment History",
       order: 1,
       blocks: []

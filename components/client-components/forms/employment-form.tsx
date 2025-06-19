@@ -12,7 +12,7 @@ export function EmploymentForm() {
   const { control, register, setValue, getValues } = useFormContext<ResumeData>();
   const { fields, append } = useFieldArray({
     control,
-    name: "employmentHistory.blocks",
+    name: "employment.blocks",
   });
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
 
@@ -28,7 +28,7 @@ export function EmploymentForm() {
 
   const handleContentChange = (md: string) => {
     if (editingBlockIndex !== null) {
-      setValue(`employmentHistory.blocks.${editingBlockIndex}.content`, md, {
+      setValue(`employment.blocks.${editingBlockIndex}.content`, md, {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true
@@ -44,13 +44,13 @@ export function EmploymentForm() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Company</label>
               <Input
-                {...register(`employmentHistory.blocks.${blockIndex}.company`)}
+                {...register(`employment.blocks.${blockIndex}.company`)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Job Title</label>
               <Input
-                {...register(`employmentHistory.blocks.${blockIndex}.jobTitle`)}
+                {...register(`employment.blocks.${blockIndex}.jobTitle`)}
               />
             </div>
           </div>
@@ -58,13 +58,13 @@ export function EmploymentForm() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Start Date</label>
               <Input
-                {...register(`employmentHistory.blocks.${blockIndex}.start`)}
+                {...register(`employment.blocks.${blockIndex}.start`)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">End Date</label>
               <Input
-                {...register(`employmentHistory.blocks.${blockIndex}.end`)}
+                {...register(`employment.blocks.${blockIndex}.end`)}
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ export function EmploymentForm() {
       <MarkdownModal
         isOpen={editingBlockIndex !== null}
         onClose={() => setEditingBlockIndex(null)}
-        markdown={editingBlockIndex !== null ? getValues(`employmentHistory.blocks.${editingBlockIndex}.content`) || "" : ""}
+        markdown={editingBlockIndex !== null ? getValues(`employment.blocks.${editingBlockIndex}.content`) || "" : ""}
         onChange={handleContentChange}
         title="Edit Experience Content"
       />

@@ -14,7 +14,7 @@ const resumeSchema = z.object({
     email: z.string().describe("Email address of the candidate").default(""),
     phone: z.string().describe("Phone number of the candidate").default(""),
   }),
-  educationHistory: z.object({
+  education: z.object({
     title: z.string().describe("Title of the education section").default("Education"),
     order: z.number().describe("Order of the education section").default(0),
     blocks: z.array(
@@ -27,7 +27,7 @@ const resumeSchema = z.object({
       })
     ),
   }),
-  employmentHistory: z.object({
+  employment: z.object({
     title: z.string().describe("Title of the employment section").default("Employments"),
     order: z.number().describe("Order of the employment section").default(1),
     blocks: z.array(
@@ -96,8 +96,8 @@ export class ResumeParser {
     // 转换为 ResumeData 类型
     const resumeData: ResumeData = {
       personalInfo: validatedData.personalInfo,
-      educationHistory: validatedData.educationHistory,
-      employmentHistory: validatedData.employmentHistory,
+      education: validatedData.education,
+      employment: validatedData.employment,
       skills: validatedData.skills,
     };
 

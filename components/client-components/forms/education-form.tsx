@@ -12,7 +12,7 @@ export function EducationForm() {
   const { control, register, setValue, getValues } = useFormContext<ResumeData>();
   const { fields, append } = useFieldArray({
     control,
-    name: "educationHistory.blocks",
+    name: "education.blocks",
   });
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
 
@@ -28,7 +28,7 @@ export function EducationForm() {
 
   const handleContentChange = (md: string) => {
     if (editingBlockIndex !== null) {
-      setValue(`educationHistory.blocks.${editingBlockIndex}.content`, md, {
+      setValue(`education.blocks.${editingBlockIndex}.content`, md, {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true
@@ -44,13 +44,13 @@ export function EducationForm() {
             <div className="space-y-2">
               <label className="text-sm font-medium">School</label>
               <Input
-                {...register(`educationHistory.blocks.${blockIndex}.school`)}
+                {...register(`education.blocks.${blockIndex}.school`)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Degree</label>
               <Input
-                {...register(`educationHistory.blocks.${blockIndex}.degree`)}
+                {...register(`education.blocks.${blockIndex}.degree`)}
               />
             </div>
           </div>
@@ -58,13 +58,13 @@ export function EducationForm() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Start Date</label>
               <Input
-                {...register(`educationHistory.blocks.${blockIndex}.start`)}
+                {...register(`education.blocks.${blockIndex}.start`)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">End Date</label>
               <Input
-                {...register(`educationHistory.blocks.${blockIndex}.end`)}
+                {...register(`education.blocks.${blockIndex}.end`)}
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ export function EducationForm() {
       <MarkdownModal
         isOpen={editingBlockIndex !== null}
         onClose={() => setEditingBlockIndex(null)}
-        markdown={editingBlockIndex !== null ? getValues(`educationHistory.blocks.${editingBlockIndex}.content`) || "" : ""}
+        markdown={editingBlockIndex !== null ? getValues(`education.blocks.${editingBlockIndex}.content`) || "" : ""}
         onChange={handleContentChange}
         title="Edit Education Content"
       />

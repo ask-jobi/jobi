@@ -58,8 +58,8 @@ export interface SkillBlock {
 
 export interface ResumeData {
   personalInfo: PersonalInfo
-  educationHistory: EducationHistory
-  employmentHistory: EmploymentHistory
+  education: EducationHistory
+  employment: EmploymentHistory
   skills: Skill
 }
 

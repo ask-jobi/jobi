@@ -10,8 +10,8 @@ export interface ResumeTemplate {
 
 export const getOrderedSections = (data: ResumeData) => {
   return [
-    { id: "education", order: data.educationHistory.order },
-    { id: "employment", order: data.employmentHistory.order },
+    { id: "education", order: data.education.order },
+    { id: "employment", order: data.employment.order },
     { id: "skills", order: data.skills.order }
   ].sort((a, b) => a.order - b.order);
 };

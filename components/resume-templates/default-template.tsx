@@ -29,8 +29,8 @@ export class DefaultTemplate implements ResumeTemplate {
       case "education":
         return (
           <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
-            <h2 className="text-lg font-bold mb-2">{data.educationHistory.title}</h2>
-            {data.educationHistory.blocks.map((block, index) => (
+            <h2 className="text-lg font-bold mb-2">{data.education.title}</h2>
+            {data.education.blocks.map((block, index) => (
               <div id={`${sectionId}-${index}`} key={index} className="mb-4">
                 <div className="flex justify-between mb-0.5">
                   <h3 className="text-base font-bold">{block.school}</h3>
@@ -47,8 +47,8 @@ export class DefaultTemplate implements ResumeTemplate {
       case "employment":
         return (
           <div id={`section-${sectionId}`} key={sectionId} className="mb-5 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleClick}>
-            <h2 className="text-lg font-bold mb-2">{data.employmentHistory.title}</h2>
-            {data.employmentHistory.blocks.map((block, index) => (
+            <h2 className="text-lg font-bold mb-2">{data.employment.title}</h2>
+            {data.employment.blocks.map((block, index) => (
               <div id={`${sectionId}-${index}`} key={index} className="mb-4">
                 <div className="flex justify-between mb-0.5">
                   <h3 className="text-base font-bold">{block.company}</h3>

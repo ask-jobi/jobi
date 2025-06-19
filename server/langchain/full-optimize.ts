@@ -45,12 +45,12 @@ export async function generateAISuggestionQueue(
 ): Promise<AISuggestionQueue> {
   // 构建完整的简历内容字符串
   const content = {
-    education: resume.educationHistory.blocks.map((block, idx) => ({
+    education: resume.education.blocks.map((block, idx) => ({
       section: "education",
       blockIndex: idx,
       content: block.content
     })),
-    employment: resume.employmentHistory.blocks.map((block, idx) => ({
+    employment: resume.employment.blocks.map((block, idx) => ({
       section: "employment",
       blockIndex: idx,
       content: block.content

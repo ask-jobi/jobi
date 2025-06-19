@@ -34,11 +34,12 @@ import { PersonalInfoForm } from "./forms/personal-info-form";
 import { EducationForm } from "./forms/education-form";
 import { EmploymentForm } from "./forms/employment-form";
 import { SkillsForm } from "./forms/skills-form";
-import {AISuggestionQueue, ResumeData} from "@/types/resume";
+import {AISuggestion, AISuggestionQueue, ResumeData} from "@/types/resume";
 import { useResume } from "./resume-context";
 import ResumeEditor from "./resume-editor";
 import { Separator } from "../ui/separator";
-import {TourAlertDialog, TourProvider, TourStep, useTour} from "@/components/tour";
+import { TourStep, useTour } from "@/components/tour";
+import SuggestionPatch from "@/components/client-components/suggestion-patch";
 
 interface SortableSectionItemProps {
   id: string;
@@ -49,7 +50,6 @@ interface SortableSectionItemProps {
 
 function SortableSectionItem({ id, title, onClick, isSelected }: SortableSectionItemProps) {
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform,
@@ -87,18 +87,17 @@ export default function ResumePage() {
   });
   const { watch, getValues, setValue } = methods;
   const router = useRouter();
-  const [tourOpen, setTourOpen] = useState<boolean>(false)
-  const { setSteps } = useTour();
+  const { setSteps, startTour } = useTour();
 
   const [sections, setSections] = useState(() => {
-    const educationOrder = watch("educationHistory.order") ?? 0;
-    const employmentOrder = watch("employmentHistory.order") ?? 1;
+    const educationOrder = watch("education.order") ?? 0;
+    const employmentOrder = watch("employment.order") ?? 1;
     const skillsOrder = watch("skills.order") ?? 2;
 
     const initialSections = [
       { id: "personalInfo", title: "Personal Info", order: -1 },
-      { id: "education", title: watch("educationHistory.title"), order: educationOrder },
-      { id: "employment", title: watch("employmentHistory.title"), order: employmentOrder },
+      { id: "education", title: watch("education.title"), order: educationOrder },
+      { id: "employment", title: watch("employment.title"), order: employmentOrder },
       { id: "skills", title: watch("skills.title"), order: skillsOrder },
     ];
     return initialSections.sort((a, b) => a.order - b.order);
@@ -155,9 +154,9 @@ export default function ResumePage() {
 
       newSections.forEach((section, index) => {
         if (section.id === "education") {
-          setValue("educationHistory.order", index);
+          setValue("education.order", index);
         } else if (section.id === "employment") {
-          setValue("employmentHistory.order", index);
+          setValue("employment.order", index);
         } else if (section.id === "skills") {
           setValue("skills.order", index);
         }
@@ -195,26 +194,102 @@ export default function ResumePage() {
       // const suggestions = (await result.json()) as AISuggestionQueue
       // console.log(suggestions)
       setSteps(steps)
-      setTourOpen(true)
+      startTour()
     } catch (e: any) {
       toast.error(e.toString())
     }
   }
 
+  const testSection0 = {
+    "section": "education",
+    "blockIndex": 0,
+    "suggestionType": "其他",
+    "reason": "该部分内容杂乱无章，建议删除。",
+    "originalContent": "## asdasdasd\n\n123\n\nsadjalskdjalksdjkaslda\n\n**asda**\n\n**该星号不会被识别而是直接显**这是因为它没有被识别为强调符号。\n\n*~~lksakjdasd~~*\n\nasdaldjlkasjdlkasd\n\n1. asdasdasdasdsd\n2. asdaskdaskldj\n\n`asdalksdasd`\n\n- > askdhakjsdhakjsdad\n- > asdasddsada\n\n> asdasdkasnhdkjashdkasd",
+    "optimizedContent": null,
+    "highlight": []
+  } as AISuggestion
+
+  const testSection1 = {
+    "section": "employment",
+    "blockIndex": 0,
+    "suggestionType": "其他",
+    "reason": "内容过于简单，没有有效信息。",
+    "originalContent": "asdaskldja\n\ncccc",
+    "optimizedContent": null,
+    "highlight": []
+  } as AISuggestion
+
   const steps: TourStep[] = [
     {
-      content: <div>Team Switcher</div>,
+      content: () => <SuggestionPatch section={testSection0} getValues={getValues} setValue={setValue}/>,
       selectorId: "education-0",
-      onClickWithinArea: () => {
-        console.log("education-0")
-      },
     },
     {
-      content: <div>Writing Area</div>,
+      content: () => <SuggestionPatch section={testSection1} getValues={getValues} setValue={setValue}/>,
       selectorId: "employment-0",
-      onClickWithinArea: () => { },
     }
   ];
+
+  // [
+  //   {
+  //     "section": "education",
+  //     "blockIndex": 0,
+  //     "suggestionType": "其他",
+  //     "reason": "该部分内容杂乱无章，建议删除。",
+  //     "originalContent": "## asdasdasd\n\n123\n\nsadjalskdjalksdjkaslda\n\n**asda**\n\n**该星号不会被识别而是直接显**这是因为它没有被识别为强调符号。\n\n*~~lksakjdasd~~*\n\nasdaldjlkasjdlkasd\n\n1. asdasdasdasdsd\n2. asdaskdaskldj\n\n`asdalksdasd`\n\n- > askdhakjsdhakjsdad\n- > asdasddsada\n\n> asdasdkasnhdkjashdkasd",
+  //     "optimizedContent": null,
+  //     "highlight": []
+  //   },
+  //   {
+  //     "section": "employment",
+  //     "blockIndex": 0,
+  //     "suggestionType": "其他",
+  //     "reason": "内容过于简单，没有有效信息。",
+  //     "originalContent": "asdaskldja\n\ncccc",
+  //     "optimizedContent": null,
+  //     "highlight": []
+  //   },
+  //   {
+  //     "section": "skills",
+  //     "blockIndex": 0,
+  //     "suggestionType": "去除重复",
+  //     "reason": "技能罗列过于冗余，建议精简。",
+  //     "originalContent": "Distributed System",
+  //     "optimizedContent": "Distributed Systems, Test-Driven Development, Domain-Driven Design, Reactive Programming, Hexagonal Architecture, MVC, Agile, CI/CD, Clean Code",
+  //     "highlight": [
+  //       "Distributed Systems",
+  //       "Test-Driven Development",
+  //       "Domain-Driven Design",
+  //       "Reactive Programming",
+  //       "Hexagonal Architecture",
+  //       "MVC",
+  //       "Agile",
+  //       "CI/CD",
+  //       "Clean Code"
+  //     ]
+  //   },
+  //   {
+  //     "section": "skills",
+  //     "blockIndex": 2,
+  //     "suggestionType": "去除重复",
+  //     "reason": "技能罗列过于冗余，建议精简。",
+  //     "originalContent": "Domain-driven design",
+  //     "optimizedContent": "SpringBoot, SpringWebFlux, Redis, JUnit5, Mockito, MockK, EMQX, MySQL, PostgreSQL, PactFlow",
+  //     "highlight": [
+  //       "SpringBoot",
+  //       "SpringWebFlux",
+  //       "Redis",
+  //       "JUnit5",
+  //       "Mockito",
+  //       "MockK",
+  //       "EMQX",
+  //       "MySQL",
+  //       "PostgreSQL",
+  //       "PactFlow"
+  //     ]
+  //   }
+  // ]
 
   return (
     <FormProvider {...methods}>
@@ -281,10 +356,6 @@ export default function ResumePage() {
         </div>
 
         <div className="w-full p-6 overflow-y-scroll">
-          <TourAlertDialog
-            isOpen={tourOpen}
-            setIsOpen={setTourOpen}
-          />
           <ResumeEditor />
         </div>
 

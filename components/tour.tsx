@@ -10,19 +10,8 @@ import {
 	useState,
 } from "react";
 
-import {
-	AlertDialog,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-
-import { Torus } from "lucide-react";
-
 export interface TourStep {
-	content: React.ReactNode;
+	content: (context: TourContextType) => React.ReactNode;
 	selectorId: string;
 	width?: number;
 	height?: number;
@@ -39,6 +28,9 @@ interface TourContextType {
 	isActive: boolean;
 	startTour: () => void;
 	setSteps: (steps: TourStep[]) => void;
+	gotoStep: (index: number) => void;
+	removeStep: (selectorId?: string) => void;
+	insertStep: (step: TourStep, index: number) => void;
 	steps: TourStep[];
 	isTourCompleted: boolean;
 	setIsTourCompleted: (completed: boolean) => void;
@@ -53,6 +45,7 @@ interface TourProviderProps {
 
 const TourContext = createContext<TourContextType | null>(null);
 
+const MASK_PADDING = 4;
 const PADDING = 16;
 const CONTENT_WIDTH = 300;
 const CONTENT_HEIGHT = 200;
@@ -82,19 +75,19 @@ function calculateContentPosition(
 	switch (position) {
 		case "top":
 			top = elementPos.top - CONTENT_HEIGHT - PADDING;
-			left = elementPos.left + elementPos.width / 2 - CONTENT_WIDTH / 2;
+			left = elementPos.left - MASK_PADDING;
 			break;
 		case "bottom":
 			top = elementPos.top + elementPos.height + PADDING;
-			left = elementPos.left + elementPos.width / 2 - CONTENT_WIDTH / 2;
+			left = elementPos.left - MASK_PADDING;
 			break;
 		case "left":
 			left = elementPos.left - CONTENT_WIDTH - PADDING;
-			top = elementPos.top + elementPos.height / 2 - CONTENT_HEIGHT / 2;
+			top = elementPos.top - MASK_PADDING;
 			break;
 		case "right":
 			left = elementPos.left + elementPos.width + PADDING;
-			top = elementPos.top + elementPos.height / 2 - CONTENT_HEIGHT / 2;
+			top = elementPos.top - MASK_PADDING;
 			break;
 	}
 
@@ -115,7 +108,6 @@ function calculateContentPosition(
 export function TourProvider({
 	children,
 	onComplete,
-	className,
 	isTourCompleted = false,
 }: TourProviderProps) {
 	const [steps, setSteps] = useState<TourStep[]>([]);
@@ -136,6 +128,40 @@ export function TourProvider({
 			}
 		}
 	}, [currentStep, steps]);
+
+	const removeStep = (selectorId?: string) => {
+		const tempSelectorId = selectorId ?? steps[currentStep].selectorId
+		const newSteps = steps.filter(it => it.selectorId !== tempSelectorId)
+		setSteps(newSteps)
+
+		// 更新currentStep
+		const currentIndex = steps.findIndex(it => it.selectorId === tempSelectorId)
+		if (currentIndex === -1) return
+
+		if (newSteps.length === 0) {
+			endTour()
+			setIsTourCompleted(true);
+			onComplete?.();
+		} else {
+			// 如果删除的是当前步骤,则移动到下一个步骤
+			// 如果删除的是后面的步骤,则保持当前步骤不变
+			if (currentIndex === currentStep) {
+				setCurrentStep(Math.min(currentStep, newSteps.length - 1))
+			}
+		}
+	}
+
+	const insertStep = (step: TourStep, index: number) => {
+		setSteps(prevSteps => {
+			const firstPart = prevSteps.slice(0, index);
+			const secondPart = prevSteps.slice(index);
+			return [...firstPart, step, ...secondPart]
+		})
+	}
+
+	const gotoStep = useCallback((index: number) => {
+		setCurrentStep(index);
+	}, [])
 
 	useEffect(() => {
 		const element = document.getElementById(steps[currentStep]?.selectorId ?? "")
@@ -244,21 +270,26 @@ export function TourProvider({
 		setIsCompleted(completed);
 	}, []);
 
+	const tourValue = {
+		currentStep,
+		totalSteps: steps.length,
+		nextStep,
+		previousStep,
+		endTour,
+		isActive: currentStep >= 0,
+		startTour,
+		setSteps,
+		gotoStep,
+		insertStep,
+		removeStep,
+		steps,
+		isTourCompleted: isCompleted,
+		setIsTourCompleted,
+	}
+
 	return (
 		<TourContext.Provider
-			value={{
-				currentStep,
-				totalSteps: steps.length,
-				nextStep,
-				previousStep,
-				endTour,
-				isActive: currentStep >= 0,
-				startTour,
-				setSteps,
-				steps,
-				isTourCompleted: isCompleted,
-				setIsTourCompleted,
-			}}
+			value={tourValue}
 		>
 			{children}
 			<AnimatePresence>
@@ -269,7 +300,6 @@ export function TourProvider({
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							className="fixed inset-0 z-50 overflow-hidden"
-							style={{ pointerEvents: 'none' }}
 						>
 							<svg
 								className="absolute inset-0 h-full w-full"
@@ -286,16 +316,16 @@ export function TourProvider({
 										<rect width="100%" height="100%" fill="white" />
 										<motion.rect
 											initial={{
-												x: elementPosition.left - 4,
-												y: elementPosition.top - 4,
-												width: (steps[currentStep]?.width || elementPosition.width) + 8,
-												height: (steps[currentStep]?.height || elementPosition.height) + 8,
+												x: elementPosition.left - MASK_PADDING,
+												y: elementPosition.top - MASK_PADDING,
+												width: (steps[currentStep]?.width || elementPosition.width) + 2 * MASK_PADDING,
+												height: (steps[currentStep]?.height || elementPosition.height) + 2 * MASK_PADDING,
 											}}
 											animate={{
-												x: elementPosition.left - 4,
-												y: elementPosition.top - 4,
-												width: (steps[currentStep]?.width || elementPosition.width) + 8,
-												height: (steps[currentStep]?.height || elementPosition.height) + 8,
+												x: elementPosition.left - MASK_PADDING,
+												y: elementPosition.top - MASK_PADDING,
+												width: (steps[currentStep]?.width || elementPosition.width) + 2 * MASK_PADDING,
+												height: (steps[currentStep]?.height || elementPosition.height) + 2 * MASK_PADDING,
 											}}
 											transition={{
 												duration: 0.3,
@@ -337,11 +367,8 @@ export function TourProvider({
 							}}
 							exit={{ opacity: 0, y: 10 }}
 							style={{
-								position: "absolute",
-								width: calculateContentPosition(
-									elementPosition,
-									steps[currentStep]?.position,
-								).width,
+								position: "fixed",
+								width: elementPosition.width + 2 * MASK_PADDING,
 							}}
 							className="bg-background relative z-[100] rounded-lg border p-4 shadow-lg"
 						>
@@ -363,25 +390,8 @@ export function TourProvider({
 											},
 										}}
 									>
-										{steps[currentStep]?.content}
+										{steps[currentStep]?.content(tourValue)}
 									</motion.div>
-									<div className="mt-4 flex justify-between">
-										{currentStep > 0 && (
-											<button
-												onClick={previousStep}
-												disabled={currentStep === 0}
-												className="text-sm text-muted-foreground hover:text-foreground"
-											>
-												Previous
-											</button>
-										)}
-										<button
-											onClick={nextStep}
-											className="ml-auto text-sm font-medium text-primary hover:text-primary/90"
-										>
-											{currentStep === steps.length - 1 ? "Finish" : "Next"}
-										</button>
-									</div>
 								</div>
 							</AnimatePresence>
 						</motion.div>
@@ -398,69 +408,4 @@ export function useTour() {
 		throw new Error("useTour must be used within a TourProvider");
 	}
 	return context;
-}
-
-export function TourAlertDialog({
-	isOpen,
-	setIsOpen,
-}: { isOpen: boolean; setIsOpen: (isOpen: boolean) => void }) {
-	const { startTour, steps, isTourCompleted, currentStep } = useTour();
-
-	if (isTourCompleted || steps.length === 0 || currentStep > -1) {
-		return null;
-	}
-	const handleSkip = async () => {
-		setIsOpen(false);
-	};
-
-	return (
-		<AlertDialog open={isOpen}>
-			<AlertDialogContent className="max-w-md p-6">
-				<AlertDialogHeader className="flex flex-col items-center justify-center">
-					<div className="relative mb-4">
-						<motion.div
-							initial={{ scale: 0.7, filter: "blur(10px)" }}
-							animate={{
-								scale: 1,
-								filter: "blur(0px)",
-								y: [0, -8, 0],
-								rotate: [42, 48, 42],
-							}}
-							transition={{
-								duration: 0.4,
-								ease: "easeOut",
-								y: {
-									duration: 2.5,
-									repeat: Number.POSITIVE_INFINITY,
-									ease: "easeInOut",
-								},
-								rotate: {
-									duration: 3,
-									repeat: Number.POSITIVE_INFINITY,
-									ease: "easeInOut",
-								},
-							}}
-						>
-							<Torus className="size-32 stroke-1 text-primary" />
-						</motion.div>
-					</div>
-					<AlertDialogTitle className="text-center text-xl font-medium">
-						Welcome to the Tour
-					</AlertDialogTitle>
-					<AlertDialogDescription className="text-muted-foreground mt-2 text-center text-sm">
-						Take a quick tour to learn about the key features and functionality
-						of this application.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<div className="mt-6 space-y-3">
-					<Button onClick={startTour} className="w-full">
-						Start Tour
-					</Button>
-					<Button onClick={handleSkip} variant="ghost" className="w-full">
-						Skip Tour
-					</Button>
-				</div>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
 }
