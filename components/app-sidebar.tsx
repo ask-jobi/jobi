@@ -1,4 +1,4 @@
-import {LayoutDashboard, Settings} from "lucide-react";
+import {LayoutDashboard, Settings, LogOut} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,7 @@ import {
 } from "./ui/sidebar";
 import { Progress } from "./ui/progress";
 import {getQuotas} from "@/server/quota";
+import { LogoutButton } from "./logout-button";
 
 const QuotaCard = async () => {
   const quotaData= await getQuotas();
@@ -92,6 +93,7 @@ export default function AppSidebar() {
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <LogoutButton />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
