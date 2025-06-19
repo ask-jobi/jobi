@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ import { PersonalInfoForm } from "./forms/personal-info-form";
 import { EducationForm } from "./forms/education-form";
 import { EmploymentForm } from "./forms/employment-form";
 import { SkillsForm } from "./forms/skills-form";
-import {AISuggestion, AISuggestionQueue, ResumeData} from "@/types/resume";
+import {AISuggestion, ResumeData} from "@/types/resume";
 import { useResume } from "./resume-context";
 import ResumeEditor from "./resume-editor";
 import { Separator } from "../ui/separator";
@@ -79,13 +79,13 @@ function SortableSectionItem({ id, title, onClick, isSelected }: SortableSection
 }
 
 export default function ResumePage() {
-  const { updateResumeData, setLoading, selectedSectionId, handleSectionClick, resumeData, application } = useResume();
+  const { updateResumeData, setLoading, selectedSectionId, handleSectionClick, resumeData, application, isLoading } = useResume();
   const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
     mode: "onChange"
   });
-  const { watch, getValues, setValue } = methods;
+  const { watch, getValues, setValue, formState: {isDirty} } = methods;
   const router = useRouter();
   const { setSteps, startTour } = useTour();
 
@@ -121,13 +121,13 @@ export default function ResumePage() {
 
   useEffect(() => {
     const subscription = watch((data) => {
-      if (data && methods.formState.isDirty) {
+      if (data && isDirty) {
         updateResumeData(data as ResumeData);
         debouncedSave();
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch, debouncedSave, updateResumeData, methods.formState.isDirty]);
+  }, [watch, debouncedSave, updateResumeData, isDirty]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -178,7 +178,7 @@ export default function ResumePage() {
       case "skills":
         return <SkillsForm />;
       default:
-        return <p className="text-gray-500">选择一个简历部分来编辑。</p>;
+        return <p className="text-gray-500">Select a part of resume to edit。</p>;
     }
   };
 
@@ -190,106 +190,25 @@ export default function ResumePage() {
 
   const handleFullResumeOptimizing = async () => {
     try {
-      // const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`)
-      // const suggestions = (await result.json()) as AISuggestionQueue
-      // console.log(suggestions)
-      setSteps(steps)
-      startTour()
+      setLoading(true);
+      const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`);
+      if (!result.ok) {
+        throw new Error(await result.text());
+      }
+      const suggestions = await result.json();
+
+      const steps: TourStep[] = suggestions.map((item: AISuggestion) => ({
+        content: () => <SuggestionPatch section={item} getValues={getValues} setValue={setValue} />,
+        selectorId: `${item.section}-${item.blockIndex}`,
+      }));
+      setSteps(steps);
+      startTour();
     } catch (e: any) {
-      toast.error(e.toString())
+      toast.error(e.toString());
+    } finally {
+      setLoading(false);
     }
   }
-
-  const testSection0 = {
-    "section": "education",
-    "blockIndex": 0,
-    "suggestionType": "其他",
-    "reason": "该部分内容杂乱无章，建议删除。",
-    "originalContent": "## asdasdasd\n\n123\n\nsadjalskdjalksdjkaslda\n\n**asda**\n\n**该星号不会被识别而是直接显**这是因为它没有被识别为强调符号。\n\n*~~lksakjdasd~~*\n\nasdaldjlkasjdlkasd\n\n1. asdasdasdasdsd\n2. asdaskdaskldj\n\n`asdalksdasd`\n\n- > askdhakjsdhakjsdad\n- > asdasddsada\n\n> asdasdkasnhdkjashdkasd",
-    "optimizedContent": null,
-    "highlight": []
-  } as AISuggestion
-
-  const testSection1 = {
-    "section": "employment",
-    "blockIndex": 0,
-    "suggestionType": "其他",
-    "reason": "内容过于简单，没有有效信息。",
-    "originalContent": "asdaskldja\n\ncccc",
-    "optimizedContent": null,
-    "highlight": []
-  } as AISuggestion
-
-  const steps: TourStep[] = [
-    {
-      content: () => <SuggestionPatch section={testSection0} getValues={getValues} setValue={setValue}/>,
-      selectorId: "education-0",
-    },
-    {
-      content: () => <SuggestionPatch section={testSection1} getValues={getValues} setValue={setValue}/>,
-      selectorId: "employment-0",
-    }
-  ];
-
-  // [
-  //   {
-  //     "section": "education",
-  //     "blockIndex": 0,
-  //     "suggestionType": "其他",
-  //     "reason": "该部分内容杂乱无章，建议删除。",
-  //     "originalContent": "## asdasdasd\n\n123\n\nsadjalskdjalksdjkaslda\n\n**asda**\n\n**该星号不会被识别而是直接显**这是因为它没有被识别为强调符号。\n\n*~~lksakjdasd~~*\n\nasdaldjlkasjdlkasd\n\n1. asdasdasdasdsd\n2. asdaskdaskldj\n\n`asdalksdasd`\n\n- > askdhakjsdhakjsdad\n- > asdasddsada\n\n> asdasdkasnhdkjashdkasd",
-  //     "optimizedContent": null,
-  //     "highlight": []
-  //   },
-  //   {
-  //     "section": "employment",
-  //     "blockIndex": 0,
-  //     "suggestionType": "其他",
-  //     "reason": "内容过于简单，没有有效信息。",
-  //     "originalContent": "asdaskldja\n\ncccc",
-  //     "optimizedContent": null,
-  //     "highlight": []
-  //   },
-  //   {
-  //     "section": "skills",
-  //     "blockIndex": 0,
-  //     "suggestionType": "去除重复",
-  //     "reason": "技能罗列过于冗余，建议精简。",
-  //     "originalContent": "Distributed System",
-  //     "optimizedContent": "Distributed Systems, Test-Driven Development, Domain-Driven Design, Reactive Programming, Hexagonal Architecture, MVC, Agile, CI/CD, Clean Code",
-  //     "highlight": [
-  //       "Distributed Systems",
-  //       "Test-Driven Development",
-  //       "Domain-Driven Design",
-  //       "Reactive Programming",
-  //       "Hexagonal Architecture",
-  //       "MVC",
-  //       "Agile",
-  //       "CI/CD",
-  //       "Clean Code"
-  //     ]
-  //   },
-  //   {
-  //     "section": "skills",
-  //     "blockIndex": 2,
-  //     "suggestionType": "去除重复",
-  //     "reason": "技能罗列过于冗余，建议精简。",
-  //     "originalContent": "Domain-driven design",
-  //     "optimizedContent": "SpringBoot, SpringWebFlux, Redis, JUnit5, Mockito, MockK, EMQX, MySQL, PostgreSQL, PactFlow",
-  //     "highlight": [
-  //       "SpringBoot",
-  //       "SpringWebFlux",
-  //       "Redis",
-  //       "JUnit5",
-  //       "Mockito",
-  //       "MockK",
-  //       "EMQX",
-  //       "MySQL",
-  //       "PostgreSQL",
-  //       "PactFlow"
-  //     ]
-  //   }
-  // ]
 
   return (
     <FormProvider {...methods}>
@@ -301,6 +220,7 @@ export default function ResumePage() {
               size="sm"
               className="flex items-center gap-2"
               onClick={handleExport}
+              disabled={isLoading}
             >
               <Download className="h-4 w-4" />
               Export
@@ -310,9 +230,16 @@ export default function ResumePage() {
               size="sm"
               className="flex items-center gap-2"
               onClick={handleFullResumeOptimizing}
+              disabled={isLoading}
             >
-              <Image src="/gemini-color.svg" alt="Gemini" width={16} height={16} />
-              AI Optimize
+              <>
+                {
+                  isLoading ?
+                    <span className="animate-spin w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full"></span>
+                    : <Image src="/gemini-color.svg" alt="Gemini" width={16} height={16} />
+                }
+                AI Optimize
+              </>
             </Button>
           </div>
           <Separator className="my-4"/>

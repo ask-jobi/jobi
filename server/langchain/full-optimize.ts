@@ -48,20 +48,21 @@ export async function generateAISuggestionQueue(
     education: resume.education.blocks.map((block, idx) => ({
       section: "education",
       blockIndex: idx,
+      title: block.school,
       content: block.content
     })),
     employment: resume.employment.blocks.map((block, idx) => ({
       section: "employment",
       blockIndex: idx,
+      title: block.company,
       content: block.content
     })),
-    skills: resume.skills.blocks.flatMap((block, idx) =>
-      block.content.map((skillContent, subIdx) => ({
-        section: "skills",
-        blockIndex: idx,
-        content: skillContent
-      }))
-    )
+    skills: resume.skills.blocks.flatMap((block, idx) => ({
+      section: "skills",
+      blockIndex: idx,
+      title: block.group,
+      content: block.content
+    }))
   };
 
   const result = await callLangChainLLM(JSON.stringify(content, null, 2));

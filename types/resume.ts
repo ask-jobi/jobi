@@ -53,7 +53,7 @@ export interface Skill {
 
 export interface SkillBlock {
   group: string;
-  content: string[];
+  content: string;
 }
 
 export interface ResumeData {

@@ -9,7 +9,7 @@ import {InputTags} from "@/components/ui/input-tags";
 import React from "react";
 
 export function SkillsForm() {
-  const { control, register } = useFormContext<ResumeData>();
+  const { control, register, setValue } = useFormContext<ResumeData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "skills.blocks",
@@ -18,50 +18,60 @@ export function SkillsForm() {
   const handleAddBlock = () => {
     append({
       group: "",
-      content: [],
+      content: "",
     });
   };
 
   return (
     <div className="space-y-4">
-      {fields.map((field, blockIndex) => (
-        <div key={field.id} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Group</label>
-            <Input
-              {...register(`skills.blocks.${blockIndex}.group`)}
-            />
+      {fields.map((field, blockIndex) => {
+
+        return (
+          <div key={field.id} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Group</label>
+              <Input
+                {...register(`skills.blocks.${blockIndex}.group`)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Skills</label>
+              <Controller
+                control={control}
+                name={`skills.blocks.${blockIndex}.content`}
+                render={({field}) => {
+                  return <InputTags
+                    {...field}
+                    onChange={(value) => {
+                      setValue(`skills.blocks.${blockIndex}.content`, value, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true
+                      })
+                    }}
+                    placeholder="Input skill and press Enter or comma to add"
+                  />
+                }}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full mt-4"
+              onClick={() => remove(blockIndex)}
+            >
+              Remove Skill Group
+            </Button>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Skills</label>
-            <Controller
-              control={control}
-              name={`skills.blocks.${blockIndex}.content`}
-              render={({field}) => {
-                return <InputTags
-                  {...field}
-                  placeholder="Input skill and press Enter or comma to add"
-                />
-              }}
-            />
-          </div>
-          <Button
-            type="button"
-            variant="destructive"
-            className="w-full mt-4"
-            onClick={() => remove(blockIndex)}
-          >
-            Remove Skill Group
-          </Button>
-        </div>
-      ))}
+        )
+      })}
       <Button
         type="button"
         variant="ghost"
         className="w-full mt-4"
         onClick={handleAddBlock}
       >
-        <Plus className="h-4 w-4 mr-2" />
+        <Plus className="h-4 w-4 mr-2"/>
         Add Skill Group
       </Button>
     </div>

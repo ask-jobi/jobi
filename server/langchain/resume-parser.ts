@@ -46,7 +46,7 @@ const resumeSchema = z.object({
     blocks: z.array(
       z.object({
         group: z.string().describe("Category of skills"),
-        content: z.array(z.string()).describe("List of skills in this category"),
+        content: z.string().describe("List of skills in this category, split by comma"),
       })
     ),
   })

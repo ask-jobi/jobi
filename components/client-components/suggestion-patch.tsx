@@ -1,4 +1,4 @@
-import React, {useMemo, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {useTour} from "@/components/tour";
 import {AISuggestion} from "@/types/resume";
 import {Button} from "@/components/ui/button";

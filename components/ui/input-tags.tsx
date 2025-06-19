@@ -6,34 +6,37 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {useMemo} from "react";
 
 type InputTagsProps = Omit<
   React.ComponentProps<"input">,
   "value" | "onChange"
 > & {
-  value: string[]
-  onChange: React.Dispatch<string[]>
+  value: string | undefined
+  onChange: React.Dispatch<string>
 }
 
 const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
-  ({ className, value, onChange, ...props }, ref) => {
+({ className, value, onChange, ...props }, ref) => {
     const [pendingDataPoint, setPendingDataPoint] = React.useState("")
+    const valueList = useMemo(() => value ? value?.split(",") : [], [value])
 
     React.useEffect(() => {
       if (pendingDataPoint.includes(",")) {
         const newDataPoints = new Set([
-          ...value,
+          ...valueList,
           ...pendingDataPoint.split(",").map((chunk) => chunk.trim()),
         ])
-        onChange(Array.from(newDataPoints))
+        console.log(newDataPoints)
+        onChange(Array.from(newDataPoints).join(","))
         setPendingDataPoint("")
       }
-    }, [pendingDataPoint, onChange, value])
+    }, [pendingDataPoint, onChange, valueList])
 
     const addPendingDataPoint = () => {
       if (pendingDataPoint) {
-        const newDataPoints = new Set([...value, pendingDataPoint])
-        onChange(Array.from(newDataPoints))
+        const newDataPoints = new Set([...valueList, pendingDataPoint])
+        onChange(Array.from(newDataPoints).join(","))
         setPendingDataPoint("")
       }
     }
@@ -45,7 +48,7 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
           className
         )}
       >
-        {value.map((item) => (
+        {valueList.map((item) => (
           <Badge key={item} variant="secondary">
             <span className="block max-w-xs truncate break-words">{item}</span>
             <Button
@@ -53,7 +56,7 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
               size="icon"
               className="ml-2 size-4 p-0"
               onClick={() => {
-                onChange(value.filter((i) => i !== item))
+                onChange(valueList.filter((i) => i !== item).join(","))
               }}
             >
               <XIcon />
@@ -71,10 +74,10 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
             } else if (
               e.key === "Backspace" &&
               pendingDataPoint.length === 0 &&
-              value.length > 0
+              valueList.length > 0
             ) {
               e.preventDefault()
-              onChange(value.slice(0, -1))
+              onChange(valueList.slice(0, -1).join(","))
             }
           }}
           {...props}

@@ -70,9 +70,9 @@ export class DefaultTemplate implements ResumeTemplate {
               <div id={`${sectionId}-${index}`} key={index} className="mb-2">
                 <h3 className="text-sm font-bold mb-1">{block.group}</h3>
                 <div className="flex flex-wrap">
-                  {block.content.map((item, itemIndex) => (
+                  {block.content.split(",").map((item, itemIndex) => (
                     <span key={`tag-${itemIndex}`} className="text-xs bg-gray-100 px-2 py-1 rounded-full mr-1 mb-1">
-                      {item}
+                      {item.trim()}
                     </span>
                   ))}
                 </div>
