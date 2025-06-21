@@ -199,7 +199,7 @@ export default function ResumePage() {
 
       const steps: TourStep[] = suggestions.map((item: AISuggestion) => ({
         content: () => <SuggestionPatch section={item} getValues={getValues} setValue={setValue} />,
-        selectorId: `${item.section}-${item.blockIndex}`,
+        selectorId: `${item.section}-${item.blockIndex}-head`,
       }));
       setSteps(steps);
       startTour();
