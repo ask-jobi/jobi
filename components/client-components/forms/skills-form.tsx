@@ -3,7 +3,7 @@
 import {useFormContext, useFieldArray, Controller} from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { ResumeData } from "@/types/resume";
 import {InputTags} from "@/components/ui/input-tags";
 import React from "react";
@@ -56,10 +56,12 @@ export function SkillsForm() {
             </div>
             <Button
               type="button"
-              variant="destructive"
-              className="w-full mt-4"
+              variant="outline"
+              size="sm"
+              className="w-full mt-4 flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
               onClick={() => remove(blockIndex)}
             >
+              <Trash className="h-4 w-4 mr-2" />
               Remove Skill Group
             </Button>
           </div>
