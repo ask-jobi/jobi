@@ -8,6 +8,12 @@ export type JobApplication = {
     }
 }
 
+export interface SectionBlock<T = any> {
+  title: string
+  order: number
+  blocks: T[]
+}
+
 export interface PersonalInfo {
   firstName: string;
   lastName: string;
@@ -33,28 +39,16 @@ export interface EmploymentBlock {
   end: string;
 }
 
-export interface EducationHistory {
-  title: string,
-  order: number,
-  blocks: EducationBlock[]
-}
-
-export interface EmploymentHistory {
-  title: string,
-  order: number,
-  blocks: EmploymentBlock[]
-}
-
-export interface Skill {
-  title: string,
-  order: number;
-  blocks: SkillBlock[],
-}
-
 export interface SkillBlock {
   group: string;
   content: string;
 }
+
+export type EducationHistory = SectionBlock<EducationBlock>
+
+export type EmploymentHistory = SectionBlock<EmploymentBlock>
+
+export type Skill = SectionBlock<SkillBlock>
 
 export interface ResumeData {
   personalInfo: PersonalInfo
@@ -63,9 +57,10 @@ export interface ResumeData {
   skills: Skill
 }
 
+export type SortableSectionId = Exclude<keyof ResumeData, "personalInfo">
 
 export interface AISuggestion {
-  section: 'education' | 'employment' | 'skills';
+  section: SortableSectionId;
   blockIndex: number;
   suggestionType: string;
   reason: string;

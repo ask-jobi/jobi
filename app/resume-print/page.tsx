@@ -1,12 +1,13 @@
 "use client"
 import { useEffect, useState } from "react";
 import { ResumeData } from "@/types/resume";
-import { DefaultTemplate } from "@/components/resume-templates/default-template";
 import {useRouter} from "next/navigation";
+import useResumeTemplate from "@/lib/hooks/use-resume-template";
 
 export default function PrintResumePage() {
   const router = useRouter()
-  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [resumeData, setResumeData] = useState<ResumeData>();
+  const template = useResumeTemplate(resumeData)
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('printResumeData');
@@ -17,7 +18,7 @@ export default function PrintResumePage() {
   }, []);
 
   useEffect(() => {
-    if (resumeData) {
+    if (template) {
       window.addEventListener(
         'afterprint',
         () => {
@@ -27,17 +28,15 @@ export default function PrintResumePage() {
       )
       window.print()
     }
-  }, [resumeData, router]);
+  }, [template, router]);
 
-  const defaultTemplate = new DefaultTemplate();
-
-  if (!resumeData) {
+  if (!template) {
     return <div>Loading resume data...</div>;
   }
 
   return (
     <div className="w-full h-full p-8">
-      {defaultTemplate.renderDocument(resumeData)}
+      {template.renderDocument()}
     </div>
   );
 }

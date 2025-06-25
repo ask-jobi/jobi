@@ -1,63 +1,30 @@
 "use client"
 
-import {JobApplication, ResumeData} from "@/types/resume";
-import {createContext, useContext, useState, ReactNode} from "react";
+import {ReactNode, useEffect} from "react";
+import {createStore, useAtom, useSetAtom} from "jotai";
+import { resumeDataAtom, applicationAtom } from "@/lib/store/resume";
+import { ResumeData, JobApplication } from "@/types/resume";
 
-interface ResumeContextType {
-  resumeData: ResumeData;
-  application: JobApplication;
-  isLoading: boolean;
-  setLoading: (loading: boolean) => void;
-  updateResumeData: (data: ResumeData) => void;
-  selectedSectionId: string | null;
-  handleSectionClick: (id: string) => void;
-}
-
-const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
-
-export function useResume() {
-  const context = useContext(ResumeContext);
-  if (context === undefined) {
-    throw new Error("useResume must be used within a ResumeProvider");
-  }
-  return context;
-}
-
-interface ResumeProviderProps {
+interface ResumeInitializerProps {
   children: ReactNode;
   initialData: ResumeData;
   jobApplication: JobApplication;
 }
 
-export function ResumeProvider({ children, initialData, jobApplication }: ResumeProviderProps) {
-  const [application] = useState<JobApplication>(jobApplication);
-  const [resumeData, setResumeData] = useState<ResumeData>(initialData);
-  const [isLoading, setLoading] = useState<boolean>(false);
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+export const store = createStore();
 
-  const updateResumeData = (data: ResumeData) => {
-    setResumeData(data);
-  };
+export function ResumeInitializer({ children, initialData, jobApplication }: ResumeInitializerProps) {
+  const [resumeData, setResumeData] = useAtom(resumeDataAtom)
+  const setJobApplication = useSetAtom(applicationAtom)
 
-  const handleSectionClick = (id: string) => {
-    setSelectedSectionId(id);
-    const sectionElement = document.getElementById(`section-${id}`);
-    if (sectionElement) {
-      sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  useEffect(() => {
+    setResumeData(initialData);
+    setJobApplication(jobApplication);
+  }, [initialData, jobApplication, setJobApplication, setResumeData]);
 
-  return (
-    <ResumeContext.Provider value={{
-      resumeData,
-      application,
-      isLoading,
-      setLoading,
-      updateResumeData,
-      selectedSectionId,
-      handleSectionClick
-    }}>
-      {children}
-    </ResumeContext.Provider>
-  );
+  if (!resumeData) {
+    return null
+  }
+
+  return <>{children}</>;
 }

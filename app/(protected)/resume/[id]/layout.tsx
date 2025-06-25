@@ -1,8 +1,9 @@
 import React from 'react';
-import {ResumeProvider} from "@/components/client-components/resume-context";
+import {ResumeInitializer, store} from "@/components/client-components/resume-context";
 import {notFound} from "next/navigation";
 import {ResumeData} from "@/types/resume";
 import {createClient} from "@/lib/supabase/server";
+import {Provider} from "jotai";
 
 async function Layout(props: {
   children: React.ReactNode,
@@ -58,9 +59,11 @@ async function Layout(props: {
   };
 
   return (
-    <ResumeProvider initialData={resumeData} jobApplication={jobApplication}>
-      {children}
-    </ResumeProvider>
+    <Provider store={store}>
+      <ResumeInitializer initialData={resumeData} jobApplication={jobApplication}>
+        {children}
+      </ResumeInitializer>
+    </Provider>
   );
 }
 

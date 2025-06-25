@@ -35,7 +35,7 @@ import { EducationForm } from "./forms/education-form";
 import { EmploymentForm } from "./forms/employment-form";
 import { SkillsForm } from "./forms/skills-form";
 import {AISuggestion, ResumeData} from "@/types/resume";
-import { useResume } from "./resume-context";
+import { useResume } from "@/lib/store/resume";
 import ResumeEditor from "./resume-editor";
 import { Separator } from "../ui/separator";
 import { TourStep, useTour } from "@/components/tour";
