@@ -6,9 +6,13 @@ export const applicationAtom = atom<JobApplication | null>(null);
 export const isLoadingAtom = atom(false);
 export const selectedSectionIdAtom = atom<string | null>(null);
 
-export const focusSectionAtom = atom(null, (get, set, id: string) => {
+export const focusSectionAtom = atom(null, (get, set, id: string, index?: number) => {
   set(selectedSectionIdAtom, id);
-  const sectionElement = document.getElementById(`section-${id}`);
+  let sectionId = `section-${id}`
+  if (index) {
+    sectionId = `${id}-${index}`
+  }
+  const sectionElement = document.getElementById(sectionId);
   if (sectionElement) {
     sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

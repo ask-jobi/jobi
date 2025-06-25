@@ -122,6 +122,7 @@ export default function ResumePage() {
   useEffect(() => {
     const subscription = watch((data) => {
       if (data && isDirty) {
+        console.log(data)
         updateResumeData(data as ResumeData);
         debouncedSave();
       }
@@ -154,11 +155,23 @@ export default function ResumePage() {
 
       newSections.forEach((section, index) => {
         if (section.id === "education") {
-          setValue("education.order", index);
+          setValue("education.order", index, {
+            shouldDirty: true,
+            shouldValidate: true,
+            shouldTouch: true
+          });
         } else if (section.id === "employment") {
-          setValue("employment.order", index);
+          setValue("employment.order", index, {
+            shouldDirty: true,
+            shouldValidate: true,
+            shouldTouch: true
+          });
         } else if (section.id === "skills") {
-          setValue("skills.order", index);
+          setValue("skills.order", index, {
+            shouldDirty: true,
+            shouldValidate: true,
+            shouldTouch: true
+          });
         }
         section.order = index;
       });

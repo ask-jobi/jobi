@@ -3,7 +3,8 @@ import {store} from "@/components/client-components/resume-context";
 import {focusSectionAtom} from "@/lib/store/resume";
 
 export abstract class BaseTemplate {
-
+  data: ResumeData
+  isInteractive: boolean;
   abstract name: string;
 
   abstract renderHeader(): React.ReactNode;
@@ -15,15 +16,30 @@ export abstract class BaseTemplate {
   abstract renderSkills(): React.ReactNode;
 
   protected constructor(data: ResumeData, isInteractive?: boolean) {
+    console.log(data)
     this.isInteractive = isInteractive ?? true
     this.data = data
   }
 
-  data: ResumeData
-  isInteractive: boolean;
-  onSectionClick: (id: SortableSectionId, index: number) => void = (id) => {
-    store.set(focusSectionAtom, id)
+
+
+  onSectionClick: (id: keyof ResumeData, index?: number) => void = (id, index) => {
+    store.set(focusSectionAtom, id, index)
   };
+
+  renderPersonalInfo(): React.ReactNode {
+    const handleClick = () => {
+      if (this.isInteractive && this.onSectionClick) this.onSectionClick("personalInfo");
+    };
+    return (
+      <div
+        id={`section-personalInfo`}
+        onClick={handleClick}
+        className={`${this.isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}`}>
+        {this.renderHeader()}
+      </div>
+    )
+  }
 
   renderSectionBlocks<
     ID extends SortableSectionId,
@@ -60,7 +76,7 @@ export abstract class BaseTemplate {
             <div
               id={`${sectionId}-${index}`}
               key={index}
-              className={`mb-4 ${this.isInteractive ? "hover:bg-gray-100 cursor-pointer" : ""}`}
+              className={`mb-4 ${this.isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}`}
               onClick={handleClick}
               tabIndex={this.isInteractive ? 0 : undefined}
             >
@@ -78,7 +94,7 @@ export abstract class BaseTemplate {
     const sections = getOrderedSections(data);
     return (
       <article className="bg-white p-8 pdf">
-        {this.renderHeader()}
+        {this.renderPersonalInfo()}
         {sections.map(({id}) => {
           switch (id) {
             case "education":
