@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import Image from "next/image";
 
 export default function LandingPage() {
   const { t } = useLanguage();
@@ -23,10 +24,13 @@ export default function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold">Jobi</span>
+            <Image
+              src="/jobi_logo.svg"
+              alt="Jobi Logo"
+              width={96}
+              height={96}
+              className="object-contain"
+            />
           </div>
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
@@ -170,11 +174,17 @@ export default function LandingPage() {
       <footer className="border-t bg-muted/50">
         <div className="container mx-auto px-4 py-12">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/jobi_logo.png"
+                  alt="Jobi Logo"
+                  width={24}
+                  height={24}
+                  className="object-cover"
+                />
               </div>
-              <span className="font-bold">Jobi</span>
+              <span className="text-xl font-bold">Jobi</span>
             </div>
             <div className="text-sm text-muted-foreground">
               {t('copyright')}
