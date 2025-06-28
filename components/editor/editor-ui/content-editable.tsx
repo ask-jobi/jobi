@@ -16,7 +16,7 @@ export function ContentEditable({
     <LexicalContentEditable
       className={
         className ??
-        `ContentEditable__root overflow-y-scroll relative block min-h-full overflow-auto px-3 py-2 focus:outline-none`
+        `ContentEditable__root overflow-y-scroll relative block min-h-full overflow-auto pl-10 pr-3 py-2 focus:outline-none`
       }
       aria-placeholder={placeholder}
       placeholder={

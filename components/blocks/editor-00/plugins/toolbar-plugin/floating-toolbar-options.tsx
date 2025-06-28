@@ -1,4 +1,16 @@
-import { FC, useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
+import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {
+  ALargeSmallIcon, BoldIcon, CodeIcon,
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon, ItalicIcon, ListIcon, ListOrderedIcon, StrikethroughIcon
+} from "lucide-react";
+import {Toggle} from "@/components/ui/toggle";
+import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
 import {
   $createParagraphNode,
   $getSelection,
@@ -6,42 +18,20 @@ import {
   $isRootOrShadowRoot,
   FORMAT_TEXT_COMMAND,
   LexicalNode,
-  TextFormatType,
-} from 'lexical';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $findMatchingParent } from '@lexical/utils';
-import { $setBlocksType } from '@lexical/selection';
-import {
-  $createHeadingNode,
-  $createQuoteNode,
-  $isHeadingNode,
-  HeadingTagType,
-} from '@lexical/rich-text';
-import {
-  $isListNode,
-  INSERT_ORDERED_LIST_COMMAND,
-  INSERT_UNORDERED_LIST_COMMAND,
-} from '@lexical/list';
-import {
-  ALargeSmallIcon,
-  BoldIcon,
-  CodeIcon,
-  Heading1Icon,
-  Heading2Icon,
-  Heading3Icon,
-  Heading4Icon,
-  Heading5Icon,
-  Heading6Icon,
-  ItalicIcon,
-  ListIcon,
-  ListOrderedIcon,
-  QuoteIcon,
-  StrikethroughIcon,
-} from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
-import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from '@/components/ui/select';
+  TextFormatType
+} from "lexical";
+import {$findMatchingParent} from "@lexical/utils";
+import {$isListNode, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND} from "@lexical/list";
+import {$createHeadingNode, $createQuoteNode, $isHeadingNode, HeadingTagType} from "@lexical/rich-text";
+import {$setBlocksType} from "@lexical/selection";
+import Image from "next/image";
+import {Button} from "@/components/ui/button";
 
-const ToolbarPlugin: FC = () => {
+function FloatingToolbarOptions({
+                                  setMode
+                                }: {
+  setMode: (state: 'default' | 'ai' | 'closed') => void
+}) {
   const [editor] = useLexicalComposerContext();
 
   /**
@@ -49,12 +39,8 @@ const ToolbarPlugin: FC = () => {
    */
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isCode, setIsCode] = useState(false);
-  const [isHighlighter, setIsHighlighter] = useState(false);
-  const [isSuperscript, setIsSuperscript] = useState(false);
-  const [isSubscript, setIsSubscript] = useState(false);
 
   /**
    * 当前选中文本的类型，如 h1、h2、p、blockquote 等
@@ -75,12 +61,8 @@ const ToolbarPlugin: FC = () => {
         // text format
         setIsBold(selection.hasFormat('bold'));
         setIsItalic(selection.hasFormat('italic'));
-        setIsUnderline(selection.hasFormat('underline'));
         setIsStrikethrough(selection.hasFormat('strikethrough'));
         setIsCode(selection.hasFormat('code'));
-        setIsHighlighter(selection.hasFormat('highlight'));
-        setIsSuperscript(selection.hasFormat('superscript'));
-        setIsSubscript(selection.hasFormat('subscript'));
 
         // block type
         const anchorNode = selection.anchor.getNode();
@@ -187,24 +169,38 @@ const ToolbarPlugin: FC = () => {
     }
   };
 
+  const intoAiMode = () => {
+    setMode('ai')
+    console.log("switch ai mode")
+  }
+
   return (
-    <div className="sticky top-0 z-10 flex items-center px-2 py-1.5 border-b border-gray-200 bg-white">
+    <div className="flex items-center px-2 py-1.5 rounded-lg shadow-xl border bg-white">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={intoAiMode}
+      >
+        <Image src="/gemini-color.svg" alt="Gemini" width={16} height={16} />
+      </Button>
+      <div className="w-px h-5 mx-2 bg-gray-200 rounded"></div>
       <Select value={blockType} onValueChange={handleBlockTypeChange}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="" />
+          <SelectValue placeholder=""/>
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="paragraph" icon={ALargeSmallIcon} >Normal</SelectItem>
-          <SelectSeparator />
-          <SelectItem value="h1" icon={Heading1Icon} >Heading 1</SelectItem>
-          <SelectItem value="h2" icon={Heading2Icon} >Heading 2</SelectItem>
-          <SelectItem value="h3" icon={Heading3Icon} >Heading 3</SelectItem>
-          <SelectItem value="h4" icon={Heading4Icon} >Heading 4</SelectItem>
-          <SelectItem value="h5" icon={Heading5Icon} >Heading 5</SelectItem>
-          <SelectItem value="h6" icon={Heading6Icon} >Heading 6</SelectItem>
-          <SelectSeparator />
-          <SelectItem value="bullet" icon={ListIcon} >Bullet List</SelectItem>
-          <SelectItem value="number" icon={ListOrderedIcon} >Ordered List</SelectItem>
+        <SelectContent className="shadow-xl z-102">
+          <SelectItem value="paragraph" icon={ALargeSmallIcon}>Normal</SelectItem>
+          <SelectSeparator/>
+          <SelectItem value="h1" icon={Heading1Icon}>Heading 1</SelectItem>
+          <SelectItem value="h2" icon={Heading2Icon}>Heading 2</SelectItem>
+          <SelectItem value="h3" icon={Heading3Icon}>Heading 3</SelectItem>
+          <SelectItem value="h4" icon={Heading4Icon}>Heading 4</SelectItem>
+          <SelectItem value="h5" icon={Heading5Icon}>Heading 5</SelectItem>
+          <SelectItem value="h6" icon={Heading6Icon}>Heading 6</SelectItem>
+          <SelectSeparator/>
+          <SelectItem value="bullet" icon={ListIcon}>Bullet List</SelectItem>
+          <SelectItem value="number" icon={ListOrderedIcon}>Ordered List</SelectItem>
         </SelectContent>
       </Select>
       <div className="w-px h-5 mx-2 bg-gray-200 rounded"></div>
@@ -223,13 +219,6 @@ const ToolbarPlugin: FC = () => {
         >
           <ItalicIcon/>
         </Toggle>
-        {/*<Toggle*/}
-        {/*  aria-label="Underline"*/}
-        {/*  pressed={isUnderline}*/}
-        {/*  onPressedChange={() => formatText('underline')}*/}
-        {/*>*/}
-        {/*  <UnderlineIcon/>*/}
-        {/*</Toggle>*/}
         <Toggle
           aria-label="Strikethrough"
           pressed={isStrikethrough}
@@ -244,30 +233,9 @@ const ToolbarPlugin: FC = () => {
         >
           <CodeIcon/>
         </Toggle>
-        {/*<Toggle*/}
-        {/*  aria-label="Hilight"*/}
-        {/*  pressed={isHighlighter}*/}
-        {/*  onPressedChange={() => formatText('highlight')}*/}
-        {/*>*/}
-        {/*  <HighlighterIcon/>*/}
-        {/*</Toggle>*/}
-        {/*<Toggle*/}
-        {/*  aria-label="上标"*/}
-        {/*  pressed={isSuperscript}*/}
-        {/*  onPressedChange={() => formatText('superscript')}*/}
-        {/*>*/}
-        {/*  <SuperscriptIcon/>*/}
-        {/*</Toggle>*/}
-        {/*<Toggle*/}
-        {/*  aria-label="下标"*/}
-        {/*  pressed={isSubscript}*/}
-        {/*  onPressedChange={() => formatText('subscript')}*/}
-        {/*>*/}
-        {/*  <SubscriptIcon/>*/}
-        {/*</Toggle>*/}
       </div>
     </div>
   );
-};
+}
 
-export default ToolbarPlugin;
+export default FloatingToolbarOptions;

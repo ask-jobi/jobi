@@ -15,7 +15,8 @@ import {ContentEditable} from "@/components/editor/editor-ui/content-editable"
 import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
-import ToolbarPlugin from "@/components/blocks/editor-00/plugins/ToolbarPlugin";
+import ToolbarPlugin from "@/components/blocks/editor-00/plugins/toolbar-plugin";
+import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggable-block-plugin";
 
 export const SUPPORT_TRANSFORMER = [
   HEADING,
@@ -42,6 +43,7 @@ export function Plugins() {
     }
   }
 
+  // TODO 添加history插件
   return (
     <div className="relative h-full">
       <ToolbarPlugin/>
@@ -59,6 +61,9 @@ export function Plugins() {
         />
         <TabIndentationPlugin/>
         <ListPlugin/>
+        {
+          floatingAnchorElem && <DraggableBlockPlugin anchorElem={floatingAnchorElem}/>
+        }
         {/* editor plugins */}
       </div>
       {/* actions plugins */}

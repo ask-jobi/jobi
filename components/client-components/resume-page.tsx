@@ -122,7 +122,6 @@ export default function ResumePage() {
   useEffect(() => {
     const subscription = watch((data) => {
       if (data && isDirty) {
-        console.log(data)
         updateResumeData(data as ResumeData);
         debouncedSave();
       }
