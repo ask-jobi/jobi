@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useAuth } from "@/lib/hooks/use-auth";
 import Image from "next/image";
 
 export default function LandingPage() {
   const { t } = useLanguage();
+  const { user, loading } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -37,12 +39,24 @@ export default function LandingPage() {
             <Link href="/pricing">
               <Button variant="ghost">{t('pricing')}</Button>
             </Link>
-            <Link href="/auth/login">
-              <Button variant="ghost">{t('login')}</Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button>{t('signUp')}</Button>
-            </Link>
+            {!loading && (
+              <>
+                {user ? (
+                  <Link href="/dashboard">
+                    <Button>{t('dashboard')}</Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/auth/login">
+                      <Button variant="ghost">{t('login')}</Button>
+                    </Link>
+                    <Link href="/auth/sign-up">
+                      <Button>{t('signUp')}</Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </header>

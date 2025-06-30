@@ -5,6 +5,7 @@ export const translations = {
     signUp: "免费注册",
     pricing: "定价",
     home: "首页",
+    dashboard: "控制台",
     
     // Hero Section
     aiDriven: "AI 驱动的简历优化",
@@ -49,6 +50,7 @@ export const translations = {
     signUp: "Sign Up Free",
     pricing: "Pricing",
     home: "Home",
+    dashboard: "Dashboard",
     
     // Hero Section
     aiDriven: "AI-Powered Resume Optimization",
