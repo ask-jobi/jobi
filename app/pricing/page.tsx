@@ -1,17 +1,49 @@
+'use client'
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Check,
   Star,
-  Crown,
   FileText
 } from "lucide-react";
+import { PricingCard } from "@/components/client-components/pricing-card";
+import { PRICING_CONFIG } from "@/lib/payment/stripe-config";
+import { PaymentCancelledAlert } from "@/components/client-components/payment-cancelled-alert";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
+// TODO: 登录状态下仍然显示免费注册按钮
+// TODO: 支付成功后，跳转到成功页面，并显示支付成功提示
+// TODO: 支付失败后，跳转到失败页面，并显示支付失败提示
+// TODO: 开始免费使用在登录下也会提示要登录
+// TODO: 联系销售也要登录？
+// TODO: 没有国际化
 export default function PricingPage() {
+  const searchParams = useSearchParams()
+  const [showCancelledAlert, setShowCancelledAlert] = useState(false)
+
+  useEffect(() => {
+    const cancelled = searchParams.get('cancelled')
+    if (cancelled === 'true') {
+      setShowCancelledAlert(true)
+    }
+  }, [searchParams])
+
+  const handleCloseAlert = () => {
+    setShowCancelledAlert(false)
+    // 清除URL参数
+    const url = new URL(window.location.href)
+    url.searchParams.delete('cancelled')
+    window.history.replaceState({}, '', url.toString())
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <PaymentCancelledAlert 
+        isVisible={showCancelledAlert} 
+        onClose={handleCloseAlert} 
+      />
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -57,128 +89,13 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 pb-20">
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Plan */}
-          <Card className="border-0 shadow-lg relative">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl">免费版</CardTitle>
-              <div className="text-4xl font-bold text-primary mb-2">¥0</div>
-              <CardDescription>适合个人用户试用</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">每月 3 次简历优化</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">基础 AI 分析</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">5 个简历模板</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">邮件支持</span>
-                </div>
-              </div>
-              <Link href="/auth/sign-up">
-                <Button className="w-full mt-4" variant="outline">
-                  开始免费试用
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <PricingCard {...PRICING_CONFIG.FREE} />
 
           {/* Pro Plan */}
-          <Card className="border-0 shadow-lg relative border-2 border-primary">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                <Crown className="w-4 h-4 mr-1" />
-                最受欢迎
-              </Badge>
-            </div>
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl">专业版</CardTitle>
-              <div className="text-4xl font-bold text-primary mb-2">¥99</div>
-              <CardDescription>每月，适合求职者</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">每月 50 次简历优化</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">高级 AI 分析</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">50+ 个简历模板</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">个性化建议</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">优先客服支持</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">导出 PDF 格式</span>
-                </div>
-              </div>
-              <Link href="/auth/sign-up">
-                <Button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-                  选择专业版
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <PricingCard {...PRICING_CONFIG.PRO} />
 
           {/* Enterprise Plan */}
-          <Card className="border-0 shadow-lg relative">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl">企业版</CardTitle>
-              <div className="text-4xl font-bold text-primary mb-2">¥299</div>
-              <CardDescription>每月，适合企业</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">无限次简历优化</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">企业级 AI 分析</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">所有简历模板</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">团队协作功能</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">专属客户经理</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-4 h-4 text-green-500 mr-3" />
-                  <span className="text-sm">API 接口</span>
-                </div>
-              </div>
-              <Link href="/auth/sign-up">
-                <Button className="w-full mt-4" variant="outline">
-                  联系销售
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <PricingCard {...PRICING_CONFIG.ENTERPRISE} />
         </div>
       </section>
 
