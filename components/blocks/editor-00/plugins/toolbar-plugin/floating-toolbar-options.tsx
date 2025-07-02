@@ -2,12 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {
   ALargeSmallIcon, BoldIcon, CodeIcon,
-  Heading1Icon,
-  Heading2Icon,
-  Heading3Icon,
-  Heading4Icon,
-  Heading5Icon,
-  Heading6Icon, ItalicIcon, ListIcon, ListOrderedIcon, StrikethroughIcon
+  ItalicIcon, ListIcon, ListOrderedIcon, StrikethroughIcon
 } from "lucide-react";
 import {Toggle} from "@/components/ui/toggle";
 import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
@@ -22,7 +17,6 @@ import {
 } from "lexical";
 import {$findMatchingParent} from "@lexical/utils";
 import {$isListNode, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND} from "@lexical/list";
-import {$createHeadingNode, $createQuoteNode, $isHeadingNode, HeadingTagType} from "@lexical/rich-text";
 import {$setBlocksType} from "@lexical/selection";
 import Image from "next/image";
 import {Button} from "@/components/ui/button";
@@ -79,8 +73,6 @@ function FloatingToolbarOptions({
 
         if ($isListNode(element)) {
           setBlockType(element.getListType());
-        } else if ($isHeadingNode(element)) {
-          setBlockType(element.getTag());
         } else {
           setBlockType(element.getType());
         }
@@ -110,26 +102,6 @@ function FloatingToolbarOptions({
   };
 
   /**
-   * 设置为标题
-   */
-  const formatHeading = (headingSize: HeadingTagType) => {
-    editor.update(() => {
-      const selection = $getSelection();
-      $setBlocksType(selection, () => $createHeadingNode(headingSize));
-    });
-  };
-
-  /**
-   * 设置为引用
-   */
-  const formatQuote = () => {
-    editor.update(() => {
-      const selection = $getSelection();
-      $setBlocksType(selection, () => $createQuoteNode());
-    });
-  };
-
-  /**
    * 设置为无序列表
    */
   const formatUnorderedList = () => {
@@ -147,19 +119,6 @@ function FloatingToolbarOptions({
     setBlockType(type);
     if (type === 'paragraph') {
       formatParagraph();
-    }
-    if (
-      type === 'h1' ||
-      type === 'h2' ||
-      type === 'h3' ||
-      type === 'h4' ||
-      type === 'h5' ||
-      type === 'h6'
-    ) {
-      formatHeading(type);
-    }
-    if (type === 'quote') {
-      formatQuote();
     }
     if (type === 'bullet') {
       formatUnorderedList();
@@ -191,13 +150,6 @@ function FloatingToolbarOptions({
         </SelectTrigger>
         <SelectContent className="shadow-xl z-102">
           <SelectItem value="paragraph" icon={ALargeSmallIcon}>Normal</SelectItem>
-          <SelectSeparator/>
-          <SelectItem value="h1" icon={Heading1Icon}>Heading 1</SelectItem>
-          <SelectItem value="h2" icon={Heading2Icon}>Heading 2</SelectItem>
-          <SelectItem value="h3" icon={Heading3Icon}>Heading 3</SelectItem>
-          <SelectItem value="h4" icon={Heading4Icon}>Heading 4</SelectItem>
-          <SelectItem value="h5" icon={Heading5Icon}>Heading 5</SelectItem>
-          <SelectItem value="h6" icon={Heading6Icon}>Heading 6</SelectItem>
           <SelectSeparator/>
           <SelectItem value="bullet" icon={ListIcon}>Bullet List</SelectItem>
           <SelectItem value="number" icon={ListOrderedIcon}>Ordered List</SelectItem>

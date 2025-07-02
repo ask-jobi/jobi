@@ -6,7 +6,7 @@ import {
   BOLD_ITALIC_UNDERSCORE,
   BOLD_STAR,
   BOLD_UNDERSCORE,
-  HEADING, INLINE_CODE, ITALIC_STAR,
+  INLINE_CODE, ITALIC_STAR,
   ITALIC_UNDERSCORE, LINK, ORDERED_LIST,
   STRIKETHROUGH,
   UNORDERED_LIST
@@ -20,7 +20,6 @@ import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggabl
 import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/PreserveSelectionPlugin";
 
 export const SUPPORT_TRANSFORMER = [
-  HEADING,
   UNORDERED_LIST,
   ORDERED_LIST,
   INLINE_CODE,

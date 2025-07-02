@@ -1,4 +1,3 @@
-import { HeadingNode } from "@lexical/rich-text"
 import {
   $createParagraphNode,
   $getEditor,
@@ -252,5 +251,4 @@ export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> =
     ListNode,
     ListItemNode,
     HorizontalRuleNode,
-    HeadingNode,
   ]

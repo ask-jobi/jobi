@@ -55,10 +55,10 @@ const ToolbarPlugin: FC = () => {
     return null;
   }
 
-
   return (
     <Portal>
-      <FocusScope>
+      <FocusScope
+        onMountAutoFocus={(e) => {e.preventDefault()}}>
         <div
           ref={setFloating}
           tabIndex={0}
