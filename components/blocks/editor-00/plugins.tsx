@@ -17,6 +17,7 @@ import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
 import ToolbarPlugin from "@/components/blocks/editor-00/plugins/toolbar-plugin";
 import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggable-block-plugin";
+import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/PreserveSelectionPlugin";
 
 export const SUPPORT_TRANSFORMER = [
   HEADING,
@@ -66,6 +67,7 @@ export function Plugins() {
         }
         {/* editor plugins */}
       </div>
+      <PreserveSelectionPlugin/>
       {/* actions plugins */}
     </div>
   )

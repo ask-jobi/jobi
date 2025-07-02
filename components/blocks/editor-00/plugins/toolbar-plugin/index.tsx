@@ -36,6 +36,7 @@ const ToolbarPlugin: FC = () => {
   });
 
   useLayoutEffect(() => {
+    setMode("default")
     setReference({
       getBoundingClientRect: () =>
         range?.getBoundingClientRect() || new DOMRect(),
@@ -48,14 +49,12 @@ const ToolbarPlugin: FC = () => {
         setMouseSelection(rangeRef.current === null && mouse === "down")
       })
     })
-    if (mouse === 'up') {
-      setMode("default")
-    }
   })
 
   if (mode === 'closed' || range === null|| mouseSelection) {
     return null;
   }
+
 
   return (
     <Portal>
