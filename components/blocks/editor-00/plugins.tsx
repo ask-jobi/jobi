@@ -1,37 +1,14 @@
 import {useState} from "react"
 import {LexicalErrorBoundary} from "@lexical/react/LexicalErrorBoundary"
 import {RichTextPlugin} from "@lexical/react/LexicalRichTextPlugin"
-import {
-  BOLD_ITALIC_STAR,
-  BOLD_ITALIC_UNDERSCORE,
-  BOLD_STAR,
-  BOLD_UNDERSCORE,
-  INLINE_CODE, ITALIC_STAR,
-  ITALIC_UNDERSCORE, LINK, ORDERED_LIST,
-  STRIKETHROUGH,
-  UNORDERED_LIST
-} from "@lexical/markdown"
 import {ContentEditable} from "@/components/editor/editor-ui/content-editable"
 import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
 import ToolbarPlugin from "@/components/blocks/editor-00/plugins/toolbar-plugin";
 import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggable-block-plugin";
-import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/PreserveSelectionPlugin";
-
-export const SUPPORT_TRANSFORMER = [
-  UNORDERED_LIST,
-  ORDERED_LIST,
-  INLINE_CODE,
-  BOLD_ITALIC_STAR,
-  BOLD_ITALIC_UNDERSCORE,
-  BOLD_STAR,
-  BOLD_UNDERSCORE,
-  ITALIC_STAR,
-  ITALIC_UNDERSCORE,
-  STRIKETHROUGH,
-  LINK
-]
+import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/preserve-selection-plugin";
+import {EXPORT_TRANSFORMER} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -57,7 +34,7 @@ export function Plugins() {
           ErrorBoundary={LexicalErrorBoundary}
         />
         <MarkdownShortcutPlugin
-          transformers={SUPPORT_TRANSFORMER}
+          transformers={EXPORT_TRANSFORMER}
         />
         <TabIndentationPlugin/>
         <ListPlugin/>

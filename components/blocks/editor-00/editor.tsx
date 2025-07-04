@@ -9,8 +9,8 @@ import { editorTheme } from "@/components/editor/themes/editor-theme"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import { nodes } from "./nodes"
-import {Plugins, SUPPORT_TRANSFORMER} from "./plugins"
-import {$convertFromMarkdownString, $convertToMarkdownString} from "@lexical/markdown";
+import {Plugins} from "./plugins"
+import {$exportMarkdown, $importMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 
 const editorConfig: InitialConfigType = {
   namespace: "Editor",
@@ -33,7 +33,7 @@ export function Editor({
       <LexicalComposer
         initialConfig={{
           ...editorConfig,
-          editorState: () => $convertFromMarkdownString(markdown, SUPPORT_TRANSFORMER),
+          editorState: () => $importMarkdown(markdown),
         }}
       >
         <TooltipProvider>
@@ -43,7 +43,7 @@ export function Editor({
             ignoreSelectionChange={true}
             onChange={(editorState, editor) => {
               editorState.read(() => {
-                const md = $convertToMarkdownString(SUPPORT_TRANSFORMER)
+                const md = $exportMarkdown()
                 onChange?.(md)
               })
             }}

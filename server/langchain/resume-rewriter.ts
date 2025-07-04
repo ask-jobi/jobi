@@ -46,6 +46,7 @@ export class ResumeRewriter {
   }
 
   async rewriteBlock(params: {
+    resumeSection: string
     originalContent: string;
     section: string;
     jd: string;
@@ -55,6 +56,7 @@ export class ResumeRewriter {
     const validatedLanguage = LanguageEnum.parse(params.language);
 
     const result = await this.chain.invoke({
+      resumeSection: params.resumeSection,
       originalContent: params.originalContent,
       section: params.section,
       jd: params.jd,
@@ -65,4 +67,4 @@ export class ResumeRewriter {
 
     return rewriteResponseSchema.parse(result);
   }
-} 
+}

@@ -15,6 +15,7 @@ export async function POST(request: Request) {
 
     const rewriter = ResumeRewriter.getInstance();
     const response = await rewriter.rewriteBlock({
+      resumeSection: body.resumeSection,
       originalContent: body.originalContent,
       section: body.context.sectionType,
       jd: body.context.jd,

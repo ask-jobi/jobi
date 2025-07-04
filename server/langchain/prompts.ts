@@ -2,16 +2,18 @@ export const REWRITE_PROMPT = `
 你是一名资深的简历优化专家, 你正在分析简历的{section}部分。请根据以下要求对简历内容进行改写：
 
 【输入信息】
-1. 原始内容：{originalContent}
-2. 职位描述：{jd}
-3. 改写指令：{instruction}
+1. 简历部分：{resumeSection}
+2. 原始内容：{originalContent}
+3. 职位描述：{jd}
+4. 改写指令：{instruction}
 
 【任务要求】
 1. 根据改写指令对内容进行优化，确保内容与职位描述相关
-2. 保持与整体简历风格的一致性
-3. 使用专业、简洁的语言
-4. 使用 markdown 格式输出
-5. 使用 {language} 输出
+2. 确保修改部分基于原始内容，可参考简历部分获得上下文
+3. 保持与整体简历风格的一致性
+4. 使用专业、简洁的语言
+5. 使用 markdown 格式输出
+6. 使用 {language} 输出
 
 请以如下 JSON 格式输出：
 {format_instructions}

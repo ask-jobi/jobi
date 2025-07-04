@@ -1,11 +1,19 @@
 import {
+  $copyNode,
+  $createNodeSelection,
   $createParagraphNode,
   $getEditor,
-  $getRoot, $isElementNode, $isParagraphNode, $isTextNode,
-  EditorConfig, ElementNode,
+  $getNodeByKey, $getRoot,
+  $getSelection,
+  $isElementNode,
+  $isParagraphNode,
+  $isTextNode,
+  EditorConfig,
+  ElementNode,
   Klass,
   LexicalNode,
-  LexicalNodeReplacement, NodeKey,
+  LexicalNodeReplacement,
+  NodeKey, NodeSelection,
   ParagraphNode,
   TextNode,
 } from "lexical"
@@ -19,9 +27,8 @@ import {
   ListItemNode,
   ListNode
 } from "@lexical/list";
-import {$convertFromMarkdownString, $convertToMarkdownString} from "@lexical/markdown";
-import {SUPPORT_TRANSFORMER} from "@/components/blocks/editor-00/plugins";
 import {diffWords} from "diff";
+import {$exportMarkdown, $importMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 
 
 export type DiffStates = 'added' | 'removed' | 'unchanged'
@@ -108,22 +115,22 @@ function $wrapTextNodeAsDiffTextNode(
 }
 
 const replaceDiffNode = (node: LexicalNode, diffState: DiffStates) => {
-  if ($isElementNode(node)) {
-    node.getAllTextNodes().forEach(textNode => {
+  const clonedNode = node
+  // 替换该Element节点
+  if ($isElementNode(clonedNode)) {
+    clonedNode.getAllTextNodes().forEach(textNode => {
       textNode.replace($wrapTextNodeAsDiffTextNode(textNode, diffState))
     })
-  } else if ($isTextNode(node)) {
-    node.replace($wrapTextNodeAsDiffTextNode(node, diffState))
+  } else if ($isTextNode(clonedNode)) {
+    clonedNode.replace($wrapTextNodeAsDiffTextNode(clonedNode, diffState))
   }
 }
 
 function processElementNode(
-  oldNode: ElementNode,
-  newNode: ElementNode
+  oldChildNodes: ElementNode[],
+  newChildNodes: ElementNode[]
 ): ElementNode[] {
   const resultNodes: ElementNode[] = []
-  const oldChildNodes = oldNode.getChildren()
-  const newChildNodes = newNode.getChildren()
 
   let oldIdx = 0;
   let newIdx = 0;
@@ -135,7 +142,7 @@ function processElementNode(
       // 代表类型一致的节点
       if ($isListNode(oldChildNode) && $isListNode(newChildNode)) {
         // list节点的子节点只可能时listItem，因此这里直接递归交给下一个分支处理
-        const recursionResult = processElementNode(oldChildNode, newChildNode)
+        const recursionResult = processElementNode(oldChildNode.getChildren(), newChildNode.getChildren())
         const listNode = $createListNode(oldChildNode.getListType())
         listNode.append(...recursionResult)
         resultNodes.push(listNode)
@@ -203,13 +210,13 @@ function processTextNodes(
   tempParagraph1.append(oldParagraph)
   tempParagraph2.append(newParagraph)
 
-  const oldContent = $convertToMarkdownString(SUPPORT_TRANSFORMER, tempParagraph1)
-  const newContent = $convertToMarkdownString(SUPPORT_TRANSFORMER, tempParagraph2)
+  const oldContent = $exportMarkdown(tempParagraph1)
+  const newContent = $exportMarkdown(tempParagraph2)
 
   const diffContents = diffWords(oldContent, newContent)
   diffContents.forEach(item => {
     const tempNode = $createParagraphNode()
-    $convertFromMarkdownString(item.value, SUPPORT_TRANSFORMER, tempNode)
+    $importMarkdown(item.value, tempNode)
     replaceDiffNode(tempNode, item.added ? 'added' : item.removed ? 'removed' : 'unchanged')
     const innerParagraphNode = tempNode.getFirstChild()
     if (innerParagraphNode && $isParagraphNode(innerParagraphNode)) {
@@ -220,26 +227,80 @@ function processTextNodes(
   return result
 }
 
-export function $calculateDiffWords(newMarkdown: string, node: ElementNode = $getRoot()) {
+export function $calculateDiffWords(newMarkdown: string, selection: NodeSelection) {
   const editor = $getEditor()
 
   editor.update(() => {
     const tempRoot = $createParagraphNode()
-    $convertFromMarkdownString(newMarkdown, SUPPORT_TRANSFORMER, tempRoot)
+    $importMarkdown(newMarkdown, tempRoot)
 
-    // 从根节点开始处理差异
-    const finalDiffedNodes = processElementNode(node, tempRoot);
+    // 从用户所选节点处理差异，注意：确保选中的片段至少是一个ElementNode(容器Node)
+    const selectionNodes = selection.extract() as ElementNode[]
+    const finalDiffedNodes = processElementNode(selectionNodes, tempRoot.getChildren());
 
-    node.clear();
+    const firstSelectionNode = selectionNodes[0]
+    const previousNode = firstSelectionNode.getPreviousSibling()
+    if (previousNode) {
+      finalDiffedNodes.reverse().forEach(it => {
+        previousNode.insertAfter(it)
+      })
+    } else {
+      $getRoot().append(...finalDiffedNodes)
+    }
 
-    // 将所有差异化处理后的节点添加到编辑器中
-    finalDiffedNodes.forEach(p => {
-      node.append(p);
-    });
   })
 }
 
+export function $getSelectionElementNodes(): NodeSelection {
+  const nodeSelection = $createNodeSelection()
+  const range = $getSelection()
+  if (!range) {
+    return nodeSelection
+  }
 
+  const nodes = range.getNodes()
+
+  // 先获取所有key，然后去重
+  const keySet = new Set<string>()
+  nodes.forEach(it => {
+    const key = it.getTopLevelElement()?.getKey()
+    if (key) {
+      keySet.add(key)
+    }
+  })
+
+  Array.from(keySet)
+    .map(it => $getNodeByKey(it))
+    .filter(it => $isElementNode(it))
+    .forEach(it => nodeSelection.add(it.getKey()))
+
+  return nodeSelection
+}
+
+function $deepCloneNode(node: LexicalNode): LexicalNode {
+  const clone = $copyNode(node);
+  if ($isElementNode(node)) {
+    node.getChildren().forEach(child => {
+      (clone as ElementNode).append($deepCloneNode(child));
+    });
+  }
+  return clone;
+}
+
+export function $getMarkdownFromSelection(nodeSelection: NodeSelection): string {
+  const result: string[] = []
+  const editor = $getEditor()
+
+  editor.update(() => {
+    nodeSelection.getNodes().forEach(it => {
+      const tempParagraph = $createParagraphNode()
+      tempParagraph.append($deepCloneNode(it))
+      const markdown = $exportMarkdown(tempParagraph)
+      result.push(markdown)
+    })
+  })
+  return result.join("\n")
+}
 
 export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> =
   [
