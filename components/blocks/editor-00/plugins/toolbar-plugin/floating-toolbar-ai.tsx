@@ -58,7 +58,7 @@ function FloatingToolbarAi({
     const result = await resp.json()
 
     editor.read(() => {
-      $calculateDiffWords(result.optimizedContent, selection)
+      $calculateDiffWords(selection, originalContent, result.optimizedContent)
     })
 
     setInstruction("")
