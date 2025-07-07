@@ -25,12 +25,11 @@ function FloatingToolbarAi({
   const [loading, setLoading] = useState<boolean>(false)
   const [instruction, setInstruction] = useState<string>('')
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmitAi = async (e: any) => {
     e.preventDefault();
 
     let selection: NodeSelection
     let originalContent = ""
-    let root
     let resumeSection = ""
 
     editor.read(() => {
@@ -38,7 +37,6 @@ function FloatingToolbarAi({
 
       selection = $getSelectionElementNodes()
       originalContent = $getMarkdownFromSelection(selection)
-      root = $getRoot()
       resumeSection = $exportMarkdown()
     })
 
@@ -74,10 +72,8 @@ function FloatingToolbarAi({
       className="flex relative"
       style={{ zIndex: 9999 }}
     >
-      <motion.form
-        layout="position"
+      <motion.div
         transition={{duration: 0}}
-        onSubmit={handleSubmit}
         className="w-full relative"
       >
         <Input
@@ -87,15 +83,17 @@ function FloatingToolbarAi({
           onChange={(e) => setInstruction(e.target.value)}
         />
         <Button
+          type="button"
           size="icon"
           variant="ghost"
+          onClick={handleSubmitAi}
           className="absolute h-full cursor-pointer right-0 px-2 top-0 disabled:opacity-50 hover:enabled:bg-gray-100 disabled:transition-opacity"
         >
           <SparklesIcon
             className="text-indigo-500 disabled:transition-opacity"
           />
         </Button>
-      </motion.form>
+      </motion.div>
     </motion.div>
   );
 }

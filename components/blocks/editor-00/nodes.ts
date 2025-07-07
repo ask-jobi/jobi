@@ -39,7 +39,14 @@ export function $calculateDiffWords(selection: NodeSelection, originalMarkdown: 
         previousNode.insertAfter(it)
       })
     } else {
-      $getRoot().append(...tempRoot.getChildren())
+      const firstChildNode = $getRoot().getFirstChild()
+      if (firstChildNode) {
+        tempRoot.getChildren().forEach(it => {
+          firstChildNode.insertBefore(it)
+        })
+      } else {
+        $getRoot().append(...tempRoot.getChildren())
+      }
     }
 
     selection.deleteNodes()
