@@ -73,6 +73,27 @@ export class DiffTextNode extends TextNode {
   getDiffState() {
     return this.__diffState
   }
+
+  exportJSON() {
+    return {
+      ...super.exportJSON(),
+      type: 'diff-text',
+      version: 1,
+      diffState: this.__diffState,
+    };
+  }
+
+  static importJSON(serializedNode: any): DiffTextNode {
+    const node = new DiffTextNode(
+      serializedNode.text,
+      serializedNode.diffState
+    );
+    node.setFormat(serializedNode.format);
+    node.setDetail(serializedNode.detail);
+    node.setMode(serializedNode.mode);
+    node.setStyle(serializedNode.style);
+    return node;
+  }
 }
 
 export const DIFF_TEXT: TextMatchTransformer = {
@@ -90,7 +111,7 @@ export const DIFF_TEXT: TextMatchTransformer = {
   regExp: /(\[\+([^\[\]]+)\+\]|\[\-([^\[\]]+)\-\])$/,
   replace: (textNode, match) => {
     const [, , addedContent, removedContent] = match
-    let diffType: DiffStates = addedContent ? "added" : "removed"
+    const diffType: DiffStates = addedContent ? "added" : "removed"
     const content = addedContent ?? removedContent
     if (!content) return
 
