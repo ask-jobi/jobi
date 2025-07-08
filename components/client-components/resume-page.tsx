@@ -2,7 +2,6 @@
 
 import {useEffect, useState} from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { useDebouncedCallback } from "use-debounce";
 import { toast } from "sonner";
 import { saveResumeChange } from "@/server/resume";
 import {
@@ -40,6 +39,7 @@ import ResumeEditor from "./resume-editor";
 import { Separator } from "../ui/separator";
 import { TourStep, useTour } from "@/components/tour";
 import SuggestionPatch from "@/components/client-components/suggestion-patch";
+import {useDebouncedCallback} from "@mantine/hooks";
 
 interface SortableSectionItemProps {
   id: string;

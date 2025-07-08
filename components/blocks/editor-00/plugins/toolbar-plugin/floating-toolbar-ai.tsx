@@ -11,9 +11,10 @@ import {
   $getMarkdownFromSelection,
   $getSelectionElementNodes
 } from "@/components/blocks/editor-00/nodes";
-import {$getRoot, NodeSelection} from "lexical";
+import {NodeSelection} from "lexical";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
+import {useClickOutside} from "@mantine/hooks";
 
 function FloatingToolbarAi({
                              setMode
@@ -24,6 +25,10 @@ function FloatingToolbarAi({
   const [editor] = useLexicalComposerContext();
   const [loading, setLoading] = useState<boolean>(false)
   const [instruction, setInstruction] = useState<string>('')
+
+  const ref = useClickOutside(() => {
+    setMode("closed")
+  })
 
   const handleSubmitAi = async (e: any) => {
     e.preventDefault();
@@ -69,6 +74,7 @@ function FloatingToolbarAi({
 
   return (
     <motion.div
+      ref={ref}
       className="flex relative"
       style={{ zIndex: 9999 }}
     >

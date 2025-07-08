@@ -1,4 +1,4 @@
-import {FC, useLayoutEffect, useState} from 'react';
+import {FC, useEffect, useLayoutEffect, useState} from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {useRange} from "@/components/blocks/editor-00/hooks/use-range";
 import {useMouseListener} from "@/components/blocks/editor-00/hooks/use-mouse-listener";
@@ -10,7 +10,7 @@ import {FocusScope} from "@radix-ui/react-focus-scope";
 const ToolbarPlugin: FC = () => {
   const padding = 20
   const [editor] = useLexicalComposerContext();
-  const [mode, setMode] = useState<"default" | "ai" | "closed">("default");
+  const [mode, setMode] = useState<"default" | "ai" | "closed">("closed");
   const {range, rangeRef} = useRange()
   const [mouseSelection, setMouseSelection] = useState<boolean>(false)
 
@@ -35,8 +35,32 @@ const ToolbarPlugin: FC = () => {
     },
   });
 
+  useEffect(() => {
+    if (mode === "ai") return;
+    console.log(mode, range, mouseSelection)
+    // 什么情况下打开floating toolbar (default模式), 同时满足以下条件
+    // 1. 实际选择了一个段落(range !== null) 并且排除了折叠的情况(!range.collapsed)
+    // 2. 鼠标抬起时(防止拖动时出现floating toolbar, !mouseSelection)
+    // 3. 当前floating toolbar处于关闭状态(mode === 'closed')
+
+    // 什么情况下关闭floating toolbar (default模式)
+    // 1. 没有选择任何一个段落(range === null || range.collapsed)
+
+    // 什么情况下关闭floating toolbar (ai模式)
+    // 1. click outside
+    // 2. 手动关闭
+    if (range && !range.collapsed && !mouseSelection) {
+      if (mode === 'closed') {
+        setMode("default");
+      }
+    } else {
+      if (mode !== 'closed') {
+        setMode("closed");
+      }
+    }
+  }, [range, mouseSelection, mode]);
+
   useLayoutEffect(() => {
-    setMode("default")
     setReference({
       getBoundingClientRect: () =>
         range?.getBoundingClientRect() || new DOMRect(),
@@ -45,24 +69,22 @@ const ToolbarPlugin: FC = () => {
 
   useMouseListener((mouse) => {
     setTimeout(() => {
-      setTimeout(() => {
-        setMouseSelection(rangeRef.current === null && mouse === "down")
-      })
+      setMouseSelection(mouse === "down")
     })
   })
 
-  if (mode === 'closed' || range === null|| mouseSelection) {
+  if (mode === 'closed') {
     return null;
   }
 
   return (
     <Portal>
-      <FocusScope
-        onMountAutoFocus={(e) => {e.preventDefault()}}>
+      <FocusScope>
         <div
           ref={setFloating}
           tabIndex={0}
           className="pointer-events-auto"
+          onMouseDown={e => e.stopPropagation()}
           style={mode === 'ai' && editor._rootElement ?
           {
             position: strategy,

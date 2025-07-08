@@ -1,0 +1,35 @@
+diff --git a/LexicalMarkdown.dev.js b/LexicalMarkdown.dev.js
+index 2f8fbeaf73d2cb7c84d236c811bc123f1a416c06..75c0b23c07a122b8fef13d7ca5817fbad0260b38 100644
+--- a/LexicalMarkdown.dev.js
++++ b/LexicalMarkdown.dev.js
+@@ -85,7 +85,7 @@ function createMarkdownExport(transformers, shouldPreserveNewLines = false) {
+   });
+   return node => {
+     const output = [];
+-    const children = (node || lexical.$getRoot()).getChildren();
++    const children = node ? [node] : lexical.$getRoot().getChildren();
+     for (let i = 0; i < children.length; i++) {
+       const child = children[i];
+       const result = exportTopLevelElements(child, elementTransformers, textFormatTransformers, byType.textMatch);
+diff --git a/LexicalMarkdown.dev.mjs b/LexicalMarkdown.dev.mjs
+index 176b6e1fd28061b070c7ecec3393e2b093f4b67e..b371db583651f23220717e51cf1985e595c66271 100644
+--- a/LexicalMarkdown.dev.mjs
++++ b/LexicalMarkdown.dev.mjs
+@@ -6,7 +6,7 @@
+  *
+  */
+ 
+-import { $isParagraphNode, $isTextNode, $getRoot, $isElementNode, $isDecoratorNode, $isLineBreakNode, $getSelection, $createTextNode, $createParagraphNode, $createLineBreakNode, COLLABORATION_TAG, HISTORIC_TAG, $isRangeSelection, $isRootOrShadowRoot, $createRangeSelection, $setSelection } from 'lexical';
++import lexical, { $isParagraphNode, $isTextNode, $getRoot, $isElementNode, $isDecoratorNode, $isLineBreakNode, $getSelection, $createTextNode, $createParagraphNode, $createLineBreakNode, COLLABORATION_TAG, HISTORIC_TAG, $isRangeSelection, $isRootOrShadowRoot, $createRangeSelection, $setSelection } from 'lexical';
+ import { $isListNode, $isListItemNode, ListNode, ListItemNode, $createListItemNode, $createListNode } from '@lexical/list';
+ import { $isQuoteNode, HeadingNode, $isHeadingNode, QuoteNode, $createQuoteNode, $createHeadingNode } from '@lexical/rich-text';
+ import { $findMatchingParent } from '@lexical/utils';
+@@ -83,7 +83,7 @@ function createMarkdownExport(transformers, shouldPreserveNewLines = false) {
+   });
+   return node => {
+     const output = [];
+-    const children = (node || $getRoot()).getChildren();
++    const children = node ? [node] : $getRoot().getChildren();
+     for (let i = 0; i < children.length; i++) {
+       const child = children[i];
+       const result = exportTopLevelElements(child, elementTransformers, textFormatTransformers, byType.textMatch);

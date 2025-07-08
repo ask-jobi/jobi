@@ -21,7 +21,7 @@ export function useRange() {
         if (tags.has("collaboration")) return;
 
         const selection = $getSelection();
-        if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+        if (!$isRangeSelection(selection)) {
           setRange(null);
           rangeRef.current = null;
           return;
