@@ -46,6 +46,7 @@ export abstract class BaseTemplate {
     S extends ResumeData[ID] extends SectionBlock<infer B> ? SectionBlock<B> : never,
     B = S extends SectionBlock<infer U> ? U : never>({
                            sectionId,
+                           headRender,
                            blockRender,
                            sectionClassName = "",
                            sectionStyle,
@@ -53,6 +54,7 @@ export abstract class BaseTemplate {
                            titleRender,
                          }: {
     sectionId: ID;
+    headRender: (block: B, index: number) => React.ReactNode;
     blockRender: (block: B, index: number) => React.ReactNode;
     sectionClassName?: string;
     sectionStyle?: React.CSSProperties;
@@ -67,7 +69,7 @@ export abstract class BaseTemplate {
         className={`mb-5 p-2 ${sectionClassName}`}
         style={sectionStyle}
       >
-        {titleRender ? titleRender(section.title) : <h2 className="text-lg font-bold mb-2">{section.title}</h2>}
+        {titleRender ? titleRender(section.title) : <h2 className={`text-lg font-bold mb-2`}>{section.title}</h2>}
         {section.blocks.map((block, index) => {
           const handleClick = () => {
             if (this.isInteractive && this.onSectionClick) this.onSectionClick(sectionId, index);
@@ -80,6 +82,9 @@ export abstract class BaseTemplate {
               onClick={handleClick}
               tabIndex={this.isInteractive ? 0 : undefined}
             >
+              <div id={`${sectionId}-${index}-head`}>
+                {headRender(block, index)}
+              </div>
               {blockRender(block, index)}
             </div>
           );
