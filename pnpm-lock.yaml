@@ -43,6 +43,9 @@ importers:
       '@langchain/openai':
         specifier: ^0.5.11
         version: 0.5.11(@langchain/core@0.3.57(openai@4.103.0(ws@8.18.2)(zod@3.25.28)))(ws@8.18.2)
+      '@lexical/history':
+        specifier: ^0.33.0
+        version: 0.33.0
       '@lexical/html':
         specifier: ^0.32.1
         version: 0.32.1
@@ -1317,6 +1320,9 @@ packages:
   '@lexical/clipboard@0.32.1':
     resolution: {integrity: sha512-oO7CuMVh3EFEqtE6+7Ccf7jMD5RNUmSdTnFm/X4kYNGqs9lgGt8j5PgSk7oP9OuAjxKNdBTbltSlh54CX3AUIg==}
 
+  '@lexical/clipboard@0.33.0':
+    resolution: {integrity: sha512-nM3HE8ekF+dhFoXvOS5G8KZDi1BJARh+dMFZlLe7MX44rEkxcMMdgtY2qr8j9cUL8d4k1BVql9nEIfF/kLp7Gw==}
+
   '@lexical/code@0.32.1':
     resolution: {integrity: sha512-2rXj8s/CG32XKQ2EpORpACfpzyAxB+/SrQW2cjwczarLs5Fxnx6u6HwahZnxaF0z5UHIPUy90qDiOiRExc74Yg==}
 
@@ -1335,14 +1341,23 @@ packages:
   '@lexical/history@0.32.1':
     resolution: {integrity: sha512-IRsKllumYEWxmzR2evN30MFY+JBM723lSyzm2PAQcgHCeBxi8t0Vc3EdyJRay+YdN65JgrohQi1WbktbK923uQ==}
 
+  '@lexical/history@0.33.0':
+    resolution: {integrity: sha512-J1WV4P+9yVAGYIR7cgM5huhKKgVAkh/1YbcOozy+1DiIZAfciHdmVIl3mg9/zxRT1KYS0gJgwsG05IZXtKt29Q==}
+
   '@lexical/html@0.32.1':
     resolution: {integrity: sha512-uctCdC9gVzx/Sw9CimT4C2IDfSbfEGYunyIrJBpsfcdqp0rroGNizjIoZNBH3xcgkk9UDboSADo+wimbzEoy8A==}
+
+  '@lexical/html@0.33.0':
+    resolution: {integrity: sha512-m5xWpxPKNOnlPLSEDHdxHUXJy/WqnQSkHsDD+xQqXN9HwqZY1CaAgnJCWWBwiCNgr1FKZmJOuZd2eS5q1wRtgQ==}
 
   '@lexical/link@0.32.1':
     resolution: {integrity: sha512-atdwNpWjZ0U2/kgS0ATTkZ8lJLHiv3TsJgqJL33BuV9Gn7advJokd4faM79Y8XxkhiPi1lVTBSHgI8V4hs+c+Q==}
 
   '@lexical/list@0.32.1':
     resolution: {integrity: sha512-3zShCfEdAvodR6mQ5CNN1gcEwfV341LXJzWCIkZzG1cPwaiBHUlT7TynQtKTPn1sATCEMmxoDG0/T+itsRNZgA==}
+
+  '@lexical/list@0.33.0':
+    resolution: {integrity: sha512-NB29jUhteIE7kGT8Nbb7IQYCa6zpYj10j/WbvlKQMG7k6aOcTCFOV2/r3q+TnuvhAshQj88g1wqMSvQt8DfsfA==}
 
   '@lexical/mark@0.32.1':
     resolution: {integrity: sha512-AXF2wmUvvSI45y+sgZKnU0pnUdttd9v75DDQgdplqtCkyDqHVGxVCNCrLE+PJtzIrwJxtA2UyC8yFZMBM92HpA==}
@@ -1371,14 +1386,23 @@ packages:
   '@lexical/selection@0.32.1':
     resolution: {integrity: sha512-X1aXJdq/5EOuSuMOqK3t+rEVmpqLf+vc2Kl5YuP8+gGWUbXuxR6iryrQuy1mAViZpF/5qw4HO/Sb+9JjubaZEg==}
 
+  '@lexical/selection@0.33.0':
+    resolution: {integrity: sha512-DffmfgnCrnf8OmoFG0d5g3jBn6AYNVA3Aoiyamri+aCX6wjL94D81LMNdnFFLICuHVb8AAmR/v7DA82aHRT8WA==}
+
   '@lexical/table@0.32.1':
     resolution: {integrity: sha512-sGk2jUbQHj5hatpxRyl6IE2oWsjRnYhmaP94THzn95/uK69o8eSizcnd148WzYsX8Zz+L9PTLS1xjvCbfLTP+A==}
+
+  '@lexical/table@0.33.0':
+    resolution: {integrity: sha512-+tZ+nUvhMesIFgy2um7rISWg6l7hsAhShaIhj7ibN0ZfZlAdfy0ZRVmY05BwSBuwG1s9o3oX6CRp25HrNLgZhQ==}
 
   '@lexical/text@0.32.1':
     resolution: {integrity: sha512-0Ek8F3KC4d16b2YaTHdyYFqDSBZ5KRtGrqU3GBog+VOGxucGaEbXEK1/ypX5CTe/wwkQDrH0FKWPQbd3l5t5YQ==}
 
   '@lexical/utils@0.32.1':
     resolution: {integrity: sha512-ZaqZZksNIHJd+g8GXc11D1ESi8JzsdLVQZ+9odXVaNxtwDIaGIqMSccFyuZ9VSoJDde4JXZkgp/0PShbAZDkyw==}
+
+  '@lexical/utils@0.33.0':
+    resolution: {integrity: sha512-vqjRMjokCEK/UXNIITMaFb00Q15bxr65hvAZfaHPCVHV7CDZxOjwi2hqA/HuTZAknIlFuWzfucPla6pBY/cldw==}
 
   '@lexical/yjs@0.32.1':
     resolution: {integrity: sha512-VHGTg5z4wcDkPe8NnhzA5+CoOKJ5tVmTmMvoiZ91rtNUFQPxWRky88Gjt1e3yXldYp4pImNEgtAjlWqvaJBYGA==}
@@ -3936,6 +3960,9 @@ packages:
   lexical@0.32.1:
     resolution: {integrity: sha512-Rvr9p00zUwzjXIqElIjMDyl/24QHw68yaqmXUWIT3lSdSAr8OpjSJK3iWBLZwVZwwpVhwShZRckomc+3vSb/zw==}
 
+  lexical@0.33.0:
+    resolution: {integrity: sha512-kH8EvPi0Ptgu+PGKeZKfZKXMpImkdVHXKoVFcseb0R/4Jkc/DzmR2VN1Z8n9UHQqxdgC9e0tSrN8iKWHZOtDKw==}
+
   lib0@0.2.108:
     resolution: {integrity: sha512-+3eK/B0SqYoZiQu9fNk4VEc6EX8cb0Li96tPGKgugzoGj/OdRdREtuTLvUW+mtinoB2mFiJjSqOJBIaMkAGhxQ==}
     engines: {node: '>=16'}
@@ -6301,6 +6328,14 @@ snapshots:
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
 
+  '@lexical/clipboard@0.33.0':
+    dependencies:
+      '@lexical/html': 0.33.0
+      '@lexical/list': 0.33.0
+      '@lexical/selection': 0.33.0
+      '@lexical/utils': 0.33.0
+      lexical: 0.33.0
+
   '@lexical/code@0.32.1':
     dependencies:
       '@lexical/utils': 0.32.1
@@ -6332,11 +6367,22 @@ snapshots:
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
 
+  '@lexical/history@0.33.0':
+    dependencies:
+      '@lexical/utils': 0.33.0
+      lexical: 0.33.0
+
   '@lexical/html@0.32.1':
     dependencies:
       '@lexical/selection': 0.32.1
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
+
+  '@lexical/html@0.33.0':
+    dependencies:
+      '@lexical/selection': 0.33.0
+      '@lexical/utils': 0.33.0
+      lexical: 0.33.0
 
   '@lexical/link@0.32.1':
     dependencies:
@@ -6348,6 +6394,12 @@ snapshots:
       '@lexical/selection': 0.32.1
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
+
+  '@lexical/list@0.33.0':
+    dependencies:
+      '@lexical/selection': 0.33.0
+      '@lexical/utils': 0.33.0
+      lexical: 0.33.0
 
   '@lexical/mark@0.32.1':
     dependencies:
@@ -6415,11 +6467,21 @@ snapshots:
     dependencies:
       lexical: 0.32.1
 
+  '@lexical/selection@0.33.0':
+    dependencies:
+      lexical: 0.33.0
+
   '@lexical/table@0.32.1':
     dependencies:
       '@lexical/clipboard': 0.32.1
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
+
+  '@lexical/table@0.33.0':
+    dependencies:
+      '@lexical/clipboard': 0.33.0
+      '@lexical/utils': 0.33.0
+      lexical: 0.33.0
 
   '@lexical/text@0.32.1':
     dependencies:
@@ -6431,6 +6493,13 @@ snapshots:
       '@lexical/selection': 0.32.1
       '@lexical/table': 0.32.1
       lexical: 0.32.1
+
+  '@lexical/utils@0.33.0':
+    dependencies:
+      '@lexical/list': 0.33.0
+      '@lexical/selection': 0.33.0
+      '@lexical/table': 0.33.0
+      lexical: 0.33.0
 
   '@lexical/yjs@0.32.1(yjs@13.6.27)':
     dependencies:
@@ -8527,7 +8596,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.9.0(debug@4.4.1))
+      retry-axios: 2.6.0(axios@1.9.0)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -9242,6 +9311,8 @@ snapshots:
       type-check: 0.4.0
 
   lexical@0.32.1: {}
+
+  lexical@0.33.0: {}
 
   lib0@0.2.108:
     dependencies:
@@ -10261,7 +10332,7 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
-  retry-axios@2.6.0(axios@1.9.0(debug@4.4.1)):
+  retry-axios@2.6.0(axios@1.9.0):
     dependencies:
       axios: 1.9.0(debug@4.4.1)
 

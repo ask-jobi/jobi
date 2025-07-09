@@ -20,6 +20,7 @@
     "@langchain/core": "^0.3.57",
     "@langchain/google-genai": "^0.2.9",
     "@langchain/openai": "^0.5.11",
+    "@lexical/history": "^0.33.0",
     "@lexical/html": "^0.32.1",
     "@lexical/link": "^0.32.1",
     "@lexical/list": "^0.32.1",

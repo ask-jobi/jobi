@@ -37,7 +37,6 @@ const ToolbarPlugin: FC = () => {
 
   useEffect(() => {
     if (mode === "ai") return;
-    console.log(mode, range, mouseSelection)
     // 什么情况下打开floating toolbar (default模式), 同时满足以下条件
     // 1. 实际选择了一个段落(range !== null) 并且排除了折叠的情况(!range.collapsed)
     // 2. 鼠标抬起时(防止拖动时出现floating toolbar, !mouseSelection)
