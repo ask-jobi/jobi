@@ -6,15 +6,15 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {useAtom} from "jotai";
 import {selectedSectionIdAtom} from "@/lib/store/resume";
-import {
-  $calculateDiffWords,
-  $getMarkdownFromSelection,
-  $getSelectionElementNodes
-} from "@/components/blocks/editor-00/nodes";
 import {NodeSelection} from "lexical";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 import {useClickOutside} from "@mantine/hooks";
+import {
+  $calculateDiffWords,
+  $getMarkdownFromSelection,
+  $getSelectionElementNodes
+} from "@/components/blocks/editor-00/utils";
 
 function FloatingToolbarAi({
                              setMode
