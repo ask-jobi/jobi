@@ -10,6 +10,7 @@ import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggabl
 import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/preserve-selection-plugin";
 import {EXPORT_TRANSFORMER} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 import {HistoryPlugin} from "@lexical/react/LexicalHistoryPlugin";
+import DiffMdPlugin from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -44,6 +45,7 @@ export function Plugins() {
         {/* editor plugins */}
       </div>
       <PreserveSelectionPlugin/>
+      <DiffMdPlugin/>
       <HistoryPlugin/>
       {/* actions plugins */}
     </div>

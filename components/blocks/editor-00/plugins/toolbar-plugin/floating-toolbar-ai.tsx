@@ -15,6 +15,7 @@ import {
   $getMarkdownFromSelection,
   $getSelectionElementNodes
 } from "@/components/blocks/editor-00/utils";
+import {REJECT_DIFF_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 
 function FloatingToolbarAi({
                              setMode
@@ -28,6 +29,7 @@ function FloatingToolbarAi({
 
   const ref = useClickOutside(() => {
     setMode("closed")
+    editor.dispatchCommand(REJECT_DIFF_COMMAND, null)
   })
 
   const handleSubmitAi = async (e: any) => {
@@ -60,7 +62,7 @@ function FloatingToolbarAi({
     })
     const result = await resp.json()
 
-    editor.read(() => {
+    editor.update(() => {
       $calculateDiffWords(selection, originalContent, result.optimizedContent)
     })
 
@@ -69,7 +71,6 @@ function FloatingToolbarAi({
     // Restore text editor selection when prompt submitted
     // editor.dispatchCommand(RESTORE_SELECTION_COMMAND, null);
     setLoading(false)
-
   }
 
   return (

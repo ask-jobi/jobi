@@ -13,8 +13,15 @@ import {
 } from "lexical";
 import {$exportMarkdown, $importMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 import {diffMarkdown} from "@/components/blocks/editor-00/diff";
+import {CACHE_DIFF_NODES_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 
-function $replaceNodes(selectionNodes: Array<LexicalNode>, childrenNodes: Array<LexicalNode>) {
+export function $generateNodesFromMarkdown(markdown: string): ElementNode[] {
+  const tempRoot = $createParagraphNode()
+  $importMarkdown(markdown, tempRoot)
+  return tempRoot.getChildren()
+}
+
+export function $replaceNodes(selectionNodes: Array<LexicalNode>, childrenNodes: Array<LexicalNode>) {
   const firstSelectionNode = selectionNodes[0]
   const previousNode = firstSelectionNode.getPreviousSibling()
   if (previousNode) {
@@ -34,31 +41,26 @@ function $replaceNodes(selectionNodes: Array<LexicalNode>, childrenNodes: Array<
 }
 
 export function $calculateDiffWords(selection: NodeSelection, originalMarkdown: string, newMarkdown: string) {
-  const editor = $getEditor()
+  const diffedMarkdown = diffMarkdown(originalMarkdown, newMarkdown)
+  const diffedNodes = $generateNodesFromMarkdown(diffedMarkdown)
 
-  editor.update(() => {
-    const tempRoot1 = $createParagraphNode()
-    $importMarkdown(newMarkdown, tempRoot1)
-    const diffedMarkdown = diffMarkdown(originalMarkdown, newMarkdown)
-    const tempRoot = $createParagraphNode()
-    $importMarkdown(diffedMarkdown, tempRoot)
+  // // 从用户所选节点处理差异，注意：确保选中的片段至少是一个ElementNode(容器Node)
+  // 优先获取lastChild的引用, 因为临时节点中的子节点会被转移到root下
+  const lastChild = diffedNodes[diffedNodes.length - 1]
+  const selectionNodes = selection.getNodes()
 
-    // // 从用户所选节点处理差异，注意：确保选中的片段至少是一个ElementNode(容器Node)
-    // 优先获取lastChild的引用, 因为临时节点中的子节点会被转移到root下
-    const lastChild = tempRoot.getLastChild()
-    const selectionNodes = selection.getNodes()
-    const diffedNodes = tempRoot.getChildren()
-    const newNodes = tempRoot1.getChildren()
-
-    // cache nodes
-
-    $replaceNodes(selectionNodes, diffedNodes)
-    selection.deleteNodes()
-    if (lastChild) {
-      const range = lastChild.selectEnd()
-      $setSelection(range)
-    }
+  $getEditor().dispatchCommand(CACHE_DIFF_NODES_COMMAND, {
+    diffNodes: diffedNodes.map(it => it.getKey()),
+    beforeMarkdown: originalMarkdown,
+    afterMarkdown: newMarkdown
   })
+
+  $replaceNodes(selectionNodes, diffedNodes)
+  selection.deleteNodes()
+  if (lastChild) {
+    const range = lastChild.selectEnd()
+    $setSelection(range)
+  }
 }
 
 export function $getSelectionElementNodes(): NodeSelection {
