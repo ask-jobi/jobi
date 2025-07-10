@@ -28,8 +28,10 @@ function FloatingToolbarAi({
   const [instruction, setInstruction] = useState<string>('')
 
   const ref = useClickOutside(() => {
-    setMode("closed")
-    editor.dispatchCommand(REJECT_DIFF_COMMAND, null)
+    setTimeout(() => {
+      setMode("closed")
+      editor.dispatchCommand(REJECT_DIFF_COMMAND, null)
+    }, 0)
   })
 
   const handleSubmitAi = async (e: any) => {
@@ -95,11 +97,11 @@ function FloatingToolbarAi({
           size="icon"
           variant="ghost"
           onClick={handleSubmitAi}
-          disabled={loading}
+          disabled={loading || instruction.length === 0}
           className="absolute h-full cursor-pointer right-0 px-2 top-0 disabled:opacity-50 hover:enabled:bg-gray-100 disabled:transition-opacity"
         >
           {
-            loading ?       
+            loading ?
             <Loader className="animate-spin w-12 h-12 text-blue-500" /> :
             <SparklesIcon
               className="text-indigo-500 disabled:transition-opacity"
