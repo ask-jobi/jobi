@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import React, {useState} from 'react';
 import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
-import {SparklesIcon} from "lucide-react";
+import {Loader, SparklesIcon} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {useAtom} from "jotai";
@@ -87,6 +87,7 @@ function FloatingToolbarAi({
           className="block w-full shadow-xl border p-2 pl-3 rounded-lg outline-none disabled:transition-colors bg-white"
           placeholder="Ask AI anything..."
           value={instruction}
+          disabled={loading}
           onChange={(e) => setInstruction(e.target.value)}
         />
         <Button
@@ -94,11 +95,16 @@ function FloatingToolbarAi({
           size="icon"
           variant="ghost"
           onClick={handleSubmitAi}
+          disabled={loading}
           className="absolute h-full cursor-pointer right-0 px-2 top-0 disabled:opacity-50 hover:enabled:bg-gray-100 disabled:transition-opacity"
         >
-          <SparklesIcon
-            className="text-indigo-500 disabled:transition-opacity"
-          />
+          {
+            loading ?       
+            <Loader className="animate-spin w-12 h-12 text-blue-500" /> :
+            <SparklesIcon
+              className="text-indigo-500 disabled:transition-opacity"
+            />
+          }
         </Button>
       </motion.div>
     </motion.div>
