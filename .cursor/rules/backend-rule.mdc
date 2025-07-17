@@ -1,0 +1,15 @@
+---
+description: 
+globs: server/**.ts,app/api/**/**.ts
+alwaysApply: false
+---
+---
+description: Rules for interacting with Supabase backend services within the frontend.
+globs: server/**.ts,app/api/**/**.ts
+---
+- 所有后端服务（认证、数据库）统一用 Supabase。
+- 认证流程（登录、注册、登出）必须用 Supabase SDK。
+- 用户 session、数据管理必须安全，禁止明文存储敏感信息。
+- API 路由中的业务逻辑必须抽离到 server/ 目录，route.ts 只做参数校验和调用。
+- Supabase 类型变更后，必须同步生成 types/supabase.ts。
+- 禁止在前端直接操作数据库，所有数据操作通过 API 或 server 层。

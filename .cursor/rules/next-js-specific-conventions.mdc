@@ -1,0 +1,16 @@
+---
+description: 
+globs: pages/**/*
+alwaysApply: false
+---
+---
+description: Enforces Next.js specific conventions for data fetching, rendering, and routing in the 'pages' directory.
+globs: pages/**/*
+---
+- 仅在需要访问浏览器 API 的组件中加 "use client"，其余全部用服务端组件。
+- 路由、数据获取、渲染严格遵循 Next.js 官方文档。
+- URL 状态管理推荐用 nuqs。
+- 优化 Web Vitals（LCP、CLS、FID），如图片用 next/image，避免 layout shift。
+- API 路由统一放在 app/api/，业务逻辑抽离到 server/。
+- SSR/SSG 优先，CSR 仅限必要场景。
+- 禁止在服务端组件中直接访问 window、document。

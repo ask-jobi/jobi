@@ -1,0 +1,15 @@
+---
+description: 
+globs: **/*.tsx
+alwaysApply: false
+---
+---
+description: Specifies the usage of Shadcn UI, Radix, Tailwind Aria for UI components and styling within the project.
+globs: **/*.tsx
+---
+- UI 组件优先使用 Shadcn UI、Radix 相关库，禁止自造轮子。
+- 样式全部用 Tailwind CSS，禁止使用 CSS/SASS/LESS 文件。
+- 响应式设计必须用 Tailwind 的响应式工具类。
+- 复用样式用 tailwind-merge 合并，避免 class 冲突。
+- 主题切换统一用 next-themes。
+- 禁止直接操作 DOM，动画优先用 motion 库。

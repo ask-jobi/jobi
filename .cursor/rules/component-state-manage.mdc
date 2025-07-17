@@ -1,0 +1,12 @@
+---
+description: 
+globs: **/*.tsx
+alwaysApply: false
+---
+---
+description: Rules for usage of component state managment
+globs: **/*.tsx
+---
+- 当出现需要在多个组件共享状态时，使用jotai库进行处理
+- jotai创建的atom state应该放在lib/store目录下
+- 使用jotai完全替换React Context
