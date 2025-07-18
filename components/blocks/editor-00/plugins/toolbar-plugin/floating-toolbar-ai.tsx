@@ -178,21 +178,21 @@ function FloatingToolbarAi({
                 AIState === 'asking' &&
                 <>
                   <CommandItemWithIcon
-                    icon={<WandIcon className="h-3.5" />}
+                    icon={<WandIcon className="h-full text-indigo-500" />}
                     onSelect={() => {
                     }}
                   >
                     Improve writing
                   </CommandItemWithIcon>
                   <CommandItemWithIcon
-                    icon={<ListMinus className="h-full" />}
+                    icon={<ListMinus className="h-full text-indigo-500" />}
                     onSelect={() => {
                     }}
                   >
                     Simplify
                   </CommandItemWithIcon>
                   <CommandItemWithIcon
-                    icon={<ListPlus className="h-full" />}
+                    icon={<ListPlus className="h-full text-indigo-500" />}
                     onSelect={() => {
 
                     }}

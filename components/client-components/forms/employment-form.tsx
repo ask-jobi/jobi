@@ -7,6 +7,7 @@ import { Plus, Edit } from "lucide-react";
 import { ResumeData } from "@/types/resume";
 import { MarkdownModal } from "@/components/ui/markdown-modal";
 import { useState } from "react";
+import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field";
 
 export function EmploymentForm() {
   const { control, register, setValue, getValues } = useFormContext<ResumeData>();
@@ -55,16 +56,11 @@ export function EmploymentForm() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Start Date</label>
-              <Input
-                {...register(`employment.blocks.${blockIndex}.start`)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">End Date</label>
-              <Input
-                {...register(`employment.blocks.${blockIndex}.end`)}
+            <div className="col-span-2">
+              <MonthRangePickerFormField
+                startName={`employment.blocks.${blockIndex}.start`}
+                endName={`employment.blocks.${blockIndex}.end`}
+                label="Start/End Date"
               />
             </div>
           </div>
