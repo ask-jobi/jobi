@@ -1,4 +1,4 @@
-import {LayoutDashboard, Settings, LogOut} from "lucide-react";
+import {LayoutDashboard, Settings} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,7 @@ import {
 import { Progress } from "./ui/progress";
 import {getQuotas} from "@/server/quota";
 import { LogoutButton } from "./logout-button";
+import Link from "next/link";
 
 const QuotaCard = async () => {
   const quotaData= await getQuotas();
@@ -46,6 +47,7 @@ const items = [
 ];
 
 export default function AppSidebar() {
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader/>
@@ -55,9 +57,9 @@ export default function AppSidebar() {
             asChild
             className="data-[slot=sidebar-menu-button]:!p-1.5"
           >
-            <a href="/">
+            <Link href="/">
               <span className="text-base font-semibold">Jobi AI</span>
-            </a>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
