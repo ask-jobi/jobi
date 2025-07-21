@@ -36,5 +36,9 @@
   "chinese": "中文",
   "english": "English",
 
-  "settings": "设置"
+  "settings": "设置",
+  "logout": "登出",
+
+  "credits": "简历额度",
+  "overallOptimized": "整体优化额度"
 }

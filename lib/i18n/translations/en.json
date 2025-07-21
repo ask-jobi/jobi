@@ -36,5 +36,9 @@
   "chinese": "中文",
   "english": "English",
 
-  "settings": "Settings"
+  "settings": "Settings",
+  "logout": "Logout",
+
+  "credits": "Credits",
+  "overallOptimized": "Overall Optimized"
 }

@@ -14,22 +14,25 @@ import { Progress } from "./ui/progress";
 import {getQuotas} from "@/server/quota";
 import { LogoutButton } from "./logout-button";
 import Link from "next/link";
+import {useTranslations} from "next-intl";
+import {getTranslations} from "next-intl/server";
 
 const QuotaCard = async () => {
   const quotaData= await getQuotas();
+  const t = await getTranslations()
 
   return (
     <div className="mx-4 my-2">
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Credits</span>
+          <span className="text-gray-600">{t("credits")}</span>
           <span className="text-gray-900">{quotaData.credits.used}/{quotaData.credits.total}</span>
         </div>
         <Progress value={(quotaData.credits.used / quotaData.credits.total) * 100}/>
       </div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Overall Optimize</span>
+          <span className="text-gray-600">{t("overallOptimized")}</span>
           <span className="text-gray-900">{quotaData.overallOptimize.used}/{quotaData.overallOptimize.total}</span>
         </div>
         <Progress value={(quotaData.overallOptimize.used / quotaData.overallOptimize.total) * 100}/>
@@ -40,13 +43,14 @@ const QuotaCard = async () => {
 
 const items = [
   {
-    title: "Dashboard",
+    title: "dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
   },
 ];
 
 export default function AppSidebar() {
+  const t = useTranslations()
 
   return (
     <Sidebar variant="inset">
@@ -75,7 +79,7 @@ export default function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
                       <item.icon/>
-                      <span>{item.title}</span>
+                      <span>{t(item.title)}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -91,7 +95,7 @@ export default function AppSidebar() {
             <SidebarMenuButton asChild>
               <a href="/settings">
                 <Settings />
-                <span>设置</span>
+                <span>{t('settings')}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
