@@ -50,7 +50,8 @@ const ToolbarPlugin: FC = () => {
     // 什么情况下关闭floating toolbar (ai模式)
     // 1. click outside
     // 2. 手动关闭
-    if (range && !range.collapsed && !mouseSelection) {
+    // TODO 暂时处理，在listitem换行有bug
+    if (range && (range.startContainer !== range.endContainer || range.startOffset + 1 !== range.endOffset) && !range.collapsed && !mouseSelection) {
       if (prevMode === 'closed') {
         setMode("default");
       }
