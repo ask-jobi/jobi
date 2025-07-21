@@ -1,14 +1,23 @@
 'use client'
 
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/lib/i18n/language-context";
 import { Globe } from "lucide-react";
+import {useLocale} from "next-intl";
+import {usePathname, useRouter} from "@/lib/i18n/navigation";
+import {useParams} from "next/navigation";
 
 export function LanguageSwitcher() {
-  const { language, setLanguage, t } = useLanguage();
+  const locale = useLocale()
+  const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
 
   const toggleLanguage = () => {
-    setLanguage(language === 'zh' ? 'en' : 'zh');
+    router.replace(
+      // @ts-expect-error -- TypeScript will validate that only known `params`
+      {pathname, params},
+      {locale: locale === 'zh' ? 'en' : 'zh'}
+    );
   };
 
   return (
@@ -19,7 +28,7 @@ export function LanguageSwitcher() {
       className="flex items-center space-x-1"
     >
       <Globe className="w-4 h-4" />
-      <span>{language === 'zh' ? 'EN' : '中文'}</span>
+      <span>{locale === 'zh' ? 'EN' : '中文'}</span>
     </Button>
   );
-} 
+}

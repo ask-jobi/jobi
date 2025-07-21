@@ -2,26 +2,25 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Sparkles, 
-  Zap, 
-  Shield, 
+import {
+  Sparkles,
+  Zap,
+  Shield,
   ArrowRight
 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/language-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/hooks/use-auth";
 import Image from "next/image";
+import {useTranslations} from 'next-intl';
 
 // TODO: 登录状态下开始免费试用按钮仍然提示登录
 // TODO: 底部立即开始按钮仍然提示登录
 // TODO: 统一所有的 Logo，最好使用同一个组件？
 // TODO: Logo 加上回到主页的链接
 export default function LandingPage() {
-  const { t } = useLanguage();
+  const t = useTranslations();
   const { user, loading } = useAuth();
 
   return (
@@ -106,7 +105,7 @@ export default function LandingPage() {
             {t('featuresDescription')}
           </p>
         </div>
-        
+
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <Card className="border-0 shadow-lg">
             <CardHeader>
@@ -212,4 +211,4 @@ export default function LandingPage() {
       </footer>
     </div>
   );
-} 
+}

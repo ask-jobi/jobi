@@ -26,7 +26,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { Download, GripVertical } from "lucide-react";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import Image from "next/image";
 
 import { PersonalInfoForm } from "./forms/personal-info-form";

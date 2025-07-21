@@ -89,7 +89,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="#">
+              <a href="/settings">
                 <Settings />
                 <span>设置</span>
               </a>

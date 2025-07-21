@@ -1,17 +1,31 @@
 "use client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLanguage } from "@/lib/i18n/language-context";
 import { Globe } from "lucide-react";
+import {useLocale, useTranslations} from "next-intl";
+import {usePathname, useRouter} from "@/lib/i18n/navigation";
+import { useParams } from "next/navigation";
 
 export default function SettingsPage() {
-  const { language, setLanguage, t } = useLanguage();
+  const t = useTranslations();
+  const locale = useLocale()
+  const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
+
+  const switchLocale = (locale: string) => {
+    router.replace(
+      // @ts-expect-error -- TypeScript will validate that only known `params`
+      {pathname, params},
+      {locale}
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-3rem)] p-6 overflow-y-auto">
       <h1 className="text-2xl font-bold mb-4">{t('settings')}</h1>
       <div className="max-w-xs">
         <label className="block mb-2 text-sm font-medium">{t('language')}</label>
-        <Select value={language} onValueChange={setLanguage}>
+        <Select value={locale} onValueChange={switchLocale}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>

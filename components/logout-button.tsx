@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter } from "@/lib/i18n/navigation";
 import { LogOut } from 'lucide-react'
 import { SidebarMenuButton, SidebarMenuItem } from './ui/sidebar'
 

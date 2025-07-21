@@ -1,0 +1,40 @@
+{
+  "login": "Login",
+  "signUp": "Sign Up Free",
+  "pricing": "Pricing",
+  "home": "Home",
+  "dashboard": "Dashboard",
+
+  "aiDriven": "AI-Powered Resume Optimization",
+  "heroTitle": "Create Perfect Resume",
+  "heroSubtitle": "Land Your Dream Job",
+  "heroDescription": "Use advanced AI technology to intelligently analyze your resume, provide personalized suggestions, and make your resume stand out among job seekers.",
+  "startFreeTrial": "Start Free Trial",
+  "learnMore": "Learn More",
+
+  "whyChooseJobi": "Why Choose Jobi?",
+  "featuresDescription": "We provide the most advanced AI technology to help you create professional and competitive resumes",
+  "aiAnalysis": "AI Smart Analysis",
+  "aiAnalysisDesc": "Advanced AI algorithms deeply analyze your resume, identify improvement areas and provide specific suggestions",
+  "personalizedOptimization": "Personalized Optimization",
+  "personalizedOptimizationDesc": "Provide tailored resume optimization suggestions based on target positions and industry characteristics",
+  "privacyProtection": "Privacy Protection",
+  "privacyProtectionDesc": "Your personal information and resume content are fully encrypted to ensure data security",
+
+  "successCases": "Success Cases",
+  "interviewRate": "Interview Pass Rate",
+  "templates": "Industry Templates",
+  "aiSupport": "AI Support",
+
+  "readyToStart": "Ready to Boost Your Career?",
+  "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
+  "getStarted": "Get Started",
+
+  "copyright": "© 2025 Jobi. All rights reserved.",
+
+  "language": "Language",
+  "chinese": "中文",
+  "english": "English",
+
+  "settings": "Settings"
+}
