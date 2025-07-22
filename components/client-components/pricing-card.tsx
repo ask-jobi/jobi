@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Link } from '@/lib/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +8,7 @@ import { Check, Crown, Loader2 } from 'lucide-react'
 import { PaymentError } from './payment-error'
 import { LoginRequiredModal } from './login-required-modal'
 import { useAuth } from '@/lib/hooks/use-auth'
+import Link from 'next/link'
 
 interface PricingCardProps {
   title: string
@@ -120,9 +120,9 @@ export function PricingCard({
   return (
     <>
       <PaymentError error={error} onClose={() => setError(undefined)} />
-      <LoginRequiredModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
         planName={title}
       />
       <Card className={`border-0 shadow-lg relative ${isPopular ? 'border-2 border-primary' : ''}`}>
@@ -150,8 +150,8 @@ export function PricingCard({
         </div>
         {!priceId || (getButtonHref() && user) ? (
           <Link href={getButtonHref() || '/auth/sign-up'}>
-            <Button 
-              className="w-full mt-4" 
+            <Button
+              className="w-full mt-4"
               variant={buttonVariant}
               disabled={isLoading || authLoading}
             >
@@ -159,8 +159,8 @@ export function PricingCard({
             </Button>
           </Link>
         ) : (
-          <Button 
-            className="w-full mt-4" 
+          <Button
+            className="w-full mt-4"
             variant={buttonVariant}
             onClick={handlePayment}
             disabled={isLoading || authLoading}
@@ -172,4 +172,4 @@ export function PricingCard({
     </Card>
     </>
   )
-} 
+}

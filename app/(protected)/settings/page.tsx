@@ -2,22 +2,20 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
-import {usePathname, useRouter} from "@/lib/i18n/navigation";
-import { useParams } from "next/navigation";
+import {useTransition} from "react";
+import {setUserLocale} from "@/lib/i18n/services";
+import {Locale} from "@/lib/i18n/config";
+import {cn} from "@/lib/utils";
 
 export default function SettingsPage() {
+  const [isPending, startTransition] = useTransition();
   const t = useTranslations();
   const locale = useLocale()
-  const pathname = usePathname();
-  const router = useRouter();
-  const params = useParams();
 
   const switchLocale = (locale: string) => {
-    router.replace(
-      // @ts-expect-error -- TypeScript will validate that only known `params`
-      {pathname, params},
-      {locale}
-    );
+    startTransition(() => {
+      setUserLocale(locale as Locale);
+    })
   }
 
   return (
@@ -26,7 +24,10 @@ export default function SettingsPage() {
       <div className="max-w-xs">
         <label className="block mb-2 text-sm font-medium">{t('language')}</label>
         <Select value={locale} onValueChange={switchLocale}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={cn(
+            "w-full",
+            isPending && 'pointer-events-none opacity-60'
+          )}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -26,7 +26,6 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { Download, GripVertical } from "lucide-react";
 import { Button } from "../ui/button";
-import { useRouter } from "@/lib/i18n/navigation";
 import Image from "next/image";
 
 import { PersonalInfoForm } from "./forms/personal-info-form";
@@ -40,6 +39,7 @@ import { Separator } from "../ui/separator";
 import { TourStep, useTour } from "@/components/tour";
 import SuggestionPatch from "@/components/client-components/suggestion-patch";
 import {useDebouncedCallback} from "@mantine/hooks";
+import {useRouter} from "next/navigation";
 
 interface SortableSectionItemProps {
   id: string;

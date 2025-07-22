@@ -1,8 +1,7 @@
 import AppSidebar from "@/components/app-sidebar";
 import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar";
 import {createClient} from "@/lib/supabase/server";
-import {redirect} from "@/lib/i18n/navigation";
-import {getLocale} from "next-intl/server";
+import {redirect} from "next/navigation";
 
 
 export default async function DashboardLayout({
@@ -11,14 +10,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient()
-  const locale = await getLocale();
 
   const {data, error} = await supabase.auth.getUser()
   if (error || !data?.user) {
-    redirect({
-      href: '/auth/login',
-      locale
-    })
+    redirect('/auth/login')
   }
 
   return (

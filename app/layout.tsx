@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
-import {hasLocale, NextIntlClientProvider} from "next-intl";
-import {routing} from "@/lib/i18n/routing";
-import {notFound} from "next/navigation";
+import {NextIntlClientProvider} from "next-intl";
+import {getUserLocale} from "@/lib/i18n/services";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,17 +29,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params
 }: Readonly<{
   children: React.ReactNode;
-  params: Promise<{locale: string}>;
 }>) {
-
-  // Ensure that the incoming `locale` is valid
-  const {locale} = await params;
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const locale = await getUserLocale()
 
   return (
     <html lang={locale}>

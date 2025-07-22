@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useRouter } from "@/lib/i18n/navigation";
 import { useState } from 'react'
+import {useRouter} from "next/navigation";
 
 export function UpdatePasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [password, setPassword] = useState('')

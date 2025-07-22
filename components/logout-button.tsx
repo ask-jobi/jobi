@@ -1,10 +1,10 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from "@/lib/i18n/navigation";
 import { LogOut } from 'lucide-react'
 import { SidebarMenuButton, SidebarMenuItem } from './ui/sidebar'
 import {useTranslations} from "next-intl";
+import {useRouter} from "next/navigation";
 
 export function LogoutButton() {
   const router = useRouter()

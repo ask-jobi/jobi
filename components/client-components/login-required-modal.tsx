@@ -1,8 +1,8 @@
 'use client'
-import { Link } from '@/lib/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Lock, UserPlus, LogIn } from 'lucide-react'
+import Link from 'next/link'
 
 interface LoginRequiredModalProps {
   isOpen: boolean
@@ -23,7 +23,7 @@ export function LoginRequiredModal({ isOpen, onClose, planName }: LoginRequiredM
             购买 {planName} 需要先登录您的账户
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="text-center text-sm text-muted-foreground">
             登录后您可以：
@@ -33,7 +33,7 @@ export function LoginRequiredModal({ isOpen, onClose, planName }: LoginRequiredM
               <li>• 查看购买历史</li>
             </ul>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-3">
             <Link href="/auth/login" className="flex-1">
               <Button className="w-full" onClick={onClose}>
@@ -48,7 +48,7 @@ export function LoginRequiredModal({ isOpen, onClose, planName }: LoginRequiredM
               </Button>
             </Link>
           </div>
-          
+
           <div className="text-center">
             <Button variant="ghost" size="sm" onClick={onClose}>
               稍后再说
@@ -58,4 +58,4 @@ export function LoginRequiredModal({ isOpen, onClose, planName }: LoginRequiredM
       </DialogContent>
     </Dialog>
   )
-} 
+}

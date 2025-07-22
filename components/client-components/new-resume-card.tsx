@@ -24,7 +24,7 @@ import ResumeAnalyzeProgress, {
   ProgressType,
 } from "@/components/client-components/resume-analyze-progress";
 import {fetchEventSource} from "@microsoft/fetch-event-source";
-import { useRouter } from "@/lib/i18n/navigation";
+import {useRouter} from "next/navigation";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information" },
