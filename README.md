@@ -44,3 +44,32 @@ npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > 
 ```
 或者访问这个地址手动生成
 https://supabase.com/docs/reference/cli/supabase-gen-types
+
+## 本地启动supabase
+
+参考这个链接安装supabase cli工具
+https://supabase.com/docs/guides/local-development/cli/getting-started
+
+连接生产环境的服务器
+```shell
+supabase link --project-ref antnnixumdyjbmqacvhv
+```
+
+启动本地服务器，这需要依赖docker环境，会在本地创建一个postgresql服务器
+```shell
+supabase start
+```
+
+### 修改数据库
+使用这个命令创建migration文件
+```shell
+supabase migration new {file_name}
+```
+编写完sql语句后，推送migration到本地服务器
+```shell
+supabase migration up
+```
+推送migration到远程服务器
+```shell
+supabase migration up --linked
+```
