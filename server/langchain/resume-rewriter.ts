@@ -4,6 +4,7 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
 import { REWRITE_PROMPT } from "./prompts";
+import {locales} from "@/lib/i18n/config";
 
 const rewriteResponseSchema = z.object({
   optimizedContent: z.string().describe("改写后的内容"),
@@ -11,7 +12,7 @@ const rewriteResponseSchema = z.object({
   aiReason: z.string().describe("AI 优化理由说明"),
 });
 
-const LanguageEnum = z.enum(["zh", "en"]);
+const LanguageEnum = z.enum(locales);
 type Language = z.infer<typeof LanguageEnum>;
 
 export class ResumeRewriter {

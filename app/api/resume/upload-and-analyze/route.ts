@@ -114,7 +114,7 @@ async function processFile(
       message: "AI processing...",
     });
 
-    const resumeData = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
+    const [resumeData, language] = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
 
     sendData(processId, {
       progress: 80,
@@ -124,7 +124,8 @@ async function processFile(
     await createResumeRecord(
       jobInfo,
       uploadResult,
-      resumeData
+      resumeData,
+      language
     );
 
     sendData(processId, {

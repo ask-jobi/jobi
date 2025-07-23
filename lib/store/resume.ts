@@ -1,7 +1,8 @@
 import {atom, useAtom, useSetAtom} from 'jotai';
-import {ResumeData, JobApplication} from '@/types/resume';
+import {ResumeData, JobApplication, ResumeMetadata} from '@/types/resume';
 
 export const resumeDataAtom = atom<ResumeData | null>(null);
+export const resumeMetadataAtom = atom<ResumeMetadata>({language: 'en'});
 export const applicationAtom = atom<JobApplication | null>(null);
 export const isLoadingAtom = atom(false);
 export const selectedSectionIdAtom = atom<string | null>(null);
@@ -17,6 +18,12 @@ export const focusSectionAtom = atom(null, (get, set, id: string, index?: number
     sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 })
+
+export function useResumeLanguage() {
+  const [resumeMetadata] = useAtom(resumeMetadataAtom);
+
+  return resumeMetadata.language
+}
 
 export function useResume() {
   const [resumeData, setResumeData] = useAtom(resumeDataAtom);

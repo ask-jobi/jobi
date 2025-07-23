@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       section: body.context.sectionType,
       jd: body.context.jd,
       instruction: body.instruction,
-      language: body.language === "zh" ? "zh" : "en",
+      language: body.language,
     });
 
     return NextResponse.json(response);

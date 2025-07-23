@@ -17,11 +17,12 @@ const fullOptimizeSuggestionSchema = z.object({
 
 const promptTemplate = new PromptTemplate({
   template: FULL_RESUME_OPTIMIZE_PROMPT,
-  inputVariables: ["content"],
+  inputVariables: ["content", "language"],
 });
 
-async function callLangChainLLM(content: string) {
-  const prompt = await promptTemplate.format({ content });
+async function callLangChainLLM(content: string, language: string) {
+  const prompt = await promptTemplate.format({ content, language });
+  console.log(prompt)
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash-lite",
     temperature: 0.3,
@@ -41,7 +42,8 @@ async function callLangChainLLM(content: string) {
 }
 
 export async function generateAISuggestionQueue(
-  resume: ResumeData
+  resume: ResumeData,
+  language: string
 ): Promise<AISuggestionQueue> {
   // 构建完整的简历内容字符串
   const content = {
@@ -65,7 +67,7 @@ export async function generateAISuggestionQueue(
     }))
   };
 
-  const result = await callLangChainLLM(JSON.stringify(content, null, 2));
+  const result = await callLangChainLLM(JSON.stringify(content, null, 2), language);
 
   return result.suggestions.map(suggestion => ({
     section: suggestion.section,

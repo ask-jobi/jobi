@@ -1,3 +1,5 @@
+import {Locale} from "@/lib/i18n/config";
+
 export type JobApplication = {
   id: string;
     resume: {
@@ -70,3 +72,7 @@ export interface AISuggestion {
 }
 
 export type AISuggestionQueue = AISuggestion[];
+
+export type ResumeMetadata = {
+  language: Locale
+}

@@ -1,27 +1,27 @@
 export const REWRITE_PROMPT = `
-你是一名资深的简历优化专家, 你正在分析简历的{section}部分。请根据以下要求对简历内容进行改写：
+You are a senior resume optimization expert, analyzing the {section} section of a resume. Please rewrite the resume content according to the following requirements:
 
-【输入信息】
-1. 简历部分：{resumeSection}
-2. 原始内容：{originalContent}
-3. 职位描述：{jd}
-4. 改写指令：{instruction}
+[Input Information]
+1. Resume Section: {resumeSection}
+2. Original Content: {originalContent}
+3. Job Description: {jd}
+4. Rewrite Instruction: {instruction}
 
-【任务要求】
-1. 根据改写指令对内容进行优化，确保内容与职位描述相关
-2. 确保修改部分基于原始内容，可参考简历部分获得上下文
-3. 保持与整体简历风格的一致性
-4. 使用专业、简洁的语言
-5. 使用 markdown 格式输出
-6. 使用 {language} 输出
+[Task Requirements]
+1. Optimize the content based on the rewrite instruction, ensuring relevance to the job description.
+2. Ensure modifications are based on the original content, and use the resume section for context if needed.
+3. Maintain consistency with the overall resume style.
+4. Use professional and concise language.
+5. Output in markdown format.
+6. Output in {language}.
 
-请以如下 JSON 格式输出：
+Please output in the following JSON format:
 {format_instructions}
 
-注意：
-1. 确保输出格式严格符合要求
-2. 优化理由要简明扼要
-3. 高亮内容应该是具体的短语或关键词
+Notes:
+1. Ensure the output format strictly follows the requirements.
+2. The optimization reason should be concise.
+3. Highlighted content should be specific phrases or keywords.
 `;
 
 
@@ -37,49 +37,51 @@ Please analyze the resume content carefully and extract the following informatio
 2. Education experience: school, degree, time period, description
 3. Work experience: company, position, time period, description
 4. Skills: grouped by category
+5. The main language of the resume content (return as 'en' for English, 'zh' for Chinese, or ISO 639-1 code for other languages)
 
-Make sure return data as following formats
+Make sure to return data in the following format:
 {format_instructions}
 
 Notes:
-1. Make sure all dates are in YYYY-MM format
-2. If some information is not found in the resume, use an empty string or empty array
-3. Keep the integrity of the JSON format
-4. Make sure the extracted information is accurate
+1. Ensure all dates are in YYYY-MM format.
+2. If some information is not found in the resume, use an empty string or empty array.
+3. Keep the integrity of the JSON format.
+4. Ensure the extracted information is accurate.
 5. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
-6. Always make sure the language of the output content is consistent with the original text.
+6. Always ensure the language of the output content is consistent with the original text.
 `;
 
-// TODO: 加上jd的描述
+// TODO: Add JD description
 export const FULL_RESUME_OPTIMIZE_PROMPT = `
-你是一名资深的英文简历优化专家。你的目标是帮助用户提升简历的表达质量和求职竞争力。请根据以下要求对简历的各个部分进行分析：
+You are a senior resume optimization expert. Your goal is to help users improve the quality and competitiveness of their resumes. Please analyze each section of the resume according to the following requirements:
 
-【任务要求】
-1. 请对下方简历的各个部分进行分析，只在确实有提升空间时才提出优化建议。  
-2. 你的建议要简明、务实，避免无意义的润色或套话。  
-3. 如果建议优化，请以如下严格的 JSON 结构输出：  
+[Task Requirements]
+1. Analyze each section of the resume below, and only provide optimization suggestions if there is room for improvement.
+2. Your suggestions should be concise and practical, avoiding meaningless embellishments or clichés.
+3. If optimization is suggested, output in the following strict JSON structure:
 {{
   "suggestions": [
     {{
       "section": "education/employment/skills",
       "blockIndex": 0,
-      "suggestionType": "简洁表达/量化成果/突出技术栈/精炼语言/去除重复/英文表达/突出领导力/突出影响力/结构优化/其他",
-      "reason": "为什么要优化（1-2句话）",
-      "originalContent": "原始内容",
-      "optimizedContent": "优化后的完整英文内容",
-      "highlight": ["修改或新增的重点短语、关键词"]
+      "suggestionType": "Concise Expression/Quantify Achievements/Highlight Tech Stack/Refine Language/Remove Redundancy/English Expression/Highlight Leadership/Highlight Impact/Structure Optimization/Other",
+      "reason": "Why optimize (1-2 sentences)",
+      "originalContent": "Original content",
+      "optimizedContent": "Optimized full English content",
+      "highlight": ["Key phrases or keywords that were modified or added"]
     }}
   ]
 }}
-4. 对于 optimizedContent 的值，可以使用 markdown 格式输出
-5. 请直接返回 Json 对象，不要添加多余的信息！
+4. For the value of optimizedContent, markdown format can be used.
+5. Please return the JSON object directly, do not add any extra information!
+6. **All suggestion fields (reason, optimizedContent, highlight, etc.) MUST be written strictly in the {language} language parameter ('en' for English, 'zh' for Chinese, etc).**
 
-【判断标准】
-- 如果原内容已准确、清晰表达，不要建议无谓修改。
-- 只针对表达冗余、无量化、技术点不突出、句式不规范、结构混乱等提出建议。
-- 建议要能体现"什么地方更好"，并尽量给出精炼的理由。
+[Evaluation Criteria]
+- If the original content is already accurate and clear, do not suggest unnecessary changes.
+- Only suggest improvements for redundancy, lack of quantification, weak technical points, improper sentence structure, or disorganized structure.
+- Suggestions should clearly state "what is improved" and provide a concise reason.
 
-【示例】
+[Examples]
 input 1:
 {{
   "education": {{
@@ -94,8 +96,8 @@ output 1:
     {{
       "section": "education",
       "blockIndex": 0,
-      "suggestionType": "其他",
-      "reason": "该部分内容杂乱无章，建议删除。",
+      "suggestionType": "Other",
+      "reason": "This section is disorganized and should be removed.",
       "optimizedContent": null,
       "highlight": []
     }}
@@ -116,14 +118,14 @@ output 2:
     {{
       "section": "employment",
       "blockIndex": 0,
-      "suggestionType": "突出技术栈/量化成果",
-      "reason": "内容表述过于笼统，未体现具体技能与成果。",
+      "suggestionType": "Highlight Tech Stack/Quantify Achievements",
+      "reason": "The content is too general and does not highlight specific skills or achievements.",
       "optimizedContent": "Designed and optimized SQL and NoSQL databases (PostgreSQL, Redis), improving data query efficiency by 30%.",
       "highlight": ["SQL", "NoSQL", "PostgreSQL", "Redis", "improving data query efficiency by 30%"]
     }}
   ]
 }}
 
-【现在请分析如下简历内容】：
+[Now please analyze the following resume content]:
 {content}
 `;

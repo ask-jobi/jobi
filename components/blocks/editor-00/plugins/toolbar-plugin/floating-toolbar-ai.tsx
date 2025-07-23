@@ -5,7 +5,7 @@ import {CheckIcon, ListMinus, ListPlus, Loader, SparklesIcon, TrashIcon, WandIco
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {useAtom} from "jotai";
-import {selectedSectionIdAtom} from "@/lib/store/resume";
+import {selectedSectionIdAtom, useResumeLanguage} from "@/lib/store/resume";
 import {NodeSelection} from "lexical";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
@@ -24,6 +24,7 @@ function FloatingToolbarAi({
   setMode: (state: 'default' | 'ai' | 'closed') => void
 }) {
   const [selectedSectionId] = useAtom(selectedSectionIdAtom);
+  const resumeLanguage = useResumeLanguage()
   const [editor] = useLexicalComposerContext();
   const [loading, setLoading] = useState<boolean>(false)
   const [instruction, setInstruction] = useState<string>('')
@@ -47,7 +48,6 @@ function FloatingToolbarAi({
 
   const handleApplyAI = () => {
     setTimeout(() => {
-      console.log('accept')
       setMode("closed")
       if (AIState === "confirm") {
         editor.dispatchCommand(APPLY_DIFF_COMMAND, null)
@@ -81,7 +81,8 @@ function FloatingToolbarAi({
         sectionType: selectedSectionId!!,
         jd: 'Empty JD'
       },
-      instruction: instruction
+      instruction: instruction,
+      language: resumeLanguage
     }
     const resp = await fetch(`/api/resume/rewrite-block`, {
       method: "POST",

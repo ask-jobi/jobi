@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const resumeData = jobApplication.resumes.resume_json as ResumeData;
 
-    const suggestions = await generateAISuggestionQueue(resumeData);
+    const suggestions = await generateAISuggestionQueue(resumeData, jobApplication.resumes.language);
 
     return Response.json(suggestions);
   } catch (error: any) {

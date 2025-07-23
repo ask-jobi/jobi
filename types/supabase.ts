@@ -83,6 +83,7 @@ export type Database = {
           id: string
           job_id: string | null
           resume_json: ResumeData | null
+          language: string
           upload_url: string | null
           user_id: string | null
         }
@@ -91,6 +92,7 @@ export type Database = {
           id?: string
           job_id?: string | null
           resume_json?: ResumeData | null
+          language?: string
           upload_url?: string | null
           user_id?: string | null
         }
@@ -99,6 +101,7 @@ export type Database = {
           id?: string
           job_id?: string | null
           resume_json?: ResumeData | null
+          language?: string
           upload_url?: string | null
           user_id?: string | null
         }

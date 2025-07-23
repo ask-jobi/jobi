@@ -3,6 +3,7 @@
 import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
 import {ResumeData} from "@/types/resume";
+import {Locale} from "@/lib/i18n/config";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -41,6 +42,7 @@ export async function getJobApplication(jobApplicationId: string) {
           resumes:resume_id (
               id,
               upload_url,
+              language,
               resume_json
           ),
           jobs:job_id (
@@ -51,7 +53,7 @@ export async function getJobApplication(jobApplicationId: string) {
           )
       `)
     .eq('id', jobApplicationId)
-  
+
   if (error) {
     throw new Error(`Failed to fetch job application: ${error.message}`)
   }
@@ -134,7 +136,7 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
   fileName: string,
   publicUrl: string,
   userId: string
-}, resumeJsonData: ResumeData) {
+}, resumeJsonData: ResumeData, language: Locale) {
   const supabase = await createClient()
   const createdIds: { jobId?: string, resumeId?: string } = {}
 
@@ -154,6 +156,7 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
         user_id: uploadResult.userId,
         job_id: jobData.id,
         upload_url: uploadResult.publicUrl,
+        language: language,
         resume_json: resumeJsonData
       })
       .select()

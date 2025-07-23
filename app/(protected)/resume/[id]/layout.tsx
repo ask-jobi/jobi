@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import {ResumeData} from "@/types/resume";
 import {createClient} from "@/lib/supabase/server";
 import {Provider} from "jotai";
+import { Locale } from '@/lib/i18n/config';
 
 async function Layout(props: {
   children: React.ReactNode,
@@ -19,6 +20,7 @@ async function Layout(props: {
       id,
       resume:resume_id (
         id,
+        language,
         resume_json
       ),
       job:job_id (
@@ -34,6 +36,7 @@ async function Layout(props: {
     notFound()
   }
 
+  const language = jobApplication.resume.language as Locale
   const resumeData: ResumeData = jobApplication.resume.resume_json || {
     personalInfo: {
       firstName: "",
@@ -60,7 +63,11 @@ async function Layout(props: {
 
   return (
     <Provider store={store}>
-      <ResumeInitializer initialData={resumeData} jobApplication={jobApplication}>
+      <ResumeInitializer
+        initialData={resumeData}
+        language={language}
+        jobApplication={jobApplication}
+      >
         {children}
       </ResumeInitializer>
     </Provider>

@@ -6,6 +6,7 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ResumeData } from "@/types/resume";
 import { RESUME_PARSE_PROMPT } from "./prompts";
+import {Locale} from "@/lib/i18n/config";
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -49,6 +50,9 @@ const resumeSchema = z.object({
         content: z.string().describe("List of skills in this category, split by comma"),
       })
     ),
+  }),
+  _metadata: z.object({
+    language: z.string().describe("Language of the resume, only 'en' or 'zh'").default("en")
   })
 });
 
@@ -84,7 +88,7 @@ export class ResumeParser {
     return ResumeParser.instance;
   }
 
-  async parseResume(resumeText: string): Promise<ResumeData> {
+  async parseResume(resumeText: string): Promise<[ResumeData, Locale]> {
     const result = await this.chain.invoke({
       resumeText: resumeText,
       format_instructions: this.parser.getFormatInstructions(),
@@ -101,6 +105,7 @@ export class ResumeParser {
       skills: validatedData.skills,
     };
 
-    return resumeData;
+    // TODO 当存在别的metadata时，优化这里的返回值
+    return [resumeData, validatedData._metadata.language as Locale];
   }
 }
