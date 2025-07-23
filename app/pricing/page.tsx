@@ -80,7 +80,9 @@ export default function PricingPage() {
             <span className="text-primary">定价方案</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            无论您是个人求职者还是企业用户，我们都有适合您的套餐选择
+            无论您是个人求职者还是企业用户，我们都有适合您的套餐选择。
+            <br />
+            我们承诺不自动续费，一次付费，享受完整功能。
           </p>
         </div>
       </section>
@@ -94,8 +96,8 @@ export default function PricingPage() {
           {/* Pro Plan */}
           <PricingCard {...PRICING_CONFIG.PRO} />
 
-          {/* Enterprise Plan */}
-          <PricingCard {...PRICING_CONFIG.ENTERPRISE} />
+          {/* Lite Plan */}
+          <PricingCard {...PRICING_CONFIG.LITE} />
         </div>
       </section>
 

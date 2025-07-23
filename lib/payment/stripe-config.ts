@@ -1,67 +1,60 @@
 // Stripe价格ID配置
 // 请根据您的Stripe产品ID进行更新
 export const STRIPE_PRICE_IDS = {
-  // 专业版 - 月付订阅
-  PRO_MONTHLY: process.env.STRIPE_PRO_MONTHLY_PRICE_ID || 'price_1RfneaQAnDbV3CHRBJiDcgBW',
+  // 专业版 - 30天
+  PRO_PASS: process.env.STRIPE_PRO_PASS_PRICE_ID || 'price_1RnozgQAnDbV3CHR81Io7diw',
   
-  // 专业版 - 年付订阅（可选）
-  PRO_YEARLY: process.env.STRIPE_PRO_YEARLY_PRICE_ID || 'price_pro_yearly',
-  
-  // 企业版 - 月付订阅
-  ENTERPRISE_MONTHLY: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly',
-  
-  // 企业版 - 年付订阅（可选）
-  ENTERPRISE_YEARLY: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly',
+  // 专业版 - 7天
+  LITE_PASS: process.env.STRIPE_LITE_PASS_PRICE_ID || 'price_1Rnp0bQAnDbV3CHRbiNbPMrl',
 } as const
 
 // 价格配置
 export const PRICING_CONFIG = {
   FREE: {
-    title: '免费版',
-    price: '¥0',
-    description: '适合个人用户试用',
+    title: 'Free Pass',
+    price: 'Free',
+    description: '适合个人用户试用，3 天完整功能',
     features: [
       '每月 3 次简历优化',
       '基础 AI 分析',
-      '5 个简历模板',
+      '动机信生成',
       '邮件支持'
     ],
     buttonText: '开始免费试用',
     buttonHref: '/auth/sign-up'
   },
   PRO: {
-    title: '专业版',
-    price: '¥99',
-    description: '每月，适合求职者',
+    title: 'Pro Pass',
+    price: '€24.99',
+    description: '最受欢迎！一次付费，享受 30 天的完整功能 + 简历优化高亮建议',
     features: [
       '每月 50 次简历优化',
       '高级 AI 分析',
-      '50+ 个简历模板',
-      '个性化建议',
+      '简历优化高亮建议',
       '优先客服支持',
-      '导出 PDF 格式'
+      '导出 PDF 格式',
+      '30 天完整功能',
+      '24h 邮件支持'
     ],
-    priceId: STRIPE_PRICE_IDS.PRO_MONTHLY,
+    priceId: STRIPE_PRICE_IDS.PRO_PASS,
     mode: 'subscription' as const,
     isPopular: true,
-    buttonText: '选择专业版',
+    buttonText: '选择 Pro Pass',
     buttonVariant: 'default' as const
   },
-  ENTERPRISE: {
-    title: '企业版',
-    price: '¥299',
-    description: '每月，适合企业',
+  LITE: {
+    title: 'Lite Pass',
+    price: '€19.99',
+    description: '短期冲刺，一次付费，享受 7 天的完整功能',
     features: [
-      '无限次简历优化',
-      '企业级 AI 分析',
-      '所有简历模板',
-      '团队协作功能',
-      '专属客户经理',
-      'API 接口'
+      '每月 3 次简历优化',
+      '基础 AI 分析',
+      '动机信生成',
+      '24h 邮件支持'
     ],
-    priceId: STRIPE_PRICE_IDS.ENTERPRISE_MONTHLY,
+    priceId: STRIPE_PRICE_IDS.LITE_PASS,
     mode: 'subscription' as const,
-    buttonText: '联系销售',
+    buttonText: '选择 Lite Pass',
     buttonHref: '/auth/sign-up'
   }
 } as const 
