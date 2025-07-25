@@ -17,6 +17,7 @@ interface PricingCardProps {
   features: readonly string[]
   priceId?: string
   mode?: 'subscription' | 'payment'
+  plan: string
   isPopular?: boolean
   buttonText: string
   buttonVariant?: 'default' | 'outline'
@@ -29,7 +30,8 @@ export function PricingCard({
   description,
   features,
   priceId,
-  mode = 'subscription',
+  mode = 'payment',
+  plan,
   isPopular = false,
   buttonText,
   buttonVariant = 'outline',
@@ -58,6 +60,7 @@ export function PricingCard({
         },
         body: JSON.stringify({
           priceId,
+          plan,
           mode,
         }),
       })

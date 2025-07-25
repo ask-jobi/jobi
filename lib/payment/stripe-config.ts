@@ -20,6 +20,7 @@ export const PRICING_CONFIG = {
       '动机信生成',
       '邮件支持'
     ],
+    plan: 'FREE',
     buttonText: '开始免费试用',
     buttonHref: '/auth/sign-up'
   },
@@ -36,8 +37,9 @@ export const PRICING_CONFIG = {
       '30 天完整功能',
       '24h 邮件支持'
     ],
+    plan: 'PRO',
     priceId: STRIPE_PRICE_IDS.PRO_PASS,
-    mode: 'subscription' as const,
+    mode: 'payment' as const,
     isPopular: true,
     buttonText: '选择 Pro Pass',
     buttonVariant: 'default' as const
@@ -52,8 +54,9 @@ export const PRICING_CONFIG = {
       '动机信生成',
       '24h 邮件支持'
     ],
+    plan: 'LITE',
     priceId: STRIPE_PRICE_IDS.LITE_PASS,
-    mode: 'subscription' as const,
+    mode: 'payment' as const,
     buttonText: '选择 Lite Pass',
     buttonHref: '/auth/sign-up'
   }

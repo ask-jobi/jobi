@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, FileText } from "lucide-react";
 
-export default function SuccessPage({
+export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string };
+  searchParams: Promise<{ session_id?: string }>
 }) {
+  const params = await searchParams
+  const sessionId = params.session_id
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
@@ -48,7 +50,7 @@ export default function SuccessPage({
             <CardContent className="space-y-6">
               <div className="bg-muted/50 rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">
-                  订单号: {searchParams.session_id || 'N/A'}
+                  订单号: {sessionId || 'N/A'}
                 </p>
               </div>
               
