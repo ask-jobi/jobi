@@ -15,8 +15,6 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { Logo } from "@/components/ui/logo";
 import {useTranslations} from 'next-intl';
 
-// ✅ 统一所有的 Logo，使用同一个组件
-// ✅ Logo 加上回到主页的链接
 export default function LandingPage() {
   const t = useTranslations();
   const { user, loading } = useAuth();
@@ -25,8 +23,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <div className="container mx-auto px-16 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
             <Logo size="lg" href="/" />
           </div>
           <div className="flex items-center space-x-4">
