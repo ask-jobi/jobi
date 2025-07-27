@@ -11,9 +11,9 @@ import {
   SidebarMenuItem
 } from "./ui/sidebar";
 import { Progress } from "./ui/progress";
+import { Logo } from "./ui/logo";
 import {getQuotas} from "@/server/quota";
 import { LogoutButton } from "./logout-button";
-import Link from "next/link";
 import {useTranslations} from "next-intl";
 import {getTranslations} from "next-intl/server";
 
@@ -54,19 +54,9 @@ export default function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader/>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            asChild
-            className="data-[slot=sidebar-menu-button]:!p-1.5"
-          >
-            <Link href="/">
-              <span className="text-base font-semibold">Jobi AI</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      <SidebarHeader>
+        <Logo size="lg"/>
+      </SidebarHeader>
 
       <QuotaCard />
 

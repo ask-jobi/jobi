@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/hooks/use-auth";
-import Image from "next/image";
+import { Logo } from "@/components/ui/logo";
 import {useTranslations} from 'next-intl';
 
-// TODO: 统一所有的 Logo，最好使用同一个组件？
-// TODO: Logo 加上回到主页的链接
+// ✅ 统一所有的 Logo，使用同一个组件
+// ✅ Logo 加上回到主页的链接
 export default function LandingPage() {
   const t = useTranslations();
   const { user, loading } = useAuth();
@@ -27,13 +27,7 @@ export default function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Image
-              src="/jobi_logo.svg"
-              alt="Jobi Logo"
-              width={96}
-              height={96}
-              className="object-contain"
-            />
+            <Logo size="lg" href="/" />
           </div>
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
@@ -188,19 +182,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t bg-muted/50">
         <div className="container mx-auto px-4 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center overflow-hidden">
-                <Image
-                  src="/jobi_logo.png"
-                  alt="Jobi Logo"
-                  width={24}
-                  height={24}
-                  className="object-cover"
-                />
-              </div>
-              <span className="text-xl font-bold">Jobi</span>
-            </div>
+          <div className="flex flex-col items-center text-center">
             <div className="text-sm text-muted-foreground">
               {t('copyright')}
             </div>
