@@ -58,8 +58,6 @@ export default function AppSidebar() {
         <Logo size="lg"/>
       </SidebarHeader>
 
-      <QuotaCard />
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -80,8 +78,10 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+       
         <SidebarMenu>
           <SidebarMenuItem>
+          <QuotaCard />
             <SidebarMenuButton asChild>
               <a href="/settings">
                 <Settings />
