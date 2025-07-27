@@ -15,8 +15,6 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import Image from "next/image";
 import {useTranslations} from 'next-intl';
 
-// TODO: 登录状态下开始免费试用按钮仍然提示登录
-// TODO: 底部立即开始按钮仍然提示登录
 // TODO: 统一所有的 Logo，最好使用同一个组件？
 // TODO: Logo 加上回到主页的链接
 export default function LandingPage() {
@@ -80,7 +78,7 @@ export default function LandingPage() {
             {t('heroDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/sign-up">
+            <Link href={user ? "/dashboard" : "/auth/sign-up"}>
               <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
                 {t('startFreeTrial')}
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -178,7 +176,7 @@ export default function LandingPage() {
           <p className="text-lg text-muted-foreground mb-8">
             {t('ctaDescription')}
           </p>
-          <Link href="/auth/sign-up">
+          <Link href={user ? "/dashboard" : "/auth/sign-up"}>
             <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
               {t('getStarted')}
               <ArrowRight className="w-5 h-5 ml-2" />
