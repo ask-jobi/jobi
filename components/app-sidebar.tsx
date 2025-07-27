@@ -55,7 +55,7 @@ export default function AppSidebar() {
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
-        <Logo size="lg"/>
+        <Logo size="md"/>
       </SidebarHeader>
 
       <SidebarContent>
