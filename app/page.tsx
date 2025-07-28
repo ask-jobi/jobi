@@ -10,50 +10,16 @@ import {
   Shield,
   ArrowRight
 } from "lucide-react";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { Logo } from "@/components/ui/logo";
+import { LandingPageLayout } from "@/components/ui/landing-page-layout";
 import {useTranslations} from 'next-intl';
 
 export default function LandingPage() {
   const t = useTranslations();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-16 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Logo size="lg" href="/" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <LanguageSwitcher />
-            <Link href="/pricing">
-              <Button variant="ghost">{t('pricing')}</Button>
-            </Link>
-            {!loading && (
-              <>
-                {user ? (
-                  <Link href="/dashboard">
-                    <Button>{t('dashboard')}</Button>
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/auth/login">
-                      <Button variant="ghost">{t('login')}</Button>
-                    </Link>
-                    <Link href="/auth/sign-up">
-                      <Button>{t('signUp')}</Button>
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <LandingPageLayout>
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
@@ -176,17 +142,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t bg-muted/50">
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex flex-col items-center text-center">
-            <div className="text-sm text-muted-foreground">
-              {t('copyright')}
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </LandingPageLayout>
   );
 }

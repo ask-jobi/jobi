@@ -4,14 +4,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Star,
-  FileText
+  Star
 } from "lucide-react";
 import { PricingCard } from "@/components/client-components/pricing-card";
 import { PRICING_CONFIG } from "@/lib/payment/stripe-config";
 import { PaymentCancelledAlert } from "@/components/client-components/payment-cancelled-alert";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LandingPageLayout } from "@/components/ui/landing-page-layout";
 
 // TODO: 登录状态下仍然显示免费注册按钮
 // TODO: 支付成功后，跳转到成功页面，并显示支付成功提示
@@ -39,34 +39,12 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <LandingPageLayout>
       <PaymentCancelledAlert 
         isVisible={showCancelledAlert} 
         onClose={handleCloseAlert} 
       />
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold">Jobi</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost">首页</Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button variant="ghost">登录</Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button>免费注册</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-12 text-center">
         <div className="max-w-4xl mx-auto">
@@ -144,23 +122,6 @@ export default function PricingPage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t bg-muted/50">
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold">Jobi</span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              © 2025 Jobi. 保留所有权利。
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </LandingPageLayout>
   );
 } 

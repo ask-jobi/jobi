@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 
@@ -9,14 +9,19 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  useEffect(() => {
-    // 获取当前用户
-    const getUser = async () => {
+  const getUser = useCallback(async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+    } catch (error) {
+      console.error('Error getting user:', error)
+    } finally {
       setLoading(false)
     }
+  }, [supabase.auth])
 
+  useEffect(() => {
+    // 获取当前用户
     getUser()
 
     // 监听认证状态变化
@@ -28,7 +33,7 @@ export function useAuth() {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, getUser])
 
   return { user, loading }
 } 
