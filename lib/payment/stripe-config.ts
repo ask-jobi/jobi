@@ -10,6 +10,8 @@ export const STRIPE_PRICE_IDS = {
 
 // 价格配置
 export const PRICING_CONFIG = {
+  // TODO：处理免费版逻辑，用户如果没有试用过，就开启创建免费通行证
+  // 如果用户已经有通行证了，就检查是否过期，如果过期了，就引导用户购买通行证
   FREE: {
     title: 'Free Pass',
     price: 'Free',

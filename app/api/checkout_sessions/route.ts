@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     console.log(origin)
     const body = await request.json()
     // TODO: 看看要不要把整个流程的 mode 都给删了
-    const { priceId, plan, mode = 'payment' } = body
+    const { priceId, plan} = body
 
     if (!priceId) {
       return NextResponse.json(

@@ -127,7 +127,7 @@ export const PRICING_CONFIG = {
       // ... 更多功能
     ],
     priceId: STRIPE_PRICE_IDS.PRO_MONTHLY,
-    mode: 'subscription',
+    mode: 'payment', //标识为一次性付款
     plan: 'PRO',
     isPopular: true,
     buttonText: '选择专业版',
