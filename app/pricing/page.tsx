@@ -12,16 +12,16 @@ import { PaymentCancelledAlert } from "@/components/client-components/payment-ca
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LandingPageLayout } from "@/components/ui/landing-page-layout";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
-// TODO: 登录状态下仍然显示免费注册按钮
-// TODO: 支付成功后，跳转到成功页面，并显示支付成功提示
-// TODO: 支付失败后，跳转到失败页面，并显示支付失败提示
 // TODO: 开始免费使用在登录下也会提示要登录
-// TODO: 联系销售也要登录？
 // TODO: 没有国际化
 export default function PricingPage() {
   const searchParams = useSearchParams()
   const [showCancelledAlert, setShowCancelledAlert] = useState(false)
+  const { user } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     const cancelled = searchParams.get('cancelled')
@@ -36,6 +36,16 @@ export default function PricingPage() {
     const url = new URL(window.location.href)
     url.searchParams.delete('cancelled')
     window.history.replaceState({}, '', url.toString())
+  }
+
+  const handleCTAClick = () => {
+    if (user) {
+      // 已登录用户跳转到仪表板
+      router.push('/dashboard')
+    } else {
+      // 未登录用户跳转到注册页面
+      router.push('/auth/sign-up')
+    }
   }
 
   return (
@@ -115,11 +125,13 @@ export default function PricingPage() {
           <p className="text-lg text-muted-foreground mb-8">
             选择最适合您的套餐，开始打造完美简历
           </p>
-          <Link href="/auth/sign-up">
-            <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-              立即开始
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
+            onClick={handleCTAClick}
+          >
+            {user ? '进入仪表板' : '立即开始'}
+          </Button>
         </div>
       </section>
     </LandingPageLayout>

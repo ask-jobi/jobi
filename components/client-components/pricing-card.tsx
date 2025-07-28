@@ -9,6 +9,7 @@ import { PaymentError } from './payment-error'
 import { LoginRequiredModal } from './login-required-modal'
 import { useAuth } from '@/lib/hooks/use-auth'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface PricingCardProps {
   title: string
@@ -39,17 +40,32 @@ export function PricingCard({
   const [error, setError] = useState<string>()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+
+  const handleButtonClick = async () => {
+    // 如果是免费套餐，直接跳转到注册页面
+    if (!priceId) {
+      router.push('/auth/sign-up')
+      return
+    }
+
+    // 对于付费套餐，检查登录状态
+    if (!user) {
+      // 未登录，跳转到登录页面
+      router.push('/auth/login')
+      return
+    }
+
+    // 已登录，处理支付
+    await handlePayment()
+  }
 
   const handlePayment = async () => {
     if (!priceId) return
 
-    // 前端检查用户是否已登录（提供更好的用户体验）
-    if (!user) {
-      setShowLoginModal(true)
-      return
-    }
-
     setIsLoading(true)
+    setError(undefined)
+
     try {
       const response = await fetch('/api/checkout_sessions', {
         method: 'POST',
@@ -65,8 +81,8 @@ export function PricingCard({
       const { url, error } = await response.json()
 
       if (response.status === 401) {
-        // 如果后端返回401，说明用户未登录，显示登录提示
-        setShowLoginModal(true)
+        // 如果后端返回401，跳转到登录页面
+        router.push('/auth/login')
         return
       }
 
@@ -88,27 +104,11 @@ export function PricingCard({
   }
 
   const getButtonText = () => {
+    if (authLoading) return '加载中...'
     if (!priceId) return buttonText // 免费套餐
     if (!user) return '登录后购买'
     return buttonText
   }
-
-  const getButtonHref = () => {
-    if (!priceId) return buttonHref || '/auth/sign-up' // 免费套餐
-    // 对于付费套餐，如果用户未登录，不返回href，让按钮触发onClick事件
-    if (!user) return null
-    return buttonHref
-  }
-
-  // 调试信息
-  console.log(`PricingCard ${title}:`, {
-    user: !!user,
-    loading: authLoading,
-    isFree: !priceId,
-    priceId,
-    buttonText: getButtonText(),
-    buttonHref: getButtonHref()
-  })
 
   const buttonContent = (
     <>
@@ -126,50 +126,38 @@ export function PricingCard({
         planName={title}
       />
       <Card className={`border-0 shadow-lg relative ${isPopular ? 'border-2 border-primary' : ''}`}>
-      {isPopular && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <Badge className="bg-primary text-primary-foreground px-4 py-1">
-            <Crown className="w-4 h-4 mr-1" />
-            最受欢迎
-          </Badge>
-        </div>
-      )}
-      <CardHeader className="text-center pb-4">
-        <CardTitle className="text-2xl">{title}</CardTitle>
-        <div className="text-4xl font-bold text-primary mb-2">{price}</div>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-2">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-center">
-              <Check className="w-4 h-4 text-green-500 mr-3" />
-              <span className="text-sm">{feature}</span>
-            </div>
-          ))}
-        </div>
-        {!priceId || (getButtonHref() && user) ? (
-          <Link href={getButtonHref() || '/auth/sign-up'}>
-            <Button
-              className="w-full mt-4"
-              variant={buttonVariant}
-              disabled={isLoading || authLoading}
-            >
-              {buttonContent}
-            </Button>
-          </Link>
-        ) : (
+        {isPopular && (
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <Badge className="bg-primary text-primary-foreground px-4 py-1">
+              <Crown className="w-4 h-4 mr-1" />
+              最受欢迎
+            </Badge>
+          </div>
+        )}
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-2xl">{title}</CardTitle>
+          <div className="text-4xl font-bold text-primary mb-2">{price}</div>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center">
+                <Check className="w-4 h-4 text-green-500 mr-3" />
+                <span className="text-sm">{feature}</span>
+              </div>
+            ))}
+          </div>
           <Button
             className="w-full mt-4"
             variant={buttonVariant}
-            onClick={handlePayment}
+            onClick={handleButtonClick}
             disabled={isLoading || authLoading}
           >
             {buttonContent}
           </Button>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     </>
   )
 }
