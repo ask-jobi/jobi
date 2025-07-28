@@ -9,7 +9,6 @@ export async function POST(request: Request) {
     const origin = headersList.get('origin')
     console.log(origin)
     const body = await request.json()
-    // TODO: 看看要不要把整个流程的 mode 都给删了
     const { priceId, plan} = body
 
     if (!priceId) {
