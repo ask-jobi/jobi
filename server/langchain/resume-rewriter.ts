@@ -15,57 +15,40 @@ const rewriteResponseSchema = z.object({
 const LanguageEnum = z.enum(locales);
 type Language = z.infer<typeof LanguageEnum>;
 
-export class ResumeRewriter {
-  private static instance: ResumeRewriter;
-  private readonly model: ChatGoogleGenerativeAI;
-  private readonly parser: StructuredOutputParser<typeof rewriteResponseSchema>;
-  private chain: RunnableSequence;
+const model = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash-lite",
+  temperature: 0.7,
+  streaming: false,
+  maxRetries: 3,
+  json: true,
+})
 
-  private constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash-lite",
-      temperature: 0.7,
-      streaming: false,
-      maxRetries: 3,
-      json: true,
-    });
+const parser = StructuredOutputParser.fromZodSchema(rewriteResponseSchema)
+const chain = RunnableSequence.from([
+  ChatPromptTemplate.fromTemplate(REWRITE_PROMPT),
+  model,
+  parser,
+])
 
-    this.parser = StructuredOutputParser.fromZodSchema(rewriteResponseSchema);
+export const rewriteBlock = async (params: {
+  resumeSection: string
+  originalContent: string;
+  section: string;
+  jd: string;
+  instruction: string;
+  language: Language;
+}) => {
+  const validatedLanguage = LanguageEnum.parse(params.language);
 
-    this.chain = RunnableSequence.from([
-      ChatPromptTemplate.fromTemplate(REWRITE_PROMPT),
-      this.model,
-      this.parser,
-    ]);
-  }
+  const result = await chain.invoke({
+    resumeSection: params.resumeSection,
+    originalContent: params.originalContent,
+    section: params.section,
+    jd: params.jd,
+    instruction: params.instruction,
+    language: validatedLanguage === "zh" ? "中文" : "英文",
+    format_instructions: parser.getFormatInstructions(),
+  });
 
-  static getInstance(): ResumeRewriter {
-    if (!ResumeRewriter.instance) {
-      ResumeRewriter.instance = new ResumeRewriter();
-    }
-    return ResumeRewriter.instance;
-  }
-
-  async rewriteBlock(params: {
-    resumeSection: string
-    originalContent: string;
-    section: string;
-    jd: string;
-    instruction: string;
-    language: Language;
-  }) {
-    const validatedLanguage = LanguageEnum.parse(params.language);
-
-    const result = await this.chain.invoke({
-      resumeSection: params.resumeSection,
-      originalContent: params.originalContent,
-      section: params.section,
-      jd: params.jd,
-      instruction: params.instruction,
-      language: validatedLanguage === "zh" ? "中文" : "英文",
-      format_instructions: this.parser.getFormatInstructions(),
-    });
-
-    return rewriteResponseSchema.parse(result);
-  }
+  return rewriteResponseSchema.parse(result);
 }

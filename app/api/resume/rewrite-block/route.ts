@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { RewriteBlockRequest } from '@/types/api/requests';
-import { ResumeRewriter } from '@/server/langchain/resume-rewriter';
+import {rewriteBlock} from '@/server/langchain/resume-rewriter';
 
 export async function POST(request: Request) {
   try {
@@ -13,8 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const rewriter = ResumeRewriter.getInstance();
-    const response = await rewriter.rewriteBlock({
+    const response = await rewriteBlock({
       resumeSection: body.resumeSection,
       originalContent: body.originalContent,
       section: body.context.sectionType,

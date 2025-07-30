@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
-import { ResumeParser } from "@/server/langchain/resume-parser";
+import {parseResume} from "@/server/langchain/resume-parser";
 import {consumeQuota} from "@/server/quota";
 
 export const dynamic = 'force-dynamic'
@@ -46,8 +46,6 @@ export async function POST(request: NextRequest) {
   writers[processId] = writer;
 
   try {
-    await consumeQuota("credits")
-
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const jobInfo = JSON.parse(
@@ -64,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     processFile(processId, file, jobInfo)
 
+    await consumeQuota("credits")
   } catch (error: any) {
     console.log('error', error)
     sendData(processId, {
@@ -90,6 +89,10 @@ async function processFile(
   jobInfo: JobInfoFormType
 ) {
   try {
+    if (file.type !== 'application/pdf') {
+      throw new Error("Only support upload pdf file as resume")
+    }
+
     // 更新状态
     sendData(processId, {
       progress: 10,
@@ -114,7 +117,7 @@ async function processFile(
       message: "AI processing...",
     });
 
-    const [resumeData, language] = await ResumeParser.getInstance().parseResume(docs[0].pageContent);
+    const [resumeData, language] = await parseResume(docs[0].pageContent);
 
     sendData(processId, {
       progress: 80,

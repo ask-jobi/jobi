@@ -56,56 +56,40 @@ const resumeSchema = z.object({
   })
 });
 
-export class ResumeParser {
-  private static instance: ResumeParser;
-  private readonly model: ChatGoogleGenerativeAI;
-  private readonly parser: StructuredOutputParser<typeof resumeSchema>;
-  private chain: RunnableSequence;
+const model = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash-lite",
+  temperature: 0,
+  streaming: false,
+  maxRetries: 0,
+  json: true,
+})
 
-  private constructor() {
-    this.model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash-lite",
-      temperature: 0,
-      streaming: false,
-      maxRetries: 0,
-      json: true,
-    });
-    this.model.withStructuredOutput(resumeSchema)
+const parser = StructuredOutputParser.fromZodSchema(resumeSchema)
 
-    this.parser = StructuredOutputParser.fromZodSchema(resumeSchema);
+const chain = RunnableSequence.from([
+  ChatPromptTemplate.fromTemplate(RESUME_PARSE_PROMPT),
+  model,
+  parser,
+])
 
-    this.chain = RunnableSequence.from([
-      ChatPromptTemplate.fromTemplate(RESUME_PARSE_PROMPT),
-      this.model,
-      this.parser,
-    ]);
-  }
 
-  static getInstance(): ResumeParser {
-    if (!ResumeParser.instance) {
-      ResumeParser.instance = new ResumeParser();
-    }
-    return ResumeParser.instance;
-  }
+export const parseResume = async (resumeText: string): Promise<[ResumeData, Locale]> => {
+  const result = await chain.invoke({
+    resumeText: resumeText,
+    format_instructions: parser.getFormatInstructions(),
+  });
 
-  async parseResume(resumeText: string): Promise<[ResumeData, Locale]> {
-    const result = await this.chain.invoke({
-      resumeText: resumeText,
-      format_instructions: this.parser.getFormatInstructions(),
-    });
+  // 验证并转换结果
+  const validatedData = resumeSchema.parse(result);
 
-    // 验证并转换结果
-    const validatedData = resumeSchema.parse(result);
+  // 转换为 ResumeData 类型
+  const resumeData: ResumeData = {
+    personalInfo: validatedData.personalInfo,
+    education: validatedData.education,
+    employment: validatedData.employment,
+    skills: validatedData.skills,
+  };
 
-    // 转换为 ResumeData 类型
-    const resumeData: ResumeData = {
-      personalInfo: validatedData.personalInfo,
-      education: validatedData.education,
-      employment: validatedData.employment,
-      skills: validatedData.skills,
-    };
-
-    // TODO 当存在别的metadata时，优化这里的返回值
-    return [resumeData, validatedData._metadata.language as Locale];
-  }
+  // TODO 当存在别的metadata时，优化这里的返回值
+  return [resumeData, validatedData._metadata.language as Locale];
 }
