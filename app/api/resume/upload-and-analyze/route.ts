@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
   const processId = Date.now().toString();
   const responseStream = new TransformStream();
   const writer = responseStream.writable.getWriter();
+  console.log(processId)
   writers[processId] = writer;
 
   try {
