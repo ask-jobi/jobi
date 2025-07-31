@@ -4,47 +4,20 @@ import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
 import {parseResume} from "@/server/langchain/resume-parser";
 import {consumeQuota} from "@/server/quota";
+import {
+  registerWriter,
+  sendData,
+  closeWriter,
+} from "@/server/sse/writer-manager";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-const writers: Record<string, WritableStreamDefaultWriter> = {};
-
-function sendData(processId: string, data: any) {
-  const encoder = new TextEncoder();
-  const writer = writers[processId];
-
-  if (!writer) {
-    console.error('Writer is not initialized for client:', processId);
-    return;
-  }
-
-  const formattedData = `data: ${JSON.stringify(data)}\n\n`;
-  writer.write(encoder.encode(formattedData));
-}
-
-function closeWriter(processId: string) {
-  const writer = writers[processId];
-  if (!writer) {
-    console.warn(`Writer not found for processId: ${processId}`);
-    return;
-  }
-
-  try {
-    writer.close();
-  } catch (error) {
-    console.error(`Error closing writer for processId: ${processId}`, error);
-  } finally {
-    delete writers[processId];
-  }
-}
 
 export async function POST(request: NextRequest) {
   const processId = Date.now().toString();
   const responseStream = new TransformStream();
   const writer = responseStream.writable.getWriter();
-  console.log(processId)
-  writers[processId] = writer;
+  registerWriter(processId, writer);
 
   try {
     const formData = await request.formData();

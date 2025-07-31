@@ -2,7 +2,7 @@ import { diffWords } from 'diff';
 
 function splitMarkdownPrefix(line: string): [string, string] {
   // 匹配标题、无序列表、有序列表
-  const match = line.match(/^\s*(?<flag>#{1,6}|[-*+] |\d+\. )\s*/);
+  const match = line.match(/^\s*(?<flag>#{1,6} |[-*+] |\d+\. )\s*/);
   if (match) {
     return [match.groups?.flag ?? "", line.slice(match[0].length)];
   }
