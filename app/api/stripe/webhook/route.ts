@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/payment/stripe'
 import { QUOTA } from '@/lib/payment/quota'
-import { createServerRoleClient } from '@/lib/supabase/serverRoleClinet'
+import { createServerRoleClient } from '@/lib/supabase/server-role-client'
 
 // 禁用 Next.js 的 bodyParser
 export const config = {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createServerRoleClient()
-    
+
     try {
       // 1. 查询 user_profiles
       const { data: profile, error: profileError } = await supabase
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         .select('*')
         .eq('id', supabaseUserId)
         .single()
-      
+
       if (profileError && profileError.code !== 'PGRST116') { // PGRST116 是 "not found" 错误
         console.error('Error querying user profile:', profileError)
         throw new Error(`Failed to query user profile: ${profileError.message}`)
@@ -60,24 +60,24 @@ export async function POST(req: Request) {
           id: supabaseUserId,
           stripe_customer_id: stripeCustomerId,
         })
-        
+
         if (insertError) {
           console.error('Error creating user profile:', insertError)
           throw new Error(`Failed to create user profile: ${insertError.message}`)
         }
-        
+
         console.log('Created new user profile for:', supabaseUserId)
       } else if (profile.stripe_customer_id !== stripeCustomerId) {
         // 如果用户存在，则更新用户 profile中 stripe_customer_id
         const { error: updateError } = await supabase.from('user_profiles')
           .update({ stripe_customer_id: stripeCustomerId })
           .eq('id', supabaseUserId)
-        
+
         if (updateError) {
           console.error('Error updating user profile:', updateError)
           throw new Error(`Failed to update user profile: ${updateError.message}`)
         }
-        
+
         console.log('Updated stripe_customer_id for user:', supabaseUserId)
       }
 
@@ -88,12 +88,12 @@ export async function POST(req: Request) {
         .delete()
         .eq('user_id', supabaseUserId)
         .gt('end_at', new Date().toISOString())
-      
+
       if (deleteError) {
         console.error('Error deleting existing access passes:', deleteError)
         throw new Error(`Failed to delete existing access passes: ${deleteError.message}`)
       }
-      
+
       console.log('Deleted existing access passes for user:', supabaseUserId)
 
       // 4. 计算有效期
@@ -121,14 +121,14 @@ export async function POST(req: Request) {
         quota_block_optimize: QUOTA[plan].quota_block_optimize,
         quota_motivation_letter: QUOTA[plan].quota_motivation_letter,
       })
-      
+
       if (insertAccessPassError) {
         console.error('Error creating access pass:', insertAccessPassError)
         throw new Error(`Failed to create access pass: ${insertAccessPassError.message}`)
       }
-      
+
       console.log('Successfully created access pass for user:', supabaseUserId, 'plan:', plan)
-      
+
     } catch (error: any) {
       console.error('Database operation failed:', error.message)
       // 返回 500 错误，但 webhook 仍然被认为是成功的
@@ -136,6 +136,6 @@ export async function POST(req: Request) {
       return new Response(`Database Error: ${error.message}`, { status: 500 })
     }
   }
-  
+
   return NextResponse.json({ received: true })
-} 
+}
