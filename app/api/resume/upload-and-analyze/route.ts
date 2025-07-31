@@ -20,23 +20,23 @@ export async function POST(request: NextRequest) {
   registerWriter(processId, writer);
 
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
+    await consumeQuota("credits")
+
+    const formData = await request.formData()
+    const file = formData.get("file") as File
     const jobInfo = JSON.parse(
       formData.get("jobInfo") as string
-    ) as JobInfoFormType;
+    ) as JobInfoFormType
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
     request.signal.onabort = async () => {
       closeWriter(processId)
-    };
+    }
 
-    processFile(processId, file, jobInfo)
-
-    await consumeQuota("credits")
+    await processFile(processId, file, jobInfo)
   } catch (error: any) {
     console.log('error', error)
     sendData(processId, {
