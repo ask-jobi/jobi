@@ -43,20 +43,22 @@ export function PricingCard({
   const router = useRouter()
 
   const handleButtonClick = async () => {
-    // 如果是免费套餐，直接跳转到注册页面
+    // 首先检查登录状态
+    if (!user) {
+      // 未登录，跳转到登录页面并传递回调URL
+      const callbackUrl = encodeURIComponent('/pricing')
+      router.push(`/auth/login?callbackUrl=${callbackUrl}`)
+      return
+    }
+
+    // 已登录，处理套餐选择
     if (!priceId) {
+      // 免费套餐，跳转到注册页面（或者直接进入应用）
       router.push('/auth/sign-up')
       return
     }
 
-    // 对于付费套餐，检查登录状态
-    if (!user) {
-      // 未登录，跳转到登录页面
-      router.push('/auth/login')
-      return
-    }
-
-    // 已登录，处理支付
+    // 付费套餐，创建支付会话
     await handlePayment()
   }
 
@@ -82,7 +84,8 @@ export function PricingCard({
 
       if (response.status === 401) {
         // 如果后端返回401，跳转到登录页面
-        router.push('/auth/login')
+        const callbackUrl = encodeURIComponent('/pricing')
+        router.push(`/auth/login?callbackUrl=${callbackUrl}`)
         return
       }
 
@@ -105,8 +108,8 @@ export function PricingCard({
 
   const getButtonText = () => {
     if (authLoading) return '加载中...'
-    if (!priceId) return buttonText // 免费套餐
     if (!user) return '登录后购买'
+    if (!priceId) return buttonText // 免费套餐
     return buttonText
   }
 

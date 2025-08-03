@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 import {useRouter} from "next/navigation";
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('')
@@ -22,6 +23,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,8 +37,16 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         password,
       })
       if (error) throw error
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push('/dashboard')
+      
+      // 检查是否有回调URL参数
+      const callbackUrl = searchParams.get('callbackUrl')
+      if (callbackUrl) {
+        // 如果有回调URL，跳转到回调页面
+        router.push(callbackUrl)
+      } else {
+        // 默认跳转到仪表板
+        router.push('/dashboard')
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {

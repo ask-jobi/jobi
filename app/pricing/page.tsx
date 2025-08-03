@@ -39,13 +39,16 @@ export default function PricingPage() {
   }
 
   const handleCTAClick = () => {
-    if (user) {
-      // 已登录用户跳转到仪表板
-      router.push('/dashboard')
-    } else {
-      // 未登录用户跳转到注册页面
-      router.push('/auth/sign-up')
+    // 首先检查登录状态
+    if (!user) {
+      // 未登录用户跳转到登录页面并传递回调URL
+      const callbackUrl = encodeURIComponent('/pricing')
+      router.push(`/auth/login?callbackUrl=${callbackUrl}`)
+      return
     }
+    
+    // 已登录用户跳转到仪表板
+    router.push('/dashboard')
   }
 
   return (
