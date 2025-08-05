@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'payment', // 一次性支付
-      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?cancelled=true`,
       automatic_tax: {enabled: true},
       //TODO: 需要测试 是否需要创建客户？ 不加这个在 payment 模式不会创建客户，加了这个每次会创新用户
