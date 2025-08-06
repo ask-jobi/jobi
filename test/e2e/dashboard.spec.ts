@@ -43,7 +43,7 @@ test.describe('Dashboard页面', () => {
 
     // 验证步骤导航存在
     await expect(page.getByText('Job Information')).toBeVisible();
-    await expect(page.getByText('Select Resume')).toBeVisible();
+    await expect(page.getByText('Upload Resume')).toBeVisible();
     await expect(page.getByText('Analyze Resume')).toBeVisible();
   });
 
@@ -91,9 +91,9 @@ test.describe('Dashboard页面', () => {
       // 点击第一个简历卡片
       await DashboardHelper.clickFirstResumeCard(page);
 
-      await page.waitForURL("**/resume/*")
+      await page.waitForURL("**/application/*")
       // 验证跳转到简历详情页
-      await expect(page).toHaveURL(/.*\/resume\/.*/);
+      await expect(page).toHaveURL(/.*\/application\/.*/);
     }
   });
 });
@@ -151,8 +151,8 @@ test.describe('Dashboard页面 - 创建简历流程', () => {
     // 点击Next进入第二步
     await page.getByRole('button', { name: 'Next' }).click();
 
-    // 验证进入第二步（Select Resume）
-    await expect(page.getByText('Select Resume')).toBeVisible();
+    // 验证进入第二步（Upload Resume）
+    await expect(page.getByText('Upload Resume')).toBeVisible();
 
     // 验证Previous按钮现在可用
     const prevButton = page.getByRole('button', { name: 'Previous' });
@@ -175,7 +175,7 @@ test.describe('Dashboard页面 - 创建简历流程', () => {
     await page.getByRole('button', { name: 'Next' }).click();
 
     // 验证在第二步
-    await expect(page.getByText('Select Resume')).toBeVisible();
+    await expect(page.getByText('Upload Resume')).toBeVisible();
 
     // 点击Previous回到第一步
     await page.getByRole('button', { name: 'Previous' }).click();

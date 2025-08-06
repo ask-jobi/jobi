@@ -40,7 +40,7 @@ export class DashboardHelper {
    * 点击第一个简历卡片
    */
   static async clickFirstResumeCard(page: Page) {
-    const resumeCards = page.locator('a[href^="/resume/"]');
+    const resumeCards = page.locator('a[href^="/application/"]');
     if (await resumeCards.count() > 0) {
       await resumeCards.first().click();
     }

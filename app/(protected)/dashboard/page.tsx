@@ -13,7 +13,7 @@ export default async function Dashboard() {
         {
           data?.map(it => {
             return (
-              <Link key={it.id} href={`/resume/${it.id}`}>
+              <Link key={it.id} href={`/application/${it.id}`}>
                 <Card className="aspect-[1/1.414] hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <CardContent>
                     <p>{it.id}</p>

@@ -105,7 +105,7 @@ const NewResumeCard = () => {
       // 直接跳转到简历编辑页面
       resetForm();
       setCardOpen(false);
-      router.push(`/resume/${result.data.applicationData.id}`);
+      router.push(`/application/${result.data.applicationData.id}`);
     } catch (error: any) {
       console.error("创建空白简历失败:", error);
       toast.error(error.message || "创建空白简历失败");
