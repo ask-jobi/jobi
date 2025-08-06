@@ -10,36 +10,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "./ui/sidebar";
-import { Progress } from "./ui/progress";
 import { Logo } from "./ui/logo";
-import {getQuotas} from "@/server/quota";
 import { LogoutButton } from "./logout-button";
 import {useTranslations} from "next-intl";
-import {getTranslations} from "next-intl/server";
-
-const QuotaCard = async () => {
-  const quotaData= await getQuotas();
-  const t = await getTranslations()
-
-  return (
-    <div className="mx-4 my-2">
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">{t("credits")}</span>
-          <span className="text-gray-900">{quotaData.credits.used}/{quotaData.credits.total}</span>
-        </div>
-        <Progress value={(quotaData.credits.used / quotaData.credits.total) * 100}/>
-      </div>
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">{t("overallOptimized")}</span>
-          <span className="text-gray-900">{quotaData.overallOptimize.used}/{quotaData.overallOptimize.total}</span>
-        </div>
-        <Progress value={(quotaData.overallOptimize.used / quotaData.overallOptimize.total) * 100}/>
-      </div>
-    </div>
-  );
-};
+import { CompactPlanDisplay } from "./client-components/compact-plan-display";
 
 const items = [
   {
@@ -78,10 +52,11 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-       
         <SidebarMenu>
           <SidebarMenuItem>
-          <QuotaCard />
+            <CompactPlanDisplay />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <a href="/settings">
                 <Settings />

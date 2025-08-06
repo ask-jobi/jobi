@@ -3,7 +3,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
 import {parseResume} from "@/server/langchain/resume-parser";
-import {consumeQuota} from "@/server/quota";
+import {verifyJobApplicationLimit} from "@/server/quota";
 import {
   registerWriter,
   sendData,
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   registerWriter(processId, writer);
 
   try {
-    await consumeQuota("credits")
+    await verifyJobApplicationLimit()
 
     const formData = await request.formData()
     const file = formData.get("file") as File

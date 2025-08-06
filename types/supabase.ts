@@ -11,6 +11,62 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      access_passes: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          plan: 'FREE' | 'LITE' | 'PRO'
+          source: string
+          start_at: string
+          end_at: string
+          stripe_checkout_session_id: string | null
+          // 简历整体优化
+          quota_full_optimize: number
+          used_full_optimize: number
+          // 简历局部优化
+          quota_block_optimize: number
+          used_block_optimize: number
+          // 动机信
+          quota_motivation_letter: number
+          used_motivation_letter: number
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          plan: 'FREE' | 'LITE' | 'PRO'
+          source?: string
+          start_at: string
+          end_at: string
+          stripe_checkout_session_id?: string | null
+          quota_full_optimize: number
+          quota_block_optimize: number
+          quota_motivation_letter: number
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          plan?: 'FREE' | 'LITE' | 'PRO'
+          source?: string
+          start_at?: string
+          end_at?: string
+          stripe_checkout_session_id?: string | null
+          quota_full_optimize?: number
+          quota_block_optimize?: number
+          quota_motivation_letter?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_passes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       job_applications: {
         Row: {
           created_at: string

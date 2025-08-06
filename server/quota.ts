@@ -9,70 +9,148 @@ type QuotaObj<Col> = {
 }
 
 type Quota = {
-  overallOptimize: QuotaObj<"overall_optimize">,
-  partialOptimize: QuotaObj<"partial_optimize">,
-  credits: QuotaObj<"credits">
+  fullOptimize: QuotaObj<"full_optimize">,
+  blockOptimize: QuotaObj<"block_optimize">,
+  motivationLetter: QuotaObj<"motivation_letter">
 }
 
-type DBQuota = Database["public"]["Tables"]["user_quotas"]["Row"]
+type DBAccessPass = Database["public"]["Tables"]["access_passes"]["Row"]
 
 type QuotaKey = keyof Quota
 
-export async function getQuotas(): Promise<Quota> {
+// 用户订阅信息类型
+type UserSubscription = {
+  plan: 'FREE' | 'LITE' | 'PRO' | null
+  planName: string
+  expiryDate: string | null
+  isActive: boolean
+  quotas: {
+    fullOptimize: { used: number; total: number }
+    blockOptimize: { used: number; total: number }
+    motivationLetter: { used: number; total: number }
+  }
+}
+
+// 获取用户有效订阅的方法
+export async function getActiveAccessPass(userId: string): Promise<DBAccessPass | null> {
   const supabase = await createClient()
 
-  const {data: quotas, error} = await supabase
-    .from("user_quotas")
-    .select("*").single()
+  const { data: accessPass, error } = await supabase
+    .from('access_passes')
+    .select('*')
+    .eq('user_id', userId)
+    .gt('end_at', new Date().toISOString())
+    .order('end_at', { ascending: false })
+    .limit(1)
+    .single()
 
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     throw error
   }
 
-  return buildQuotas(quotas)
+  return accessPass
 }
 
-const buildQuotas = (dbQuotas: DBQuota): Quota => {
+
+// 新增：获取用户订阅信息
+export async function getUserSubscription(): Promise<UserSubscription> {
+  const supabase = await createClient()
+
+  // 获取当前用户
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('用户未登录')
+  }
+
+  // 获取用户有效订阅
+  const accessPass = await getActiveAccessPass(user.id)
+
+  // 如果没有有效订阅，返回默认值
+  if (!accessPass) {
+    return {
+      plan: null,
+      planName: '无套餐',
+      expiryDate: null,
+      isActive: false,
+      quotas: {
+        fullOptimize: { used: 0, total: 0 },
+        blockOptimize: { used: 0, total: 0 },
+        motivationLetter: { used: 0, total: 0 }
+      }
+    }
+  }
+
+  const planNames = {
+    'FREE': '免费试用',
+    'LITE': 'Lite 14天',
+    'PRO': 'Pro 30天'
+  }
+
   return {
-    overallOptimize: {
-      total: dbQuotas.overall_optimize_quota!!,
-      used: dbQuotas.overall_optimize_used!!,
-      colName: "overall_optimize"
-    },
-    partialOptimize: {
-      total: dbQuotas.partial_optimize_quota!!,
-      used: dbQuotas.partial_optimize_used!!,
-      colName: "partial_optimize"
-    },
-    credits: {
-      total: dbQuotas.credits_quota!!,
-      used: dbQuotas.credits_used!!,
-      colName: "credits"
+    plan: accessPass.plan,
+    planName: planNames[accessPass.plan] || '未知套餐',
+    expiryDate: accessPass.end_at,
+    isActive: true,
+    quotas: {
+      fullOptimize: { 
+        used: accessPass.used_full_optimize, 
+        total: accessPass.quota_full_optimize 
+      },
+      blockOptimize: { 
+        used: accessPass.used_block_optimize,
+        total: accessPass.quota_block_optimize 
+      },
+      motivationLetter: { 
+        used: accessPass.used_motivation_letter, 
+        total: accessPass.quota_motivation_letter 
+      }
     }
   }
 }
 
+const buildQuotas = (accessPass: DBAccessPass): Quota => {
+  return {
+    fullOptimize: {
+      total: accessPass.quota_full_optimize!!,
+      used: accessPass.used_full_optimize!!,
+      colName: "full_optimize"
+    },
+    blockOptimize: {
+      total: accessPass.quota_block_optimize!!,
+      used: accessPass.used_block_optimize!!,
+      colName: "block_optimize"
+    },
+    motivationLetter: {
+      total: accessPass.quota_motivation_letter!!,
+      used: accessPass.used_motivation_letter!!,
+      colName: "motivation_letter"
+    }
+  }
+}
+
+// TODO: 在各个地方调用来消耗配额
 export async function consumeQuota(key: QuotaKey) {
   const supabase = await createClient()
-  const {data: dbQuotas, error} = await supabase
-    .from("user_quotas")
+  const {data: accessPass, error} = await supabase
+    .from("access_passes")
     .select("*").single()
 
   if (error) {
     throw error
   }
 
-  const quotas = buildQuotas(dbQuotas)
+  const quotas = buildQuotas(accessPass)
 
   const updateParams = verifyAndUpdateQuota(key, quotas)
 
   await supabase
-    .from("user_quotas")
+    .from("access_passes")
     .update({
       ...updateParams
     })
-    .eq('id', dbQuotas.id)
+    .eq('id', accessPass.id)
 }
+
 function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
   const quotaItem = quotas[key]
   if (quotaItem.used >= quotaItem.total) {
@@ -80,7 +158,31 @@ function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
   }
 
   return {
-    [`${quotaItem.colName}_used`]: quotaItem.used + 1
+    [`used_${quotaItem.colName}`]: quotaItem.used + 1
+  }
+}
+
+// 目前不做配额的限制，但是需要限制用户申请岗位的数量， 未来考虑设计进配额
+export async function verifyJobApplicationLimit() {
+  const supabase = await createClient()
+
+  // 获取当前用户
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('用户未登录')
+  }
+
+  const {data: jobApplications, error} = await supabase
+    .from("job_applications")
+    .select("*")
+    .eq("user_id", user.id)
+
+  if (error) {
+    throw error
+  }
+
+  if (jobApplications.length >= 10) {
+    throw new Error('您已达岗位申请上限, 请尝试删除一些已申请的岗位')
   }
 }
 
