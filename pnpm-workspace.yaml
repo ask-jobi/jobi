@@ -1,2 +1,0 @@
-patchedDependencies:
-  '@lexical/markdown': patches/@lexical__markdown.patch

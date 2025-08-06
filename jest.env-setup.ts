@@ -1,4 +1,4 @@
-import {config} from "dotenv";
+import {loadEnvConfig} from "@next/env";
 
-config({path: ".env.test"});
+loadEnvConfig(process.cwd())
 jest.mock('server-only', () => ({}));
