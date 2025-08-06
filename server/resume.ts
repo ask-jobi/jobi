@@ -208,3 +208,105 @@ export async function saveResumeChange(resumeId: string, data: ResumeData) {
 
   if (error) throw error;
 }
+
+export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
+  const supabase = await createClient()
+  const user = await supabase.auth.getUser()
+
+  if (!user.data.user) {
+    throw new Error("User not authenticated")
+  }
+
+  const createdIds: { jobId?: string, resumeId?: string, applicationId?: string } = {}
+
+  try {
+    const {data: jobData, error: jobError} = await supabase
+      .from('jobs')
+      .insert(jobInfos)
+      .select()
+      .single()
+
+    if (jobError) throw jobError
+    createdIds.jobId = jobData.id
+
+    // 创建空的简历数据
+    const emptyResumeData: ResumeData = {
+      personalInfo: {
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: ""
+      },
+      education: {
+        title: "Education History",
+        order: 0,
+        blocks: []
+      },
+      employment: {
+        title: "Employment History",
+        order: 1,
+        blocks: []
+      },
+      skills: {
+        title: "Skills",
+        order: 2,
+        blocks: []
+      }
+    };
+
+    const {data: resumeData, error: resumeError} = await supabase
+      .from('resumes')
+      .insert({
+        user_id: user.data.user.id,
+        job_id: jobData.id,
+        upload_url: null, // 空简历没有上传文件
+        language: 'en', // 默认英语
+        resume_json: emptyResumeData
+      })
+      .select()
+      .single()
+
+    if (resumeError) throw resumeError
+    createdIds.resumeId = resumeData.id
+
+    const {data: applicationData, error: applicationError} = await supabase
+      .from('job_applications')
+      .insert({
+        user_id: user.data.user.id,
+        resume_id: resumeData.id,
+        job_id: jobData.id,
+        optimized_resume_url: null
+      })
+      .select()
+      .single()
+
+    if (applicationError) throw applicationError
+    createdIds.applicationId = applicationData.id
+
+    return {
+      jobData, 
+      resumeData, 
+      applicationData
+    }
+
+  } catch (error: any) {
+    // 统一处理回滚
+    await rollbackEmptyResumeChanges(supabase, createdIds)
+    throw new Error(`Failed to create empty resume record: ${error.message}`)
+  }
+}
+
+async function rollbackEmptyResumeChanges(
+  supabase: any,
+  createdIds: { jobId?: string, resumeId?: string, applicationId?: string }
+) {
+  if (createdIds.applicationId) {
+    await supabase.from('job_applications').delete().eq('id', createdIds.applicationId)
+  }
+  if (createdIds.resumeId) {
+    await supabase.from('resumes').delete().eq('id', createdIds.resumeId)
+  }
+  if (createdIds.jobId) {
+    await supabase.from('jobs').delete().eq('id', createdIds.jobId)
+  }
+}

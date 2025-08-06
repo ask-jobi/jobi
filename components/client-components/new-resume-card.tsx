@@ -25,10 +25,11 @@ import ResumeAnalyzeProgress, {
 } from "@/components/client-components/resume-analyze-progress";
 import {fetchEventSource} from "@microsoft/fetch-event-source";
 import {useRouter} from "next/navigation";
+import {FileText} from "lucide-react";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information" },
-  { id: "step-2", title: "Select Resume" },
+  { id: "step-2", title: "Upload Resume" },
   { id: "step-3", title: "Analyze Resume" }
 );
 
@@ -82,6 +83,35 @@ const NewResumeCard = () => {
     setIsAnalyzing(false);
   }
 
+  const createEmptyResume = async () => {
+    try {
+      const response = await fetch("/api/resume/create-empty", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jobInfo: form.getValues()
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "创建空白简历失败");
+      }
+
+      const result = await response.json();
+
+      // 直接跳转到简历编辑页面
+      resetForm();
+      setCardOpen(false);
+      router.push(`/resume/${result.data.applicationData.id}`);
+    } catch (error: any) {
+      console.error("创建空白简历失败:", error);
+      toast.error(error.message || "创建空白简历失败");
+    }
+  };
+
   const analyzeResume = async () => {
     if (isAnalyzing) return;
 
@@ -127,6 +157,14 @@ const NewResumeCard = () => {
     }
   };
 
+  const handleCreateEmpty = () => {
+    createEmptyResume()
+  };
+
+  const handleSelectFile = (file: File) => {
+    setResumeFile(file);
+  };
+
   useEffect(() => {
     return () => {
       if (controller) {
@@ -168,12 +206,28 @@ const NewResumeCard = () => {
               {methods.switch({
                 "step-1": () => <JobInformationForm form={form} />,
                 "step-2": () => (
-                  <ResumeUpload
-                    file={resumeFile}
-                    onSelectFile={setResumeFile}
-                  />
+                  <div className="space-y-4">
+                    <ResumeUpload
+                      file={resumeFile}
+                      onSelectFile={handleSelectFile}
+                    />
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Or
+                      </div>
+                      <Button
+                        onClick={handleCreateEmpty}
+                        variant="link"
+                        size="sm"
+                        className="text-primary hover:text-primary/80"
+                      >
+                        <FileText className="size-4 mr-1"/>
+                        Create Empty Resume
+                      </Button>
+                    </div>
+                  </div>
                 ),
-                "step-3": () => <ResumeAnalyzeProgress progress={progress} />,
+                "step-3": () => <ResumeAnalyzeProgress progress={progress}/>,
               })}
               <Stepper.Controls>
                 {!methods.isLast && (

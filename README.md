@@ -85,12 +85,11 @@ test/
 │   ├── dashboard.spec.ts   # Dashboard页面测试
 │   ├── auth.setup.ts       # 认证设置
 │   ├── helpers/            # 测试辅助工具
-│   │   └── auth-helper.ts  # 认证和页面操作辅助类
 │   └── .auth/              # 认证状态存储
 ├── __mocks__/              # Jest模拟文件
 │   └── next/               # Next.js模块模拟
 ├── utils.ts                # 测试工具函数
-└── test_pdf.pdf           # 测试用PDF文件
+└── test_pdf.pdf            # 测试用PDF文件
 
 app/api/
 └── resume/
@@ -193,29 +192,7 @@ E2E测试使用自动认证流程：
    - 邮箱: `mock_normal@mail.com`
    - 密码: `mock_normal`
 
-#### 测试覆盖范围
-
-##### Dashboard页面测试
-- ✅ 页面加载和布局验证
-- ✅ "Create New Resume"卡片交互
-- ✅ 现有简历卡片跳转
-- ✅ 响应式布局测试
-- ✅ 侧边栏显示验证
-
-##### 认证功能测试
-- ✅ 已认证用户正常访问
-- ✅ 未认证用户重定向到登录页
-
-##### 创建简历流程测试
-- ✅ 对话框打开/关闭
-- ✅ 工作信息表单填写
-- ✅ 表单验证
-- ✅ 步骤导航（3步流程）
-- ✅ 按钮状态管理
-
 #### 辅助工具
-
-`test/e2e/helpers/auth-helper.ts` 提供：
 
 - **DashboardHelper**: 页面操作辅助方法
   - `navigateToDashboard()`: 导航到dashboard
@@ -229,11 +206,11 @@ E2E测试使用自动认证流程：
 #### 前置条件
 1. 确保开发服务器正在运行
 2. 确保数据库连接正常
-3. 确保Supabase服务可用
+3. 确保Supabase服务可用!!
 
 #### 环境变量
 ```bash
-# .env.local (用于真实认证测试)
+# .env.test (用于真实认证测试)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
@@ -311,28 +288,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    # Jest覆盖率
    pnpm test --coverage
    ```
-
-### CI/CD集成
-
-项目包含GitHub Actions配置：
-
-```yaml
-# .github/workflows/playwright.yml
-name: Playwright Tests
-on: [workflow_dispatch]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - name: Install dependencies
-        run: pnpm install
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Run Playwright tests
-        run: pnpm exec playwright test
-```
 
 ### 扩展测试
 

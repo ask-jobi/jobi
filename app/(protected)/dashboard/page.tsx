@@ -9,6 +9,7 @@ export default async function Dashboard() {
   return (
     <div className="h-[calc(100vh-3rem)] p-6 overflow-y-auto">
       <div className="grid xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <NewResumeCard/>
         {
           data?.map(it => {
             return (
@@ -22,7 +23,6 @@ export default async function Dashboard() {
             )
           })
         }
-        <NewResumeCard/>
       </div>
     </div>
   );
