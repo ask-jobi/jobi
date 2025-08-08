@@ -1,7 +1,6 @@
 import NewResumeCard from "@/components/client-components/new-resume-card";
-import {Card, CardContent} from "@/components/ui/card";
+import ResumeThumbnailCard from "@/components/client-components/resume-thumbnail-card";
 import {fetchJobApplication} from "@/server/resume";
-import Link from "next/link";
 
 export default async function Dashboard() {
   const data = await fetchJobApplication()
@@ -12,14 +11,17 @@ export default async function Dashboard() {
         <NewResumeCard/>
         {
           data?.map(it => {
+            // 生成缩略图 URL
+            const thumbnailUrl = it.resumes?.id
+              ? `/api/resume/thumbnail?resume_id=${encodeURIComponent(it.resumes.id)}`
+              : null;
+
             return (
-              <Link key={it.id} href={`/application/${it.id}`}>
-                <Card className="aspect-[1/1.414] hover:shadow-lg transition-all duration-300 cursor-pointer">
-                  <CardContent>
-                    <p>{it.id}</p>
-                  </CardContent>
-                </Card>
-              </Link>
+              <ResumeThumbnailCard
+                key={it.id}
+                thumbnailUrl={thumbnailUrl}
+                applicationId={it.id}
+              />
             )
           })
         }
