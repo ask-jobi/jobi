@@ -40,6 +40,7 @@ import { TourStep, useTour } from "@/components/tour";
 import SuggestionPatch from "@/components/client-components/suggestion-patch";
 import {useDebouncedCallback} from "@mantine/hooks";
 import {useRouter} from "next/navigation";
+import { ResumeEvaluationProgress } from "@/components/client-components/resume-evaluation-progress";
 
 interface SortableSectionItemProps {
   id: string;
@@ -295,7 +296,10 @@ export default function ResumePage() {
         </div>
 
         <div className="w-full p-6 overflow-y-scroll">
-          <ResumeEditor />
+          <div className="flex flex-col gap-4">
+            <ResumeEvaluationProgress resumeData={resumeData} />
+            <ResumeEditor />
+          </div>
         </div>
 
         <div className="right w-1/3 p-6 border-l overflow-y-auto">
