@@ -3,9 +3,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import type { ResumeData } from '@/types/resume'
-import type { ResumeEvaluationReport, ModuleEvaluationReport, EvaluationResult } from '@/lib/evaluation'
+import {
+  ResumeEvaluationReport,
+  ModuleEvaluationReport,
+  EvaluationResult,
+  evaluateResumeSubjective
+} from '@/lib/evaluation'
 import { evaluateResumeObjective } from '@/lib/evaluation'
 import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Button } from '../ui/button'
 
 export interface ResumeEvaluationProgressProps {
   resumeData: ResumeData
@@ -61,6 +67,11 @@ export function ResumeEvaluationProgress({
 
   const indicatorClassName = getIndicatorColorClass(percent)
 
+  const subjectiveEvaluate = async () => {
+    const report = await evaluateResumeSubjective(resumeData)
+    console.log("report: ", report)
+  }
+
   return (
     <div className="w-full bg-white rounded-lg border shadow-sm p-4">
       <div className="flex items-center gap-3">
@@ -73,6 +84,7 @@ export function ResumeEvaluationProgress({
         <div className="min-w-10 text-right text-sm font-semibold tabular-nums">
           {percent}%
         </div>
+        <Button onClick={subjectiveEvaluate}>Subjective Evaluate</Button>
       </div>
 
       {/* Issues 列表 - 默认隐藏，可展开 */}

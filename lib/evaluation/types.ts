@@ -57,6 +57,5 @@ export interface LLMEvaluatorConfig {
 export interface EvaluationOptions {
   includeObjective?: boolean; // Whether to include objective evaluation
   includeSubjective?: boolean; // Whether to include subjective evaluation
-  llmConfig?: LLMEvaluatorConfig;
   enableScoring?: boolean; // Whether to enable scoring
-} 
+}

@@ -48,18 +48,13 @@ export async function evaluateResume(
   options: {
     includeObjective?: boolean;
     includeSubjective?: boolean;
-    llmConfig?: {
-      apiKey?: string;
-      model?: string;
-    };
   } = {}
 ): Promise<ResumeEvaluationReport> {
   const evaluator = new ResumeEvaluator({
     includeObjective: options.includeObjective ?? true,
     includeSubjective: options.includeSubjective ?? true,
-    llmConfig: options.llmConfig
   });
-  
+
   return await evaluator.evaluateResume(resumeData);
 }
 
@@ -74,7 +69,7 @@ export async function evaluateResumeObjective(
     includeObjective: true,
     includeSubjective: false
   });
-  
+
   return await evaluator.evaluateResume(resumeData);
 }
 
@@ -84,18 +79,11 @@ export async function evaluateResumeObjective(
  */
 export async function evaluateResumeSubjective(
   resumeData: any,
-  options: {
-    llmConfig?: {
-      apiKey?: string;
-      model?: string;
-    };
-  } = {}
 ): Promise<ResumeEvaluationReport> {
   const evaluator = new ResumeEvaluator({
     includeObjective: false,
     includeSubjective: true,
-    llmConfig: options.llmConfig
   });
-  
+
   return await evaluator.evaluateResume(resumeData);
-} 
+}

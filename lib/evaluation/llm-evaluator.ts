@@ -1,16 +1,43 @@
 import { EvaluationResult, LLMEvaluatorConfig } from './types';
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { z } from "zod";
+
+// Evaluation result schema for structured output
+const evaluationSchema = z.object({
+  passed: z.boolean().describe("Whether the content passes the evaluation criteria"),
+  score: z.number().min(0).max(100).describe("Evaluation score from 0 to 100"),
+  message: z.string().describe("Brief evaluation message"),
+  suggestion: z.string().describe("Specific suggestions for improvement")
+});
+
+type EvaluationSchemaType = z.infer<typeof evaluationSchema>;
 
 // LLM Evaluator class
 export class LLMEvaluator {
   private config: LLMEvaluatorConfig;
+  private readonly model: ChatGoogleGenerativeAI;
+  private readonly parser: StructuredOutputParser<typeof evaluationSchema>;
 
   constructor(config: LLMEvaluatorConfig = {}) {
     this.config = {
-      model: 'gpt-3.5-turbo',
+      model: "gemini-2.0-flash-lite",
       temperature: 0.3,
-      maxTokens: 500,
       ...config
     };
+
+    this.model = new ChatGoogleGenerativeAI({
+      model: this.config.model || "gemini-2.0-flash-lite",
+      temperature: this.config.temperature,
+      streaming: false,
+      maxRetries: 0,
+      json: true,
+      apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+    });
+
+    this.parser = StructuredOutputParser.fromZodSchema(evaluationSchema);
   }
 
   /**
@@ -26,93 +53,39 @@ export class LLMEvaluator {
     ruleName: string
   ): Promise<EvaluationResult> {
     try {
-      if (!this.config.apiKey) {
-        return {
-          passed: false,
-          ruleName,
-          message: 'LLM API key not configured',
-          type: 'subjective'
-        };
-      }
+      const chain = RunnableSequence.from([
+        ChatPromptTemplate.fromTemplate(`
+You are a professional resume evaluation expert. Please evaluate resume content according to the given criteria.
 
-      const response = await this.callLLM(content, evaluationPrompt);
-      return this.parseLLMResponse(response, ruleName);
+{evaluationPrompt}
+
+Content to evaluate: {content}
+
+{format_instructions}
+`),
+        this.model,
+        this.parser,
+      ]);
+
+      const result = await chain.invoke({
+        evaluationPrompt,
+        content,
+        format_instructions: this.parser.getFormatInstructions(),
+      }) as EvaluationSchemaType;
+
+      return {
+        passed: result.passed,
+        ruleName,
+        message: result.message,
+        suggestion: result.suggestion,
+        score: result.score,
+        type: 'subjective'
+      };
     } catch (error) {
       return {
         passed: false,
         ruleName,
         message: `LLM evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        type: 'subjective'
-      };
-    }
-  }
-
-  /**
-   * Call LLM API
-   */
-  private async callLLM(content: string, prompt: string): Promise<string> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.config.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional resume evaluation expert. Please evaluate resume content according to the given criteria and return results in JSON format.'
-          },
-          {
-            role: 'user',
-            content: `${prompt}\n\nContent: ${content}\n\nPlease return JSON format: {"passed": boolean, "score": number, "message": string, "suggestion": string}`
-          }
-        ],
-        temperature: this.config.temperature,
-        max_tokens: this.config.maxTokens
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`LLM API call failed: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content || '';
-  }
-
-  /**
-   * Parse LLM response
-   */
-  private parseLLMResponse(response: string, ruleName: string): EvaluationResult {
-    try {
-      // Try to extract JSON part
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return {
-          passed: false,
-          ruleName,
-          message: 'LLM response format error',
-          type: 'subjective'
-        };
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]);
-      
-      return {
-        passed: parsed.passed || false,
-        ruleName,
-        message: parsed.message || 'Evaluation completed',
-        suggestion: parsed.suggestion,
-        score: parsed.score,
-        type: 'subjective'
-      };
-    } catch (error) {
-      return {
-        passed: false,
-        ruleName,
-        message: `Response parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         type: 'subjective'
       };
     }
@@ -162,4 +135,4 @@ Please provide a score (0-100) and suggestions.
 };
 
 // Create default LLM evaluator instance
-export const defaultLLMEvaluator = new LLMEvaluator(); 
+export const defaultLLMEvaluator = new LLMEvaluator();
