@@ -1,212 +1,200 @@
-import { SubjectiveRule } from '../types';
-import { defaultLLMEvaluator, EVALUATION_PROMPTS } from '../llm-evaluator';
-import type { EmploymentBlock, SkillBlock, EducationBlock } from '@/types/resume';
+import { defaultLLMEvaluator } from '../llm-evaluator';
+import type { ResumeData } from '@/types/resume';
+import type { ModuleEvaluationReport, EvaluationResult } from '../types';
 
-// ========== Employment Experience Subjective Rules ==========
+// Rule configuration interface
+export interface SubjectiveRuleConfig {
+  name: string;
+  description: string;
+  criteria: string[];
+  enabled: boolean;
+  weight: number;
+}
 
-/**
- * Evaluate employment experience content clarity and professionalism
- */
-export const evaluateEmploymentClarity: SubjectiveRule<EmploymentBlock> = async (data) => {
-  const evaluationText = `
-Position: ${data.jobTitle}
-Company: ${data.company}
-Work Content: ${data.content}
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    evaluationText,
-    EVALUATION_PROMPTS.EMPLOYMENT_CLARITY,
-    'Employment Content Clarity Evaluation'
-  );
+// Default subjective rules configuration
+export const DEFAULT_SUBJECTIVE_RULES: Record<string, SubjectiveRuleConfig> = {
+  personalInfo: {
+    name: "Personal Information Quality",
+    description: "Evaluate personal information completeness and professionalism",
+    criteria: [
+      "Completeness and accuracy of contact information",
+      "Professional presentation of personal details",
+      "Appropriate inclusion of relevant links (LinkedIn, website)"
+    ],
+    enabled: true,
+    weight: 1.0
+  },
+  education: {
+    name: "Education Relevance",
+    description: "Evaluate education section relevance and quality",
+    criteria: [
+      "Relevance of education to target position",
+      "Quality of academic achievement descriptions",
+      "Professional presentation of educational background"
+    ],
+    enabled: true,
+    weight: 1.0
+  },
+  employment: {
+    name: "Employment Experience Quality",
+    description: "Evaluate employment experience descriptions",
+    criteria: [
+      "Clarity and professionalism of job descriptions",
+      "Specificity of achievements and contributions",
+      "Use of appropriate professional terminology",
+      "Quantifiable results and impact"
+    ],
+    enabled: true,
+    weight: 1.0
+  },
+  skills: {
+    name: "Skills Assessment",
+    description: "Evaluate skills section quality and relevance",
+    criteria: [
+      "Relevance to target industry and position",
+      "Specificity of skill descriptions",
+      "Logical grouping and organization",
+      "Demonstration of skill application"
+    ],
+    enabled: true,
+    weight: 1.0
+  },
+  overall: {
+    name: "Overall Resume Quality",
+    description: "Evaluate overall resume professionalism and consistency",
+    criteria: [
+      "Professional consistency across all sections",
+      "Logical information organization",
+      "Language accuracy and professionalism",
+      "Competitive advantage highlighting"
+    ],
+    enabled: true,
+    weight: 1.0
+  }
 };
 
-/**
- * Evaluate employment experience achievement orientation
- */
-export const evaluateEmploymentAchievements: SubjectiveRule<EmploymentBlock> = async (data) => {
-  const prompt = `
-Please evaluate the achievement orientation of the following employment experience:
+export const evaluateResumeProfessionalism = async (
+  resumeData: ResumeData,
+  rules?: Record<string, SubjectiveRuleConfig>
+): Promise<ModuleEvaluationReport[]> => {
+  try {
+    const result = await defaultLLMEvaluator.evaluateResume(resumeData, rules);
 
-Evaluation criteria:
-1. Whether it contains specific quantifiable results (such as numbers, percentages, time, etc.)
-2. Whether it highlights personal contributions and impact
-3. Whether it uses action-oriented verbs
-4. Whether it demonstrates actual application of skills
+    const moduleReports: ModuleEvaluationReport[] = [];
 
-Please provide a score (0-100) and suggestions.
-`;
+    // Add Personal Info evaluation
+    if (result.personalInfo) {
+      const personalInfoResult: EvaluationResult = {
+        passed: result.personalInfo.passed,
+        ruleName: 'Personal Information Quality',
+        message: result.personalInfo.message,
+        suggestion: result.personalInfo.suggestion,
+        score: result.personalInfo.score,
+        type: 'subjective'
+      };
 
-  return await defaultLLMEvaluator.evaluateContent(
-    data.content,
-    prompt,
-    'Employment Achievement Orientation Evaluation'
-  );
+      moduleReports.push({
+        module: 'Personal Information (Subjective)',
+        results: [personalInfoResult],
+        overallScore: result.personalInfo.score,
+        passed: result.personalInfo.passed
+      });
+    }
+
+    // Add Education evaluations
+    if (result.education && result.education.length > 0) {
+      result.education.forEach((edu, index) => {
+        const educationResult: EvaluationResult = {
+          passed: edu.passed,
+          ruleName: `Education Block ${index + 1} Quality`,
+          message: edu.message,
+          suggestion: edu.suggestion,
+          score: edu.score,
+          type: 'subjective'
+        };
+
+        moduleReports.push({
+          module: `Education Block ${index + 1} (Subjective)`,
+          results: [educationResult],
+          overallScore: edu.score,
+          passed: edu.passed
+        });
+      });
+    }
+
+    // Add Employment evaluations
+    if (result.employment && result.employment.length > 0) {
+      result.employment.forEach((emp, index) => {
+        const employmentResult: EvaluationResult = {
+          passed: emp.passed,
+          ruleName: `Employment Block ${index + 1} Quality`,
+          message: emp.message,
+          suggestion: emp.suggestion,
+          score: emp.score,
+          type: 'subjective'
+        };
+
+        moduleReports.push({
+          module: `Employment Block ${index + 1} (Subjective)`,
+          results: [employmentResult],
+          overallScore: emp.score,
+          passed: emp.passed
+        });
+      });
+    }
+
+    // Add Skills evaluations
+    if (result.skills && result.skills.length > 0) {
+      result.skills.forEach((skill, index) => {
+        const skillResult: EvaluationResult = {
+          passed: skill.passed,
+          ruleName: `Skills Block ${index + 1} Quality`,
+          message: skill.message,
+          suggestion: skill.suggestion,
+          score: skill.score,
+          type: 'subjective'
+        };
+
+        moduleReports.push({
+          module: `Skills Block ${index + 1} (Subjective)`,
+          results: [skillResult],
+          overallScore: skill.score,
+          passed: skill.passed
+        });
+      });
+    }
+
+    // Add Overall evaluation
+    if (result.overall) {
+      const overallResult: EvaluationResult = {
+        passed: result.overall.passed,
+        ruleName: 'Overall Resume Quality',
+        message: result.overall.message,
+        suggestion: result.overall.suggestion,
+        score: result.overall.score,
+        type: 'subjective'
+      };
+
+      moduleReports.push({
+        module: 'Overall Professionalism',
+        results: [overallResult],
+        overallScore: result.overall.score,
+        passed: result.overall.passed
+      });
+    }
+
+    return moduleReports;
+  } catch (error) {
+    // Return error report if evaluation fails
+    return [{
+      module: 'Subjective Evaluation Error',
+      results: [{
+        passed: false,
+        ruleName: 'Subjective Evaluation',
+        message: `Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'subjective'
+      }],
+      passed: false
+    }];
+  }
 };
-
-/**
- * Evaluate employment experience technical depth
- */
-export const evaluateEmploymentTechnicalDepth: SubjectiveRule<EmploymentBlock> = async (data) => {
-  const prompt = `
-Please evaluate the technical depth of the following employment experience:
-
-Evaluation criteria:
-1. Whether specific technology stacks and tools are mentioned
-2. Whether technical descriptions are accurate and professional
-3. Whether technical problem-solving abilities are demonstrated
-4. Whether technical growth and progress are shown
-
-Please provide a score (0-100) and suggestions.
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    data.content,
-    prompt,
-    'Employment Technical Depth Evaluation'
-  );
-};
-
-// ========== Skills Subjective Rules ==========
-
-/**
- * Evaluate skill description quality and relevance
- */
-export const evaluateSkillDescription: SubjectiveRule<SkillBlock> = async (data) => {
-  const evaluationText = `
-Skill Group: ${data.group}
-Skill Description: ${data.content}
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    evaluationText,
-    EVALUATION_PROMPTS.SKILL_DESCRIPTION,
-    'Skill Description Quality Evaluation'
-  );
-};
-
-/**
- * Evaluate skill industry match
- */
-export const evaluateSkillIndustryMatch: SubjectiveRule<SkillBlock> = async (data) => {
-  const prompt = `
-Please evaluate the match between the following skills and common industries:
-
-Evaluation criteria:
-1. Whether skills are relevant to target industry
-2. Whether skill descriptions demonstrate actual application scenarios
-3. Whether skill combinations are reasonable and complementary
-4. Whether industry-recognized skill certifications or standards are included
-
-Please provide a score (0-100) and suggestions.
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    data.content,
-    prompt,
-    'Skill Industry Match Evaluation'
-  );
-};
-
-// ========== Education Experience Subjective Rules ==========
-
-/**
- * Evaluate education experience relevance and value
- */
-export const evaluateEducationRelevance: SubjectiveRule<EducationBlock> = async (data) => {
-  const prompt = `
-Please evaluate the relevance of the following education experience to career goals:
-
-Evaluation criteria:
-1. Whether the major is relevant to target position
-2. Whether school reputation and ranking help with job search
-3. Whether course content matches industry requirements
-4. Whether continuous learning ability is demonstrated
-
-Please provide a score (0-100) and suggestions.
-`;
-
-  const evaluationText = `
-School: ${data.school}
-Major: ${data.degree}
-Education Experience: ${data.content}
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    evaluationText,
-    prompt,
-    'Education Relevance Evaluation'
-  );
-};
-
-/**
- * Evaluate education experience achievement description
- */
-export const evaluateEducationAchievements: SubjectiveRule<EducationBlock> = async (data) => {
-  const prompt = `
-Please evaluate the quality of achievement description in the following education experience:
-
-Evaluation criteria:
-1. Whether academic achievements and honors are highlighted
-2. Whether relevant projects and research results are mentioned
-3. Whether leadership and teamwork abilities are demonstrated
-4. Whether descriptions are specific rather than general
-
-Please provide a score (0-100) and suggestions.
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    data.content,
-    prompt,
-    'Education Achievement Evaluation'
-  );
-};
-
-// ========== Overall Resume Subjective Rules ==========
-
-/**
- * Evaluate overall resume professionalism and consistency
- */
-export const evaluateResumeProfessionalism = async (resumeData: any): Promise<any> => {
-  const prompt = `
-Please evaluate the overall professionalism and consistency of the following resume:
-
-Evaluation criteria:
-1. Whether overall style is professional and consistent
-2. Whether information organization is logical and clear
-3. Whether language expression is accurate and professional
-4. Whether core competitive advantages are highlighted
-5. Whether it meets target position requirements
-
-Please provide a score (0-100) and suggestions.
-`;
-
-  // Convert resume data to text format
-  const resumeText = `
-Personal Information:
-Name: ${resumeData.personalInfo?.firstName || ''} ${resumeData.personalInfo?.lastName || ''}
-Email: ${resumeData.personalInfo?.email || ''}
-Phone: ${resumeData.personalInfo?.phone || ''}
-
-Education Experience:
-${resumeData.education?.blocks?.map((edu: any) => 
-  `${edu.school} - ${edu.degree}\n${edu.content}`
-).join('\n\n') || 'None'}
-
-Employment Experience:
-${resumeData.employment?.blocks?.map((emp: any) => 
-  `${emp.company} - ${emp.jobTitle}\n${emp.content}`
-).join('\n\n') || 'None'}
-
-Skills:
-${resumeData.skills?.blocks?.map((skill: any) => 
-  `${skill.group}: ${skill.content}`
-).join('\n') || 'None'}
-`;
-
-  return await defaultLLMEvaluator.evaluateContent(
-    resumeText,
-    prompt,
-    'Resume Overall Professionalism Evaluation'
-  );
-}; 

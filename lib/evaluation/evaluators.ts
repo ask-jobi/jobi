@@ -1,39 +1,26 @@
 import { RuleConfig } from './types';
 import { ModuleEvaluator } from './module-evaluator';
 import type { PersonalInfo, EducationBlock, EmploymentBlock, SkillBlock } from '@/types/resume';
-import { 
-  checkEmailFormat, 
-  checkPhoneFormat, 
-  checkRequiredFields, 
-  checkWebsiteFormat 
+import {
+  checkEmailFormat,
+  checkPhoneFormat,
+  checkRequiredFields,
+  checkWebsiteFormat
 } from './rules/objective-rules';
-import { 
-  checkEducationContentLength, 
-  checkEducationRequiredFields, 
-  checkEducationTimeLogic 
+import {
+  checkEducationContentLength,
+  checkEducationRequiredFields,
+  checkEducationTimeLogic
 } from './rules/objective-rules';
-import { 
-  checkEmploymentContentLength, 
-  checkEmploymentRequiredFields, 
-  checkEmploymentTimeLogic 
+import {
+  checkEmploymentContentLength,
+  checkEmploymentRequiredFields,
+  checkEmploymentTimeLogic
 } from './rules/objective-rules';
-import { 
-  checkSkillContentLength, 
-  checkSkillGroup 
+import {
+  checkSkillContentLength,
+  checkSkillGroup
 } from './rules/objective-rules';
-import { 
-  evaluateEmploymentClarity, 
-  evaluateEmploymentAchievements, 
-  evaluateEmploymentTechnicalDepth 
-} from './rules/subjective-rules';
-import { 
-  evaluateSkillDescription, 
-  evaluateSkillIndustryMatch 
-} from './rules/subjective-rules';
-import { 
-  evaluateEducationRelevance, 
-  evaluateEducationAchievements 
-} from './rules/subjective-rules';
 
 // ========== Personal Information Evaluator ==========
 
@@ -96,20 +83,6 @@ const educationRules: RuleConfig<EducationBlock>[] = [
     rule: checkEducationTimeLogic,
     weight: 2,
     enabled: true
-  },
-  {
-    name: 'Education Relevance Evaluation',
-    type: 'subjective',
-    rule: evaluateEducationRelevance,
-    weight: 2,
-    enabled: true
-  },
-  {
-    name: 'Education Achievement Evaluation',
-    type: 'subjective',
-    rule: evaluateEducationAchievements,
-    weight: 1,
-    enabled: true
   }
 ];
 
@@ -141,27 +114,6 @@ const employmentRules: RuleConfig<EmploymentBlock>[] = [
     rule: checkEmploymentTimeLogic,
     weight: 2,
     enabled: true
-  },
-  {
-    name: 'Employment Content Clarity Evaluation',
-    type: 'subjective',
-    rule: evaluateEmploymentClarity,
-    weight: 3,
-    enabled: true
-  },
-  {
-    name: 'Employment Achievement Orientation Evaluation',
-    type: 'subjective',
-    rule: evaluateEmploymentAchievements,
-    weight: 3,
-    enabled: true
-  },
-  {
-    name: 'Employment Technical Depth Evaluation',
-    type: 'subjective',
-    rule: evaluateEmploymentTechnicalDepth,
-    weight: 2,
-    enabled: true
   }
 ];
 
@@ -186,20 +138,6 @@ const skillRules: RuleConfig<SkillBlock>[] = [
     rule: checkSkillGroup,
     weight: 1,
     enabled: true
-  },
-  {
-    name: 'Skill Description Quality Evaluation',
-    type: 'subjective',
-    rule: evaluateSkillDescription,
-    weight: 2,
-    enabled: true
-  },
-  {
-    name: 'Skill Industry Match Evaluation',
-    type: 'subjective',
-    rule: evaluateSkillIndustryMatch,
-    weight: 2,
-    enabled: true
   }
 ];
 
@@ -215,4 +153,4 @@ export const evaluatorRegistry = {
   education: educationEvaluator,
   employment: employmentEvaluator,
   skills: skillEvaluator
-}; 
+};

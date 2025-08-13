@@ -1,13 +1,13 @@
-import { 
-  EvaluationResult, 
-  ModuleEvaluationReport, 
-  RuleConfig, 
-  ModuleEvaluatorConfig 
+import {
+  EvaluationResult,
+  ModuleEvaluationReport,
+  RuleConfig,
+  ModuleEvaluatorConfig
 } from './types';
 
 /**
  * Module Evaluator class
- * Responsible for executing all evaluation rules for a specific module
+ * Responsible for executing objective evaluation rules for a specific module
  */
 export class ModuleEvaluator<T> {
   private config: ModuleEvaluatorConfig<T>;
@@ -16,52 +16,20 @@ export class ModuleEvaluator<T> {
     this.config = config;
   }
 
-  /**
-   * Evaluate module data
-   * @param data Module data
-   * @param options Evaluation options
-   * @returns Promise<ModuleEvaluationReport>
-   */
-  async evaluate(data: T, options: { includeObjective?: boolean; includeSubjective?: boolean } = {}): Promise<ModuleEvaluationReport> {
-    const { includeObjective = true, includeSubjective = true } = options;
-    
-    const enabledRules = this.config.rules.filter(rule => 
-      rule.enabled !== false && 
-      ((rule.type === 'objective' && includeObjective) || (rule.type === 'subjective' && includeSubjective))
-    );
+  async evaluate(data: T): Promise<ModuleEvaluationReport> {
+    const enabledRules = this.config.rules.filter(rule => rule.enabled !== false);
 
     const results: EvaluationResult[] = [];
 
-    // Execute objective rules first (synchronous)
+    // Execute objective rules (synchronous)
     for (const ruleConfig of enabledRules) {
-      if (ruleConfig.type === 'objective' && includeObjective) {
+      if (ruleConfig.type === 'objective') {
         const rule = ruleConfig.rule as (data: T) => EvaluationResult;
         const result = rule(data);
         results.push({
           ...result,
           ruleName: ruleConfig.name
         });
-      }
-    }
-
-    // Execute subjective rules (asynchronous)
-    for (const ruleConfig of enabledRules) {
-      if (ruleConfig.type === 'subjective' && includeSubjective) {
-        const rule = ruleConfig.rule as (data: T) => Promise<EvaluationResult>;
-        try {
-          const result = await rule(data);
-          results.push({
-            ...result,
-            ruleName: ruleConfig.name
-          });
-        } catch (error) {
-          results.push({
-            passed: false,
-            ruleName: ruleConfig.name,
-            message: `Rule execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            type: 'subjective'
-          });
-        }
       }
     }
 
@@ -90,9 +58,9 @@ export class ModuleEvaluator<T> {
       const result = results[i];
       const rule = rules[i];
       const weight = rule.weight || 1;
-      
+
       totalWeight += weight;
-      
+
       // Use score if available, otherwise calculate based on passed status
       const score = result.score !== undefined ? result.score : (result.passed ? 100 : 0);
       weightedScore += score * weight;
@@ -112,7 +80,10 @@ export class ModuleEvaluator<T> {
    * Remove rule
    */
   removeRule(ruleName: string): void {
-    this.config.rules = this.config.rules.filter(rule => rule.name !== ruleName);
+    this.config = {
+      ...this.config,
+      rules: this.config.rules.filter(rule => rule.name !== ruleName)
+    };
   }
 
   /**
@@ -131,4 +102,14 @@ export class ModuleEvaluator<T> {
   getRules(): RuleConfig<T>[] {
     return [...this.config.rules];
   }
-} 
+
+  /**
+   * Update rule configuration
+   */
+  updateRule(ruleName: string, updates: Partial<RuleConfig<T>>): void {
+    const ruleIndex = this.config.rules.findIndex(r => r.name === ruleName);
+    if (ruleIndex !== -1) {
+      this.config.rules[ruleIndex] = { ...this.config.rules[ruleIndex], ...updates };
+    }
+  }
+}
