@@ -45,14 +45,6 @@ export interface ModuleEvaluatorConfig<T> {
   rules: RuleConfig<T>[];
 }
 
-// LLM evaluator configuration
-export interface LLMEvaluatorConfig {
-  apiKey?: string;
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-}
-
 // Evaluation options
 export interface EvaluationOptions {
   includeObjective?: boolean; // Whether to include objective evaluation

@@ -1,4 +1,3 @@
-import { defaultLLMEvaluator } from '../llm-evaluator';
 import type { ResumeData } from '@/types/resume';
 import type { ModuleEvaluationReport, EvaluationResult } from '../types';
 
@@ -78,8 +77,21 @@ export const evaluateResumeProfessionalism = async (
   rules?: Record<string, SubjectiveRuleConfig>
 ): Promise<ModuleEvaluationReport[]> => {
   try {
-    const result = await defaultLLMEvaluator.evaluateResume(resumeData, rules);
+    // Call Next.js API route for LLM evaluation
+    const response = await fetch('/api/evaluation/subjective', {
+      method: 'POST',
+      body: JSON.stringify({
+        resumeData,
+        rules: rules || DEFAULT_SUBJECTIVE_RULES
+      })
+    });
 
+    if (!response.ok) {
+      throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
     const moduleReports: ModuleEvaluationReport[] = [];
 
     // Add Personal Info evaluation
@@ -103,7 +115,7 @@ export const evaluateResumeProfessionalism = async (
 
     // Add Education evaluations
     if (result.education && result.education.length > 0) {
-      result.education.forEach((edu, index) => {
+      result.education.forEach((edu: any, index: number) => {
         const educationResult: EvaluationResult = {
           passed: edu.passed,
           ruleName: `Education Block ${index + 1} Quality`,
@@ -124,7 +136,7 @@ export const evaluateResumeProfessionalism = async (
 
     // Add Employment evaluations
     if (result.employment && result.employment.length > 0) {
-      result.employment.forEach((emp, index) => {
+      result.employment.forEach((emp: any, index: number) => {
         const employmentResult: EvaluationResult = {
           passed: emp.passed,
           ruleName: `Employment Block ${index + 1} Quality`,
@@ -145,7 +157,7 @@ export const evaluateResumeProfessionalism = async (
 
     // Add Skills evaluations
     if (result.skills && result.skills.length > 0) {
-      result.skills.forEach((skill, index) => {
+      result.skills.forEach((skill: any, index: number) => {
         const skillResult: EvaluationResult = {
           passed: skill.passed,
           ruleName: `Skills Block ${index + 1} Quality`,

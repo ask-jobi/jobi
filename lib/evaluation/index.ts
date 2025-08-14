@@ -194,13 +194,11 @@ export type {
   SubjectiveRule,
   RuleConfig,
   ModuleEvaluatorConfig,
-  LLMEvaluatorConfig,
   EvaluationOptions
 } from './types';
 
 // Main class exports
 export {ModuleEvaluator} from './module-evaluator';
-export {LLMEvaluator, defaultLLMEvaluator} from './llm-evaluator';
 
 // Evaluator instance exports
 export {
