@@ -1,6 +1,6 @@
 import { evaluateResume, evaluateResumeObjective, evaluateResumeSubjective } from '../index';
-import { defaultLLMEvaluator } from '../llm-evaluator';
 import type { ResumeData } from '@/types/resume';
+import {DEFAULT_SUBJECTIVE_RULES} from "@/lib/evaluation/rules/subjective-rules";
 
 // Build a reusable valid sample resume
 const baseResume: ResumeData = {
@@ -53,47 +53,86 @@ const baseResume: ResumeData = {
 // Helper to deep clone resume
 const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
-// Helper to mock LLM responses consistently
-const mockSubjectiveResult = {
-  passed: true,
-  ruleName: 'Mock Subjective Rule',
-  type: 'subjective' as const,
-  score: 85,
-  message: 'Mock evaluation passed',
-  suggestion: 'Mock suggestion'
+// Mock fetch for API calls
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
+// Mock subjective evaluation response
+const mockSubjectiveResponse = {
+  personalInfo: {
+    passed: true,
+    score: 85,
+    message: 'Personal information is well presented',
+    suggestion: 'Consider adding a professional summary'
+  },
+  education: [
+    {
+      passed: true,
+      score: 90,
+      message: 'Education section is comprehensive',
+      suggestion: 'Highlight relevant coursework'
+    }
+  ],
+  employment: [
+    {
+      passed: true,
+      score: 88,
+      message: 'Employment experience is well described',
+      suggestion: 'Add more quantifiable achievements'
+    }
+  ],
+  skills: [
+    {
+      passed: true,
+      score: 92,
+      message: 'Skills are well organized',
+      suggestion: 'Consider adding proficiency levels'
+    }
+  ],
+  overall: {
+    passed: true,
+    score: 89,
+    message: 'Overall resume quality is good',
+    suggestion: 'Focus on quantifiable achievements'
+  }
 };
 
-describe('Resume Evaluation (with LLM mocked)', () => {
+describe('Resume Evaluation (with API mocked)', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
     jest.clearAllMocks();
+    mockFetch.mockClear();
   });
 
-  test('Objective only evaluation should not call LLM and should produce valid report', async () => {
-    const spy = jest.spyOn(defaultLLMEvaluator as any, 'evaluateContent').mockResolvedValue(mockSubjectiveResult);
-
+  test('Objective only evaluation should not call API and should produce valid report', async () => {
     const result = await evaluateResumeObjective(baseResume);
 
-    expect(spy).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
     expect(result.modules.length).toBeGreaterThan(0);
     expect(result.summary).toContain('Overall Score');
+
     // Ensure at least personal info and one other module are present
     const hasPersonal = result.modules.some(m => m.module.includes('Personal') || m.module.includes('Information'));
     expect(hasPersonal).toBe(true);
+
     // All results should be objective only
     result.modules.forEach(m => m.results.forEach(r => expect(r.type).toBe('objective')));
   });
 
-  test('Subjective only evaluation should call LLM and include overall professionalism', async () => {
-    const spy = jest.spyOn(defaultLLMEvaluator as any, 'evaluateContent').mockResolvedValue(mockSubjectiveResult);
-
-    const result = await evaluateResumeSubjective(baseResume, {
-      llmConfig: { apiKey: 'test-key', model: 'gpt-3.5-turbo' }
+  test('Subjective only evaluation should call API and include subjective results', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockSubjectiveResponse
     });
 
-    expect(spy).toHaveBeenCalled();
-    const hasOverall = result.modules.some(m => m.module.includes('Overall Professionalism'));
-    expect(hasOverall).toBe(true);
+    const result = await evaluateResumeSubjective(baseResume);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/evaluation/subjective', {
+      method: 'POST',
+      body: JSON.stringify({
+        resumeData: baseResume,
+        rules: DEFAULT_SUBJECTIVE_RULES
+      })
+    });
 
     // Should contain subjective results
     const hasSubjective = result.modules.some(m => m.results.some(r => r.type === 'subjective'));
@@ -102,21 +141,18 @@ describe('Resume Evaluation (with LLM mocked)', () => {
     expect(result.summary).toContain('Overall Score');
   });
 
-  test('Full evaluation (objective + subjective) should call LLM and return mixed results', async () => {
-    const spy = jest
-      .spyOn(defaultLLMEvaluator as any, 'evaluateContent')
-      .mockImplementation(async (...args: any[]) => ({
-        ...mockSubjectiveResult,
-        ruleName: args[2]
-      }));
+  test('Full evaluation (objective + subjective) should call API and return mixed results', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockSubjectiveResponse
+    });
 
     const result = await evaluateResume(baseResume, {
       includeObjective: true,
-      includeSubjective: true,
-      llmConfig: { apiKey: 'test-key', model: 'gpt-3.5-turbo' }
+      includeSubjective: true
     });
 
-    expect(spy).toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalled();
     expect(result.modules.length).toBeGreaterThan(0);
 
     // Should contain detailed module entries like Employment Experience 1, Skills 1, etc.
@@ -182,21 +218,23 @@ describe('Resume Evaluation (with LLM mocked)', () => {
   });
 
   test('Disabling subjective rules should produce no subjective results', async () => {
-    const spy = jest.spyOn(defaultLLMEvaluator as any, 'evaluateContent').mockResolvedValue(mockSubjectiveResult);
     const res = await evaluateResume(baseResume, { includeObjective: true, includeSubjective: false });
 
-    expect(spy).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
     const hasSubjective = res.modules.some(m => m.results.some(r => r.type === 'subjective'));
     expect(hasSubjective).toBe(false);
   });
 
-  test('Subjective rule error should be captured as failed result', async () => {
-    jest.spyOn(defaultLLMEvaluator as any, 'evaluateContent').mockRejectedValue(new Error('network error'));
+  test('API error should be captured as failed result', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error'
+    });
 
     const res = await evaluateResume(baseResume, {
       includeObjective: false,
-      includeSubjective: true,
-      llmConfig: { apiKey: 'test-key', model: 'gpt-3.5-turbo' }
+      includeSubjective: true
     });
 
     const hasFailedSubjective = res.modules.some(m => m.results.some(r => r.type === 'subjective' && r.passed === false));
