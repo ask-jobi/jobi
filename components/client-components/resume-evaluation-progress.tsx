@@ -106,7 +106,7 @@ export function ResumeEvaluationProgress({
   }
 
   return (
-    <div className="w-full bg-white rounded-lg border shadow-sm p-4">
+    <div className="w-full p-4">
       <div className="flex items-center gap-3">
         <div className="text-sm font-medium text-gray-700">
           Evaluation
@@ -121,7 +121,7 @@ export function ResumeEvaluationProgress({
       </div>
 
       {issues.size > 0 && (
-        <div className="border-t pt-3 mt-3">
+        <div className="pt-3">
           {
             Array.from(issues.keys()).map(name => (
               <button

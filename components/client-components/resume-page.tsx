@@ -295,8 +295,8 @@ export default function ResumePage() {
           </DndContext>
         </div>
 
-        <div className="w-full p-6 overflow-y-scroll">
-          <div className="flex flex-col gap-4">
+        <div className="w-full overflow-y-scroll">
+          <div className="flex flex-col gap-4 divide-y">
             <ResumeEvaluationProgress resumeData={resumeData} />
             <ResumeEditor />
           </div>
