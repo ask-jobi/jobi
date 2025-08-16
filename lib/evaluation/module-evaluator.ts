@@ -16,21 +16,19 @@ export class ModuleEvaluator<T> {
     this.config = config;
   }
 
-  async evaluate(data: T): Promise<ModuleEvaluationReport> {
+  async evaluate(data: T, index: number): Promise<ModuleEvaluationReport> {
     const enabledRules = this.config.rules.filter(rule => rule.enabled !== false);
 
     const results: EvaluationResult[] = [];
 
     // Execute objective rules (synchronous)
     for (const ruleConfig of enabledRules) {
-      if (ruleConfig.type === 'objective') {
-        const rule = ruleConfig.rule as (data: T) => EvaluationResult;
-        const result = rule(data);
-        results.push({
-          ...result,
-          ruleName: ruleConfig.name
-        });
-      }
+      const rule = ruleConfig.rule as (data: T) => EvaluationResult;
+      const result = rule(data);
+      results.push({
+        ...result,
+        ruleName: ruleConfig.name
+      });
     }
 
     // Calculate module overall score
@@ -39,6 +37,7 @@ export class ModuleEvaluator<T> {
 
     return {
       module: this.config.moduleName,
+      index: index,
       results,
       overallScore,
       passed

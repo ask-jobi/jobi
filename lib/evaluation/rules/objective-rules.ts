@@ -12,10 +12,8 @@ export const checkEmailFormat: ObjectiveRule<PersonalInfo> = (data) => {
 
   return {
     passed: isValid,
-    ruleName: 'Email Format Check',
     message: isValid ? 'Email format is correct' : 'Email format is incorrect',
     suggestion: isValid ? undefined : 'Please check email format, ensure it contains @ symbol and valid domain',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };
@@ -29,10 +27,8 @@ export const checkPhoneFormat: ObjectiveRule<PersonalInfo> = (data) => {
 
   return {
     passed: isValid,
-    ruleName: 'Phone Number Format Check',
     message: isValid ? 'Phone number format is correct' : 'Phone number format is incorrect',
     suggestion: isValid ? undefined : 'Please ensure phone number only contains digits, spaces, hyphens, plus signs and parentheses',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };
@@ -52,14 +48,12 @@ export const checkRequiredFields: ObjectiveRule<PersonalInfo> = (data) => {
 
   return {
     passed: missingFields.length === 0,
-    ruleName: 'Required Fields Completeness Check',
     message: missingFields.length === 0
       ? 'All required fields are filled'
       : `Missing required fields: ${missingFields.map(f => f.name).join(', ')}`,
     suggestion: missingFields.length === 0
       ? undefined
       : `Please fill in the following required fields: ${missingFields.map(f => f.name).join(', ')}`,
-    type: 'objective',
     score: missingFields.length === 0 ? 100 : Math.max(0, 100 - missingFields.length * 25)
   };
 };
@@ -71,9 +65,7 @@ export const checkWebsiteFormat: ObjectiveRule<PersonalInfo> = (data) => {
   if (!data.website) {
     return {
       passed: true,
-      ruleName: 'Website Link Format Check',
       message: 'No website link provided',
-      type: 'objective',
       score: 100
     };
   }
@@ -83,10 +75,8 @@ export const checkWebsiteFormat: ObjectiveRule<PersonalInfo> = (data) => {
 
   return {
     passed: isValid,
-    ruleName: 'Website Link Format Check',
     message: isValid ? 'Website link format is correct' : 'Website link format is incorrect',
     suggestion: isValid ? undefined : 'Please ensure website link starts with http:// or https://',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };
@@ -103,12 +93,10 @@ export const checkEducationContentLength: ObjectiveRule<EducationBlock> = (data)
 
   return {
     passed: isValid,
-    ruleName: 'Education Content Length Check',
     message: isValid
       ? `Education content length is appropriate (${contentLength} characters)`
       : `Education content is too short (${contentLength}/${minLength} characters)`,
     suggestion: isValid ? undefined : 'Please provide detailed description of your education experience, including main courses, achievements, etc.',
-    type: 'objective',
     score: Math.min(100, Math.round((contentLength / minLength) * 100))
   };
 };
@@ -128,14 +116,12 @@ export const checkEducationRequiredFields: ObjectiveRule<EducationBlock> = (data
 
   return {
     passed: missingFields.length === 0,
-    ruleName: 'Education Required Fields Check',
     message: missingFields.length === 0
       ? 'Education information is complete'
       : `Missing fields: ${missingFields.map(f => f.name).join(', ')}`,
     suggestion: missingFields.length === 0
       ? undefined
       : `Please fill in the following fields: ${missingFields.map(f => f.name).join(', ')}`,
-    type: 'objective',
     score: missingFields.length === 0 ? 100 : Math.max(0, 100 - missingFields.length * 25)
   };
 };
@@ -147,10 +133,8 @@ export const checkEducationTimeLogic: ObjectiveRule<EducationBlock> = (data) => 
   if (!data.start || !data.end) {
     return {
       passed: false,
-      ruleName: 'Education Time Logic Check',
       message: 'Missing start or end date',
       suggestion: 'Please provide complete education dates',
-      type: 'objective',
       score: 0
     };
   }
@@ -161,10 +145,8 @@ export const checkEducationTimeLogic: ObjectiveRule<EducationBlock> = (data) => 
 
   return {
     passed: isValid,
-    ruleName: 'Education Time Logic Check',
     message: isValid ? 'Education time logic is correct' : 'End date cannot be earlier than start date',
     suggestion: isValid ? undefined : 'Please check education start and end dates',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };
@@ -181,12 +163,10 @@ export const checkEmploymentContentLength: ObjectiveRule<EmploymentBlock> = (dat
 
   return {
     passed: isValid,
-    ruleName: 'Employment Content Length Check',
     message: isValid
       ? `Employment content length is appropriate (${contentLength} characters)`
       : `Employment content is too short (${contentLength}/${minLength} characters)`,
     suggestion: isValid ? undefined : 'Please provide detailed description of your work responsibilities, achievements and skill applications',
-    type: 'objective',
     score: Math.min(100, Math.round((contentLength / minLength) * 100))
   };
 };
@@ -206,14 +186,12 @@ export const checkEmploymentRequiredFields: ObjectiveRule<EmploymentBlock> = (da
 
   return {
     passed: missingFields.length === 0,
-    ruleName: 'Employment Required Fields Check',
     message: missingFields.length === 0
       ? 'Employment information is complete'
       : `Missing fields: ${missingFields.map(f => f.name).join(', ')}`,
     suggestion: missingFields.length === 0
       ? undefined
       : `Please fill in the following fields: ${missingFields.map(f => f.name).join(', ')}`,
-    type: 'objective',
     score: missingFields.length === 0 ? 100 : Math.max(0, 100 - missingFields.length * 25)
   };
 };
@@ -225,10 +203,8 @@ export const checkEmploymentTimeLogic: ObjectiveRule<EmploymentBlock> = (data) =
   if (!data.start || !data.end) {
     return {
       passed: false,
-      ruleName: 'Employment Time Logic Check',
       message: 'Missing start or end date',
       suggestion: 'Please provide complete employment dates',
-      type: 'objective',
       score: 0
     };
   }
@@ -239,10 +215,8 @@ export const checkEmploymentTimeLogic: ObjectiveRule<EmploymentBlock> = (data) =
 
   return {
     passed: isValid,
-    ruleName: 'Employment Time Logic Check',
     message: isValid ? 'Employment time logic is correct' : 'End date cannot be earlier than start date',
     suggestion: isValid ? undefined : 'Please check employment start and end dates',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };
@@ -259,12 +233,10 @@ export const checkSkillContentLength: ObjectiveRule<SkillBlock> = (data) => {
 
   return {
     passed: isValid,
-    ruleName: 'Skill Description Length Check',
     message: isValid
       ? `Skill description length is appropriate (${contentLength} characters)`
       : `Skill description is too short (${contentLength}/${minLength} characters)`,
     suggestion: isValid ? undefined : 'Please provide detailed description of your skill level or application scenarios',
-    type: 'objective',
     score: Math.min(100, Math.round((contentLength / minLength) * 100))
   };
 };
@@ -277,10 +249,8 @@ export const checkSkillGroup: ObjectiveRule<SkillBlock> = (data) => {
 
   return {
     passed: isValid,
-    ruleName: 'Skill Group Check',
     message: isValid ? 'Skill group is set' : 'Skill group cannot be empty',
     suggestion: isValid ? undefined : 'Please set skill group (e.g., Programming Languages, Frameworks, Tools, etc.)',
-    type: 'objective',
     score: isValid ? 100 : 0
   };
 };

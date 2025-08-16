@@ -7,23 +7,21 @@ import {evaluatorRegistry} from './evaluators';
 import type {ResumeData} from '@/types/resume';
 import {ModuleEvaluator} from './module-evaluator';
 import {evaluateResumeProfessionalism} from "@/lib/evaluation/rules/subjective-rules";
+import {toast} from "sonner";
 
 /**
  * Evaluate multiple data blocks in a module
  */
 async function evaluateSectionBlocks<T>(
   blocks: T[],
-  evaluator: ModuleEvaluator<any>,
-  moduleName: string
+  evaluator: ModuleEvaluator<any>
 ): Promise<ModuleEvaluationReport[]> {
   const reports: ModuleEvaluationReport[] = [];
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const report = await evaluator.evaluate(block);
+    const report = await evaluator.evaluate(block, i);
 
-    // Add index identifier for each block
-    report.module = `${moduleName} ${i + 1}`;
     reports.push(report);
   }
 
@@ -95,7 +93,7 @@ export async function evaluateResume(
   if (includeObjective) {
     // Evaluate personal information
     if (resumeData.personalInfo) {
-      const personalInfoReport = await evaluatorRegistry.personalInfo.evaluate(resumeData.personalInfo);
+      const personalInfoReport = await evaluatorRegistry.personalInfo.evaluate(resumeData.personalInfo, 0);
       moduleReports.push(personalInfoReport);
     }
 
@@ -103,8 +101,7 @@ export async function evaluateResume(
     if (resumeData.education?.blocks?.length > 0) {
       const educationReports = await evaluateSectionBlocks(
         resumeData.education.blocks,
-        evaluatorRegistry.education,
-        'Education Experience'
+        evaluatorRegistry.education
       );
       moduleReports.push(...educationReports);
     }
@@ -113,8 +110,7 @@ export async function evaluateResume(
     if (resumeData.employment?.blocks?.length > 0) {
       const employmentReports = await evaluateSectionBlocks(
         resumeData.employment.blocks,
-        evaluatorRegistry.employment,
-        'Employment Experience'
+        evaluatorRegistry.employment
       );
       moduleReports.push(...employmentReports);
     }
@@ -124,7 +120,6 @@ export async function evaluateResume(
       const skillReports = await evaluateSectionBlocks(
         resumeData.skills.blocks,
         evaluatorRegistry.skills,
-        'Skills'
       );
       moduleReports.push(...skillReports);
     }
@@ -135,16 +130,7 @@ export async function evaluateResume(
       const subjectiveReports = await evaluateResumeProfessionalism(resumeData);
       moduleReports.push(...subjectiveReports);
     } catch (error) {
-      moduleReports.push({
-        module: 'Subjective Evaluation Error',
-        results: [{
-          passed: false,
-          ruleName: 'Subjective Evaluation',
-          message: 'Subjective evaluation failed',
-          type: 'subjective'
-        }],
-        passed: false
-      });
+      toast.error("Subjective Evaluation Error: " + error)
     }
   }
 
@@ -191,7 +177,6 @@ export type {
   ModuleEvaluationReport,
   ResumeEvaluationReport,
   ObjectiveRule,
-  SubjectiveRule,
   RuleConfig,
   ModuleEvaluatorConfig,
   EvaluationOptions

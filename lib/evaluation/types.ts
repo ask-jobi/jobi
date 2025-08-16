@@ -1,16 +1,18 @@
 // Evaluation result interface
+import {ResumeData} from "@/types/resume";
+
 export interface EvaluationResult {
-  passed: boolean;
   ruleName: string;
+  passed: boolean;
   message?: string;
   suggestion?: string;
-  type: 'objective' | 'subjective';
   score?: number; // Optional score (0-100)
 }
 
 // Module evaluation report
 export interface ModuleEvaluationReport {
-  module: string;
+  module: keyof ResumeData;
+  index: number;
   results: EvaluationResult[];
   overallScore?: number; // Module overall score
   passed: boolean; // Whether the module passed all rules
@@ -25,16 +27,12 @@ export interface ResumeEvaluationReport {
 }
 
 // Objective rule type
-export type ObjectiveRule<T> = (data: T) => EvaluationResult;
-
-// Subjective rule type (async, requires LLM)
-export type SubjectiveRule<T> = (data: T) => Promise<EvaluationResult>;
+export type ObjectiveRule<T> = (data: T) => Omit<EvaluationResult, 'ruleName'>;
 
 // Rule configuration
 export interface RuleConfig<T> {
   name: string;
-  type: 'objective' | 'subjective';
-  rule: ObjectiveRule<T> | SubjectiveRule<T>;
+  rule: ObjectiveRule<T>;
   weight?: number; // Rule weight for weighted scoring
   enabled?: boolean; // Whether the rule is enabled
 }

@@ -27,28 +27,24 @@ import {
 const personalInfoRules: RuleConfig<PersonalInfo>[] = [
   {
     name: 'Email Format Check',
-    type: 'objective',
     rule: checkEmailFormat,
     weight: 2,
     enabled: true
   },
   {
     name: 'Phone Number Format Check',
-    type: 'objective',
     rule: checkPhoneFormat,
     weight: 1,
     enabled: true
   },
   {
     name: 'Required Fields Completeness Check',
-    type: 'objective',
     rule: checkRequiredFields,
     weight: 3,
     enabled: true
   },
   {
     name: 'Website Link Format Check',
-    type: 'objective',
     rule: checkWebsiteFormat,
     weight: 1,
     enabled: true
@@ -56,7 +52,7 @@ const personalInfoRules: RuleConfig<PersonalInfo>[] = [
 ];
 
 export const personalInfoEvaluator = new ModuleEvaluator<PersonalInfo>({
-  moduleName: 'Personal Information',
+  moduleName: 'personalInfo',
   rules: personalInfoRules
 });
 
@@ -65,21 +61,18 @@ export const personalInfoEvaluator = new ModuleEvaluator<PersonalInfo>({
 const educationRules: RuleConfig<EducationBlock>[] = [
   {
     name: 'Education Content Length Check',
-    type: 'objective',
     rule: checkEducationContentLength,
     weight: 2,
     enabled: true
   },
   {
     name: 'Education Required Fields Check',
-    type: 'objective',
     rule: checkEducationRequiredFields,
     weight: 3,
     enabled: true
   },
   {
     name: 'Education Time Logic Check',
-    type: 'objective',
     rule: checkEducationTimeLogic,
     weight: 2,
     enabled: true
@@ -87,7 +80,7 @@ const educationRules: RuleConfig<EducationBlock>[] = [
 ];
 
 export const educationEvaluator = new ModuleEvaluator<EducationBlock>({
-  moduleName: 'Education Experience',
+  moduleName: 'education',
   rules: educationRules
 });
 
@@ -96,21 +89,18 @@ export const educationEvaluator = new ModuleEvaluator<EducationBlock>({
 const employmentRules: RuleConfig<EmploymentBlock>[] = [
   {
     name: 'Employment Content Length Check',
-    type: 'objective',
     rule: checkEmploymentContentLength,
     weight: 2,
     enabled: true
   },
   {
     name: 'Employment Required Fields Check',
-    type: 'objective',
     rule: checkEmploymentRequiredFields,
     weight: 3,
     enabled: true
   },
   {
     name: 'Employment Time Logic Check',
-    type: 'objective',
     rule: checkEmploymentTimeLogic,
     weight: 2,
     enabled: true
@@ -118,7 +108,7 @@ const employmentRules: RuleConfig<EmploymentBlock>[] = [
 ];
 
 export const employmentEvaluator = new ModuleEvaluator<EmploymentBlock>({
-  moduleName: 'Employment Experience',
+  moduleName: 'employment',
   rules: employmentRules
 });
 
@@ -127,14 +117,12 @@ export const employmentEvaluator = new ModuleEvaluator<EmploymentBlock>({
 const skillRules: RuleConfig<SkillBlock>[] = [
   {
     name: 'Skill Description Length Check',
-    type: 'objective',
     rule: checkSkillContentLength,
     weight: 1,
     enabled: true
   },
   {
     name: 'Skill Group Check',
-    type: 'objective',
     rule: checkSkillGroup,
     weight: 1,
     enabled: true
@@ -142,7 +130,7 @@ const skillRules: RuleConfig<SkillBlock>[] = [
 ];
 
 export const skillEvaluator = new ModuleEvaluator<SkillBlock>({
-  moduleName: 'Skills',
+  moduleName: 'skills',
   rules: skillRules
 });
 
