@@ -128,7 +128,6 @@ const buildQuotas = (accessPass: DBAccessPass): Quota => {
   }
 }
 
-// TODO: 在各个地方调用来消耗配额
 export async function consumeQuota(key: QuotaKey) {
   const supabase = await createClient()
   const {data: accessPass, error} = await supabase
@@ -143,12 +142,18 @@ export async function consumeQuota(key: QuotaKey) {
 
   const updateParams = verifyAndUpdateQuota(key, quotas)
 
-  await supabase
+  const {error: updateError} = await supabase
     .from("access_passes")
     .update({
       ...updateParams
     })
     .eq('id', accessPass.id)
+
+  if (updateError) {
+    throw updateError
+  }
+
+  console.log('consuming quota', key, 'success');
 }
 
 function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
@@ -169,7 +174,7 @@ export async function verifyJobApplicationLimit() {
   // 获取当前用户
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
-    throw new Error('用户未登录')
+    throw new Error('User not logged in')
   }
 
   const {data: jobApplications, error} = await supabase
@@ -182,7 +187,7 @@ export async function verifyJobApplicationLimit() {
   }
 
   if (jobApplications.length >= 10) {
-    throw new Error('您已达岗位申请上限, 请尝试删除一些已申请的岗位')
+    throw new Error('You have reached the maximum job application limit, please try to delete some jobs you have applied for.')
   }
 }
 

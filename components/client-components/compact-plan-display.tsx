@@ -19,8 +19,6 @@ interface SubscriptionData {
   }
 }
 
-// TODO: 购买新套餐后，没有更新 access_passes 表中的数据，导致显示的套餐信息不准确 ？ 
-// TODO: 检查一下 进度条是否正常
 
 export function CompactPlanDisplay() {
   const t = useTranslations()

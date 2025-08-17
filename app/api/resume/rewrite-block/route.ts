@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { RewriteBlockRequest } from '@/types/api/requests';
 import {rewriteBlock} from '@/server/langchain/resume-rewriter';
+import { consumeQuota } from '@/server/quota';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
       instruction: body.instruction,
       language: body.language,
     });
+
+    await consumeQuota('blockOptimize');
 
     return NextResponse.json(response);
   } catch (error) {
