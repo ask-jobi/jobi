@@ -82,7 +82,6 @@ export async function POST(req: Request) {
       }
 
       // 3. 删除当前未过期的 access_passes
-      // TODO: 现在直接用 access_passes 来管理用量，可以删除 quata 表
       const { error: deleteError } = await supabase
         .from('access_passes')
         .delete()
