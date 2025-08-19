@@ -8,7 +8,6 @@ import { Check, Crown, Loader2 } from 'lucide-react'
 import { PaymentError } from './payment-error'
 import { LoginRequiredModal } from './login-required-modal'
 import { useAuth } from '@/lib/hooks/use-auth'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 interface PricingCardProps {
@@ -21,7 +20,6 @@ interface PricingCardProps {
   isPopular?: boolean
   buttonText: string
   buttonVariant?: 'default' | 'outline'
-  buttonHref?: string
 }
 
 export function PricingCard({
@@ -34,7 +32,6 @@ export function PricingCard({
   isPopular = false,
   buttonText,
   buttonVariant = 'outline',
-  buttonHref
 }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
@@ -50,8 +47,10 @@ export function PricingCard({
       router.push(`/auth/login?callbackUrl=${callbackUrl}`)
       return
     }
-
-    // 已登录，处理套餐选择
+    // TODO: 处理免费通行证的逻辑
+    // TODO: 如果用户没有任意通行行证，则创建免费通行证 3 天试用（检查一下有没有其他地方有创建免费通行证的逻辑）
+    // TODO: 如果用户有通行证，则检查是否过期，如果过期了，则引导用户购买通行，没有则直接进入DASHBOARD
+    // 已登录之后的处理，处理套餐选择
     if (!priceId) {
       // 免费套餐，跳转到注册页面（或者直接进入应用）
       router.push('/auth/sign-up')

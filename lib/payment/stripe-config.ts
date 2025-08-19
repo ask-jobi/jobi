@@ -24,7 +24,6 @@ export const PRICING_CONFIG = {
     ],
     plan: 'FREE',
     buttonText: '开始免费试用',
-    buttonHref: '/auth/sign-up'
   },
   PRO: {
     title: 'Pro Pass',
@@ -60,6 +59,5 @@ export const PRICING_CONFIG = {
     priceId: STRIPE_PRICE_IDS.LITE_PASS,
     mode: 'payment' as const,
     buttonText: '选择 Lite Pass',
-    buttonHref: '/auth/sign-up'
   }
 } as const 
