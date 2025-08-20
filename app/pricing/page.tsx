@@ -1,6 +1,5 @@
 'use client'
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -14,10 +13,10 @@ import { useEffect, useState } from "react";
 import { LandingPageLayout } from "@/components/ui/landing-page-layout";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 
-// TODO: 开始免费使用在登录下也会提示要登录
-// TODO: 没有国际化
 export default function PricingPage() {
+  const t = useTranslations();
   const searchParams = useSearchParams()
   const [showCancelledAlert, setShowCancelledAlert] = useState(false)
   const { user } = useAuth()
@@ -63,17 +62,15 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto">
           <Badge variant="secondary" className="mb-4">
             <Star className="w-4 h-4 mr-2 text-yellow-500" />
-            选择最适合您的套餐
+            {t('pricing.choosePlan')}
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            简单透明的
+            {t('pricing.heroTitle')}
             <br />
-            <span className="text-primary">定价方案</span>
+            <span className="text-primary">{t('pricing.heroTitleHighlight')}</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            无论您是个人求职者还是企业用户，我们都有适合您的套餐选择。
-            <br />
-            我们承诺不自动续费，一次付费，享受完整功能。
+            {t('pricing.heroDescription')}
           </p>
         </div>
       </section>
@@ -96,24 +93,24 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
-            常见问题
+            {t('pricing.faqTitle')}
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-2">可以随时取消订阅吗？</h3>
-              <p className="text-muted-foreground">是的，您可以随时取消订阅，取消后仍可使用到当前计费周期结束。</p>
+              <h3 className="text-lg font-semibold mb-2">{t('pricing.faqCancelSubscription')}</h3>
+              <p className="text-muted-foreground">{t('pricing.faqCancelSubscriptionAnswer')}</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">支持哪些支付方式？</h3>
-              <p className="text-muted-foreground">我们支持支付宝、微信支付、银行卡等多种支付方式。</p>
+              <h3 className="text-lg font-semibold mb-2">{t('pricing.faqPaymentMethods')}</h3>
+              <p className="text-muted-foreground">{t('pricing.faqPaymentMethodsAnswer')}</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">有退款政策吗？</h3>
-              <p className="text-muted-foreground">我们提供7天无理由退款保证，如果您不满意我们的服务。</p>
+              <h3 className="text-lg font-semibold mb-2">{t('pricing.faqRefundPolicy')}</h3>
+              <p className="text-muted-foreground">{t('pricing.faqRefundPolicyAnswer')}</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">企业版可以定制吗？</h3>
-              <p className="text-muted-foreground">是的，企业版支持定制化需求，请联系我们的销售团队。</p>
+              <h3 className="text-lg font-semibold mb-2">{t('pricing.faqEnterpriseCustomization')}</h3>
+              <p className="text-muted-foreground">{t('pricing.faqEnterpriseCustomizationAnswer')}</p>
             </div>
           </div>
         </div>
@@ -123,17 +120,17 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            准备好开始了吗？
+            {t('pricing.ctaTitle')}
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            选择最适合您的套餐，开始打造完美简历
+            {t('pricing.ctaDescription')}
           </p>
           <Button 
             size="lg" 
             className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
             onClick={handleCTAClick}
           >
-            {user ? '进入仪表板' : '立即开始'}
+            {user ? t('pricing.ctaButtonLoggedIn') : t('pricing.ctaButtonLoggedOut')}
           </Button>
         </div>
       </section>

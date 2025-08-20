@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { X, AlertCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface PaymentCancelledAlertProps {
   isVisible: boolean
@@ -11,6 +12,7 @@ interface PaymentCancelledAlertProps {
 }
 
 export function PaymentCancelledAlert({ isVisible, onClose }: PaymentCancelledAlertProps) {
+  const t = useTranslations();
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function PaymentCancelledAlert({ isVisible, onClose }: PaymentCancelledAl
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-5 h-5 text-orange-600" />
-              <CardTitle className="text-orange-800 text-lg">支付已取消</CardTitle>
+              <CardTitle className="text-orange-800 text-lg">{t('pricing.paymentCancelled.title')}</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -53,7 +55,7 @@ export function PaymentCancelledAlert({ isVisible, onClose }: PaymentCancelledAl
         </CardHeader>
         <CardContent>
           <CardDescription className="text-orange-700">
-            您的支付已被取消。您可以随时重新选择套餐进行购买。
+            {t('pricing.paymentCancelled.description')}
           </CardDescription>
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 {
   "login": "Login",
   "signUp": "Sign Up Free",
-  "pricing": "Pricing",
+  "pricingPage": "Pricing",
   "home": "Home",
   "dashboard": "Dashboard",
 
@@ -68,5 +68,90 @@
   "subscriptionAndUsage": "Subscription & Usage",
   "loadingSubscriptionError": "Error loading subscription information",
   "failedToLoadSubscription": "Failed to load subscription information",
-  "subscriptionAndUsageSettings": "Subscription & Usage Settings"
+  "subscriptionAndUsageSettings": "Subscription & Usage Settings",
+
+  "pricing": {
+    "choosePlan": "Choose the plan that best fits you",
+    "heroTitle": "Simple and transparent",
+    "heroTitleHighlight": "pricing plans",
+    "heroDescription": "Whether you're an individual job seeker or a business user, we have the right plan for you. We promise no auto-renewal - pay once and enjoy full features.",
+    "faqTitle": "Frequently Asked Questions",
+    "faqCancelSubscription": "Can I cancel my subscription anytime?",
+    "faqCancelSubscriptionAnswer": "Yes, you can cancel your subscription at any time. After cancellation, you can still use the service until the end of your current billing cycle.",
+    "faqPaymentMethods": "What payment methods do you support?",
+    "faqPaymentMethodsAnswer": "We support various payment methods including Alipay, WeChat Pay, bank cards, and more.",
+    "faqRefundPolicy": "Do you have a refund policy?",
+    "faqRefundPolicyAnswer": "Yes, we offer a 7-day no-questions-asked refund guarantee if you're not satisfied with our service.",
+    "faqEnterpriseCustomization": "Can enterprise plans be customized?",
+    "faqEnterpriseCustomizationAnswer": "Yes, enterprise plans support customization. Please contact our sales team for your specific needs.",
+    "ctaTitle": "Ready to get started?",
+    "ctaDescription": "Choose the plan that best fits you and start building your perfect resume",
+    "ctaButtonLoggedIn": "Go to Dashboard",
+    "ctaButtonLoggedOut": "Get Started Now",
+    "mostPopular": "Most Popular",
+    "loading": "Loading...",
+    "loginToPurchase": "Login to Purchase",
+    "paymentError": "An error occurred during payment, please try again",
+    "plans": {
+      "free": {
+        "title": "Free Pass",
+        "price": "Free",
+        "description": "Perfect for individual users to try, 3 days full features",
+        "features": [
+          "3 resume optimizations per month",
+          "Basic AI analysis",
+          "Motivation letter generation",
+          "Email support"
+        ],
+        "buttonText": "Start Free Trial"
+      },
+      "pro": {
+        "title": "Pro Pass",
+        "price": "€24.99",
+        "description": "Most popular! One-time payment, enjoy 30 days full features + resume optimization highlight suggestions",
+        "features": [
+          "50 resume optimizations per month",
+          "Advanced AI analysis",
+          "Resume optimization highlight suggestions",
+          "Priority customer support",
+          "Export to PDF format",
+          "30 days full features",
+          "24h email support"
+        ],
+        "buttonText": "Choose Pro Pass"
+      },
+      "lite": {
+        "title": "Lite Pass",
+        "price": "€19.99",
+        "description": "Short-term sprint, one-time payment, enjoy 7 days full features",
+        "features": [
+          "3 resume optimizations per month",
+          "Basic AI analysis",
+          "Motivation letter generation",
+          "24h email support"
+        ],
+        "buttonText": "Choose Lite Pass"
+      }
+    },
+    "paymentCancelled": {
+      "title": "Payment Cancelled",
+      "description": "Your payment has been cancelled. You can choose a plan and purchase again at any time."
+    },
+    "loginRequired": {
+      "title": "Login Required",
+      "description": "To purchase {planName}, you need to log in to your account first",
+      "benefitsTitle": "After logging in, you can:",
+      "benefits": [
+        "Complete payments securely",
+        "Manage your subscriptions",
+        "View purchase history"
+      ],
+      "loginButton": "Login",
+      "signUpButton": "Sign Up",
+      "laterButton": "Maybe Later"
+    },
+    "paymentError": {
+      "title": "Payment Error"
+    }
+  }
 }

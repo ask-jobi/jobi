@@ -36,7 +36,7 @@ export const Header = memo(function Header({
           {showLanguageSwitcher && <LanguageSwitcher />}
           {showPricingLink && (
             <Link href="/pricing">
-              <Button variant="ghost">{t('pricing')}</Button>
+              <Button variant="ghost">{t('pricingPage')}</Button>
             </Link>
           )}
           {showAuthButtons && (

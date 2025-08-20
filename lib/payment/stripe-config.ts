@@ -8,56 +8,75 @@ export const STRIPE_PRICE_IDS = {
   LITE_PASS: process.env.STRIPE_LITE_PASS_PRICE_ID || 'price_1Rnp0bQAnDbV3CHRbiNbPMrl',
 } as const
 
-// 价格配置
-export const PRICING_CONFIG = {
-  // TODO：处理免费版逻辑，用户如果没有试用过，就开启创建免费通行证
-  // 如果用户已经有通行证了，就检查是否过期，如果过期了，就引导用户购买通行证
+// 基础价格配置（不包含文本内容）
+export const BASE_PRICING_CONFIG = {
   FREE: {
-    title: 'Free Pass',
-    price: 'Free',
-    description: '适合个人用户试用，3 天完整功能',
-    features: [
-      '每月 3 次简历优化',
-      '基础 AI 分析',
-      '动机信生成',
-      '邮件支持'
-    ],
     plan: 'FREE',
-    buttonText: '开始免费试用',
   },
   PRO: {
-    title: 'Pro Pass',
-    price: '€24.99',
-    description: '最受欢迎！一次付费，享受 30 天的完整功能 + 简历优化高亮建议',
+    plan: 'PRO',
+    priceId: STRIPE_PRICE_IDS.PRO_PASS,
+    mode: 'payment' as const,
+    isPopular: true,
+    buttonVariant: 'default' as const
+  },
+  LITE: {
+    plan: 'LITE',
+    priceId: STRIPE_PRICE_IDS.LITE_PASS,
+    mode: 'payment' as const,
+  }
+} as const
+
+// 价格配置（包含文本内容，需要国际化）
+export const PRICING_CONFIG = {
+  // TODO: Handle free plan logic - if user hasn't tried before, create free pass for 3 days trial
+  // If user already has a pass, check if expired, if expired guide user to purchase, if not go directly to DASHBOARD
+  FREE: {
+    title: 'pricing.plans.free.title',
+    price: 'pricing.plans.free.price',
+    description: 'pricing.plans.free.description',
     features: [
-      '每月 50 次简历优化',
-      '高级 AI 分析',
-      '简历优化高亮建议',
-      '优先客服支持',
-      '导出 PDF 格式',
-      '30 天完整功能',
-      '24h 邮件支持'
+      'pricing.plans.free.features.0',
+      'pricing.plans.free.features.1',
+      'pricing.plans.free.features.2',
+      'pricing.plans.free.features.3'
+    ],
+    plan: 'FREE',
+    buttonText: 'pricing.plans.free.buttonText',
+  },
+  PRO: {
+    title: 'pricing.plans.pro.title',
+    price: '€24.99',
+    description: 'pricing.plans.pro.description',
+    features: [
+      'pricing.plans.pro.features.0',
+      'pricing.plans.pro.features.1',
+      'pricing.plans.pro.features.2',
+      'pricing.plans.pro.features.3',
+      'pricing.plans.pro.features.4',
+      'pricing.plans.pro.features.5',
+      'pricing.plans.pro.features.6'
     ],
     plan: 'PRO',
     priceId: STRIPE_PRICE_IDS.PRO_PASS,
     mode: 'payment' as const,
     isPopular: true,
-    buttonText: '选择 Pro Pass',
+    buttonText: 'pricing.plans.pro.buttonText',
     buttonVariant: 'default' as const
   },
   LITE: {
-    title: 'Lite Pass',
+    title: 'pricing.plans.lite.title',
     price: '€19.99',
-    description: '短期冲刺，一次付费，享受 7 天的完整功能',
+    description: 'pricing.plans.lite.description',
     features: [
-      '每月 3 次简历优化',
-      '基础 AI 分析',
-      '动机信生成',
-      '24h 邮件支持'
+      'pricing.plans.lite.features.0',
+      'pricing.plans.lite.features.1',
+      'pricing.plans.lite.features.2',
+      'pricing.plans.lite.features.3'
     ],
     plan: 'LITE',
     priceId: STRIPE_PRICE_IDS.LITE_PASS,
     mode: 'payment' as const,
-    buttonText: '选择 Lite Pass',
+    buttonText: 'pricing.plans.lite.buttonText',
   }
 } as const 

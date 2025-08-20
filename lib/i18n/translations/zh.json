@@ -1,7 +1,7 @@
 {
   "login": "登录",
   "signUp": "免费注册",
-  "pricing": "定价",
+  "pricingPage": "定价",
   "home": "首页",
   "dashboard": "控制台",
 
@@ -68,5 +68,90 @@
   "subscriptionAndUsage": "套餐与用量",
   "loadingSubscriptionError": "加载套餐信息时出现错误",
   "failedToLoadSubscription": "无法加载套餐信息",
-  "subscriptionAndUsageSettings": "套餐与用量设置"
+  "subscriptionAndUsageSettings": "套餐与用量设置",
+
+  "pricing": {
+    "choosePlan": "选择最适合您的套餐",
+    "heroTitle": "简单透明的",
+    "heroTitleHighlight": "定价方案",
+    "heroDescription": "无论您是个人求职者还是企业用户，我们都有适合您的套餐选择。我们承诺不自动续费，一次付费，享受完整功能。",
+    "faqTitle": "常见问题",
+    "faqCancelSubscription": "可以随时取消订阅吗？",
+    "faqCancelSubscriptionAnswer": "是的，您可以随时取消订阅，取消后仍可使用到当前计费周期结束。",
+    "faqPaymentMethods": "支持哪些支付方式？",
+    "faqPaymentMethodsAnswer": "我们支持支付宝、微信支付、银行卡等多种支付方式。",
+    "faqRefundPolicy": "有退款政策吗？",
+    "faqRefundPolicyAnswer": "我们提供7天无理由退款保证，如果您不满意我们的服务。",
+    "faqEnterpriseCustomization": "企业版可以定制吗？",
+    "faqEnterpriseCustomizationAnswer": "是的，企业版支持定制化需求，请联系我们的销售团队。",
+    "ctaTitle": "准备好开始了吗？",
+    "ctaDescription": "选择最适合您的套餐，开始打造完美简历",
+    "ctaButtonLoggedIn": "进入仪表板",
+    "ctaButtonLoggedOut": "立即开始",
+    "mostPopular": "最受欢迎",
+    "loading": "加载中...",
+    "loginToPurchase": "登录后购买",
+    "paymentError": "支付过程中出现错误，请重试",
+    "plans": {
+      "free": {
+        "title": "Free Pass",
+        "price": "免费",
+        "description": "适合个人用户试用，3 天完整功能",
+        "features": [
+          "每月 3 次简历优化",
+          "基础 AI 分析",
+          "动机信生成",
+          "邮件支持"
+        ],
+        "buttonText": "开始免费试用"
+      },
+      "pro": {
+        "title": "Pro Pass",
+        "price": "€24.99",
+        "description": "最受欢迎！一次付费，享受 30 天的完整功能 + 简历优化高亮建议",
+        "features": [
+          "每月 50 次简历优化",
+          "高级 AI 分析",
+          "简历优化高亮建议",
+          "优先客服支持",
+          "导出 PDF 格式",
+          "30 天完整功能",
+          "24h 邮件支持"
+        ],
+        "buttonText": "选择 Pro Pass"
+      },
+      "lite": {
+        "title": "Lite Pass",
+        "price": "€19.99",
+        "description": "短期冲刺，一次付费，享受 7 天的完整功能",
+        "features": [
+          "每月 3 次简历优化",
+          "基础 AI 分析",
+          "动机信生成",
+          "24h 邮件支持"
+        ],
+        "buttonText": "选择 Lite Pass"
+      }
+    },
+    "paymentCancelled": {
+      "title": "支付已取消",
+      "description": "您的支付已被取消。您可以随时重新选择套餐进行购买。"
+    },
+    "loginRequired": {
+      "title": "需要登录",
+      "description": "购买 {planName} 需要先登录您的账户",
+      "benefitsTitle": "登录后您可以：",
+      "benefits": [
+        "安全完成支付",
+        "管理您的订阅",
+        "查看购买历史"
+      ],
+      "loginButton": "登录",
+      "signUpButton": "注册",
+      "laterButton": "稍后再说"
+    },
+    "paymentError": {
+      "title": "支付错误"
+    }
+  }
 }
