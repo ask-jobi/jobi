@@ -33,7 +33,7 @@ export const PRICING_CONFIG = {
   // If user already has a pass, check if expired, if expired guide user to purchase, if not go directly to DASHBOARD
   FREE: {
     title: 'pricing.plans.free.title',
-    price: 'pricing.plans.free.price',
+    price: 'Free',
     description: 'pricing.plans.free.description',
     features: [
       'pricing.plans.free.features.0',

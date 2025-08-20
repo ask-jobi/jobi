@@ -67,13 +67,45 @@ export function PricingCard({
       router.push(`/auth/login?callbackUrl=${callbackUrl}`)
       return
     }
-    // TODO: 处理免费通行证的逻辑
-    // TODO: 如果用户没有任意通行行证，则创建免费通行证 3 天试用（检查一下有没有其他地方有创建免费通行证的逻辑）
-    // TODO: 如果用户有通行证，则检查是否过期，如果过期了，则引导用户购买通行，没有则直接进入DASHBOARD
+
     // 已登录之后的处理，处理套餐选择
     if (!priceId) {
-      // 免费套餐，跳转到注册页面（或者直接进入应用）
-      router.push('/auth/sign-up')
+      // 免费套餐：处理免费通行证的逻辑
+      try {
+        setIsLoading(true)
+        
+        // 调用API创建免费通行证（API会自动检查用户历史）
+        const response = await fetch('/api/access-passes/create-free', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const result = await response.json()
+
+        if (response.ok) {
+          if (result.message === 'Free pass created successfully') {
+            // 新创建了免费通行证，跳转到仪表板
+            router.push('/dashboard')
+          } else if (result.message === 'User already has an active pass') {
+            // 用户已有有效通行证，直接跳转到仪表板
+            router.push('/dashboard')
+          }
+        } else {
+          // 创建失败，显示错误信息
+          if (result.code === 'ALREADY_TRIED') {
+            setError(t('pricing.freePass.alreadyTried'))
+          } else {
+            setError(result.error || t('pricing.freePass.createFailed'))
+          }
+        }
+      } catch (error) {
+        console.error('Error creating free access pass:', error)
+        setError(t('pricing.freePass.createError'))
+      } finally {
+        setIsLoading(false)
+      }
       return
     }
 

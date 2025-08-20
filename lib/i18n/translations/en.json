@@ -150,8 +150,12 @@
       "signUpButton": "Sign Up",
       "laterButton": "Maybe Later"
     },
-    "paymentError": {
-      "title": "Payment Error"
+    "freePass": {
+      "createSuccess": "Free pass created successfully",
+      "alreadyExists": "User already has an active pass",
+      "createFailed": "Failed to create free pass",
+      "createError": "Error occurred while creating free pass",
+      "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
     }
   }
 }

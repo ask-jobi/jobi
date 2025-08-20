@@ -91,7 +91,16 @@
     "mostPopular": "最受欢迎",
     "loading": "加载中...",
     "loginToPurchase": "登录后购买",
-    "paymentError": "支付过程中出现错误，请重试",
+    "paymentError": {
+      "title": "支付错误"
+    },
+    "freePass": {
+      "createSuccess": "免费通行证创建成功",
+      "alreadyExists": "用户已有有效通行证",
+      "createFailed": "创建免费通行证失败",
+      "createError": "创建免费通行证时出现错误",
+      "alreadyTried": "您已经试用过该产品，请选择付费套餐继续使用"
+    },
     "plans": {
       "free": {
         "title": "Free Pass",
@@ -149,9 +158,6 @@
       "loginButton": "登录",
       "signUpButton": "注册",
       "laterButton": "稍后再说"
-    },
-    "paymentError": {
-      "title": "支付错误"
     }
   }
 }
