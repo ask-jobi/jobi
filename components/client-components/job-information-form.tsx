@@ -27,7 +27,9 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Job Name</FormLabel>
+              <FormLabel className="after:content-['*'] after:text-destructive">
+                Job Name
+              </FormLabel>
               <FormControl>
                 <Input placeholder="job name" {...field} />
               </FormControl>
@@ -40,7 +42,9 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           name="company"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Company</FormLabel>
+              <FormLabel className="after:content-['*'] after:text-destructive">
+                Company
+              </FormLabel>
               <FormControl>
                 <Input placeholder="company name" {...field} />
               </FormControl>
@@ -53,7 +57,9 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Job Description</FormLabel>
+              <FormLabel className="after:content-['*'] after:text-destructive">
+                Job Description
+              </FormLabel>
               <FormControl>
                 <Textarea placeholder="job description" {...field} />
               </FormControl>
