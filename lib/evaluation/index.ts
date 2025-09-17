@@ -53,11 +53,11 @@ function generateSummary(moduleReports: ModuleEvaluationReport[]): string {
   const overallScore = calculateOverallScore(moduleReports);
 
   let summary = `Resume evaluation completed!\n\n`;
-  summary += `📊 Overall Score: ${overallScore}/100\n`;
-  summary += `✅ Passed Modules: ${passedCount}/${totalModules}\n`;
+  summary += `Overall Score: ${overallScore}/100\n`;
+  summary += `Passed Modules: ${passedCount}/${totalModules}\n`;
 
   if (failedModules.length > 0) {
-    summary += `❌ Modules Needing Improvement: ${failedModules.map(r => r.module).join(', ')}\n`;
+    summary += `Modules Needing Improvement: ${failedModules.map(r => r.module).join(', ')}\n`;
   }
 
   // Add specific suggestions
@@ -68,7 +68,7 @@ function generateSummary(moduleReports: ModuleEvaluationReport[]): string {
     .slice(0, 5); // Show at most 5 suggestions
 
   if (suggestions.length > 0) {
-    summary += `\n💡 Key Suggestions:\n${suggestions.join('\n')}`;
+    summary += `\nKey Suggestions:\n${suggestions.join('\n')}`;
   }
 
   return summary;

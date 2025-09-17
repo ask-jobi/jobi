@@ -70,6 +70,11 @@
   "failedToLoadSubscription": "无法加载套餐信息",
   "subscriptionAndUsageSettings": "套餐与用量设置",
 
+  "monthPicker": {
+    "present": "现在",
+    "selectStartEndDate": "请选择起止时间"
+  },
+
   "pricing": {
     "choosePlan": "选择最适合您的套餐",
     "heroTitle": "简单透明的",

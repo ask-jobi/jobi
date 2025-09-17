@@ -24,7 +24,7 @@ const resumeSchema = z.object({
         school: z.string().describe("Name of the school"),
         degree: z.string().describe("Degree obtained"),
         start: z.string().describe("Start date in YYYY-MM format"),
-        end: z.string().describe("End date in YYYY-MM format"),
+        end: z.string().describe("End date in YYYY-MM format, if contains current/present/now, format as 'present'"),
       })
     ),
   }),
@@ -37,7 +37,7 @@ const resumeSchema = z.object({
         company: z.string().describe("Name of the company"),
         jobTitle: z.string().describe("Job title"),
         start: z.string().describe("Start date in YYYY-MM format"),
-        end: z.string().describe("End date in YYYY-MM format"),
+        end: z.string().describe("End date in YYYY-MM format, if contains current/present/now, format as 'present'"),
       })
     ),
   }),

@@ -30,7 +30,7 @@ export class DefaultTemplate extends BaseTemplate {
         <>
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.school}</h3>
-            <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
+            <span className="text-sm text-gray-600">{block.start} - {this.localizePresent(block.end)}</span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
         </>
@@ -46,7 +46,7 @@ export class DefaultTemplate extends BaseTemplate {
         <>
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.company}</h3>
-            <span className="text-sm text-gray-600">{block.start} - {block.end}</span>
+            <span className="text-sm text-gray-600">{block.start} - {this.localizePresent(block.end)}</span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
         </>

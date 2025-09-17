@@ -6,6 +6,7 @@ export abstract class BaseTemplate {
   data: ResumeData
   isInteractive: boolean;
   abstract name: string;
+  presentLabel: string = 'Present';
 
   abstract renderHeader(): React.ReactNode;
 
@@ -19,6 +20,16 @@ export abstract class BaseTemplate {
     console.log(data)
     this.isInteractive = isInteractive ?? true
     this.data = data
+  }
+
+  setPresentLabel(label: string) {
+    this.presentLabel = label
+  }
+
+  localizePresent(value: string): string {
+    const v = value ?? ''
+    const isPresent = v.toLowerCase?.() === 'present' || v === '现在' || v === '至今'
+    return isPresent ? this.presentLabel : value
   }
 
 

@@ -140,7 +140,7 @@ export const checkEducationTimeLogic: ObjectiveRule<EducationBlock> = (data) => 
   }
 
   const startDate = new Date(data.start);
-  const endDate = new Date(data.end);
+  const endDate = data.end === 'present' ? new Date() : new Date(data.end);
   const isValid = startDate <= endDate;
 
   return {
@@ -210,7 +210,7 @@ export const checkEmploymentTimeLogic: ObjectiveRule<EmploymentBlock> = (data) =
   }
 
   const startDate = new Date(data.start);
-  const endDate = new Date(data.end);
+  const endDate = data.end === 'present' ? new Date() : new Date(data.end);
   const isValid = startDate <= endDate;
 
   return {

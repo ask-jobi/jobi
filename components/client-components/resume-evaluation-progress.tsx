@@ -43,7 +43,6 @@ const extractIssueBlockName = (resumeData: ResumeData, module: ModuleEvaluationR
 }
 
 function extractObjectiveStats(resumeData: ResumeData, report?: ResumeEvaluationReport) {
-  console.log(report)
   const allResults: EvaluationResult[] = []
 
   const issuesGrouped = new Map<string, EvaluationResultDisplay[]>()
@@ -117,7 +116,7 @@ export function ResumeEvaluationProgress({
         <div className="min-w-10 text-right text-sm font-semibold tabular-nums">
           {percent}%
         </div>
-        <Button onClick={subjectiveEvaluate}>Subjective Evaluate</Button>
+        <Button onClick={subjectiveEvaluate}>Advance Evaluate</Button>
       </div>
 
       {issues.size > 0 && (

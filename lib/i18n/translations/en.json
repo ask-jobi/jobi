@@ -70,6 +70,11 @@
   "failedToLoadSubscription": "Failed to load subscription information",
   "subscriptionAndUsageSettings": "Subscription & Usage Settings",
 
+  "monthPicker": {
+    "present": "Present",
+    "selectStartEndDate": "Select Start/End Date"
+  },
+
   "pricing": {
     "choosePlan": "Choose the plan that best fits you",
     "heroTitle": "Simple and transparent",
