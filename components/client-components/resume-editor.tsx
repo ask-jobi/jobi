@@ -1,16 +1,9 @@
 "use client"
 
-import {useEffect} from "react";
-import {useSidebar} from "@/components/ui/sidebar";
 import useResumeTemplate from "@/lib/hooks/use-resume-template";
 
 export default function ResumeEditor() {
-  const sidebar = useSidebar();
   const template = useResumeTemplate()
-
-  useEffect(() => {
-    sidebar.setOpen(false)
-  }, []);
 
   if (!template) return null;
 

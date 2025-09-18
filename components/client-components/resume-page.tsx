@@ -225,7 +225,7 @@ export default function ResumePage() {
 
   return (
     <FormProvider {...methods}>
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex">
         <div className="left w-1/5 p-6 border-r">
           <div className="flex flex-col gap-2">
             <Button
