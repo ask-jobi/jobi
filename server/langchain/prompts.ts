@@ -49,6 +49,7 @@ Notes:
 4. Ensure the extracted information is accurate.
 5. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
 6. Always ensure the language of the output content is consistent with the original text.
+7. skills split by english comma
 `;
 
 // TODO: Add JD description
