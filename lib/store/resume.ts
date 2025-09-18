@@ -17,6 +17,13 @@ export const focusSectionAtom = atom(null, (get, set, id: string, index?: number
   if (sectionElement) {
     sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  setTimeout(() => {
+    const formElement = document.getElementById(`form-${id}-${index}`);
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  })
 })
 
 export function useResumeLanguage() {

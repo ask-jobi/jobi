@@ -23,11 +23,10 @@ export function SkillsForm() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-[70vh]">
       {fields.map((field, blockIndex) => {
-
         return (
-          <div key={field.id} className="space-y-4">
+          <div id={`form-skills-${blockIndex}`} key={field.id} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Group</label>
               <Input
