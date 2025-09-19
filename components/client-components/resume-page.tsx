@@ -41,6 +41,7 @@ import SuggestionPatch from "@/components/client-components/suggestion-patch";
 import {useDebouncedCallback} from "@mantine/hooks";
 import {useRouter} from "next/navigation";
 import { ResumeEvaluationProgress } from "@/components/client-components/resume-evaluation-progress";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface SortableSectionItemProps {
   id: string;
@@ -89,6 +90,8 @@ export default function ResumePage() {
   const { watch, getValues, setValue, formState: {isDirty} } = methods;
   const router = useRouter();
   const { setSteps, startTour } = useTour();
+
+  // Resizable handled by react-resizable-panels
 
   const [sections, setSections] = useState(() => {
     const educationOrder = watch("education.order") ?? 0;
@@ -225,8 +228,8 @@ export default function ResumePage() {
 
   return (
     <FormProvider {...methods}>
-      <div className="flex">
-        <div className="left w-1/5 p-6 border-r">
+      <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
+        <div className="left w-1/8 p-6 border-r overflow-y-auto">
           <div className="flex flex-col gap-2">
             <Button
               variant="outline"
@@ -295,16 +298,20 @@ export default function ResumePage() {
           </DndContext>
         </div>
 
-        <div className="w-full overflow-y-scroll">
-          <div className="flex flex-col gap-4 divide-y">
-            <ResumeEvaluationProgress resumeData={resumeData} />
-            <ResumeEditor />
-          </div>
-        </div>
-
-        <div className="right w-1/3 p-6 border-l overflow-y-auto">
-          {renderSelectedSectionForm()}
-        </div>
+        <PanelGroup direction="horizontal" className="flex-1 h-full">
+          <Panel minSize={25} defaultSize={67} className="h-full overflow-y-auto">
+            <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
+              <ResumeEvaluationProgress resumeData={resumeData} />
+              <ResumeEditor />
+            </div>
+          </Panel>
+          <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize" />
+          <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
+            <div className="right p-6 h-full overflow-y-auto">
+              {renderSelectedSectionForm()}
+            </div>
+          </Panel>
+        </PanelGroup>
       </div>
     </FormProvider>
   );
