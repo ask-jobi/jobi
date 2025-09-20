@@ -87,7 +87,7 @@ export abstract class BaseTemplate {
           };
           return (
             <div
-              id={`${sectionId}-${index}`}
+              id={`section-${sectionId}-${index}`}
               key={index}
               className={`mb-4 ${this.isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}`}
               onClick={handleClick}

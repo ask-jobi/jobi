@@ -10,16 +10,16 @@ export const selectedSectionIdAtom = atom<string | null>(null);
 export const focusSectionAtom = atom(null, (get, set, id: string, index?: number) => {
   set(selectedSectionIdAtom, id);
   let sectionId = `section-${id}`
-  if (index) {
-    sectionId = `${id}-${index}`
+  const formSectionId = `form-${id}-${index}`
+  if (index && index > 0) {
+    sectionId = `section-${id}-${index}`
   }
   const sectionElement = document.getElementById(sectionId);
   if (sectionElement) {
     sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-
   setTimeout(() => {
-    const formElement = document.getElementById(`form-${id}-${index}`);
+    const formElement = document.getElementById(formSectionId);
     if (formElement) {
       formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
