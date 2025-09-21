@@ -87,12 +87,19 @@ export default function ResumePage() {
     defaultValues: resumeData,
     mode: "onChange"
   });
-  const { watch, getValues, setValue, formState: {isDirty} } = methods;
+  const { watch, getValues, setValue, formState: {isDirty}, reset } = methods;
   const router = useRouter();
   const { setSteps, startTour } = useTour();
 
   // Resizable handled by react-resizable-panels
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(true);
+
+  // Reset form when resume data changes (e.g., switching between resumes)
+  useEffect(() => {
+    if (resumeData) {
+      reset(resumeData);
+    }
+  }, [resumeData, reset]);
 
   const [sections, setSections] = useState(() => {
     const educationOrder = watch("education.order") ?? 0;
