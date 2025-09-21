@@ -2,10 +2,23 @@
 
 import useResumeTemplate from "@/lib/hooks/use-resume-template";
 
-export default function ResumeEditor() {
+interface ResumeEditorProps {
+  onSelectionClick?: () => void;
+}
+
+export default function ResumeEditor({ onSelectionClick }: ResumeEditorProps) {
   const template = useResumeTemplate()
 
   if (!template) return null;
+
+  // Override the template's onSectionClick to also expand the right panel
+  const originalOnSectionClick = template.onSectionClick;
+  template.onSectionClick = (id, index) => {
+    originalOnSectionClick(id, index);
+    if (onSelectionClick) {
+      onSelectionClick();
+    }
+  };
 
   return (
     <div className="w-full flex justify-center items-start">

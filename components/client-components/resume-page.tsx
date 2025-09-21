@@ -24,7 +24,7 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
-import { Download, GripVertical } from "lucide-react";
+import { Download, GripVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../ui/button";
 import Image from "next/image";
 
@@ -92,6 +92,7 @@ export default function ResumePage() {
   const { setSteps, startTour } = useTour();
 
   // Resizable handled by react-resizable-panels
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
   const [sections, setSections] = useState(() => {
     const educationOrder = watch("education.order") ?? 0;
@@ -226,6 +227,14 @@ export default function ResumePage() {
     }
   }
 
+  const toggleRightPanel = () => {
+    setIsRightPanelCollapsed(!isRightPanelCollapsed);
+  }
+
+  const openRightPanel = () => {
+    setIsRightPanelCollapsed(false)
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
@@ -299,18 +308,41 @@ export default function ResumePage() {
         </div>
 
         <PanelGroup direction="horizontal" className="flex-1 h-full">
-          <Panel minSize={25} defaultSize={67} className="h-full overflow-y-auto">
+          <Panel minSize={25} defaultSize={isRightPanelCollapsed ? 100 : 67} className="h-full overflow-y-auto">
             <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
               <ResumeEvaluationProgress resumeData={resumeData} />
-              <ResumeEditor />
+              <ResumeEditor onSelectionClick={openRightPanel} />
             </div>
           </Panel>
-          <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize" />
-          <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
-            <div className="right p-6 h-full overflow-y-auto">
-              {renderSelectedSectionForm()}
+          {!isRightPanelCollapsed && (
+            <>
+              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize relative group">
+                <button
+                  onClick={toggleRightPanel}
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-l flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  aria-label="Collapse right panel"
+                >
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </PanelResizeHandle>
+              <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
+                <div className="right p-6 h-full overflow-y-auto">
+                  {renderSelectedSectionForm()}
+                </div>
+              </Panel>
+            </>
+          )}
+          {isRightPanelCollapsed && (
+            <div className="w-1 bg-gray-200 hover:bg-gray-300 relative group">
+              <button
+                onClick={toggleRightPanel}
+                className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-r flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Expand right panel"
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </button>
             </div>
-          </Panel>
+          )}
         </PanelGroup>
       </div>
     </FormProvider>
