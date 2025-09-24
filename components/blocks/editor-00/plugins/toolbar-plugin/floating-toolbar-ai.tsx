@@ -17,6 +17,7 @@ import {
 } from "@/components/blocks/editor-00/utils";
 import {APPLY_DIFF_COMMAND, REJECT_DIFF_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 import {Command, CommandItem, CommandList} from '@/components/ui/command';
+import {toast} from "sonner";
 
 function FloatingToolbarAi({
                              setMode
@@ -89,6 +90,11 @@ function FloatingToolbarAi({
       body: JSON.stringify(body)
     })
     const result = await resp.json()
+    if (!resp.ok) {
+      setLoading(false)
+      toast.error(result.error)
+      return
+    }
 
     editor.update(() => {
       $calculateDiffWords(selection, originalContent, result.optimizedContent)

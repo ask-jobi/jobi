@@ -92,17 +92,17 @@ export async function getUserSubscription(): Promise<UserSubscription> {
     expiryDate: accessPass.end_at,
     isActive: true,
     quotas: {
-      fullOptimize: { 
-        used: accessPass.used_full_optimize, 
-        total: accessPass.quota_full_optimize 
+      fullOptimize: {
+        used: accessPass.used_full_optimize,
+        total: accessPass.quota_full_optimize
       },
-      blockOptimize: { 
+      blockOptimize: {
         used: accessPass.used_block_optimize,
-        total: accessPass.quota_block_optimize 
+        total: accessPass.quota_block_optimize
       },
-      motivationLetter: { 
-        used: accessPass.used_motivation_letter, 
-        total: accessPass.quota_motivation_letter 
+      motivationLetter: {
+        used: accessPass.used_motivation_letter,
+        total: accessPass.quota_motivation_letter
       }
     }
   }
@@ -134,6 +134,7 @@ export async function consumeQuota(key: QuotaKey) {
     .from("access_passes")
     .select("*").single()
 
+  console.log(accessPass, error)
   if (error) {
     throw error
   }

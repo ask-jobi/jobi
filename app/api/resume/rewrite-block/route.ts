@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!body.originalContent || !body.context.jd || !body.instruction) {
       return NextResponse.json(
-        { error: '缺少必要字段' },
+        { error: 'required fields are missed' },
         { status: 400 }
       );
     }
@@ -27,9 +27,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('处理请求时发生错误:', error);
+    console.error('an error occurred while processing the request:', error);
     return NextResponse.json(
-      { error: '服务器内部错误' },
+      { error: 'internal server error' },
       { status: 500 }
     );
   }
