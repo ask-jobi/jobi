@@ -1,4 +1,3 @@
-import {useState} from "react"
 import {LexicalErrorBoundary} from "@lexical/react/LexicalErrorBoundary"
 import {RichTextPlugin} from "@lexical/react/LexicalRichTextPlugin"
 import {ContentEditable} from "@/components/editor/editor-ui/content-editable"
@@ -6,21 +5,12 @@ import {MarkdownShortcutPlugin} from "@lexical/react/LexicalMarkdownShortcutPlug
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
 import {ListPlugin} from "@lexical/react/LexicalListPlugin";
 import ToolbarPlugin from "@/components/blocks/editor-00/plugins/toolbar-plugin";
-import DraggableBlockPlugin from "@/components/blocks/editor-00/plugins/draggable-block-plugin";
 import {PreserveSelectionPlugin} from "@/components/blocks/editor-00/plugins/preserve-selection-plugin";
 import {EXPORT_TRANSFORMER} from "@/components/blocks/editor-00/plugins/markdown-plugin";
 import {HistoryPlugin} from "@lexical/react/LexicalHistoryPlugin";
 import DiffMdPlugin from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 
 export function Plugins() {
-  const [floatingAnchorElem, setFloatingAnchorElem] =
-    useState<HTMLDivElement | null>(null)
-
-  const onRef = (_floatingAnchorElem: HTMLDivElement) => {
-    if (_floatingAnchorElem !== null) {
-      setFloatingAnchorElem(_floatingAnchorElem)
-    }
-  }
 
   return (
     <div className="relative h-full">
@@ -28,7 +18,7 @@ export function Plugins() {
       <div className="relative h-full">
         <RichTextPlugin
           contentEditable={
-            <div className="h-full" ref={onRef}>
+            <div className="h-full">
               <ContentEditable placeholder={"Start typing ..."}/>
             </div>
           }
@@ -39,9 +29,6 @@ export function Plugins() {
         />
         <TabIndentationPlugin/>
         <ListPlugin/>
-        {
-          floatingAnchorElem && <DraggableBlockPlugin anchorElem={floatingAnchorElem}/>
-        }
         {/* editor plugins */}
       </div>
       <PreserveSelectionPlugin/>
