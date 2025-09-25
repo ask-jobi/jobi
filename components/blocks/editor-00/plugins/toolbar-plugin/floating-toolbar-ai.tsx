@@ -31,12 +31,16 @@ function FloatingToolbarAi({
   const [instruction, setInstruction] = useState<string>('')
   const [AIState, setAIState] = useState<"asking" | "confirm">("asking")
   const commandRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (commandRef.current) {
-      commandRef.current.focus();
+      commandRef.current.focus()
     }
-  }, []);
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
 
   const handleRejectAI = () => {
     setTimeout(() => {
@@ -131,6 +135,7 @@ function FloatingToolbarAi({
           <Input
             className="block w-full shadow-xl border p-2 pl-3 rounded-lg outline-none disabled:transition-colors bg-white"
             placeholder="Ask AI anything..."
+            ref={inputRef}
             value={instruction}
             disabled={loading}
             onChange={(e) => setInstruction(e.target.value)}
