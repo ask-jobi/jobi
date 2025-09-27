@@ -85,7 +85,7 @@ const ToolbarPlugin: FC = () => {
         <div
           ref={setFloating}
           tabIndex={0}
-          className="pointer-events-auto"
+          className="pointer-events-none"
           onMouseDown={e => e.stopPropagation()}
           style={mode === 'ai' && editor._rootElement ?
           {

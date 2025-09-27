@@ -9,7 +9,6 @@ import {selectedSectionIdAtom, useResumeLanguage} from "@/lib/store/resume";
 import {NodeSelection} from "lexical";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
-import {useClickOutside} from "@mantine/hooks";
 import {
   $calculateDiffWords,
   $getMarkdownFromSelection,
@@ -18,6 +17,7 @@ import {
 import {APPLY_DIFF_COMMAND, REJECT_DIFF_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
 import {Command, CommandItem, CommandList} from '@/components/ui/command';
 import {toast} from "sonner";
+import {useClickOutside} from "@mantine/hooks";
 
 function FloatingToolbarAi({
                              setMode
@@ -116,7 +116,7 @@ function FloatingToolbarAi({
     <>
       <motion.div
         ref={ref}
-        className="flex relative"
+        className="flex relative pointer-events-auto"
         initial={{opacity: 0, scale: 0.93}}
         animate={{
           opacity: 1,
@@ -163,12 +163,11 @@ function FloatingToolbarAi({
         <motion.div
           layoutId="floating-toolbar-command-panel"
           layout="size"
-          className="origin-top-left"
-          initial={{opacity: 0, scale: 0.93}}
+          className="origin-top-left pointer-events-auto"
+          initial={{opacity: 0, scale: 0.93, width: "fit-content"}}
           animate={{
             opacity: 1,
-            scale: 1,
-            width: "initial",
+            scale: 1
           }}
           transition={{
             type: "spring",
@@ -183,7 +182,7 @@ function FloatingToolbarAi({
               // Prevent clicks outside of items from removing selection
               e.preventDefault();
             }}
-            className="z-10 relative mt-1 rounded-lg border shadow-2xl border-gray-300/75 bg-card max-w-[210px] max-h-[360px] overflow-y-auto pointer-events-auto"
+            className="z-10 relative mt-1 rounded-lg border shadow-2xl border-gray-300/75 bg-card w-[210px] max-h-[360px] overflow-y-auto pointer-events-auto"
           >
             <CommandList className="rounded-lg">
               {

@@ -134,7 +134,7 @@ function FloatingToolbarOptions({
   }
 
   return (
-    <div className="flex items-center px-2 py-1.5 rounded-lg shadow-xl border bg-white">
+    <div className="flex items-center px-2 py-1.5 rounded-lg shadow-xl border bg-white pointer-events-auto">
       <Button
         type="button"
         variant="outline"
