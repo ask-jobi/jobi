@@ -1,11 +1,28 @@
+'use client'
+
 import {SidebarTrigger} from "@/components/ui/sidebar";
 import {Separator} from "@radix-ui/react-separator";
+import { usePathname } from "next/navigation";
 
 export default ({
                   children,
                 }: {
   children: React.ReactNode;
 }) => {
+  const pathname = usePathname();
+  
+  const getPageTitle = () => {
+    if (pathname === '/jobs') {
+      return (
+        <>
+          <span className="text-foreground">Explore</span>{' '}
+          <span className="text-primary">jobs</span>
+        </>
+      );
+    }
+    return 'Dashboard';
+  };
+
   return (
     <div className="w-full">
       <header
@@ -16,7 +33,7 @@ export default ({
             orientation="vertical"
             className="mx-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-base font-medium">Dashboard</h1>
+          <h1 className="text-base font-medium">{getPageTitle()}</h1>
         </div>
       </header>
       {children}
