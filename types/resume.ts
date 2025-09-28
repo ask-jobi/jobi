@@ -32,7 +32,7 @@ export interface EducationBlock {
   start: string;
   end: string;
 }
-
+// TODO: 改为用 DateRange 类型
 export interface EmploymentBlock {
   content: string;
   company: string;
@@ -46,17 +46,69 @@ export interface SkillBlock {
   content: string;
 }
 
+export interface DateRange { start?: string; end?: string; isCurrent?: boolean }
+
+export interface ProjectBlock {
+  title: string;
+  content: string;
+  role?: string;
+  date?: DateRange;
+}
+
+export interface ResearchBlock {
+  title: string;
+  content: string;
+  role?: string;
+  date: DateRange;
+}
+
+export interface PublicationBlock {
+  title: string;
+  date: string;
+  description?: string;
+}
+
+export interface AwardBlock {
+  title: string;
+  issuer?: string;
+  date?: string;
+  description?: string;
+}
+
+export interface CertificationBlock {
+  name: string;                    
+  issuer?: string;                 
+  date?: string;
+}
+
 export type EducationHistory = SectionBlock<EducationBlock>
 
 export type EmploymentHistory = SectionBlock<EmploymentBlock>
 
 export type Skill = SectionBlock<SkillBlock>
 
+export type ResearchExperience = SectionBlock<ResearchBlock>
+
+export type Project = SectionBlock<ProjectBlock>
+
+export type Publication = SectionBlock<PublicationBlock>
+
+export type Award = SectionBlock<AwardBlock>
+
+export type Certification = SectionBlock<CertificationBlock>
+
 export interface ResumeData {
+  // required
   personalInfo: PersonalInfo
   education: EducationHistory
-  employment: EmploymentHistory
   skills: Skill
+  // optional
+  employment?: EmploymentHistory
+  research?: ResearchExperience
+  projects?: Project
+  publications?: Publication
+  awards?: Award
+  certifications?: Certification
 }
 
 export type SortableSectionId = Exclude<keyof ResumeData, "personalInfo">

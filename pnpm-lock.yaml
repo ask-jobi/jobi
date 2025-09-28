@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@lexical/markdown':
-    hash: 5197dde00c21d6799e32e99472f280f25cad87be78b70655893e42a805cf9032
-    path: patches/@lexical__markdown.patch
-
 importers:
 
   .:
@@ -57,7 +52,7 @@ importers:
         version: 0.32.1
       '@lexical/markdown':
         specifier: ^0.32.1
-        version: 0.32.1(patch_hash=5197dde00c21d6799e32e99472f280f25cad87be78b70655893e42a805cf9032)
+        version: 0.32.1
       '@lexical/react':
         specifier: ^0.32.1
         version: 0.32.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(yjs@13.6.27)
@@ -6511,7 +6506,7 @@ snapshots:
       '@lexical/utils': 0.32.1
       lexical: 0.32.1
 
-  '@lexical/markdown@0.32.1(patch_hash=5197dde00c21d6799e32e99472f280f25cad87be78b70655893e42a805cf9032)':
+  '@lexical/markdown@0.32.1':
     dependencies:
       '@lexical/code': 0.32.1
       '@lexical/link': 0.32.1
@@ -6546,7 +6541,7 @@ snapshots:
       '@lexical/link': 0.32.1
       '@lexical/list': 0.32.1
       '@lexical/mark': 0.32.1
-      '@lexical/markdown': 0.32.1(patch_hash=5197dde00c21d6799e32e99472f280f25cad87be78b70655893e42a805cf9032)
+      '@lexical/markdown': 0.32.1
       '@lexical/overflow': 0.32.1
       '@lexical/plain-text': 0.32.1
       '@lexical/rich-text': 0.32.1
@@ -8726,7 +8721,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.11.0)
+      retry-axios: 2.6.0(axios@1.11.0(debug@4.4.1))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -10489,7 +10484,7 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
-  retry-axios@2.6.0(axios@1.11.0):
+  retry-axios@2.6.0(axios@1.11.0(debug@4.4.1)):
     dependencies:
       axios: 1.11.0(debug@4.4.1)
 
