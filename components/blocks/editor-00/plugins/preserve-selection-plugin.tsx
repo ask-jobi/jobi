@@ -4,13 +4,19 @@ import {
   $getSelection,
   $isRangeSelection,
   $setSelection,
+  $isTextNode,
+  $createTextNode,
+  $getRoot,
   COMMAND_PRIORITY_LOW, createCommand,
   LexicalCommand,
   RangeSelection
 } from "lexical";
+import {$createSelectionHighlightNode} from "@/components/blocks/editor-00/nodes/selection-highlight-node";
 
 export const SAVE_SELECTION_COMMAND: LexicalCommand<null> = createCommand();
 export const RESTORE_SELECTION_COMMAND: LexicalCommand<null> = createCommand();
+export const SHOW_SELECTION_HIGHLIGHT_COMMAND: LexicalCommand<null> = createCommand();
+export const HIDE_SELECTION_HIGHLIGHT_COMMAND: LexicalCommand<null> = createCommand();
 
 export function PreserveSelectionPlugin() {
   const [editor] = useLexicalComposerContext();
@@ -32,6 +38,44 @@ export function PreserveSelectionPlugin() {
       return true;
     };
 
+    // Show selection highlight
+    const showSelectionHighlight = () => {
+      editor.update(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection) && !selection.isCollapsed()) {
+          const selectedNodes = selection.getNodes();
+
+          selectedNodes.forEach((node) => {
+            if ($isTextNode(node)) {
+              // Wrap the entire TextNode with SelectionHighlightNode
+              const textContent = node.getTextContent();
+              const highlightNode = $createSelectionHighlightNode(textContent);
+
+              // Replace the original text node with highlighted version
+              node.replace(highlightNode);
+            }
+          });
+        }
+      });
+      return true;
+    };
+
+    // Hide selection highlight
+    const hideSelectionHighlight = () => {
+      editor.update(() => {
+        const root = $getRoot();
+        const allTextNodes = root.getAllTextNodes();
+        allTextNodes.forEach((textNode) => {
+          if (textNode.getType() === 'selection-highlight') {
+            const textContent = textNode.getTextContent();
+            const plainTextNode = $createTextNode(textContent);
+            textNode.replace(plainTextNode);
+          }
+        });
+      });
+      return true;
+    };
+
     const unregisterSaveCommand = editor.registerCommand(
       SAVE_SELECTION_COMMAND,
       saveSelection,
@@ -44,9 +88,23 @@ export function PreserveSelectionPlugin() {
       COMMAND_PRIORITY_LOW
     );
 
+    const unregisterShowHighlight = editor.registerCommand(
+      SHOW_SELECTION_HIGHLIGHT_COMMAND,
+      showSelectionHighlight,
+      COMMAND_PRIORITY_LOW
+    );
+
+    const unregisterHideHighlight = editor.registerCommand(
+      HIDE_SELECTION_HIGHLIGHT_COMMAND,
+      hideSelectionHighlight,
+      COMMAND_PRIORITY_LOW
+    );
+
     return () => {
       unregisterSaveCommand();
       unregisterRestoreCommand();
+      unregisterShowHighlight();
+      unregisterHideHighlight();
     };
   }, [editor, savedSelection]);
 

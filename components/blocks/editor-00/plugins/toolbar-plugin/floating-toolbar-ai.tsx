@@ -15,6 +15,10 @@ import {
   $getSelectionElementNodes
 } from "@/components/blocks/editor-00/utils";
 import {APPLY_DIFF_COMMAND, REJECT_DIFF_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
+import {
+  SHOW_SELECTION_HIGHLIGHT_COMMAND,
+  HIDE_SELECTION_HIGHLIGHT_COMMAND,
+} from "@/components/blocks/editor-00/plugins/preserve-selection-plugin";
 import {Command, CommandItem, CommandList} from '@/components/ui/command';
 import {toast} from "sonner";
 import {useClickOutside} from "@mantine/hooks";
@@ -34,12 +38,20 @@ function FloatingToolbarAi({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (commandRef.current) {
-      commandRef.current.focus()
-    }
     if (inputRef.current) {
-      inputRef.current.focus()
+      // 这里必须延迟调用，似乎是SHOW_SELECTION_HIGHLIGHT_COMMAND的会打断input focus
+      setTimeout(() => {
+        inputRef.current!!.focus()
+      })
     }
+    // Show selection highlight when AI toolbar appears
+    // TODO 处理回滚时，toolbar和highlight段落的展示方式
+    editor.dispatchCommand(SHOW_SELECTION_HIGHLIGHT_COMMAND, null);
+
+    return () => {
+      // Hide selection highlight when AI toolbar closes
+      editor.dispatchCommand(HIDE_SELECTION_HIGHLIGHT_COMMAND, null);
+    };
   }, [])
 
   const handleRejectAI = () => {

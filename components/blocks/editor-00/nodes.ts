@@ -2,6 +2,7 @@ import {EditorConfig, Klass, LexicalNode, LexicalNodeReplacement, NodeKey, Parag
 import {HorizontalRuleNode} from "@lexical/react/LexicalHorizontalRuleNode";
 import {AutoLinkNode, LinkNode} from "@lexical/link";
 import {ListItemNode, ListNode} from "@lexical/list";
+import {SelectionHighlightNode} from "@/components/blocks/editor-00/nodes/selection-highlight-node";
 
 export type DiffStates = 'added' | 'removed' | 'unchanged'
 
@@ -93,4 +94,5 @@ export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> =
     ListNode,
     ListItemNode,
     HorizontalRuleNode,
+    SelectionHighlightNode,
   ]
