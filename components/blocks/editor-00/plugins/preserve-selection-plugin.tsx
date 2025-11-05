@@ -9,7 +9,7 @@ import {
   $getRoot,
   COMMAND_PRIORITY_LOW, createCommand,
   LexicalCommand,
-  RangeSelection
+  RangeSelection, ElementNode, DecoratorNode, $isElementNode
 } from "lexical";
 import {$createSelectionHighlightNode} from "@/components/blocks/editor-00/nodes/selection-highlight-node";
 
@@ -45,7 +45,22 @@ export function PreserveSelectionPlugin() {
         if ($isRangeSelection(selection) && !selection.isCollapsed()) {
           const selectedNodes = selection.getNodes();
 
-          selectedNodes.forEach((node) => {
+          const allChildrenNodes = selectedNodes
+            .map(it => it.getTopLevelElement())
+            .reduce((prev, cur) => {
+              if (cur && !prev.some(it => it?.getKey() === cur?.getKey())) {
+                prev.push(cur);
+              }
+              return prev;
+            }, [] as (ElementNode | DecoratorNode<any>)[])
+            .flatMap(it => {
+              if ($isElementNode(it)) {
+                return it.getAllTextNodes()
+              }
+            })
+
+          console.log(allChildrenNodes)
+          allChildrenNodes.forEach((node) => {
             if ($isTextNode(node)) {
               // Wrap the entire TextNode with SelectionHighlightNode
               const textContent = node.getTextContent();
@@ -56,7 +71,7 @@ export function PreserveSelectionPlugin() {
             }
           });
         }
-      });
+      }, {tag: 'historic'});
       return true;
     };
 
@@ -72,7 +87,7 @@ export function PreserveSelectionPlugin() {
             textNode.replace(plainTextNode);
           }
         });
-      });
+      }, {tag: 'historic'});
       return true;
     };
 
