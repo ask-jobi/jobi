@@ -59,7 +59,6 @@ export function PreserveSelectionPlugin() {
               }
             })
 
-          console.log(allChildrenNodes)
           allChildrenNodes.forEach((node) => {
             if ($isTextNode(node)) {
               // Wrap the entire TextNode with SelectionHighlightNode
