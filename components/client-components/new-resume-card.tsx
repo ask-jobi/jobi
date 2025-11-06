@@ -217,7 +217,7 @@ const NewResumeCard = () => {
                       </div>
                       <Button
                         onClick={handleCreateEmpty}
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         className="text-primary hover:text-primary/80"
                       >
