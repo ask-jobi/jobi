@@ -114,7 +114,7 @@ function FloatingToolbarAi({
 
     editor.update(() => {
       $calculateDiffWords(selection, originalContent, result.optimizedContent)
-    })
+    }, {tag: 'historic'})
 
     setInstruction("")
 

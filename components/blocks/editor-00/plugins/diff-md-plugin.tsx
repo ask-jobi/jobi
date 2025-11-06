@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
-import {$getNodeByKey, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand, LexicalNode} from "lexical";
+import {$getNodeByKey, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand} from "lexical";
 import {$generateNodesFromMarkdown, $replaceNodes} from "@/components/blocks/editor-00/utils";
 
 export const REJECT_DIFF_COMMAND: LexicalCommand<null> = createCommand();
