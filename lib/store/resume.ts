@@ -6,6 +6,13 @@ export const resumeMetadataAtom = atom<ResumeMetadata>({language: 'en'});
 export const applicationAtom = atom<JobApplication | null>(null);
 export const isLoadingAtom = atom(false);
 export const selectedSectionIdAtom = atom<string | null>(null);
+export const rightPanelViewAtom = atom<'form' | 'evaluation'>('form');
+export const isRightPanelCollapsedAtom = atom(true);
+
+export const openRightPanelAtom = atom(null, (get, set, view: 'form' | 'evaluation' = 'form') => {
+  set(rightPanelViewAtom, view);
+  set(isRightPanelCollapsedAtom, false)
+})
 
 export const focusSectionAtom = atom(null, (get, set, id: string, index?: number) => {
   set(selectedSectionIdAtom, id);

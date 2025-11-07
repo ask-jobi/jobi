@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { ResumeData } from '@/types/resume'
 import { Trophy, Loader2, Download } from 'lucide-react'
-import { useResume } from '@/lib/store/resume'
+import { openRightPanelAtom, useResume } from '@/lib/store/resume'
 import { useFormContext } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { TourStep, useTour } from '@/components/tour'
@@ -18,6 +18,7 @@ import {
   ModuleEvaluationReport,
   ResumeEvaluationReport
 } from "@/lib/evaluation";
+import { useSetAtom } from 'jotai'
 
 type EvaluationResultDisplay = {
   blockName: string
@@ -78,6 +79,7 @@ export function FloatingButtonGroup({ resumeData }: FloatingButtonGroupProps) {
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState<number | undefined>(undefined)
   const { application, isLoading, setLoading: setGlobalLoading } = useResume()
+  const openRightPanel = useSetAtom(openRightPanelAtom);
   const { getValues, setValue } = useFormContext<ResumeData>()
   const router = useRouter()
   const { setSteps, startTour } = useTour()
@@ -140,6 +142,11 @@ export function FloatingButtonGroup({ resumeData }: FloatingButtonGroupProps) {
         className={`rounded-full w-12 h-12 flex flex-col items-center justify-center gap-1 ${getScoreColor(score)} hover:${getScoreColor(score)}/75 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer`}
         disabled={loading}
         title={score !== undefined ? `简历得分: ${score}分` : '加载中...'}
+        onClick={() => {
+          if (openRightPanel && !loading) {
+            openRightPanel('evaluation')
+          }
+        }}
       >
         {loading ? (
           <Loader2 className="w-5 h-5 animate-spin" />

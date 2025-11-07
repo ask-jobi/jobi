@@ -1,16 +1,15 @@
 "use client"
 
 import useResumeTemplate from "@/lib/hooks/use-resume-template";
-import { useResume } from "@/lib/store/resume";
+import { openRightPanelAtom, useResume } from "@/lib/store/resume";
 import { FloatingButtonGroup } from "./floating-button-group";
+import { useSetAtom } from "jotai";
 
-interface ResumeEditorProps {
-  onSelectionClick?: () => void;
-}
 
-export default function ResumeEditor({ onSelectionClick }: ResumeEditorProps) {
+export default function ResumeEditor() {
   const template = useResumeTemplate()
   const { resumeData } = useResume()
+  const openRightPanel = useSetAtom(openRightPanelAtom);
 
   if (!template) return null;
 
@@ -18,8 +17,8 @@ export default function ResumeEditor({ onSelectionClick }: ResumeEditorProps) {
   const originalOnSectionClick = template.onSectionClick;
   template.onSectionClick = (id, index) => {
     originalOnSectionClick(id, index);
-    if (onSelectionClick) {
-      onSelectionClick();
+    if (openRightPanel) {
+      openRightPanel('form');
     }
   };
 

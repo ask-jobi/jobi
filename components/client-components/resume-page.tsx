@@ -11,10 +11,11 @@ import { EducationForm } from "./forms/education-form";
 import { EmploymentForm } from "./forms/employment-form";
 import { SkillsForm } from "./forms/skills-form";
 import { ResumeData } from "@/types/resume";
-import { useResume } from "@/lib/store/resume";
+import { isRightPanelCollapsedAtom, rightPanelViewAtom, useResume } from "@/lib/store/resume";
 import ResumeEditor from "./resume-editor";
 import {useDebouncedCallback} from "@mantine/hooks";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useAtom } from "jotai";
 
 
 export default function ResumePage() {
@@ -26,8 +27,8 @@ export default function ResumePage() {
   });
   const { watch, getValues, formState: {isDirty}, reset } = methods;
 
-  // Resizable handled by react-resizable-panels
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(true);
+  const [rightPanelView, setRightPanelView] = useAtom(rightPanelViewAtom);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useAtom(isRightPanelCollapsedAtom);
 
   // Reset form when resume data changes (e.g., switching between resumes)
   useEffect(() => {
@@ -77,13 +78,16 @@ export default function ResumePage() {
     }
   };
 
+  // useEffect(() => {
+  //   if (rightPanelView !== 'form' && selectedSectionId) {
+  //     setRightPanelView('form');
+  //   }
+  // }, [selectedSectionId, rightPanelView]);
+
   const toggleRightPanel = () => {
     setIsRightPanelCollapsed(!isRightPanelCollapsed);
   }
 
-  const openRightPanel = () => {
-    setIsRightPanelCollapsed(false)
-  }
 
   return (
     <FormProvider {...methods}>
@@ -91,7 +95,7 @@ export default function ResumePage() {
         <PanelGroup direction="horizontal" className="flex-1 h-full">
           <Panel minSize={25} defaultSize={isRightPanelCollapsed ? 100 : 67} className="h-full overflow-y-auto">
             <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
-              <ResumeEditor onSelectionClick={openRightPanel} />
+              <ResumeEditor/>
             </div>
           </Panel>
           {!isRightPanelCollapsed && (
@@ -107,7 +111,14 @@ export default function ResumePage() {
               </PanelResizeHandle>
               <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
                 <div className="right p-6 h-full overflow-y-auto">
-                  {renderSelectedSectionForm()}
+                  {rightPanelView === 'evaluation' ? (
+                    <div className="h-full w-full flex flex-col items-start gap-4 text-sm text-muted-foreground">
+                      <h2 className="text-lg font-semibold text-foreground">Evaluation Report</h2>
+                      <p>评估报告内容即将上线，敬请期待。</p>
+                    </div>
+                  ) : (
+                    renderSelectedSectionForm()
+                  )}
                 </div>
               </Panel>
             </>
