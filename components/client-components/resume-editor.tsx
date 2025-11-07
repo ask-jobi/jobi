@@ -24,7 +24,7 @@ export default function ResumeEditor({ onSelectionClick }: ResumeEditorProps) {
   };
 
   return (
-    <div className="w-full flex justify-center items-start relative">
+    <div className="w-full flex justify-center items-start relative py-4">
       <div className="w-[210mm] bg-white shadow-lg border border-gray-200 overflow-y-auto overflow-x-hidden relative">
         {template.renderDocument()}
       </div>

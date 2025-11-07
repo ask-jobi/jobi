@@ -14,7 +14,6 @@ import { ResumeData } from "@/types/resume";
 import { useResume } from "@/lib/store/resume";
 import ResumeEditor from "./resume-editor";
 import {useDebouncedCallback} from "@mantine/hooks";
-import { ResumeEvaluationProgress } from "@/components/client-components/resume-evaluation-progress";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 
@@ -92,7 +91,6 @@ export default function ResumePage() {
         <PanelGroup direction="horizontal" className="flex-1 h-full">
           <Panel minSize={25} defaultSize={isRightPanelCollapsed ? 100 : 67} className="h-full overflow-y-auto">
             <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
-              <ResumeEvaluationProgress resumeData={resumeData} />
               <ResumeEditor onSelectionClick={openRightPanel} />
             </div>
           </Panel>
