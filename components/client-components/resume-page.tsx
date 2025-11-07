@@ -19,7 +19,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 
 export default function ResumePage() {
-  const { updateResumeData, setLoading, selectedSectionId, handleSectionClick, resumeData, application } = useResume();
+  const { updateResumeData, setLoading, selectedSectionId, resumeData, application } = useResume();
   const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
@@ -37,19 +37,6 @@ export default function ResumePage() {
     }
   }, [resumeData, reset]);
 
-  const sections = (() => {
-    const educationOrder = watch("education.order") ?? 0;
-    const employmentOrder = watch("employment.order") ?? 1;
-    const skillsOrder = watch("skills.order") ?? 2;
-
-    const initialSections = [
-      { id: "personalInfo", title: "Personal Info", order: -1 },
-      { id: "education", title: watch("education.title"), order: educationOrder },
-      { id: "employment", title: watch("employment.title"), order: employmentOrder },
-      { id: "skills", title: watch("skills.title"), order: skillsOrder },
-    ];
-    return initialSections.sort((a, b) => a.order - b.order);
-  })();
 
   const handleChange = async () => {
     try {
@@ -102,26 +89,6 @@ export default function ResumePage() {
   return (
     <FormProvider {...methods}>
       <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
-        <div className="left w-1/8 p-6 border-r overflow-y-auto">
-          <ul>
-            <li
-              className={`mb-2 p-2 rounded-md flex justify-between items-center cursor-pointer ${selectedSectionId === "personalInfo" ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
-              onClick={() => handleSectionClick("personalInfo")}
-            >
-              Personal Info
-            </li>
-            {sections.filter(s => s.id !== "personalInfo").map((section) => (
-              <li
-                key={section.id}
-                className={`mb-2 p-2 rounded-md flex justify-between items-center cursor-pointer ${selectedSectionId === section.id ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
-                onClick={() => handleSectionClick(section.id)}
-              >
-                {section.title}
-              </li>
-            ))}
-          </ul>
-        </div>
-
         <PanelGroup direction="horizontal" className="flex-1 h-full">
           <Panel minSize={25} defaultSize={isRightPanelCollapsed ? 100 : 67} className="h-full overflow-y-auto">
             <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
