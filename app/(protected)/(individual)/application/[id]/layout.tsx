@@ -21,23 +21,27 @@ async function Layout(props: {
       resume:resume_id (
         id,
         language,
-        resume_json
+        resume_json,
+        evaluation_report
       ),
       job:job_id (
         id,
         name,
-        company
+        company,
+        description
       )
     `)
     .eq('id', id)
     .single()
+  console.info(`Job application: ${JSON.stringify(jobApplication)}`)
 
   if (error || !jobApplication) {
     notFound()
   }
 
-  const language = jobApplication.resume.language as Locale
-  const resumeData: ResumeData = jobApplication.resume.resume_json || {
+  const resume = jobApplication.resume as any
+  const language = resume.language as Locale
+  const resumeData: ResumeData = resume.resume_json || {
     personalInfo: {
       firstName: "",
       lastName: "",
@@ -61,12 +65,15 @@ async function Layout(props: {
     }
   };
 
+  const evaluationReport = resume?.evaluation_report ?? null
+
   return (
     <Provider store={store}>
       <ResumeInitializer
         initialData={resumeData}
         language={language}
-        jobApplication={jobApplication}
+        jobApplication={jobApplication as any}
+        evaluation={evaluationReport}
       >
         {children}
       </ResumeInitializer>

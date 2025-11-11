@@ -5,43 +5,37 @@ import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
 import {EducationBlock, EmploymentBlock, ResumeData, SkillBlock} from '@/types/resume';
-import {DEFAULT_SUBJECTIVE_RULES, SubjectiveRuleConfig} from "@/lib/evaluation/rules/subjective-rules";
+import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
 
-// Evaluation result schema for structured output
+// New unified evaluation schema for structured output
 const evaluationSchema = z.object({
-  personalInfo: z.object({
-    passed: z.boolean().describe("Whether personal info passes evaluation"),
-    score: z.number().min(0).max(100).describe("Personal info score from 0 to 100"),
-    message: z.string().describe("Personal info evaluation message"),
-    suggestion: z.string().describe("Personal info improvement suggestions")
+  summary: z.string().describe("Overall summary of the candidate and resume quality"),
+  matchScore: z.number().min(0).max(100).describe("Match score between resume and JD (0-100)"),
+  criteria: z.array(z.object({
+    name: z.string().describe("Criterion name, e.g., Technical Skills, Communication"),
+    score: z.number().min(0).max(100).describe("Criterion score (0-100)"),
+    comment: z.string().optional().describe("Comments on this criterion"),
+  })).describe("List of evaluation criteria"),
+  strengths: z.array(z.string()).optional().describe("Key strengths"),
+  weaknesses: z.array(z.string()).optional().describe("Areas for improvement"),
+  recommendation: z.object({
+    decision: z.enum(["strong_hire","hire","neutral","no_hire"]).describe("Final hiring recommendation"),
+    confidence: z.number().min(0).max(1).optional().describe("Confidence level (0-1)"),
+    rationale: z.string().optional().describe("Rationale for the decision"),
   }),
-  education: z.array(z.object({
-    passed: z.boolean().describe("Whether this education block passes evaluation"),
-    score: z.number().min(0).max(100).describe("Education block score from 0 to 100"),
-    message: z.string().describe("Education block evaluation message"),
-    suggestion: z.string().describe("Education block improvement suggestions")
-  })).describe("Array of education block evaluations"),
-  employment: z.array(z.object({
-    passed: z.boolean().describe("Whether this employment block passes evaluation"),
-    score: z.number().min(0).max(100).describe("Employment block score from 0 to 100"),
-    message: z.string().describe("Employment block evaluation message"),
-    suggestion: z.string().describe("Employment block improvement suggestions")
-  })).describe("Array of employment block evaluations"),
-  skills: z.array(z.object({
-    passed: z.boolean().describe("Whether this skills block passes evaluation"),
-    score: z.number().min(0).max(100).describe("Skills block score from 0 to 100"),
-    message: z.string().describe("Skills block evaluation message"),
-    suggestion: z.string().describe("Skills block improvement suggestions")
-  })).describe("Array of skills block evaluations"),
-  overall: z.object({
-    passed: z.boolean().describe("Whether overall resume passes evaluation"),
-    score: z.number().min(0).max(100).describe("Overall resume score from 0 to 100"),
-    message: z.string().describe("Overall evaluation message"),
-    suggestion: z.string().describe("Overall improvement suggestions")
-  })
+  improvementSuggestions: z.array(z.object({
+    area: z.string().describe("Area to improve"),
+    suggestion: z.string().describe("Specific suggestion"),
+    priority: z.enum(["low","medium","high"]).optional().describe("Priority level"),
+  })).optional(),
+  keywords: z.object({
+    matched: z.array(z.string()),
+    missing: z.array(z.string()),
+  }).optional(),
+  risks: z.array(z.string()).optional(),
 });
 
-type EvaluationSchemaType = z.infer<typeof evaluationSchema>;
+type EvaluationSchemaType = ResumeEvaluationOutput;
 
 const parser = StructuredOutputParser.fromZodSchema(evaluationSchema)
 
@@ -53,41 +47,42 @@ const model = new ChatGoogleGenerativeAI({
   json: true
 });
 
-const buildPrompt = (enabledRules: SubjectiveRuleConfig[]) : string => {
-  const rulesDescription = enabledRules
-    .map(rule => `${rule.name}:\n${rule.criteria.map(criterion => `- ${criterion}`).join('\n')}`)
-    .join('\n\n');
+const buildPrompt = (): string => {
+  return `You are an AI Resume Evaluation System.
 
-  return `You are a professional resume evaluation expert. Please evaluate the following resume by analyzing each section individually and then providing an overall assessment.
+Your task is to analyze a candidate's resume and a job description (JD),
+then produce a structured JSON evaluation report that matches the given TypeScript interface.
 
-Evaluation criteria for each section:
 
-${rulesDescription}
 
-IMPORTANT: You must evaluate each section (Personal Information, Education, Employment, Skills) individually and provide specific feedback for each one. Then provide an overall assessment that considers how well all sections work together.
-CRITICAL: For Education, Employment, and Skills sections, you must evaluate each individual block/entry separately and return an array of evaluations. Each block should have its own score, message, and suggestions.
+=== OUTPUT RULES ===
 
-Please provide a comprehensive evaluation with scores (0-100) and specific suggestions for each section, plus an overall assessment.
+- Output must be valid JSON, no explanations or extra text.
+- "matchScore" must reflect the overall fit between resume and JD (0–100).
+- Include at least 3–5 evaluation criteria (e.g., "Technical Skills", "Experience Fit", "Communication").
+- Each comment should be concise and factual.
+- Summarize key strengths and weaknesses clearly.
+- recommendation.decision must always be one of: "strong_hire", "hire", "neutral", "no_hire".
+- Include improvementSuggestions when possible.
+- Use "keywords" to reflect which important terms from JD are found or missing in the resume.
+- If unsure, make reasonable inferences from the resume content.
 
 Resume Content:
 {resumeContent}
 
+Job Description:
+{jobDescription}
+
+=== OUTPUT FORMAT ===
 {format_instructions}`;
 }
 
 export const evaluateResume = async (
   resumeData: ResumeData,
-  rules?: Record<string, SubjectiveRuleConfig>
+  jobDescription?: string
 ): Promise<EvaluationSchemaType> => {
   try {
-    const ruleConfig = rules || DEFAULT_SUBJECTIVE_RULES;
-    const enabledRules = Object.values(ruleConfig).filter(rule => rule.enabled);
-
-    if (enabledRules.length === 0) {
-      throw new Error("No subjective rules enabled for evaluation");
-    }
-
-    const prompt = buildPrompt(enabledRules);
+    const prompt = buildPrompt();
 
     const chain = RunnableSequence.from([
       ChatPromptTemplate.fromTemplate(prompt),
@@ -120,8 +115,12 @@ ${resumeData.skills?.blocks?.map((skill: SkillBlock, index: number) =>
 ).join('\n\n') || 'None'}
 `;
 
+    // Default JD if not provided
+    const defaultJD = jobDescription || 'General position requiring relevant experience and skills.';
+
     const result = await chain.invoke({
       resumeContent,
+      jobDescription: defaultJD,
       format_instructions: parser.getFormatInstructions(),
     }) as EvaluationSchemaType;
 

@@ -29,7 +29,7 @@ export default function ResumeEditor() {
       </div>
       {resumeData && (
         <div className="sticky left-[calc(50%+205mm/2)] top-[20%] -translate-y-1/2">
-          <FloatingButtonGroup resumeData={resumeData} />
+          <FloatingButtonGroup />
         </div>
       )}
     </div>

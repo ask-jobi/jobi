@@ -9,6 +9,7 @@ import {
   sendData,
   closeWriter,
 } from "@/server/sse/writer-manager";
+import { evaluateAndSaveResume } from "@/server/evaluation";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -91,19 +92,26 @@ async function processFile(
       message: "AI processing...",
     });
 
-    const [resumeData, language] = await parseResume(docs[0].pageContent);
+    const [resumeTextData, language] = await parseResume(docs[0].pageContent);
 
     sendData(processId, {
-      progress: 80,
+      progress: 70,
       message: "Prepare resume data...",
     });
 
-    await createResumeRecord(
+    const {resumeData, jobData} = await createResumeRecord(
       jobInfo,
       uploadResult,
-      resumeData,
+      resumeTextData,
       language
     );
+
+    sendData(processId, {
+      progress: 85,
+      message: "Evaluating resume...",
+    });
+
+    await evaluateAndSaveResume(resumeData.id, resumeData.resume_json!!, jobData.description)
 
     sendData(processId, {
       progress: 100,

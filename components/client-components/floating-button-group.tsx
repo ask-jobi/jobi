@@ -1,104 +1,28 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
-import type { ResumeData } from '@/types/resume'
 import { Trophy, Loader2, Download } from 'lucide-react'
 import { openRightPanelAtom, useResume } from '@/lib/store/resume'
 import { useFormContext } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { TourStep, useTour } from '@/components/tour'
 import SuggestionPatch from '@/components/client-components/suggestion-patch'
-import type { AISuggestion } from '@/types/resume'
+import type { AISuggestion, ResumeData } from '@/types/resume'
 import { toast } from 'sonner'
 import Image from 'next/image'
-import {
-  evaluateResumeObjective,
-  EvaluationResult,
-  ModuleEvaluationReport,
-  ResumeEvaluationReport
-} from "@/lib/evaluation";
 import { useSetAtom } from 'jotai'
 
-type EvaluationResultDisplay = {
-  blockName: string
-} & EvaluationResult
 
-const extractIssueBlockName = (resumeData: ResumeData, module: ModuleEvaluationReport): string => {
-  switch (module.module) {
-    case "personalInfo":
-      return resumeData["personalInfo"].firstName + resumeData["personalInfo"].lastName
-    case "employment":
-      return resumeData["employment"]?.blocks[module.index].company ?? "Employment Name"
-    case "education":
-      return resumeData["education"].blocks[module.index].school
-    case "skills":
-      return resumeData["skills"].blocks[module.index].group
-    default:
-      return "None"
-  }
-}
-
-function extractObjectiveStats(resumeData: ResumeData, report?: ResumeEvaluationReport) {
-  const allResults: EvaluationResult[] = []
-
-  const issuesGrouped = new Map<string, EvaluationResultDisplay[]>()
-
-  if (report?.modules?.length) {
-    report.modules.forEach((m: ModuleEvaluationReport) => {
-      m.results.forEach((r) => {
-        allResults.push(r)
-
-        if (!r.passed) {
-          const item: EvaluationResultDisplay = {
-            blockName: extractIssueBlockName(resumeData, m),
-            ...r
-          }
-          if (issuesGrouped.has(r.ruleName)) {
-            issuesGrouped.set(r.ruleName, [...issuesGrouped.get(r.ruleName)!!, item])
-          } else {
-            issuesGrouped.set(r.ruleName, [item])
-          }
-        }
-      })
-    })
-  }
-
-  const total = allResults.length
-  const passed = allResults.filter(r => r.passed).length
-  const percent = total > 0 ? Math.round((passed / total) * 100) : 0
-
-  return { percent, issues: issuesGrouped, total }
-}
-
-export interface FloatingButtonGroupProps {
-  resumeData: ResumeData
-}
-
-export function FloatingButtonGroup({ resumeData }: FloatingButtonGroupProps) {
-  const [loading, setLoading] = useState(false)
-  const [score, setScore] = useState<number | undefined>(undefined)
-  const { application, isLoading, setLoading: setGlobalLoading } = useResume()
+export function FloatingButtonGroup() {
+  const { application, isLoading, setLoading: setGlobalLoading, resumeEvaluation } = useResume()
   const openRightPanel = useSetAtom(openRightPanelAtom);
   const { getValues, setValue } = useFormContext<ResumeData>()
   const router = useRouter()
   const { setSteps, startTour } = useTour()
 
-  useEffect(() => {
-    async function fetchScore() {
-      try {
-        setLoading(true)
-        const report: ResumeEvaluationReport = await evaluateResumeObjective(resumeData)
-        const {percent} = extractObjectiveStats(resumeData, report)
-        setScore(percent)
-      } catch (error) {
-        console.error('Failed to fetch resume score:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchScore()
-  }, [resumeData])
+  const score = resumeEvaluation?.matchScore
+  const loading = resumeEvaluation == null
 
   const getScoreColor = (score?: number) => {
     if (!score) return 'bg-gray-500'

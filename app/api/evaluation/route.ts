@@ -3,7 +3,7 @@ import {evaluateResume} from "@/lib/evaluation/llm-evaluator";
 
 export async function POST(request: NextRequest) {
   try {
-    const { resumeData, rules } = await request.json();
+    const { resumeData, jobDescription } = await request.json();
 
     if (!resumeData) {
       return NextResponse.json(
@@ -13,14 +13,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Call LLM evaluator on the server side
-    const result = await evaluateResume(resumeData, rules);
+    const result = await evaluateResume(resumeData, jobDescription);
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Subjective evaluation error:', error);
+    console.error('Evaluation error:', error);
     return NextResponse.json(
       {
-        error: 'Subjective evaluation failed',
+        error: 'Evaluation failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

@@ -1,196 +1,40 @@
 import {
-  ResumeEvaluationReport,
-  ModuleEvaluationReport,
-  EvaluationOptions
+  EvaluationOptions,
+  ResumeEvaluationOutput
 } from './types';
-import {evaluatorRegistry} from './evaluators';
 import type {ResumeData} from '@/types/resume';
-import {ModuleEvaluator} from './module-evaluator';
-import {evaluateResumeProfessionalism} from "@/lib/evaluation/rules/subjective-rules";
+import {evaluateResume as evaluateResumeLLM} from "@/lib/evaluation/llm-evaluator";
 import {toast} from "sonner";
 
 /**
- * Evaluate multiple data blocks in a module
- */
-async function evaluateSectionBlocks<T>(
-  blocks: T[],
-  evaluator: ModuleEvaluator<any>
-): Promise<ModuleEvaluationReport[]> {
-  const reports: ModuleEvaluationReport[] = [];
-
-  for (let i = 0; i < blocks.length; i++) {
-    const block = blocks[i];
-    const report = await evaluator.evaluate(block, i);
-
-    reports.push(report);
-  }
-
-  return reports;
-}
-
-/**
- * Calculate overall score
- */
-function calculateOverallScore(moduleReports: ModuleEvaluationReport[]): number {
-  if (moduleReports.length === 0) return 0;
-
-  const totalScore = moduleReports.reduce((sum, report) => {
-    return sum + (report.overallScore || 0);
-  }, 0);
-
-  return Math.round(totalScore / moduleReports.length);
-}
-
-/**
- * Generate evaluation summary
- */
-function generateSummary(moduleReports: ModuleEvaluationReport[]): string {
-  const passedModules = moduleReports.filter(report => report.passed);
-  const failedModules = moduleReports.filter(report => !report.passed);
-
-  const totalModules = moduleReports.length;
-  const passedCount = passedModules.length;
-  const overallScore = calculateOverallScore(moduleReports);
-
-  let summary = `Resume evaluation completed!\n\n`;
-  summary += `Overall Score: ${overallScore}/100\n`;
-  summary += `Passed Modules: ${passedCount}/${totalModules}\n`;
-
-  if (failedModules.length > 0) {
-    summary += `Modules Needing Improvement: ${failedModules.map(r => r.module).join(', ')}\n`;
-  }
-
-  // Add specific suggestions
-  const suggestions = moduleReports
-    .flatMap(report => report.results)
-    .filter(result => !result.passed && result.suggestion)
-    .map(result => `• ${result.suggestion}`)
-    .slice(0, 5); // Show at most 5 suggestions
-
-  if (suggestions.length > 0) {
-    summary += `\nKey Suggestions:\n${suggestions.join('\n')}`;
-  }
-
-  return summary;
-}
-
-/**
  * Main resume evaluation function
- * Provides unified API to evaluate resume with configurable options
+ * Uses LLM-based evaluation to assess resume quality
  */
 export async function evaluateResume(
   resumeData: ResumeData,
   options: EvaluationOptions = {}
-): Promise<ResumeEvaluationReport> {
+): Promise<ResumeEvaluationOutput> {
   const {
-    includeObjective = true,
-    includeSubjective = false,
-    enableScoring = true
+    jobDescription
   } = options;
 
-  const moduleReports: ModuleEvaluationReport[] = [];
-
-  if (includeObjective) {
-    // Evaluate personal information
-    if (resumeData.personalInfo) {
-      const personalInfoReport = await evaluatorRegistry.personalInfo.evaluate(resumeData.personalInfo, 0);
-      moduleReports.push(personalInfoReport);
-    }
-
-    // Evaluate education experience
-    if (resumeData.education?.blocks?.length > 0) {
-      const educationReports = await evaluateSectionBlocks(
-        resumeData.education.blocks,
-        evaluatorRegistry.education
-      );
-      moduleReports.push(...educationReports);
-    }
-
-    // Evaluate employment experience
-    if (resumeData.employment?.blocks?.length > 0) {
-      const employmentReports = await evaluateSectionBlocks(
-        resumeData.employment.blocks,
-        evaluatorRegistry.employment
-      );
-      moduleReports.push(...employmentReports);
-    }
-
-    // Evaluate skills
-    if (resumeData.skills?.blocks?.length > 0) {
-      const skillReports = await evaluateSectionBlocks(
-        resumeData.skills.blocks,
-        evaluatorRegistry.skills,
-      );
-      moduleReports.push(...skillReports);
-    }
+  try {
+    const result = await evaluateResumeLLM(resumeData, jobDescription);
+    return result;
+  } catch (error) {
+    toast.error("Evaluation Error: " + (error instanceof Error ? error.message : 'Unknown error'));
+    throw error;
   }
-
-  if (includeSubjective) {
-    try {
-      const subjectiveReports = await evaluateResumeProfessionalism(resumeData);
-      moduleReports.push(...subjectiveReports);
-    } catch (error) {
-      toast.error("Subjective Evaluation Error: " + error)
-    }
-  }
-
-  // Calculate overall score and status
-  const overallScore = enableScoring ? calculateOverallScore(moduleReports) : undefined;
-  const passed = moduleReports.every(report => report.passed);
-  const summary = generateSummary(moduleReports);
-
-  return {
-    modules: moduleReports,
-    overallScore,
-    passed,
-    summary
-  };
-}
-
-/**
- * Objective evaluation only function
- * No LLM subjective evaluation, faster
- */
-export async function evaluateResumeObjective(
-  resumeData: ResumeData
-): Promise<ResumeEvaluationReport> {
-  return await evaluateResume(resumeData, {
-    includeObjective: true,
-    includeSubjective: false,
-    enableScoring: true
-  });
-}
-
-export async function evaluateResumeSubjective(
-  resumeData: ResumeData,
-): Promise<ResumeEvaluationReport> {
-  return await evaluateResume(resumeData, {
-    includeObjective: false,
-    includeSubjective: true,
-    enableScoring: true
-  });
 }
 
 // Main type exports
 export type {
-  EvaluationResult,
-  ModuleEvaluationReport,
-  ResumeEvaluationReport,
-  ObjectiveRule,
-  RuleConfig,
-  ModuleEvaluatorConfig,
+  ResumeEvaluationOutput,
+  EvaluationCriterion,
+  EvaluationRecommendation,
+  ImprovementSuggestion,
+  KeywordAnalysis,
   EvaluationOptions
 } from './types';
 
-// Main class exports
-export {ModuleEvaluator} from './module-evaluator';
-
-// Evaluator instance exports
-export {
-  personalInfoEvaluator,
-  educationEvaluator,
-  employmentEvaluator,
-  skillEvaluator,
-  evaluatorRegistry
-} from './evaluators';
 

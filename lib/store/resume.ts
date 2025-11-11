@@ -1,13 +1,15 @@
 import {atom, useAtom, useSetAtom} from 'jotai';
 import {ResumeData, JobApplication, ResumeMetadata} from '@/types/resume';
+import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
 
 export const resumeDataAtom = atom<ResumeData | null>(null);
 export const resumeMetadataAtom = atom<ResumeMetadata>({language: 'en'});
 export const applicationAtom = atom<JobApplication | null>(null);
 export const isLoadingAtom = atom(false);
 export const selectedSectionIdAtom = atom<string | null>(null);
-export const rightPanelViewAtom = atom<'form' | 'evaluation'>('form');
-export const isRightPanelCollapsedAtom = atom(true);
+export const rightPanelViewAtom = atom<'form' | 'evaluation'>('evaluation');
+export const isRightPanelCollapsedAtom = atom(false);
+export const resumeEvaluationAtom = atom<ResumeEvaluationOutput | null>(null);
 
 export const openRightPanelAtom = atom(null, (get, set, view: 'form' | 'evaluation' = 'form') => {
   set(rightPanelViewAtom, view);
@@ -44,6 +46,7 @@ export function useResume() {
   const [application] = useAtom(applicationAtom);
   const [isLoading, setLoading] = useAtom(isLoadingAtom);
   const [selectedSectionId] = useAtom(selectedSectionIdAtom);
+  const [resumeEvaluation, setResumeEvaluation] = useAtom(resumeEvaluationAtom);
   const handleSectionClick = useSetAtom(focusSectionAtom)
 
   const updateResumeData = (data: ResumeData) => setResumeData(data);
@@ -56,5 +59,7 @@ export function useResume() {
     updateResumeData,
     selectedSectionId,
     handleSectionClick,
+    resumeEvaluation,
+    setResumeEvaluation,
   };
 }

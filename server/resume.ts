@@ -283,6 +283,9 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
     if (applicationError) throw applicationError
     createdIds.applicationId = applicationData.id
 
+    // TODO Evaluate and save (do not block user in empty creation; still await here to persist immediately)
+    // await evaluateAndSaveResume(resumeData.id, emptyResumeData, jobData.description)
+
     return {
       jobData, 
       resumeData, 
