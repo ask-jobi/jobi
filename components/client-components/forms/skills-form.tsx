@@ -22,6 +22,10 @@ export function SkillsForm() {
     });
   };
 
+  const handleRemoveSkills = (index: number) => {
+    remove(index)
+  }
+
   return (
     <div className="space-y-4 pb-[70vh]">
       {fields.map((field, blockIndex) => {
@@ -58,7 +62,7 @@ export function SkillsForm() {
               variant="outline"
               size="sm"
               className="w-full mt-4 flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-              onClick={() => remove(blockIndex)}
+              onClick={() => handleRemoveSkills(blockIndex)}
             >
               <Trash className="h-4 w-4 mr-2" />
               Remove Skill Group

@@ -1,6 +1,6 @@
 "use client"
 
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 import { saveResumeChange } from "@/server/resume";
@@ -16,18 +16,19 @@ import ResumeEditor from "./resume-editor";
 import {useDebouncedCallback} from "@mantine/hooks";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAtom } from "jotai";
+import { EvaluationReport } from "./evaluation-report";
 
 
 export default function ResumePage() {
-  const { updateResumeData, setLoading, selectedSectionId, resumeData, application } = useResume();
+  const { updateResumeData, setLoading, selectedSectionId, resumeData, application, resumeEvaluation } = useResume();
   const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
     mode: "onChange"
   });
-  const { watch, getValues, formState: {isDirty}, reset } = methods;
+  const { subscribe, getValues, reset } = methods;
 
-  const [rightPanelView, setRightPanelView] = useAtom(rightPanelViewAtom);
+  const [rightPanelView] = useAtom(rightPanelViewAtom);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useAtom(isRightPanelCollapsedAtom);
 
   // Reset form when resume data changes (e.g., switching between resumes)
@@ -53,14 +54,18 @@ export default function ResumePage() {
   const debouncedSave = useDebouncedCallback(handleChange, 2000);
 
   useEffect(() => {
-    const subscription = watch((data) => {
-      if (data && isDirty) {
-        updateResumeData(data as ResumeData);
+    const callback = subscribe({
+      formState: {
+        values: true,
+      },
+      callback: (data) => {
+      if (data.values && data.isDirty) {
+        updateResumeData(data.values);
         debouncedSave();
       }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, debouncedSave, updateResumeData, isDirty]);
+    }});
+    return () => callback();
+  }, [subscribe, debouncedSave, updateResumeData]);
 
 
   const renderSelectedSectionForm = () => {
@@ -112,10 +117,14 @@ export default function ResumePage() {
               <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
                 <div className="right p-6 h-full overflow-y-auto">
                   {rightPanelView === 'evaluation' ? (
-                    <div className="h-full w-full flex flex-col items-start gap-4 text-sm text-muted-foreground">
-                      <h2 className="text-lg font-semibold text-foreground">Evaluation Report</h2>
-                      <p>评估报告内容即将上线，敬请期待。</p>
-                    </div>
+                    resumeEvaluation ? (
+                      <EvaluationReport evaluation={resumeEvaluation} />
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
+                        <p>暂无评估报告</p>
+                        <p className="text-xs">评估报告将在简历创建后自动生成</p>
+                      </div>
+                    )
                   ) : (
                     renderSelectedSectionForm()
                   )}
