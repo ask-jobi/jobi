@@ -22,7 +22,6 @@ export function FloatingButtonGroup() {
   const { setSteps, startTour } = useTour()
 
   const score = resumeEvaluation?.matchScore
-  const loading = resumeEvaluation == null
 
   const getScoreColor = (score?: number) => {
     if (!score) return 'bg-gray-500'
@@ -61,25 +60,17 @@ export function FloatingButtonGroup() {
 
   return (
     <div className="flex flex-col gap-3 z-50">
-      {/* 第一个按钮：显示简历得分 */}
       <Button
         className={`rounded-full w-12 h-12 flex flex-col items-center justify-center gap-1 ${getScoreColor(score)} hover:${getScoreColor(score)}/75 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer`}
-        disabled={loading}
-        title={score !== undefined ? `简历得分: ${score}分` : '加载中...'}
+        title={score !== undefined ? `Score: ${score}` : 'Loading...'}
         onClick={() => {
-          if (openRightPanel && !loading) {
+          if (openRightPanel) {
             openRightPanel('evaluation')
           }
         }}
       >
-        {loading ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <>
-            <Trophy className="w-5 h-5" />
-            <span className="text-xs font-bold">{score ?? '--'}</span>
-          </>
-        )}
+        <Trophy className="w-5 h-5" />
+        <span className="text-xs font-bold">{score ?? '--'}</span>
       </Button>
 
       {/* Export 按钮 */}

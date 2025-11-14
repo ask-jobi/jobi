@@ -1,26 +1,21 @@
 "use client"
 
 import {useEffect} from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { toast } from "sonner";
-import { saveResumeChange } from "@/server/resume";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import { PersonalInfoForm } from "./forms/personal-info-form";
-import { EducationForm } from "./forms/education-form";
-import { EmploymentForm } from "./forms/employment-form";
-import { SkillsForm } from "./forms/skills-form";
-import { ResumeData } from "@/types/resume";
-import { isRightPanelCollapsedAtom, rightPanelViewAtom, useResume } from "@/lib/store/resume";
+import {FormProvider, useForm} from "react-hook-form";
+import {toast} from "sonner";
+import {saveResumeChange} from "@/server/resume";
+import {ChevronLeft, ChevronRight} from "lucide-react";
+import {ResumeData} from "@/types/resume";
+import {isRightPanelCollapsedAtom, useResume} from "@/lib/store/resume";
 import ResumeEditor from "./resume-editor";
 import {useDebouncedCallback} from "@mantine/hooks";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { useAtom } from "jotai";
-import { EvaluationReport } from "./evaluation-report";
+import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
+import {useAtom} from "jotai";
+import {ResumeRightPanel} from "@/components/client-components/resume-right-panel";
 
 
 export default function ResumePage() {
-  const { updateResumeData, setLoading, selectedSectionId, resumeData, application, resumeEvaluation } = useResume();
+  const { updateResumeData, setLoading, resumeData, application } = useResume();
   const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
@@ -28,7 +23,6 @@ export default function ResumePage() {
   });
   const { subscribe, getValues, reset } = methods;
 
-  const [rightPanelView] = useAtom(rightPanelViewAtom);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useAtom(isRightPanelCollapsedAtom);
 
   // Reset form when resume data changes (e.g., switching between resumes)
@@ -67,22 +61,6 @@ export default function ResumePage() {
     return () => callback();
   }, [subscribe, debouncedSave, updateResumeData]);
 
-
-  const renderSelectedSectionForm = () => {
-    switch (selectedSectionId) {
-      case "personalInfo":
-        return <PersonalInfoForm />;
-      case "education":
-        return <EducationForm />;
-      case "employment":
-        return <EmploymentForm />;
-      case "skills":
-        return <SkillsForm />;
-      default:
-        return <p className="text-gray-500">Select a part of resume to edit。</p>;
-    }
-  };
-
   // useEffect(() => {
   //   if (rightPanelView !== 'form' && selectedSectionId) {
   //     setRightPanelView('form');
@@ -105,29 +83,19 @@ export default function ResumePage() {
           </Panel>
           {!isRightPanelCollapsed && (
             <>
-              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize relative group">
+              <PanelResizeHandle
+                className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize relative group">
                 <button
                   onClick={toggleRightPanel}
                   className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-l flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   aria-label="Collapse right panel"
                 >
-                  <ChevronRight className="w-3 h-3" />
+                  <ChevronRight className="w-3 h-3"/>
                 </button>
               </PanelResizeHandle>
               <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
                 <div className="right p-6 h-full overflow-y-auto">
-                  {rightPanelView === 'evaluation' ? (
-                    resumeEvaluation ? (
-                      <EvaluationReport evaluation={resumeEvaluation} />
-                    ) : (
-                      <div className="h-full w-full flex flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
-                        <p>暂无评估报告</p>
-                        <p className="text-xs">评估报告将在简历创建后自动生成</p>
-                      </div>
-                    )
-                  ) : (
-                    renderSelectedSectionForm()
-                  )}
+                  <ResumeRightPanel />
                 </div>
               </Panel>
             </>
