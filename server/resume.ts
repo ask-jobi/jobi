@@ -4,6 +4,7 @@ import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
 import {ResumeData} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
+import type {ResumeEvaluationOutput} from "@/lib/evaluation";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -287,8 +288,8 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
     // await evaluateAndSaveResume(resumeData.id, emptyResumeData, jobData.description)
 
     return {
-      jobData, 
-      resumeData, 
+      jobData,
+      resumeData,
       applicationData
     }
 
