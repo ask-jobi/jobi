@@ -33,7 +33,7 @@ async function Layout(props: {
     `)
     .eq('id', id)
     .single()
-  console.info(`Job application: ${JSON.stringify(jobApplication)}`)
+  // console.info(`Job application: ${JSON.stringify(jobApplication)}`)
 
   if (error || !jobApplication) {
     notFound()

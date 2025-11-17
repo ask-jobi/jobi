@@ -1,11 +1,6 @@
-import "server-only"
-import ResumePage from "@/components/client-components/resume-page";
-import {TourProvider} from "@/components/tour";
+import {redirect} from "next/navigation";
 
-export default function Page() {
-  return (
-    <TourProvider>
-      <ResumePage />
-    </TourProvider>
-  )
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const {id} = await params
+  redirect(`/application/${id}/resume`);
 }
