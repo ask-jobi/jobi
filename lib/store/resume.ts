@@ -122,6 +122,7 @@ export function useResumeLanguage() {
 export function useResume() {
   const [resumeData, setResumeData] = useAtom(resumeDataAtom);
   const [application] = useAtom(applicationAtom);
+  const [jobDescription, setJobDescription] = useAtom(jobAtom);
   const [isLoading, setLoading] = useAtom(isLoadingAtom);
   const [selectedSectionId] = useAtom(selectedSectionIdAtom);
   const [resumeEvaluation, setResumeEvaluation] = useAtom(resumeEvaluationAtom);
@@ -139,5 +140,7 @@ export function useResume() {
     handleSectionClick,
     resumeEvaluation,
     setResumeEvaluation,
+    jobDescription,
+    setJobDescription
   };
 }

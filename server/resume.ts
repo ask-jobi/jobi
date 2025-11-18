@@ -2,7 +2,7 @@
 
 import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
-import {ResumeData} from "@/types/resume";
+import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
 import type {ResumeEvaluationOutput} from "@/lib/evaluation";
 
@@ -198,6 +198,16 @@ async function rollbackChanges(
     await supabase.from('jobs').delete().eq('id', createdIds.jobId)
   }
   await supabase.storage.from(BUCKET_NAME).remove([fileName])
+}
+
+export async function updateResumeJobDescription(jobDescription: ResumeJobDescription) {
+  const supabase = await createClient()
+  const {error} = await supabase
+    .from('jobs')
+    .update(jobDescription)
+    .eq('id', jobDescription.id)
+
+  if (error) throw error
 }
 
 export async function saveResumeChange(resumeId: string, data: ResumeData) {
