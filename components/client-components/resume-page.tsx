@@ -51,6 +51,7 @@ export default function ResumePage() {
     const callback = subscribe({
       formState: {
         values: true,
+        isDirty: true
       },
       callback: (data) => {
       if (data.values && data.isDirty) {

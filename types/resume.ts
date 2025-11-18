@@ -1,13 +1,22 @@
 import {Locale} from "@/lib/i18n/config";
+import type {ResumeEvaluationOutput} from "@/lib/evaluation";
+
+export type ResumeJobDescription = {
+  id: string
+  name: string
+  company: string
+  description: string
+}
 
 export type JobApplication = {
-  id: string;
-    resume: {
-        id: string;
-    }
-    job: {
-        id: string;
-    }
+  id: string
+  resume: {
+    id: string
+    resume_json: ResumeData
+    language: Locale
+    evaluation_report: ResumeEvaluationOutput | null
+  }
+  job: ResumeJobDescription
 }
 
 export interface SectionBlock<T = any> {
@@ -76,8 +85,8 @@ export interface AwardBlock {
 }
 
 export interface CertificationBlock {
-  name: string;                    
-  issuer?: string;                 
+  name: string;
+  issuer?: string;
   date?: string;
 }
 
