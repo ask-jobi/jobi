@@ -15,7 +15,7 @@ import {updateResumeEvaluationReport} from "@/server/evaluation";
 export function ResumeRightPanel() {
   const [rightPanelView] = useAtom(rightPanelViewAtom)
   const [loading, setLoading] = useState(false)
-  const {application, selectedSectionId, resumeEvaluation, setResumeEvaluation, resumeData} = useResume()
+  const {application, selectedSectionId, resumeEvaluation, setResumeEvaluation, resumeData, jobDescription} = useResume()
 
   const renderSelectedSectionForm = () => {
     switch (selectedSectionId) {
@@ -41,7 +41,7 @@ export function ResumeRightPanel() {
       },
       body: JSON.stringify({
         resumeData: resumeData,
-        jobDescription: null
+        jobDescription: jobDescription
       }),
     })
     const result = await response.json()

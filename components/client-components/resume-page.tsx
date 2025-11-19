@@ -16,7 +16,6 @@ import {ResumeRightPanel} from "@/components/client-components/resume-right-pane
 
 export default function ResumePage() {
   const { updateResumeData, setLoading, resumeData, application } = useResume();
-  const resumeId = application.resume.id;
   const methods = useForm<ResumeData>({
     defaultValues: resumeData,
     mode: "onChange"
@@ -36,7 +35,7 @@ export default function ResumePage() {
   const handleChange = async () => {
     try {
       const formData = getValues();
-      await saveResumeChange(resumeId, formData);
+      await saveResumeChange(application.resume.id, formData);
       updateResumeData(formData);
       setLoading(false);
       toast.success("Auto saved");

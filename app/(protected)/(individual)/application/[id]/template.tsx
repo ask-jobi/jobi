@@ -27,11 +27,10 @@ export default ({
 }) => {
   const router = useRouter()
   const segment = useSelectedLayoutSegment();
-  const {application} = useResume()
   const [navigationLinks, setNavigationLinks] = useState(defaultNavigationLinks)
 
   const handleGoBack = () => {
-    router.back()
+    router.replace(`/dashboard`)
   }
 
   useEffect(() => {
