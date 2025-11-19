@@ -163,5 +163,29 @@
       "createError": "Error occurred while creating free pass",
       "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
     }
+  },
+
+  "evaluation": {
+    "overallScore": "Overall Score",
+    "recommendation": "Recommendation",
+    "confidenceScore": "Confidence Score",
+    "decision": {
+      "strong_hire": "Strong Hire",
+      "hire": "Hire",
+      "neutral": "Neutral",
+      "no_hire": "No Hire"
+    },
+    "criteria": "Criteria",
+    "strengths": "Strengths",
+    "weaknesses": "Weaknesses",
+    "improvementSuggestions": "Improvement Suggestions",
+    "keywords": "Keywords",
+    "keywordsMatched": "Keywords Matched",
+    "keywordsMissing": "Keywords Missing",
+    "risks": "Risks",
+
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
   }
 }

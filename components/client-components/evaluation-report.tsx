@@ -6,12 +6,15 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import type { ResumeEvaluationOutput } from '@/lib/evaluation/types'
 import { CheckCircle2, XCircle, AlertCircle, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import {useTranslations} from "next-intl";
 
 interface EvaluationReportProps {
   evaluation: ResumeEvaluationOutput
 }
 
 export function EvaluationReport({ evaluation }: EvaluationReportProps) {
+  const t = useTranslations("evaluation")
+
   const getScoreColor = (score: number) => {
     if (score < 30) return 'bg-red-500'
     if (score < 70) return 'bg-orange-500'
@@ -19,17 +22,18 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   }
 
   const getDecisionBadge = (decision: string) => {
+    const label = t(`decision.${decision}`)
     switch (decision) {
       case 'strong_hire':
-        return <Badge className="bg-green-600 text-white">强烈推荐</Badge>
+        return <Badge className="bg-green-600 text-white">{label}</Badge>
       case 'hire':
-        return <Badge className="bg-green-500 text-white">推荐</Badge>
+        return <Badge className="bg-green-500 text-white">{label}</Badge>
       case 'neutral':
-        return <Badge variant="secondary">中性</Badge>
+        return <Badge variant="secondary">{label}</Badge>
       case 'no_hire':
-        return <Badge variant="destructive">不推荐</Badge>
+        return <Badge variant="destructive">{label}</Badge>
       default:
-        return <Badge variant="secondary">{decision}</Badge>
+        return <Badge variant="secondary">{label}</Badge>
     }
   }
 
@@ -52,13 +56,13 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">总体评分</CardTitle>
+            <CardTitle className="text-lg">{t("overallScore")}</CardTitle>
             <div className="text-3xl font-bold">{evaluation.matchScore}</div>
           </div>
         </CardHeader>
         <CardContent>
-          <Progress 
-            value={evaluation.matchScore} 
+          <Progress
+            value={evaluation.matchScore}
             className="h-3"
             indicatorClassName={getScoreColor(evaluation.matchScore)}
           />
@@ -70,14 +74,14 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       {evaluation.recommendation && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">推荐决策</CardTitle>
+            <CardTitle className="text-lg">{t("recommendation")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2">
               {getDecisionBadge(evaluation.recommendation.decision)}
               {evaluation.recommendation.confidence && (
                 <span className="text-sm text-muted-foreground">
-                  信心值: {(evaluation.recommendation.confidence * 100).toFixed(0)}%
+                  {t("confidenceScore")}: {(evaluation.recommendation.confidence * 100).toFixed(0)}%
                 </span>
               )}
             </div>
@@ -92,17 +96,17 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       {evaluation.criteria && evaluation.criteria.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">评估维度</CardTitle>
+            <CardTitle className="text-lg">{t("criteria")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {evaluation.criteria.map((criterion, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{criterion.name}</span>
-                  <span className="text-sm font-bold">{criterion.score}分</span>
+                  <span className="text-sm font-bold">{criterion.score}</span>
                 </div>
-                <Progress 
-                  value={criterion.score} 
+                <Progress
+                  value={criterion.score}
                   className="h-2"
                   indicatorClassName={getScoreColor(criterion.score)}
                 />
@@ -121,7 +125,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
-              主要优势
+              {t("strengths")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -143,7 +147,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingDown className="w-5 h-5 text-orange-600" />
-              待改进
+              {t("weaknesses")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -165,7 +169,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Target className="w-5 h-5 text-blue-600" />
-              改进建议
+              {t("improvementSuggestions")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -174,12 +178,11 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{suggestion.area}</span>
                   {suggestion.priority && (
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={getPriorityColor(suggestion.priority)}
                     >
-                      {suggestion.priority === 'high' ? '高' : 
-                       suggestion.priority === 'medium' ? '中' : '低'}
+                      {t(suggestion.priority)}
                     </Badge>
                   )}
                 </div>
@@ -194,12 +197,12 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       {evaluation.keywords && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">关键词匹配</CardTitle>
+            <CardTitle className="text-lg">{t("keywords")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {evaluation.keywords.matched && evaluation.keywords.matched.length > 0 && (
               <div>
-                <div className="text-sm font-medium mb-2 text-green-600">已匹配关键词</div>
+                <div className="text-sm font-medium mb-2 text-green-600">{t("keywordsMatched")}</div>
                 <div className="flex flex-wrap gap-2">
                   {evaluation.keywords.matched.map((keyword, index) => (
                     <Badge key={index} variant="outline" className="bg-green-50 border-green-200">
@@ -211,7 +214,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
             )}
             {evaluation.keywords.missing && evaluation.keywords.missing.length > 0 && (
               <div>
-                <div className="text-sm font-medium mb-2 text-orange-600">缺失关键词</div>
+                <div className="text-sm font-medium mb-2 text-orange-600">{t("keywordsMissing")}</div>
                 <div className="flex flex-wrap gap-2">
                   {evaluation.keywords.missing.map((keyword, index) => (
                     <Badge key={index} variant="outline" className="bg-orange-50 border-orange-200">
@@ -231,7 +234,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-600" />
-              潜在风险
+              {t("risks")}
             </CardTitle>
           </CardHeader>
           <CardContent>
