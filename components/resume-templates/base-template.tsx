@@ -132,9 +132,10 @@ export abstract class BaseTemplate {
 type OrderedSection = SectionBlock & { id: keyof ResumeData }
 
 export const getOrderedSections = (data: ResumeData): OrderedSection[] => {
+  // TODO employment可能为空?
   return [
     {id: "education" as const, ...data.education},
-    {id: "employment" as const, ...data.employment},
+    {id: "employment" as const, ...data.employment!!},
     {id: "skills" as const, ...data.skills}
-  ].sort((a, b) => a.order - b.order);
+  ];
 };
