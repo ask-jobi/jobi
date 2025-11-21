@@ -76,9 +76,7 @@ function FloatingToolbarAi({
     handleRejectAI()
   })
 
-  const handleSubmitAi = async (e: any) => {
-    e.preventDefault();
-
+  const submitAi = async (instruction: string) => {
     let selection: NodeSelection
     let originalContent = ""
     let resumeSection = ""
@@ -122,6 +120,12 @@ function FloatingToolbarAi({
     // editor.dispatchCommand(RESTORE_SELECTION_COMMAND, null);
     setLoading(false)
     setAIState("confirm")
+  }
+
+  const handleSubmitAi = async (e: any) => {
+    e.preventDefault();
+
+    await submitAi(instruction)
   }
 
   return (
@@ -202,22 +206,24 @@ function FloatingToolbarAi({
                 <>
                   <CommandItemWithIcon
                     icon={<WandIcon className="h-full text-indigo-500" />}
-                    onSelect={() => {
+                    onSelect={async () => {
+                      await submitAi("Improve the clarity, structure, and readability of the text without changing its original meaning. Use concise and professional language. Do not add new information.")
                     }}
                   >
                     Improve writing
                   </CommandItemWithIcon>
                   <CommandItemWithIcon
                     icon={<ListMinus className="h-full text-indigo-500" />}
-                    onSelect={() => {
+                    onSelect={async () => {
+                      await submitAi("Simplify the text by making it shorter and easier to understand. Keep the original meaning, but remove unnecessary complexity, jargon, or redundant details.")
                     }}
                   >
                     Simplify
                   </CommandItemWithIcon>
                   <CommandItemWithIcon
                     icon={<ListPlus className="h-full text-indigo-500" />}
-                    onSelect={() => {
-
+                    onSelect={async () => {
+                      await submitAi("Expand the text by adding more depth and explanation. Only elaborate on information already present in the text. Do not invent facts or add unverifiable details.")
                     }}
                   >
                     Add more detail

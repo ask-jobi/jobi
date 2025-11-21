@@ -53,12 +53,12 @@ export async function generateAISuggestionQueue(
       title: block.school,
       content: block.content
     })),
-    employment: resume.employment.blocks.map((block, idx) => ({
+    employment: resume.employment ? resume.employment.blocks.map((block, idx) => ({
       section: "employment",
       blockIndex: idx,
       title: block.company,
       content: block.content
-    })),
+    })) : [],
     skills: resume.skills.blocks.flatMap((block, idx) => ({
       section: "skills",
       blockIndex: idx,
