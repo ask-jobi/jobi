@@ -4,8 +4,9 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
-import {EducationBlock, EmploymentBlock, ResumeData, SkillBlock} from '@/types/resume';
+import {ResumeData} from '@/types/resume';
 import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
+import {resumeFormat} from "@/lib/utils";
 
 // New unified evaluation schema for structured output
 const evaluationSchema = z.object({
@@ -91,29 +92,7 @@ export const evaluateResume = async (
     ]);
 
     // Convert resume data to text format
-    const resumeContent = `
-Personal Information:
-Name: ${resumeData.personalInfo?.firstName || ''} ${resumeData.personalInfo?.lastName || ''}
-Email: ${resumeData.personalInfo?.email || ''}
-Phone: ${resumeData.personalInfo?.phone || ''}
-Website: ${resumeData.personalInfo?.website || 'Not provided'}
-LinkedIn: ${resumeData.personalInfo?.linkedin || 'Not provided'}
-
-Education Experience:
-${resumeData.education?.blocks?.map((edu: EducationBlock, index: number) => 
-`Education Block ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
-).join('\n\n') || 'None'}
-
-Employment Experience:
-${resumeData.employment?.blocks?.map((emp: EmploymentBlock, index: number) => 
-`Employment Block ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
-).join('\n\n') || 'None'}
-
-Skills:
-${resumeData.skills?.blocks?.map((skill: SkillBlock, index: number) => 
-`Skills Block ${index + 1}:\n${skill.group}: ${skill.content}`
-).join('\n\n') || 'None'}
-`;
+    const resumeContent = resumeFormat(resumeData);
 
     // Default JD if not provided
     const defaultJD = jobDescription || 'General position requiring relevant experience and skills.';

@@ -52,81 +52,118 @@ Notes:
 7. skills split by english comma
 `;
 
-// TODO: Add JD description
 export const FULL_RESUME_OPTIMIZE_PROMPT = `
-You are a senior resume optimization expert. Your goal is to help users improve the quality and competitiveness of their resumes. Please analyze each section of the resume according to the following requirements:
+You are a senior AI resume optimization engine.  
+Your task:  
+Rewrite and optimize the candidate’s resume **section by section** using the Resume JSON + JD + Evaluation Report.
 
-[Task Requirements]
-1. Analyze each section of the resume below, and only provide optimization suggestions if there is room for improvement.
-2. Your suggestions should be concise and practical, avoiding meaningless embellishments or clichés.
-3. If optimization is suggested, output in the following strict JSON structure:
-{{
-  "suggestions": [
-    {{
-      "section": "education/employment/skills",
-      "blockIndex": 0,
-      "suggestionType": "Concise Expression/Quantify Achievements/Highlight Tech Stack/Refine Language/Remove Redundancy/English Expression/Highlight Leadership/Highlight Impact/Structure Optimization/Other",
-      "reason": "Why optimize (1-2 sentences)",
-      "originalContent": "Original content",
-      "optimizedContent": "Optimized full English content",
-      "highlight": ["Key phrases or keywords that were modified or added"]
-    }}
-  ]
-}}
-4. For the value of optimizedContent, markdown format can be used.
-5. Please return the JSON object directly, do not add any extra information!
-6. **All suggestion fields (reason, optimizedContent, highlight, etc.) MUST be written strictly in the {language} language parameter ('en' for English, 'zh' for Chinese, etc).**
+========================  
+[Inputs]  
+1. resume: {resume}  
+2. jd: {job_description}  
+3. evaluation: {evaluation_report}  
+language: {language}  
+========================  
 
-[Evaluation Criteria]
-- If the original content is already accurate and clear, do not suggest unnecessary changes.
-- Only suggest improvements for redundancy, lack of quantification, weak technical points, improper sentence structure, or disorganized structure.
-- Suggestions should clearly state "what is improved" and provide a concise reason.
+# ========================  
+# Your Core Responsibilities  
+# ========================  
 
-[Examples]
-input 1:
+You MUST deeply analyze:  
+- The original resume content  
+- The job description  
+- The evaluation report (criteria, strengths, weaknesses, missing keywords)
+
+Then for EACH resume section + block (identified by index):  
+- Evaluate whether improvement is needed  
+- If needed → generate ONE suggestion object  
+- If not needed → produce **no output for that block**  
+- Preserve the original structure, order, and block boundaries  
+- Do NOT merge, split, or invent new sections or blocks  
+
+Your optimizations must improve:  
+- clarity  
+- structure  
+- relevance to JD  
+- subtle integration of JD keywords  
+- correctness and realism  
+- concise English expression  
+- strong action verbs  
+- optional qualitative quantification (“significant”, “numerous”), but **no invented numbers ever**
+
+========================  
+[Keyword Strategy]  
+========================  
+
+Extract from JD + evaluation report:
+
+1. **Technical Keywords**  
+2. **Soft Skills Keywords**  
+3. **Domain / Industry Keywords**
+
+Also check:  
+evaluation.keywords.missing → integrate only when:  
+- logically consistent with candidate’s work  
+- implied by existing experience  
+- subtle and natural, NOT keyword stuffing  
+- never fabricate skills, tools, or domains the candidate clearly never used
+
+========================  
+[Skills Section Rules – must follow strictly]  
+========================  
+
+1. You MUST preserve ALL original skills exactly as they appear.  
+2. You MUST NOT:
+   - replace the content with a category title (e.g., “Technical Skills”)
+   - shorten, group, merge, or abstract skills  
+   - remove any skill  
+   - infer or add new skills  
+   - output a header-only result (e.g., “Technical Skills”)  
+3. If the original skills are already clear and correctly formatted, return **no suggestions** for that block.
+
+Any violation of the above rules should be considered invalid output.
+
+========================  
+[Strict Anti-Hallucination Rules]  
+========================  
+
+1. **Never invent numbers**  
+2. **Never invent tools, skills, positions, or responsibilities**  
+3. If describing impact without numbers, use qualitative phrases only  
+4. No placeholders (“xx”, “N”, “…”)  
+5. All content must be realistically derived from the original resume
+6. Avoid repeating the same meaning (“奠定基础” twice or redundant phrasing)
+7. Every optimization must bring **clearer structure, stronger JD alignment, better readability**
+8. If the original sentence is already optimal, return no suggestion
+9. Never add responsibilities or claims that are not explicitly stated or strongly implied
+
+========================  
+[Output Format — Extremely Important]  
+========================  
+
+Return ONLY this JSON object.  
+No explanations, no preface, no trailing text, no comments.  
+No sentences outside JSON.  
+No markdown outside "optimizedContent".
+
 {{
-  "education": {{
-    "section": "education",
-    "blockIndex": 0,
-    "content": "## asdasdasd"
-  }}
+"suggestions": [
+{{
+"section": "education | employment | skills | summary | projects",
+"blockIndex": 0,
+"suggestionType": "Concise Expression / Quantify Achievements / Highlight Tech Stack / Improve JD Alignment / Structure Optimization / English Expression / Other",
+"reason": "Explain briefly WHY this block needs improvement",
+"originalContent": "Exact original content",
+"optimizedContent": "Improved content in {language}, markdown allowed",
+"highlight": ["specific modified phrases", "inserted JD keywords", "enhanced structure"]
 }}
-output 1:
-{{
-  "suggestions": [
-    {{
-      "section": "education",
-      "blockIndex": 0,
-      "suggestionType": "Other",
-      "reason": "This section is disorganized and should be removed.",
-      "optimizedContent": null,
-      "highlight": []
-    }}
-  ]
+]
 }}
 
-input 2:
-{{
-  "employment": {{
-    "section": "employment",
-    "blockIndex": 0,
-    "content": "Worked on database."
-  }}
-}}
-output 2:
-{{
-  "suggestions": [
-    {{
-      "section": "employment",
-      "blockIndex": 0,
-      "suggestionType": "Highlight Tech Stack/Quantify Achievements",
-      "reason": "The content is too general and does not highlight specific skills or achievements.",
-      "optimizedContent": "Designed and optimized SQL and NoSQL databases (PostgreSQL, Redis), improving data query efficiency by 30%.",
-      "highlight": ["SQL", "NoSQL", "PostgreSQL", "Redis", "improving data query efficiency by 30%"]
-    }}
-  ]
-}}
+If no blocks require improvement → return:  
+{{ "suggestions": [] }}
 
-[Now please analyze the following resume content]:
-{content}
+========================  
+Final rule: output ONLY valid JSON.  
+========================
 `;

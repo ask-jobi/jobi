@@ -1,8 +1,9 @@
-import { AISuggestionQueue, ResumeData } from "@/types/resume";
+import {AISuggestionQueue, ResumeData, ResumeJobDescription} from "@/types/resume";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { FULL_RESUME_OPTIMIZE_PROMPT } from "./prompts";
 import z from "zod";
+import {ResumeEvaluationOutput} from "@/lib/evaluation";
 
 const fullOptimizeSuggestionSchema = z.object({
   suggestions: z.array(z.object({
@@ -17,36 +18,17 @@ const fullOptimizeSuggestionSchema = z.object({
 
 const promptTemplate = new PromptTemplate({
   template: FULL_RESUME_OPTIMIZE_PROMPT,
-  inputVariables: ["content", "language"],
+  inputVariables: ["resume", "job_description", "evaluation_report", "language"],
 });
-
-async function callLangChainLLM(content: string, language: string) {
-  const prompt = await promptTemplate.format({ content, language });
-  console.log(prompt)
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash-lite",
-    temperature: 0.3,
-    json: true,
-    maxRetries: 3
-  });
-  model.withStructuredOutput(fullOptimizeSuggestionSchema);
-  const response = await model.invoke(prompt);
-  let parsed;
-  try {
-    parsed = fullOptimizeSuggestionSchema.parse(JSON.parse(response.content.toString()));
-  } catch (err) {
-    console.error("AI 输出解析错误:", err);
-    throw new Error("AI 输出格式异常：" + response.content);
-  }
-  return parsed;
-}
 
 export async function generateAISuggestionQueue(
   resume: ResumeData,
+  jobDescription: ResumeJobDescription,
+  evaluationReport: ResumeEvaluationOutput,
   language: string
 ): Promise<AISuggestionQueue> {
   // 构建完整的简历内容字符串
-  const content = {
+  const resumeFormatted = {
     education: resume.education.blocks.map((block, idx) => ({
       section: "education",
       blockIndex: idx,
@@ -67,16 +49,35 @@ export async function generateAISuggestionQueue(
     }))
   };
 
-  const result = await callLangChainLLM(JSON.stringify(content, null, 2), language);
-
-  return result.suggestions.map(suggestion => ({
-    section: suggestion.section,
-    blockIndex: suggestion.blockIndex,
-    suggestionType: suggestion.suggestionType,
-    reason: suggestion.reason,
-    originalContent: content[suggestion.section][suggestion.blockIndex].content,
-    optimizedContent: suggestion.optimizedContent,
-    highlight: suggestion.highlight
-  }));
+  const prompt = await promptTemplate.format({
+    resume: resumeFormatted,
+    job_description: jobDescription,
+    evaluation_report: evaluationReport,
+    language
+  });
+  console.log(prompt)
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash-lite",
+    temperature: 0.3,
+    json: true,
+    maxRetries: 3
+  });
+  model.withStructuredOutput(fullOptimizeSuggestionSchema);
+  const response = await model.invoke(prompt);
+  try {
+    const result  = fullOptimizeSuggestionSchema.parse(JSON.parse(response.content.toString()));
+    return result.suggestions.map(suggestion => ({
+      section: suggestion.section,
+      blockIndex: suggestion.blockIndex,
+      suggestionType: suggestion.suggestionType,
+      reason: suggestion.reason,
+      originalContent: resumeFormatted[suggestion.section][suggestion.blockIndex].content,
+      optimizedContent: suggestion.optimizedContent,
+      highlight: suggestion.highlight
+    }));
+  } catch (err) {
+    console.error("AI 输出解析错误:", err);
+    throw new Error("AI 输出格式异常：" + response.content);
+  }
 }
 

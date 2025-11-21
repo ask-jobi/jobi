@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { generateAISuggestionQueue } from "@/server/langchain/full-optimize";
 import { getJobApplication } from "@/server/resume";
-import { ResumeData } from "@/types/resume";
+import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import { consumeQuota } from "@/server/quota";
+import {ResumeEvaluationOutput} from "@/lib/evaluation";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -22,9 +23,11 @@ export async function GET(request: NextRequest) {
     }
 
     const resumeData = jobApplication.resumes.resume_json as ResumeData;
+    const jobDescription = jobApplication.jobs as ResumeJobDescription;
+    const resumeEvaluationReport = jobApplication.resumes.evaluation_report as ResumeEvaluationOutput;
 
-    const suggestions = await generateAISuggestionQueue(resumeData, jobApplication.resumes.language);
-    
+    const suggestions = await generateAISuggestionQueue(resumeData, jobDescription, resumeEvaluationReport, jobApplication.resumes.language);
+
     // 消耗一次 fullOptimize 用量
     await consumeQuota('fullOptimize');
 

@@ -4,7 +4,6 @@ import {createClient} from "@/lib/supabase/server";
 import {JobInfoFormType} from "@/components/client-components/job-information-form";
 import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
-import type {ResumeEvaluationOutput} from "@/lib/evaluation";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -43,6 +42,7 @@ export async function getJobApplication(jobApplicationId: string) {
           resumes:resume_id (
               id,
               upload_url,
+              evaluation_report,
               language,
               resume_json
           ),
