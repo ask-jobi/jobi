@@ -5,7 +5,7 @@ import {CheckIcon, ListMinus, ListPlus, Loader, SparklesIcon, TrashIcon, WandIco
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {useAtom} from "jotai";
-import {selectedSectionIdAtom, useResumeLanguage} from "@/lib/store/resume";
+import {selectedSectionIdAtom, useResume, useResumeLanguage} from "@/lib/store/resume";
 import {NodeSelection} from "lexical";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
@@ -29,6 +29,7 @@ function FloatingToolbarAi({
   setMode: (state: 'default' | 'ai' | 'closed') => void
 }) {
   const [selectedSectionId] = useAtom(selectedSectionIdAtom);
+  const {jobDescription} = useResume()
   const resumeLanguage = useResumeLanguage()
   const [editor] = useLexicalComposerContext();
   const [loading, setLoading] = useState<boolean>(false)
@@ -94,7 +95,7 @@ function FloatingToolbarAi({
       originalContent: originalContent,
       context: {
         sectionType: selectedSectionId!!,
-        jd: 'Empty JD'
+        jd: jobDescription?.description ?? 'Empty JD'
       },
       instruction: instruction,
       language: resumeLanguage
