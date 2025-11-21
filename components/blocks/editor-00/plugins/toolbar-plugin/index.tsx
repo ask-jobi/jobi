@@ -81,33 +81,31 @@ const ToolbarPlugin: FC = () => {
 
   return (
     <Portal>
-      <FocusScope>
-        <div
-          ref={setFloating}
-          tabIndex={0}
-          className="pointer-events-none"
-          onMouseDown={e => e.stopPropagation()}
-          style={mode === 'ai' && editor._rootElement ?
-          {
-            position: strategy,
-            top: 0,
-            left: editor._rootElement.getBoundingClientRect().left + 40,
-            zIndex: 100,
-            transform: `translate3d(0, ${Math.round(y)}px, 0)`,
-            width:
-              editor._rootElement.getBoundingClientRect().width - 52,
-          } :
-          {
-            position: strategy,
-            top: 0,
-            left: 0,
-            zIndex: 100,
-            transform: `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`,
-          }}
-        >
-          <Toolbar mode={mode} setMode={setMode}/>
-        </div>
-      </FocusScope>
+      <div
+        ref={setFloating}
+        tabIndex={0}
+        className="pointer-events-none"
+        onMouseDown={e => e.stopPropagation()}
+        style={mode === 'ai' && editor._rootElement ?
+        {
+          position: strategy,
+          top: 0,
+          left: editor._rootElement.getBoundingClientRect().left + 40,
+          zIndex: 100,
+          transform: `translate3d(0, ${Math.round(y)}px, 0)`,
+          width:
+            editor._rootElement.getBoundingClientRect().width - 52,
+        } :
+        {
+          position: strategy,
+          top: 0,
+          left: 0,
+          zIndex: 100,
+          transform: `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`,
+        }}
+      >
+        <Toolbar mode={mode} setMode={setMode}/>
+      </div>
     </Portal>
   );
 };

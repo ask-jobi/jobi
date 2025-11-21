@@ -1,6 +1,7 @@
 import React from 'react';
 import FloatingToolbarOptions from "@/components/blocks/editor-00/plugins/toolbar-plugin/floating-toolbar-options";
 import FloatingToolbarAi from "@/components/blocks/editor-00/plugins/toolbar-plugin/floating-toolbar-ai";
+import { FocusScope } from '@radix-ui/react-focus-scope';
 
 function Toolbar({
                    setMode,
@@ -21,7 +22,9 @@ function Toolbar({
       }
       {
         mode === 'ai' &&
-        <FloatingToolbarAi setMode={setMode}/>
+        <FocusScope>
+          <FloatingToolbarAi setMode={setMode}/>
+        </FocusScope>
       }
     </>
   );
