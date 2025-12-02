@@ -1,6 +1,6 @@
 "use client"
 
-import {useEffect} from "react";
+import {useEffect, useRef} from "react";
 import {FormProvider, useForm} from "react-hook-form";
 import {toast} from "sonner";
 import {saveResumeChange} from "@/server/resume";
@@ -24,12 +24,25 @@ export default function ResumePage() {
 
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useAtom(isRightPanelCollapsedAtom);
 
-  // Reset form when resume data changes (e.g., switching between resumes)
+  // 使用 ref 来跟踪上一次的简历 ID，只在切换简历时重置表单
+  const previousResumeIdRef = useRef<string | null>(application?.resume.id ?? null);
+
+  // Reset form only when switching between resumes (resume ID changes)
   useEffect(() => {
-    if (resumeData) {
+    const currentResumeId = application?.resume.id;
+
+    // 如果是切换到了新的简历，需要重置表单
+    if (currentResumeId && currentResumeId !== previousResumeIdRef.current) {
+      previousResumeIdRef.current = currentResumeId;
+      if (resumeData) {
+        reset(resumeData);
+      }
+    } else if (previousResumeIdRef.current === null && currentResumeId && resumeData) {
+      // 初始化时，如果还没有设置过 previousResumeId，也需要重置表单
+      previousResumeIdRef.current = currentResumeId;
       reset(resumeData);
     }
-  }, [resumeData, reset]);
+  }, [application?.resume.id, resumeData, reset]);
 
 
   const handleChange = async () => {
