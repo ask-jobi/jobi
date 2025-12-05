@@ -19,7 +19,7 @@ export async function evaluateAndSaveResume(
   // Update resumes table with evaluation report
   const { error } = await supabase
     .from("resumes")
-    .update({ evaluation_report: report } as any)
+    .update({ evaluation_report: report, evaluation_report_refresh_flag: false } as any)
     .eq("id", resumeId)
 
   if (error) {
@@ -37,7 +37,7 @@ export async function updateResumeEvaluationReport(
 
   const { error } = await supabase
     .from("resumes")
-    .update({ evaluation_report: report } as any)
+    .update({ evaluation_report: report, evaluation_report_refresh_flag: false } as any)
     .eq("id", resumeId)
 
   if (error) {
@@ -45,4 +45,19 @@ export async function updateResumeEvaluationReport(
   }
 
   return report
+}
+
+export async function updateResumeEvaluationReportRefreshFlag(
+  resumeId: string,
+  flag: boolean = true
+) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("resumes")
+    .update({ evaluation_report_refresh_flag: flag })
+    .eq("id", resumeId)
+
+  if (error) {
+    throw new Error(`Failed to update resume evaluation: ${error.message}`)
+  }
 }

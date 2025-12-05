@@ -54,7 +54,7 @@ export abstract class BaseTemplate {
 
   renderSectionBlocks<
     ID extends SortableSectionId,
-    S extends ResumeData[ID] extends SectionBlock<infer B> ? SectionBlock<B> : never,
+    S extends NonNullable<ResumeData[ID]> extends SectionBlock<infer B> ? SectionBlock<B> : never,
     B = S extends SectionBlock<infer U> ? U : never>({
                            sectionId,
                            headRender,

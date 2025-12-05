@@ -9,13 +9,11 @@ import {Button} from "@/components/ui/button";
 import {useState} from "react";
 import {Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "../ui/empty";
 import { Spinner } from "../ui/spinner";
-import {toast} from "sonner";
-import {updateResumeEvaluationReport} from "@/server/evaluation";
 
 export function ResumeRightPanel() {
   const [rightPanelView] = useAtom(rightPanelViewAtom)
   const [loading, setLoading] = useState(false)
-  const {application, selectedSectionId, resumeEvaluation, setResumeEvaluation, resumeData, jobDescription} = useResume()
+  const {selectedSectionId, resumeEvaluation, refreshEvaluationReport } = useResume()
 
   const renderSelectedSectionForm = () => {
     switch (selectedSectionId) {
@@ -34,23 +32,7 @@ export function ResumeRightPanel() {
 
   const handleCreateEvaluationReport = async () => {
     setLoading(true)
-    const response = await fetch("/api/evaluation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        resumeData: resumeData,
-        jobDescription: jobDescription
-      }),
-    })
-    const result = await response.json()
-    if (!response.ok) {
-      toast.error(result.error)
-    } else {
-      await updateResumeEvaluationReport(application.resume.id, result)
-      setResumeEvaluation(result)
-    }
+    await refreshEvaluationReport()
     setLoading(false)
   }
 

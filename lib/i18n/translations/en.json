@@ -166,6 +166,7 @@
   },
 
   "evaluation": {
+    "refreshEvaluation": "Refresh Evaluation",
     "overallScore": "Overall Score",
     "recommendation": "Recommendation",
     "confidenceScore": "Confidence Score",

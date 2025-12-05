@@ -168,6 +168,7 @@
   },
 
   "evaluation": {
+    "refreshEvaluation": "刷新报告",
     "overallScore": "总体评分",
     "recommendation": "推荐决策",
     "confidenceScore": "信心值",

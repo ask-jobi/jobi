@@ -20,7 +20,8 @@ async function Layout(props: {
         id,
         language,
         resume_json,
-        evaluation_report
+        evaluation_report,
+        evaluation_report_refresh_flag
       ),
       job:job_id (
         id,

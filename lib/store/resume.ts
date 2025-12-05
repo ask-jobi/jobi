@@ -1,6 +1,8 @@
 import {atom, useAtom, useSetAtom} from 'jotai';
 import {ResumeData, JobApplication, ResumeMetadata, ResumeJobDescription} from '@/types/resume';
 import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
+import {toast} from "sonner";
+import {updateResumeEvaluationReport} from "@/server/evaluation";
 
 export const applicationAtom = atom<JobApplication | null>(null);
 export const resumeDataAtom = atom(
@@ -33,6 +35,7 @@ export const resumeDataAtom = atom(
   (get, set, update: ResumeData) => {
     const app = get(applicationAtom);
     if (!app) return;
+    set(evaluationRefreshFlagAtom, true)
     set(applicationAtom, {
       ...app,
       resume: {
@@ -56,6 +59,7 @@ export const jobAtom = atom(
   (get, set, update: Partial<ResumeJobDescription>) => {
     const app = get(applicationAtom);
     if (!app) return;
+    set(evaluationRefreshFlagAtom, true)
     set(applicationAtom, {
       ...app,
       job: {
@@ -73,6 +77,7 @@ export const resumeEvaluationAtom = atom(
   (get, set, update: ResumeEvaluationOutput) => {
     const app = get(applicationAtom);
     if (!app) return;
+    set(evaluationRefreshFlagAtom, false)
     set(applicationAtom, {
       ...app,
       resume: {
@@ -82,6 +87,24 @@ export const resumeEvaluationAtom = atom(
     })
   }
 );
+export const evaluationRefreshFlagAtom = atom(
+  (get) => {
+    const app = get(applicationAtom)
+    if (!app) return null
+    return app.resume.evaluation_report_refresh_flag ?? false
+  },
+  (get, set, flag: boolean) => {
+    const app = get(applicationAtom)
+    if (!app) return
+    set(applicationAtom, {
+      ...app,
+      resume: {
+        ...app.resume,
+        evaluation_report_refresh_flag: flag
+      }
+    })
+  }
+)
 
 
 export const isLoadingAtom = atom(false);
@@ -126,9 +149,31 @@ export function useResume() {
   const [isLoading, setLoading] = useAtom(isLoadingAtom);
   const [selectedSectionId] = useAtom(selectedSectionIdAtom);
   const [resumeEvaluation, setResumeEvaluation] = useAtom(resumeEvaluationAtom);
+  const [evaluationRefreshFlag, setEvaluationRefreshFlag] = useAtom(evaluationRefreshFlagAtom);
   const handleSectionClick = useSetAtom(focusSectionAtom)
 
   const updateResumeData = (data: ResumeData) => setResumeData(data);
+
+  const refreshEvaluationReport = async () => {
+    const response = await fetch("/api/evaluation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        resumeData: resumeData,
+        jobDescription: jobDescription
+      }),
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      toast.error(result.error)
+    } else {
+      await updateResumeEvaluationReport(application!!.resume.id, result)
+      setResumeEvaluation(result)
+      setEvaluationRefreshFlag(false)
+    }
+  }
 
   return {
     resumeData: resumeData as ResumeData,
@@ -141,6 +186,9 @@ export function useResume() {
     resumeEvaluation,
     setResumeEvaluation,
     jobDescription,
-    setJobDescription
+    setJobDescription,
+    evaluationRefreshFlag,
+    setEvaluationRefreshFlag,
+    refreshEvaluationReport
   };
 }

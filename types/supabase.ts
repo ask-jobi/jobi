@@ -139,6 +139,7 @@ export type Database = {
         Row: {
           created_at: string
           evaluation_report: ResumeEvaluationOutput | null
+          evaluation_report_refresh_flag?: boolean
           id: string
           job_id: string | null
           language: Locale
@@ -149,6 +150,7 @@ export type Database = {
         Insert: {
           created_at?: string
           evaluation_report?: ResumeEvaluationOutput | null
+          evaluation_report_refresh_flag?: boolean
           id?: string
           job_id?: string | null
           language?: Locale
@@ -159,6 +161,7 @@ export type Database = {
         Update: {
           created_at?: string
           evaluation_report?: ResumeEvaluationOutput | null
+          evaluation_report_refresh_flag?: boolean
           id?: string
           job_id?: string | null
           language?: Locale

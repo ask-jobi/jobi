@@ -15,6 +15,7 @@ export type JobApplication = {
     resume_json: ResumeData
     language: Locale
     evaluation_report: ResumeEvaluationOutput | null
+    evaluation_report_refresh_flag: boolean
   }
   job: ResumeJobDescription
 }

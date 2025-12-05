@@ -202,19 +202,29 @@ async function rollbackChanges(
 
 export async function updateResumeJobDescription(jobDescription: ResumeJobDescription) {
   const supabase = await createClient()
+  const {id, ...payload} = jobDescription
   const {error} = await supabase
     .from('jobs')
-    .update(jobDescription)
-    .eq('id', jobDescription.id)
+    .update(payload)
+    .eq('id', id)
 
   if (error) throw error
+
+  const { error: flagError } = await supabase
+    .from('resumes')
+    .update({ evaluation_report_refresh_flag: true })
+    .eq('job_id', id)
+
+  if (flagError) {
+    throw new Error(`Failed to mark evaluation refresh flag: ${flagError.message}`)
+  }
 }
 
 export async function saveResumeChange(resumeId: string, data: ResumeData) {
   const supabase = await createClient()
   const {error} = await supabase
     .from('resumes')
-    .update({ resume_json: data })
+    .update({ resume_json: data, evaluation_report_refresh_flag: true })
     .eq('id', resumeId)
 
   if (error) throw error;

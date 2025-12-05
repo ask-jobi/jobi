@@ -63,7 +63,7 @@ export class DefaultTemplate extends BaseTemplate {
       ),
       blockRender: (block) => (
         <div className="flex flex-wrap">
-          {block.content.split(",").map((item: string, itemIndex: number) => (
+          {block.content?.split(",").map((item: string, itemIndex: number) => (
             <span key={`tag-${itemIndex}`} className="text-xs bg-gray-100 px-2 py-1 rounded-full mr-1 mb-1">
               {item.trim()}
             </span>
