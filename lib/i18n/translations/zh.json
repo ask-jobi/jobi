@@ -71,6 +71,30 @@
   "failedToLoadSubscription": "无法加载套餐信息",
   "subscriptionAndUsageSettings": "套餐与用量设置",
 
+  "createNewResume": "创建新简历",
+
+  "form": {
+    "stepJobInfo": "岗位信息",
+    "stepUpload": "上传简历",
+    "stepAnalyze": "分析简历",
+
+    "job": {
+      "name": "岗位名称",
+      "namePlaceholder": "岗位名称",
+      "nameError": "岗位名称不能为空",
+      "company": "公司",
+      "companyPlaceholder": "公司",
+      "companyError": "公司名不能为空",
+      "desc": "岗位简介",
+      "descPlaceholder": "岗位简介",
+      "descError": "岗位简介不能为空"
+    },
+
+    "previous": "上一步",
+    "next": "下一步",
+    "startAnalysis": "开始解析"
+  },
+
   "monthPicker": {
     "present": "现在",
     "selectStartEndDate": "请选择起止时间"
@@ -165,6 +189,14 @@
       "signUpButton": "注册",
       "laterButton": "稍后再说"
     }
+  },
+
+  "rightPanel": {
+    "evaluateResume": "评估简历",
+    "evaluationTitle": "暂无评估报告",
+    "evaluationDescription": "请点击以下按钮生成报告",
+    "evaluationLoadingTitle": "正在处理你的请求",
+    "evaluationLoadingDescription": "请等待结果，不要刷新页面。"
   },
 
   "evaluation": {

@@ -4,6 +4,7 @@ import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
 import {NextIntlClientProvider} from "next-intl";
 import {getUserLocale} from "@/lib/i18n/services";
+import z from "zod/v4/core";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getUserLocale()
+
+  z.config(z.locales.zhCN())
 
   return (
     <html lang={locale}>

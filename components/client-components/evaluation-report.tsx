@@ -63,20 +63,20 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
 
   return (
     <div className="space-y-6">
-        {
-          loading && evaluationRefreshFlag && <Button onClick={refreshEvaluation}>{t("refreshEvaluation")}</Button>
-        }
+      {
+        loading && evaluationRefreshFlag && <Button onClick={refreshEvaluation}>{t("refreshEvaluation")}</Button>
+      }
 
-        {
-          loading && (
-          <>
-            <SkeletonCard/>
-            <SkeletonCard/>
-            <SkeletonCard/>
-            <SkeletonCard/>
-          </>
-          )
-        }
+      {
+        loading && (
+        <>
+          <SkeletonCard/>
+          <SkeletonCard/>
+          <SkeletonCard/>
+          <SkeletonCard/>
+        </>
+        )
+      }
 
       {
         !loading && (

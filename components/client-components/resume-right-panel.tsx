@@ -9,11 +9,13 @@ import {Button} from "@/components/ui/button";
 import {useState} from "react";
 import {Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "../ui/empty";
 import { Spinner } from "../ui/spinner";
+import {useTranslations} from "next-intl";
 
 export function ResumeRightPanel() {
   const [rightPanelView] = useAtom(rightPanelViewAtom)
   const [loading, setLoading] = useState(false)
   const {selectedSectionId, resumeEvaluation, refreshEvaluationReport } = useResume()
+  const t = useTranslations("rightPanel")
 
   const renderSelectedSectionForm = () => {
     switch (selectedSectionId) {
@@ -47,23 +49,23 @@ export function ResumeRightPanel() {
               <EmptyTitle>
                 {
                   loading ?
-                    'Processing your request' :
-                    '暂无评估报告'
+                    t('evaluationLoadingTitle') :
+                    t('evaluationTitle')
                 }
 
               </EmptyTitle>
               <EmptyDescription>
                 {
                   loading ?
-                    'Please wait while we process your request. Do not refresh the page.' :
-                    '请点击以下按钮生成报告'
+                    t('evaluationLoadingDescription') :
+                    t('evaluationDescription')
                 }
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <Button variant="outline" size="sm" disabled={loading} onClick={handleCreateEvaluationReport}>
                 { loading && <Spinner/> }
-                Evaluate Resume
+                {t('evaluateResume')}
               </Button>
             </EmptyContent>
           </Empty>

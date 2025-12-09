@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils'
 
 interface SubscriptionData {
   plan: 'FREE' | 'LITE' | 'PRO' | null
-  planName: string
   expiryDate: string | null
   isActive: boolean
   quotas: {
@@ -53,6 +52,19 @@ export function CompactPlanDisplay() {
         return 'bg-gradient-to-r from-gray-500 to-gray-600'
       default:
         return 'bg-gradient-to-r from-gray-400 to-gray-500'
+    }
+  }
+
+  const getPlanName = (plan: string | null) => {
+    switch (plan) {
+      case 'PRO':
+        return 'pro30Days'
+      case 'LITE':
+        return 'lite14Days'
+      case 'FREE':
+        return 'freeTrial'
+      default:
+        return 'noPlan'
     }
   }
 
@@ -103,34 +115,34 @@ export function CompactPlanDisplay() {
               <Package className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">{t('currentPlan')}</span>
             </div>
-            <Badge 
+            <Badge
               className={`text-white border-0 text-xs ${getPlanGradient(subscription.plan)}`}
             >
-              {subscription.planName}
+              {t(getPlanName(subscription.plan))}
             </Badge>
           </div>
         </TooltipTrigger>
-        
+
         <TooltipContent side="right" className="w-64 p-3">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4" />
               <h4 className="font-semibold text-sm">{t('planDetails')}</h4>
             </div>
-            
+
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('planType')}</span>
-                <span className="font-medium">{subscription.planName}</span>
+                <span className="font-medium">{t(getPlanName(subscription.plan))}</span>
               </div>
-              
+
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('status')}</span>
                 <span className="font-medium">
                   {subscription.isActive ? t('active') : t('expired')}
                 </span>
               </div>
-              
+
               {subscription.expiryDate && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('validUntil')}</span>
@@ -166,4 +178,4 @@ export function CompactPlanDisplay() {
       </Tooltip>
     </TooltipProvider>
   )
-} 
+}

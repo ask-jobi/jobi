@@ -23,7 +23,7 @@ export type Database = {
           created_at: string | null
           end_at: string
           id: string
-          plan: string
+          plan: 'FREE' | 'LITE' | 'PRO'
           quota_block_optimize: number
           quota_full_optimize: number
           quota_motivation_letter: number
@@ -39,7 +39,7 @@ export type Database = {
           created_at?: string | null
           end_at: string
           id?: string
-          plan: string
+          plan: 'FREE' | 'LITE' | 'PRO'
           quota_block_optimize?: number
           quota_full_optimize?: number
           quota_motivation_letter?: number
@@ -55,7 +55,7 @@ export type Database = {
           created_at?: string | null
           end_at?: string
           id?: string
-          plan?: string
+          plan?: 'FREE' | 'LITE' | 'PRO'
           quota_block_optimize?: number
           quota_full_optimize?: number
           quota_motivation_letter?: number

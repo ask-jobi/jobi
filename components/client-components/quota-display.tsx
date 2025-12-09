@@ -27,7 +27,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
   const t = useTranslations()
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('noPlan')
+    if (!dateString) return t('noActivePlan')
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
@@ -45,6 +45,19 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
         return 'bg-gradient-to-r from-gray-500 to-gray-600'
       default:
         return 'bg-gradient-to-r from-gray-400 to-gray-500'
+    }
+  }
+
+  const getPlanName = (plan: string | null) => {
+    switch (plan) {
+      case 'PRO':
+        return 'pro30Days'
+      case 'LITE':
+        return 'lite14Days'
+      case 'FREE':
+        return 'freeTrial'
+      default:
+        return 'noPlan'
     }
   }
 
@@ -69,14 +82,14 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
             <Package className="w-5 h-5 text-muted-foreground" />
             {t('currentPlan')}
           </CardTitle>
-          <Badge 
+          <Badge
             className={`text-white border-0 ${getPlanGradient(subscription.plan)}`}
           >
-            {subscription.planName}
+            {t(getPlanName(subscription.plan))}
           </Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-0 space-y-6">
         {/* 有效期 */}
         <div className="flex items-center justify-between">
@@ -95,7 +108,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
             <Info className="w-4 h-4 text-muted-foreground" />
             <h4 className="font-semibold text-sm">{t('detailedUsage')}</h4>
           </div>
-          
+
           {/* 整体优化 */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -104,7 +117,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
                 {subscription.quotas.fullOptimize.used} / {subscription.quotas.fullOptimize.total}
               </span>
             </div>
-            <Progress 
+            <Progress
               value={getUsagePercentage(subscription.quotas.fullOptimize.used, subscription.quotas.fullOptimize.total)}
               className="h-2"
             />
@@ -118,7 +131,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
                 {subscription.quotas.blockOptimize.used} / {subscription.quotas.blockOptimize.total}
               </span>
             </div>
-            <Progress 
+            <Progress
               value={getUsagePercentage(subscription.quotas.blockOptimize.used, subscription.quotas.blockOptimize.total)}
               className="h-2"
             />
@@ -132,7 +145,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
                 {subscription.quotas.motivationLetter.used} / {subscription.quotas.motivationLetter.total}
               </span>
             </div>
-            <Progress 
+            <Progress
               value={getUsagePercentage(subscription.quotas.motivationLetter.used, subscription.quotas.motivationLetter.total)}
               className="h-2"
             />
@@ -142,9 +155,9 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
         {/* 操作按钮 */}
         <div className="flex gap-3 pt-4">
           {subscription.isActive ? (
-            <Button 
-              variant="outline" 
-              size="default" 
+            <Button
+              variant="outline"
+              size="default"
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
               onClick={handleRenew}
             >
@@ -152,9 +165,9 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               {t('renewPlan')}
             </Button>
           ) : (
-            <Button 
-              variant="default" 
-              size="default" 
+            <Button
+              variant="default"
+              size="default"
               className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
               onClick={handleUpgrade}
             >
@@ -162,11 +175,11 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               {t('buyPlan')}
             </Button>
           )}
-          
+
           {subscription.plan === 'LITE' && (
-            <Button 
-              variant="default" 
-              size="default" 
+            <Button
+              variant="default"
+              size="default"
               className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
               onClick={handleUpgrade}
             >
@@ -178,4 +191,4 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
       </CardContent>
     </Card>
   )
-} 
+}

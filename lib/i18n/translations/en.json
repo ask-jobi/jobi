@@ -71,6 +71,29 @@
   "failedToLoadSubscription": "Failed to load subscription information",
   "subscriptionAndUsageSettings": "Subscription & Usage Settings",
 
+  "createNewResume": "Create New Resume",
+
+  "form": {
+    "stepJobInfo": "Job Information",
+    "stepUpload": "UploadResume",
+    "stepAnalyze": "Analyze Resume",
+    "job": {
+      "name": "Job Name",
+      "namePlaceholder": "Job name",
+      "nameError": "岗位名称不能为空",
+      "company": "Company",
+      "companyPlaceholder": "Company name",
+      "companyError": "岗位名称不能为空",
+      "desc": "Job Description",
+      "descPlaceholder": "Job description",
+      "descError": "岗位名称不能为空"
+    },
+
+    "previous": "Previous",
+    "next": "Next",
+    "startAnalysis": "Start Analysis"
+  },
+
   "monthPicker": {
     "present": "Present",
     "selectStartEndDate": "Select Start/End Date"
@@ -163,6 +186,14 @@
       "createError": "Error occurred while creating free pass",
       "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
     }
+  },
+
+  "rightPanel": {
+    "evaluateResume": "Evaluate Resume",
+    "evaluationTitle": "No evaluation report available.",
+    "evaluationDescription": "Please click the button below to generate a report.",
+    "evaluationLoadingTitle": "Processing your request",
+    "evaluationLoadingDescription": "Please wait while we process your request. Do not refresh the page."
   },
 
   "evaluation": {

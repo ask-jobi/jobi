@@ -26,11 +26,12 @@ import ResumeAnalyzeProgress, {
 import {fetchEventSource} from "@microsoft/fetch-event-source";
 import {useRouter} from "next/navigation";
 import {FileText} from "lucide-react";
+import {useTranslations} from "next-intl";
 
 const { Stepper } = defineStepper(
-  { id: "step-1", title: "Job Information" },
-  { id: "step-2", title: "Upload Resume" },
-  { id: "step-3", title: "Analyze Resume" }
+  { id: "step-1", title: "Job Information", i18n: "stepJobInfo" },
+  { id: "step-2", title: "Upload Resume", i18n: "stepUpload" },
+  { id: "step-3", title: "Analyze Resume", i18n: "stepAnalyze" }
 );
 
 const initialProgress: ProgressType = [0, "Ready to analyze"]
@@ -41,6 +42,7 @@ const NewResumeCard = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeFile, setResumeFile] = useState<File>();
   const [controller, setController] = useState<AbortController | null>(null);
+  const t = useTranslations()
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -97,7 +99,7 @@ const NewResumeCard = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "创建空白简历失败");
+        throw new Error(errorData.error || "create empty resume failed");
       }
 
       const result = await response.json();
@@ -108,7 +110,7 @@ const NewResumeCard = () => {
       router.push(`/application/${result.data.applicationData.id}`);
     } catch (error: any) {
       console.error("创建空白简历失败:", error);
-      toast.error(error.message || "创建空白简历失败");
+      toast.error(error.message || "create empty resume failed");
     }
   };
 
@@ -179,14 +181,14 @@ const NewResumeCard = () => {
         <Card className="aspect-[1/1.414] border-dashed cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-primary">
           <CardContent className="flex items-center justify-center h-full">
             <p className="text-lg font-medium text-muted-foreground select-none">
-              Create New Resume
+              {t('createNewResume')}
             </p>
           </CardContent>
         </Card>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Resume</DialogTitle>
+          <DialogTitle>{t('createNewResume')}</DialogTitle>
           <DialogDescription />
         </DialogHeader>
         <Stepper.Provider className="space-y-4">
@@ -199,7 +201,7 @@ const NewResumeCard = () => {
                     of={step.id}
                     onClick={() => methods.goTo(step.id)}
                   >
-                    <Stepper.Title>{step.title}</Stepper.Title>
+                    <Stepper.Title>{t(`form.${step.i18n}`)}</Stepper.Title>
                   </Stepper.Step>
                 ))}
               </Stepper.Navigation>
@@ -236,15 +238,15 @@ const NewResumeCard = () => {
                     onClick={methods.prev}
                     disabled={methods.isFirst}
                   >
-                    Previous
+                    {t('form.previous')}
                   </Button>
                 )}
                 {methods.switch({
                   "step-1": () => (
-                    <Button onClick={() => handleNext(methods)}>Next</Button>
+                    <Button onClick={() => handleNext(methods)}>{t('form.next')}</Button>
                   ),
                   "step-2": () => (
-                    <Button onClick={() => handleNext(methods)} disabled={!resumeFile || isAnalyzing}>Start Analysis</Button>
+                    <Button onClick={() => handleNext(methods)} disabled={!resumeFile || isAnalyzing}>{t('form.startAnalysis')}</Button>
                   ),
                 })}
               </Stepper.Controls>

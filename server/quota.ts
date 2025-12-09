@@ -17,11 +17,9 @@ type Quota = {
 type DBAccessPass = Database["public"]["Tables"]["access_passes"]["Row"]
 
 type QuotaKey = keyof Quota
-
 // 用户订阅信息类型
 type UserSubscription = {
   plan: 'FREE' | 'LITE' | 'PRO' | null
-  planName: string
   expiryDate: string | null
   isActive: boolean
   quotas: {
@@ -69,7 +67,6 @@ export async function getUserSubscription(): Promise<UserSubscription> {
   if (!accessPass) {
     return {
       plan: null,
-      planName: '无套餐',
       expiryDate: null,
       isActive: false,
       quotas: {
@@ -80,15 +77,8 @@ export async function getUserSubscription(): Promise<UserSubscription> {
     }
   }
 
-  const planNames = {
-    'FREE': '免费试用',
-    'LITE': 'Lite 14天',
-    'PRO': 'Pro 30天'
-  }
-
   return {
     plan: accessPass.plan,
-    planName: planNames[accessPass.plan] || '未知套餐',
     expiryDate: accessPass.end_at,
     isActive: true,
     quotas: {
@@ -134,7 +124,6 @@ export async function consumeQuota(key: QuotaKey) {
     .from("access_passes")
     .select("*").single()
 
-  console.log(accessPass, error)
   if (error) {
     throw error
   }
