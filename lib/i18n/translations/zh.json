@@ -6,32 +6,32 @@
   "dashboard": "控制台",
   "jobs": "职位搜索",
 
-  "aiDriven": "AI 驱动的简历优化",
-  "heroTitle": "打造完美简历",
-  "heroSubtitle": "获得理想工作",
-  "heroDescription": "使用先进的 AI 技术，智能分析您的简历，提供个性化建议，让您的简历在众多求职者中脱颖而出。",
-  "startFreeTrial": "开始免费试用",
-  "learnMore": "了解更多",
-
-  "whyChooseJobi": "为什么选择 Jobi？",
-  "featuresDescription": "我们提供最先进的 AI 技术，帮助您创建专业、有竞争力的简历",
-  "aiAnalysis": "AI 智能分析",
-  "aiAnalysisDesc": "先进的 AI 算法深度分析您的简历，识别改进空间并提供具体建议",
-  "personalizedOptimization": "个性化优化",
-  "personalizedOptimizationDesc": "根据目标职位和行业特点，提供量身定制的简历优化建议",
-  "privacyProtection": "隐私保护",
-  "privacyProtectionDesc": "您的个人信息和简历内容完全加密，确保数据安全",
-
-  "successCases": "成功案例",
-  "interviewRate": "面试通过率",
-  "templates": "行业模板",
-  "aiSupport": "AI 支持",
-
-  "readyToStart": "准备好提升您的职业发展了吗？",
-  "ctaDescription": "加入数千名成功求职者的行列，让 AI 帮助您打造完美简历",
-  "getStarted": "立即开始",
-
-  "copyright": "© 2025 Jobi. 保留所有权利。",
+  "landingPage": {
+    "hero": {
+      "slogan": "让每一份简历都命中靶心。",
+      "valueProposition": "一键输入岗位描述，AI智能为您生成完全匹配的简历，轻松通过筛选，赢得面试机会。",
+      "startFreeTrial": "开始免费试用",
+      "learnMore": "了解更多"
+    },
+    "features": {
+      "title": "为什么选择 Jobi？",
+      "description": "我们提供无缝的简历编辑体验，帮助您创建最具竞争力的定制化简历",
+      "feature1": "一键导入",
+      "feature1Desc": "无需重新录入简历，上传已有的 PDF 简历，即刻生成 HR 熟悉的专业简历模版。",
+      "feature2": "岗位定制",
+      "feature2Desc": "使用求职专家微调的 AI 模型，基于岗位描述精准改写简历内容，提升 ATS 与机筛通过率。",
+      "feature3": "真实表达",
+      "feature3Desc": "基于事实的内容修改与建议，避免模板感与 AI 痕迹，确保您的简历真实、专业。"
+    },
+    "successCases": "成功案例",
+    "interviewRate": "面试通过率",
+    "templates": "行业模板",
+    "aiSupport": "AI 支持",
+    "readyToStart": "准备好提升您的职业发展了吗？",
+    "ctaDescription": "加入数千名成功求职者的行列，让 AI 帮助您打造完美简历",
+    "getStarted": "立即开始",
+    "copyright": "© 2025 Jobi. 保留所有权利。"
+  },
 
   "language": "语言",
   "chinese": "中文",

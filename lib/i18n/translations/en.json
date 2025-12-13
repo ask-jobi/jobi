@@ -6,32 +6,32 @@
   "dashboard": "Dashboard",
   "jobs": "Job Search",
 
-  "aiDriven": "AI-Powered Resume Optimization",
-  "heroTitle": "Create Perfect Resume",
-  "heroSubtitle": "Land Your Dream Job",
-  "heroDescription": "Use advanced AI technology to intelligently analyze your resume, provide personalized suggestions, and make your resume stand out among job seekers.",
-  "startFreeTrial": "Start Free Trial",
-  "learnMore": "Learn More",
-
-  "whyChooseJobi": "Why Choose Jobi?",
-  "featuresDescription": "We provide the most advanced AI technology to help you create professional and competitive resumes",
-  "aiAnalysis": "AI Smart Analysis",
-  "aiAnalysisDesc": "Advanced AI algorithms deeply analyze your resume, identify improvement areas and provide specific suggestions",
-  "personalizedOptimization": "Personalized Optimization",
-  "personalizedOptimizationDesc": "Provide tailored resume optimization suggestions based on target positions and industry characteristics",
-  "privacyProtection": "Privacy Protection",
-  "privacyProtectionDesc": "Your personal information and resume content are fully encrypted to ensure data security",
-
-  "successCases": "Success Cases",
-  "interviewRate": "Interview Pass Rate",
-  "templates": "Industry Templates",
-  "aiSupport": "AI Support",
-
-  "readyToStart": "Ready to Boost Your Career?",
-  "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
-  "getStarted": "Get Started",
-
-  "copyright": "© 2025 Jobi. All rights reserved.",
+  "landingPage": {
+    "hero": {
+      "slogan": "Make every resume hit the target.",
+      "valueProposition": "Enter job descriptions with one click, AI intelligently generates perfectly matched resumes for you, easily pass screening, and win interview opportunities.",
+      "startFreeTrial": "Start Free Trial",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "title": "Why Choose Jobi?",
+      "description": "We provide a seamless resume editing experience to help you create the most competitive customized resumes",
+      "feature1": "One-Click Import",
+      "feature1Desc": "No need to re-enter your resume, upload your existing PDF resume, and instantly generate professional resume templates familiar to HR.",
+      "feature2": "Job Customization",
+      "feature2Desc": "Using AI models fine-tuned by job search experts, accurately rewrite resume content based on job descriptions, improving ATS and machine screening pass rates.",
+      "feature3": "Authentic Expression",
+      "feature3Desc": "Fact-based content modifications and suggestions, avoiding template feel and AI traces, ensuring your resume is authentic and professional."
+    },
+    "successCases": "Success Cases",
+    "interviewRate": "Interview Pass Rate",
+    "templates": "Industry Templates",
+    "aiSupport": "AI Support",
+    "readyToStart": "Ready to Boost Your Career?",
+    "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
+    "getStarted": "Get Started",
+    "copyright": "© 2025 Jobi. All rights reserved."
+  },
 
   "language": "Language",
   "chinese": "中文",

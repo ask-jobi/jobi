@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Sparkles,
   Zap,
@@ -23,28 +22,22 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-6">
-            <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
-            {t('aiDriven')}
-          </Badge>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            {t('heroTitle')}
-            <br />
-            <span className="text-primary">{t('heroSubtitle')}</span>
+            {t('landingPage.hero.slogan')}
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            {t('heroDescription')}
+            {t('landingPage.hero.valueProposition')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={user ? "/dashboard" : "/auth/sign-up"}>
               <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-                {t('startFreeTrial')}
+                {t('landingPage.hero.startFreeTrial')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="#features">
               <Button variant="outline" size="lg" className="text-lg px-8">
-                {t('learnMore')}
+                {t('landingPage.hero.learnMore')}
               </Button>
             </Link>
           </div>
@@ -55,10 +48,10 @@ export default function LandingPage() {
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {t('whyChooseJobi')}
+            {t('landingPage.features.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('featuresDescription')}
+            {t('landingPage.features.description')}
           </p>
         </div>
 
@@ -68,9 +61,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-blue-600" />
               </div>
-              <CardTitle>{t('aiAnalysis')}</CardTitle>
+              <CardTitle>{t('landingPage.features.feature1')}</CardTitle>
               <CardDescription>
-                {t('aiAnalysisDesc')}
+                {t('landingPage.features.feature1Desc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -80,9 +73,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-purple-600" />
               </div>
-              <CardTitle>{t('personalizedOptimization')}</CardTitle>
+              <CardTitle>{t('landingPage.features.feature2')}</CardTitle>
               <CardDescription>
-                {t('personalizedOptimizationDesc')}
+                {t('landingPage.features.feature2Desc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -92,9 +85,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-green-600" />
               </div>
-              <CardTitle>{t('privacyProtection')}</CardTitle>
+              <CardTitle>{t('landingPage.features.feature3')}</CardTitle>
               <CardDescription>
-                {t('privacyProtectionDesc')}
+                {t('landingPage.features.feature3Desc')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -107,19 +100,19 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-purple-700 mb-2">10,000+</div>
-              <div className="text-muted-foreground">{t('successCases')}</div>
+              <div className="text-muted-foreground">{t('landingPage.successCases')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-600 mb-2">95%</div>
-              <div className="text-muted-foreground">{t('interviewRate')}</div>
+              <div className="text-muted-foreground">{t('landingPage.interviewRate')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-500 mb-2">50+</div>
-              <div className="text-muted-foreground">{t('templates')}</div>
+              <div className="text-muted-foreground">{t('landingPage.templates')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-              <div className="text-muted-foreground">{t('aiSupport')}</div>
+              <div className="text-muted-foreground">{t('landingPage.aiSupport')}</div>
             </div>
           </div>
         </div>
@@ -129,14 +122,14 @@ export default function LandingPage() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            {t('readyToStart')}
+            {t('landingPage.readyToStart')}
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            {t('ctaDescription')}
+            {t('landingPage.ctaDescription')}
           </p>
           <Link href={user ? "/dashboard" : "/auth/sign-up"}>
             <Button size="lg" className="text-lg px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
-              {t('getStarted')}
+              {t('landingPage.getStarted')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>

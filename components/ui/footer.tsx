@@ -10,7 +10,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col items-center text-center">
           <div className="text-sm text-muted-foreground">
-            {t('copyright')}
+            {t('landingPage.copyright')}
           </div>
         </div>
       </div>
