@@ -4,7 +4,7 @@ import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
 import {NextIntlClientProvider} from "next-intl";
 import {getUserLocale} from "@/lib/i18n/services";
-import z from "zod/v4/core";
+import z from "zod";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

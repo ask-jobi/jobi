@@ -176,7 +176,8 @@ export async function verifyJobApplicationLimit() {
     throw error
   }
 
-  if (jobApplications.length >= 10) {
+  // TODO what is this number?
+  if (jobApplications.length >= 20) {
     throw new Error('You have reached the maximum job application limit, please try to delete some jobs you have applied for.')
   }
 }

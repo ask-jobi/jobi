@@ -1,5 +1,4 @@
 import {NextRequest, NextResponse} from "next/server";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
 import { JobInfoFormType } from "@/components/client-components/job-information-form";
 import {parseResume} from "@/server/langchain/resume-parser";
@@ -10,6 +9,7 @@ import {
   closeWriter,
 } from "@/server/sse/writer-manager";
 import { evaluateAndSaveResume } from "@/server/evaluation";
+import {loadPdfToDoc} from "@/server/langchain/tools";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -80,12 +80,9 @@ async function processFile(
       message: "Analyzing resume file...",
     });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const loader = new PDFLoader(new Blob([arrayBuffer]), {
-      splitPages: false,
+    const docs = await loadPdfToDoc(file, {
+      splitPages: false
     });
-
-    const docs = await loader.load();
 
     sendData(processId, {
       progress: 50,

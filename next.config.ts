@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  serverExternalPackages: ["pdf-parse"],
   turbopack: {
     resolveAlias: {
       html2canvas: "html2canvas-pro",
