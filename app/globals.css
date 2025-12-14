@@ -123,6 +123,73 @@
       transform: translateX(100%);
     }
   }
+
+  @keyframes pulse-subtle {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 59, 130, 246), 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(var(--primary-rgb, 59, 130, 246), 0);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes ping-slow {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    75%, 100% {
+      transform: scale(1.05);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.6s ease-out forwards;
+}
+
+.card-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.card-hidden {
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 .animate-shimmer {

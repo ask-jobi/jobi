@@ -13,8 +13,19 @@
       "startFreeTrial": "Start Free Trial",
       "learnMore": "Learn More"
     },
+    "problem": {
+      "title": "Have you encountered these problems?",
+      "subtitle": "Resumes sent but no response, few interview opportunities",
+      "problem1": "Resumes sent but no response",
+      "problem1Desc": "Submitted dozens of resumes, but received no replies, don't know where the problem lies",
+      "problem2": "Resumes are all the same",
+      "problem2Desc": "Using the same resume for all positions, unable to highlight core advantages matching the position",
+      "problem3": "Filtered by ATS system",
+      "problem3Desc": "Resume format or keywords do not meet system requirements, HR cannot even see your resume",
+      "atsExplanation": "ATS (Applicant Tracking System) is used by HR to automatically screen resumes. If your resume format is incorrect or missing keywords, ATS will filter out your resume before HR even sees it."
+    },
     "features": {
-      "title": "Why Choose Jobi?",
+      "title": "No worries, Jobi can help you solve it.",
       "description": "We provide a seamless resume editing experience to help you create the most competitive customized resumes",
       "feature1": "One-Click Import",
       "feature1Desc": "No need to re-enter your resume, upload your existing PDF resume, and instantly generate professional resume templates familiar to HR.",
@@ -23,10 +34,6 @@
       "feature3": "Authentic Expression",
       "feature3Desc": "Fact-based content modifications and suggestions, avoiding template feel and AI traces, ensuring your resume is authentic and professional."
     },
-    "successCases": "Success Cases",
-    "interviewRate": "Interview Pass Rate",
-    "templates": "Industry Templates",
-    "aiSupport": "AI Support",
     "readyToStart": "Ready to Boost Your Career?",
     "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
     "getStarted": "Get Started",

@@ -13,8 +13,19 @@
       "startFreeTrial": "开始免费试用",
       "learnMore": "了解更多"
     },
+    "problem": {
+      "title": "你是否遇到过这些问题？",
+      "subtitle": "简历投递石沉大海，面试机会寥寥无几",
+      "problem1": "投递石沉大海",
+      "problem1Desc": "投递几十份简历，却收不到一个回复，不知道问题出在哪里",
+      "problem2": "简历千篇一律",
+      "problem2Desc": "用同一份简历投递所有岗位，无法突出与岗位匹配的核心优势",
+      "problem3": "被 ATS 系统过滤",
+      "problem3Desc": "简历格式或关键词不符合系统要求，HR 根本看不到你的简历",
+      "atsExplanation": "ATS（Applicant Tracking System）是申请者追踪系统，HR 使用它来自动筛选简历。如果你的简历格式不正确或缺少关键词，ATS 会在 HR 看到之前就过滤掉你的简历。"
+    },
     "features": {
-      "title": "为什么选择 Jobi？",
+      "title": "没关系，Jobi 可以帮你解决。",
       "description": "我们提供无缝的简历编辑体验，帮助您创建最具竞争力的定制化简历",
       "feature1": "一键导入",
       "feature1Desc": "无需重新录入简历，上传已有的 PDF 简历，即刻生成 HR 熟悉的专业简历模版。",
@@ -23,10 +34,6 @@
       "feature3": "真实表达",
       "feature3Desc": "基于事实的内容修改与建议，避免模板感与 AI 痕迹，确保您的简历真实、专业。"
     },
-    "successCases": "成功案例",
-    "interviewRate": "面试通过率",
-    "templates": "行业模板",
-    "aiSupport": "AI 支持",
     "readyToStart": "准备好提升您的职业发展了吗？",
     "ctaDescription": "加入数千名成功求职者的行列，让 AI 帮助您打造完美简历",
     "getStarted": "立即开始",
