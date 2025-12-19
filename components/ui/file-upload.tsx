@@ -11,6 +11,7 @@ import {
   FileTextIcon,
   FileVideoIcon,
 } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 
 const ROOT_NAME = "FileUpload";
@@ -325,11 +326,20 @@ interface FileUploadRootProps
 
 const FileUploadRoot = React.forwardRef<HTMLDivElement, FileUploadRootProps>(
   (props, forwardedRef) => {
+    // Extract props that should not be passed to DOM elements
+    // These props are used via propsRef.current, so we extract them to prevent them from being passed to DOM
     const {
       value,
       defaultValue,
       onValueChange,
       accept,
+      maxFiles: _maxFiles,
+      maxSize: _maxSize,
+      onAccept: _onAccept,
+      onFileAccept: _onFileAccept,
+      onFileReject: _onFileReject,
+      onFileValidate: _onFileValidate,
+      onUpload: _onUpload,
       dir: dirProp,
       label,
       name,
@@ -342,6 +352,15 @@ const FileUploadRoot = React.forwardRef<HTMLDivElement, FileUploadRootProps>(
       className,
       ...rootProps
     } = props;
+    
+    // Suppress unused variable warnings - these are used via propsRef.current
+    void _maxFiles;
+    void _maxSize;
+    void _onAccept;
+    void _onFileAccept;
+    void _onFileReject;
+    void _onFileValidate;
+    void _onUpload;
 
     const inputId = React.useId();
     const dropzoneId = React.useId();
@@ -778,8 +797,6 @@ const FileUploadDropzone = React.forwardRef<
       role="region"
       id={context.dropzoneId}
       aria-controls={`${context.inputId} ${context.listId}`}
-      aria-disabled={context.disabled}
-      aria-invalid={invalid}
       data-disabled={context.disabled ? "" : undefined}
       data-dragging={dragOver ? "" : undefined}
       data-invalid={invalid ? "" : undefined}
@@ -874,7 +891,6 @@ const FileUploadList = React.forwardRef<HTMLDivElement, FileUploadListProps>(
       <ListPrimitive
         role="list"
         id={context.listId}
-        aria-orientation={orientation}
         data-orientation={orientation}
         data-slot="file-upload-list"
         data-state={shouldRender ? "active" : "inactive"}
@@ -1071,14 +1087,18 @@ const FileUploadItemPreview = React.forwardRef<
       if (render) return render(file);
 
       if (itemContext.fileState?.file.type.startsWith("image/")) {
+        const objectUrl = URL.createObjectURL(file);
         return (
-          <img
-            src={URL.createObjectURL(file)}
+          <Image
+            src={objectUrl}
             alt={file.name}
-            className="size-full object-cover"
+            fill
+            className="object-cover"
+            unoptimized
             onLoad={(event) => {
-              if (!(event.target instanceof HTMLImageElement)) return;
-              URL.revokeObjectURL(event.target.src);
+              if (event.target instanceof HTMLImageElement) {
+                URL.revokeObjectURL(event.target.src);
+              }
             }}
           />
         );
