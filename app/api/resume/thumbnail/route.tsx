@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
           </div>
 
           {/* 教育经历 */}
-          {parsedData.education.blocks.length > 0 && (
+          {parsedData.education?.blocks && parsedData.education.blocks.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '16px' }}>
               <h2 style={{ 
                 fontSize: '16px', 
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
           )}
 
           {/* 工作经历 */}
-          {parsedData.employment.blocks.length > 0 && (
+          {parsedData.employment?.blocks && parsedData.employment.blocks.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '16px' }}>
               <h2 style={{ 
                 fontSize: '16px', 
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
           )}
 
           {/* 技能 */}
-          {parsedData.skills.blocks.length > 0 && (
+          {parsedData.skills?.blocks && parsedData.skills.blocks.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <h2 style={{ 
                 fontSize: '16px', 

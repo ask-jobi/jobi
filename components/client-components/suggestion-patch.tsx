@@ -48,7 +48,9 @@ function SuggestionPatch({
 
   const handleApplyPatch = () => {
     const formData = getValues();
-    const block = formData[section.section].blocks[section.blockIndex];
+    const sectionData = formData[section.section];
+    if (!sectionData) return;
+    const block = sectionData.blocks[section.blockIndex];
 
     if (block) {
       appendPatchHistory({
@@ -58,7 +60,7 @@ function SuggestionPatch({
         action: 'apply'
       });
 
-      setValue(`${section.section}.blocks.${section.blockIndex}.content`, section.optimizedContent ?? "", {
+      setValue(`${section.section}.blocks.${section.blockIndex}.content` as any, section.optimizedContent ?? "", {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true
