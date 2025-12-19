@@ -5,7 +5,6 @@ import {useMouseListener} from "@/components/blocks/editor-00/hooks/use-mouse-li
 import {autoUpdate, useFloating, hide, limitShift, offset, shift, size} from "@floating-ui/react-dom";
 import Toolbar from "@/components/blocks/editor-00/plugins/toolbar-plugin/toolbar";
 import {Portal} from "@radix-ui/react-portal"
-import {FocusScope} from "@radix-ui/react-focus-scope";
 import {usePrevious} from "@mantine/hooks";
 
 const ToolbarPlugin: FC = () => {

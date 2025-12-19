@@ -53,7 +53,7 @@ function FloatingToolbarAi({
       // Hide selection highlight when AI toolbar closes
       editor.dispatchCommand(HIDE_SELECTION_HIGHLIGHT_COMMAND, null);
     };
-  }, [])
+  }, [editor])
 
   const handleRejectAI = () => {
     setTimeout(() => {

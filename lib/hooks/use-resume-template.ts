@@ -20,7 +20,7 @@ function useResumeTemplate(data?: ResumeData) {
       tmp.setPresentLabel(t('present'))
       setTemplate(tmp)
     }
-  }, [resumeData, data]);
+  }, [resumeData, data, t]);
 
   return template
 }

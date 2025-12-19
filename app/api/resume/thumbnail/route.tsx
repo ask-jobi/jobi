@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient()
-    const { data: resumeData, error } = await supabase
+    const { data: resumeData } = await supabase
       .from('resumes')
       .select('resume_json')
       .eq('id', resumeId)

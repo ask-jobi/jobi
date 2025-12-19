@@ -5,9 +5,7 @@ import { Upload, FileText, Sparkles, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import ResumeUpload from '@/components/client-components/resume-upload'
-import { useAuth } from '@/lib/hooks/use-auth'
 
 interface Resume {
   id: string
@@ -53,10 +51,8 @@ const mockResumes: Resume[] = [
 ]
 
 export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
-  const { user } = useAuth()
   const [selectedResume, setSelectedResume] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
   const [step, setStep] = useState<'select' | 'upload'>('select')
 
   useEffect(() => {

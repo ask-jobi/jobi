@@ -7,9 +7,6 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   ArrowRight,
-  Upload,
-  Target,
-  CheckCircle,
   Mail,
   Files,
   ShieldX,
@@ -95,6 +92,7 @@ export default function LandingPage() {
       cardObservers.forEach((observer) => observer?.disconnect());
       featureObservers.forEach((observer) => observer?.disconnect());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

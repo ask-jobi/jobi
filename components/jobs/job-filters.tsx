@@ -4,15 +4,8 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useTranslations } from 'next-intl'
 
-interface JobFiltersProps {
-  filters: any
-  setFilters: (filters: any) => void
-}
-
-export function JobFilters({ filters, setFilters }: JobFiltersProps) {
-  const t = useTranslations()
+export function JobFilters() {
   const [activeFilters, setActiveFilters] = useState<string[]>([])
 
   const filterOptions = [

@@ -18,7 +18,6 @@ export function StaticCard({
   defaultCollapsed = false,
   className,
   onCollapseChange,
-  id,
 }: StaticCardProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 

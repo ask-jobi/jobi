@@ -64,7 +64,8 @@ function DiffMdPlugin() {
       unregisterApplyDiffCommand()
       unregisterRejectDiffCommand()
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
 
   return (
     <></>

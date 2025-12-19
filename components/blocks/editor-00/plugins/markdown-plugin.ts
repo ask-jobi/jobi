@@ -19,7 +19,7 @@ import {DiffStates, DiffTextNode} from "@/components/blocks/editor-00/nodes";
 
 export const DIFF_TEXT: TextMatchTransformer = {
   dependencies: [DiffTextNode],
-  export: (node, exportChildren) => {
+  export: (node) => {
     if (!(node instanceof DiffTextNode)) return null;
     if (node.getDiffState() === "added") {
       return `[+${node.getTextContent()}+]`;

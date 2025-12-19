@@ -147,7 +147,6 @@ describe('GET /api/resume/full-suggestion', () => {
 
       const request = createMockRequest('job-app-123');
       const response = await GET(request);
-      const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(

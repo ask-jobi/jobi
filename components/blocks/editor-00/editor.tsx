@@ -41,7 +41,7 @@ export function Editor({
 
           <OnChangePlugin
             ignoreSelectionChange={true}
-            onChange={(editorState, editor) => {
+            onChange={(editorState) => {
               editorState.read(() => {
                 const md = $exportMarkdown()
                 onChange?.(md)

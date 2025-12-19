@@ -7,7 +7,6 @@ import * as React from "react";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import {useEffect, useState} from "react";
-import {useResume} from "@/lib/store/resume";
 
 type NavigationLink = {
   href: string,
@@ -20,11 +19,11 @@ const defaultNavigationLinks: NavigationLink[] = [
   { href: 'jd', label: 'Job Description', active: false }
 ];
 
-export default ({
-                  children,
-                }: {
+function ApplicationTemplate({
+  children,
+}: {
   children: React.ReactNode;
-}) => {
+}) {
   const router = useRouter()
   const segment = useSelectedLayoutSegment();
   const [navigationLinks, setNavigationLinks] = useState(defaultNavigationLinks)
@@ -84,3 +83,5 @@ export default ({
     </div>
   )
 }
+
+export default ApplicationTemplate;

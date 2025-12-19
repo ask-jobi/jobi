@@ -1,5 +1,4 @@
 // Evaluation result interface
-import {ResumeData} from "@/types/resume";
 
 // Evaluation options
 export interface EvaluationOptions {

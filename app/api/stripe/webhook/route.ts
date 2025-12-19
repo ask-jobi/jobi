@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
       // 4. 计算有效期
       const startAt = new Date()
-      let endAt = new Date()
+      const endAt = new Date()
       if (plan === 'LITE') {
           endAt.setDate(startAt.getDate() + 14)
       } else if (plan === 'PRO') {

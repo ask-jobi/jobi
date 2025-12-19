@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import { useTranslations } from "next-intl";
-import {useState} from "react";
 
 interface MonthRangePickerFormFieldProps {
   startName: string; // employment.blocks.0.start

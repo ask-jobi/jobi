@@ -329,14 +329,7 @@ const FileUploadRoot = React.forwardRef<HTMLDivElement, FileUploadRootProps>(
       value,
       defaultValue,
       onValueChange,
-      onAccept,
-      onFileAccept,
-      onFileReject,
-      onFileValidate,
-      onUpload,
       accept,
-      maxFiles,
-      maxSize,
       dir: dirProp,
       label,
       name,
@@ -517,6 +510,7 @@ const FileUploadRoot = React.forwardRef<HTMLDivElement, FileUploadRootProps>(
           }
         }
       },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [store, isControlled, propsRef],
     );
 
@@ -564,7 +558,7 @@ const FileUploadRoot = React.forwardRef<HTMLDivElement, FileUploadRootProps>(
           }
         }
       },
-      [store, propsRef.current.onUpload],
+      [store, propsRef],
     );
 
     const onInputChange = React.useCallback(
@@ -663,7 +657,7 @@ const FileUploadDropzone = React.forwardRef<
       event.preventDefault();
       store.dispatch({ variant: "SET_DRAG_OVER", dragOver: true });
     },
-    [store, propsRef.current.onDragOver],
+    [store, propsRef],
   );
 
   const onDragEnter = React.useCallback(
@@ -675,7 +669,7 @@ const FileUploadDropzone = React.forwardRef<
       event.preventDefault();
       store.dispatch({ variant: "SET_DRAG_OVER", dragOver: true });
     },
-    [store, propsRef.current.onDragEnter],
+    [store, propsRef],
   );
 
   const onDragLeave = React.useCallback(
@@ -696,7 +690,7 @@ const FileUploadDropzone = React.forwardRef<
       event.preventDefault();
       store.dispatch({ variant: "SET_DRAG_OVER", dragOver: false });
     },
-    [store, propsRef.current.onDragLeave],
+    [store, propsRef],
   );
 
   const onDrop = React.useCallback(
@@ -720,7 +714,7 @@ const FileUploadDropzone = React.forwardRef<
       inputElement.files = dataTransfer.files;
       inputElement.dispatchEvent(new Event("change", { bubbles: true }));
     },
-    [store, context.inputRef, propsRef.current.onDrop],
+    [store, context.inputRef, propsRef],
   );
 
   const onPaste = React.useCallback(
@@ -774,7 +768,7 @@ const FileUploadDropzone = React.forwardRef<
         context.inputRef.current?.click();
       }
     },
-    [context.inputRef, propsRef.current.onKeyDown],
+    [context.inputRef, propsRef],
   );
 
   const DropzonePrimitive = asChild ? Slot : "div";
@@ -831,7 +825,7 @@ const FileUploadTrigger = React.forwardRef<
 
       context.inputRef.current?.click();
     },
-    [context.inputRef, propsRef.current],
+    [context.inputRef, propsRef],
   );
 
   const TriggerPrimitive = asChild ? Slot : "button";
@@ -868,9 +862,9 @@ const FileUploadList = React.forwardRef<HTMLDivElement, FileUploadListProps>(
     } = props;
 
     const context = useFileUploadContext(LIST_NAME);
+    const filesSize = useStore((state) => state.files.size);
 
-    const shouldRender =
-      forceMount || useStore((state) => state.files.size > 0);
+    const shouldRender = forceMount || filesSize > 0;
 
     if (!shouldRender) return null;
 
@@ -1349,7 +1343,7 @@ const FileUploadItemDelete = React.forwardRef<
         file: itemContext.fileState.file,
       });
     },
-    [store, itemContext.fileState, propsRef.current?.onClick],
+    [store, itemContext.fileState, propsRef],
   );
 
   if (!itemContext.fileState) return null;
@@ -1399,7 +1393,8 @@ const FileUploadClear = React.forwardRef<
     [store, propsRef],
   );
 
-  const shouldRender = forceMount || useStore((state) => state.files.size > 0);
+  const filesSize = useStore((state) => state.files.size);
+  const shouldRender = forceMount || filesSize > 0;
 
   if (!shouldRender) return null;
 

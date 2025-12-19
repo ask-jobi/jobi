@@ -15,8 +15,8 @@ interface JobSearchHeaderProps {
   setContractType: (type: string) => void
   location: string
   setLocation: (location: string) => void
-  filters: any
-  setFilters: (filters: any) => void
+  filters?: any
+  setFilters?: (filters: any) => void
 }
 
 export function JobSearchHeader({
@@ -25,9 +25,7 @@ export function JobSearchHeader({
   contractType,
   setContractType,
   location,
-  setLocation,
-  filters,
-  setFilters
+  setLocation
 }: JobSearchHeaderProps) {
   const [activeFilters] = useState(1)
   const [isMatchMeModalOpen, setIsMatchMeModalOpen] = useState(false)

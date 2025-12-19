@@ -44,7 +44,7 @@ function SuggestionPatch({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setValue, undoPatch]);
+  }, [setValue, undoPatch, gotoStep, insertStep]);
 
   const handleApplyPatch = () => {
     const formData = getValues();

@@ -4,11 +4,11 @@ import {SidebarTrigger} from "@/components/ui/sidebar";
 import {Separator} from "@radix-ui/react-separator";
 import { usePathname } from "next/navigation";
 
-export default ({
-                  children,
-                }: {
+function MainTemplate({
+  children,
+}: {
   children: React.ReactNode;
-}) => {
+}) {
   const pathname = usePathname();
   
   const getPageTitle = () => {
@@ -40,3 +40,5 @@ export default ({
     </div>
   )
 }
+
+export default MainTemplate;

@@ -191,9 +191,6 @@ describe('POST /api/resume/upload-and-analyze', () => {
       const request = createMockRequest(file, mockJobInfo);
       const response = await POST(request);
 
-      if (!response.body) throw new Error('No response body');
-      const results = await readStreamAndParseDataLines(response.body);
-
       expect(response.status).toBe(200);
       expect(mockCreateResumeRecord).toHaveBeenCalledWith(
         mockJobInfo,

@@ -68,10 +68,6 @@ export function CompactPlanDisplay() {
     }
   }
 
-  const getUsagePercentage = (used: number, total: number) => {
-    if (total === 0) return 0
-    return Math.round((used / total) * 100)
-  }
 
   // 使用与侧边栏按钮相同的样式类
   const sidebarButtonStyle = cn(
