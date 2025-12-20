@@ -12,6 +12,7 @@ import type { AISuggestion, ResumeData } from '@/types/resume'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { useSetAtom } from 'jotai'
+import { trackClickAiFullSuggestion, trackExportResume } from '@/lib/user-tracking/user-tracking'
 
 
 export function FloatingButtonGroup() {
@@ -31,6 +32,7 @@ export function FloatingButtonGroup() {
   }
 
   const handleExport = () => {
+    trackExportResume()
     const currentResumeData = getValues()
     sessionStorage.setItem('printResumeData', JSON.stringify(currentResumeData))
     router.push('/resume-print')
@@ -38,6 +40,7 @@ export function FloatingButtonGroup() {
 
   const handleFullResumeOptimizing = async () => {
     try {
+      trackClickAiFullSuggestion()
       setGlobalLoading(true)
       const result = await fetch(`/api/resume/full-suggestion?jobApplicationId=${application.id}`)
       if (!result.ok) {

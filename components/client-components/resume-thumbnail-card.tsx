@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { trackViewResume } from "@/lib/user-tracking/user-tracking";
 
 interface ResumeThumbnailCardProps {
   thumbnailUrl: string | null;
@@ -26,8 +27,15 @@ export default function ResumeThumbnailCard({
     setHasError(true);
   };
 
+  const handleCardClick = () => {
+    // 跟踪用户点击简历卡片的事件
+    trackViewResume({
+      applicationId,
+    });
+  };
+
   return (
-    <Link href={`/application/${applicationId}`}>
+    <Link href={`/application/${applicationId}`} onClick={handleCardClick}>
       <div className="aspect-[1/1.414] group hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-105 bg-white border-gray-200">
         <div className="h-full relative bg-white border border-gray-300 rounded-sm shadow-sm overflow-hidden">
           {/* 加载状态 */}
