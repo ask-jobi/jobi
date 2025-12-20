@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Preview Env: [jobi-beta.vercel.app](jobi-beta.vercel.app)
+
+Production Env: [www.hellojobi.com](www.hellojobi.com)
+
+
 ## Getting Started
 
 First, run the development server:
