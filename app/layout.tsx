@@ -4,7 +4,7 @@ import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
 import {NextIntlClientProvider} from "next-intl";
 import {getUserLocale} from "@/lib/i18n/services";
-import Script from 'next/script'
+import UmamiScript from "@/components/user-tracking/UmamiScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,11 +44,7 @@ export default async function RootLayout({
           {children}
           <Toaster />
         </NextIntlClientProvider>
-        <Script
-          src="https://cloud.umami.is/script.js"
-          data-website-id="dd508046-2ce0-4c69-bcd8-f2ee1ee50eba"
-          strategy="afterInteractive"
-        />
+        <UmamiScript />
       </body>
     </html>
   );
