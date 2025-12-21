@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from 'react';
 export default function LandingPage() {
   const t = useTranslations();
   const { user } = useAuth();
-  
+
   // 滚动动画状态 - Problem cards
   const [visibleCards, setVisibleCards] = useState<boolean[]>([false, false, false]);
   const cardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
@@ -111,10 +111,10 @@ export default function LandingPage() {
               <Button size="lg" className="text-lg px-8 relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-md overflow-hidden group border-0">
                 {/* 持续的背景白色光晕 */}
                 <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-60 animate-pulse-slow blur-sm"></span>
-                
+
                 {/* 白色光晕扫过效果 */}
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></span>
-                
+
                 {/* 内容 */}
                 <span className="relative z-10 flex items-center">
                   {t('landingPage.hero.startFreeTrial')}
@@ -145,7 +145,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Problem 1 */}
-            <Card 
+            <Card
               ref={cardRefs[0]}
               className={`relative border border-border/50 shadow-lg transition-all duration-700 ease-out ${
                 visibleCards[0] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
@@ -165,7 +165,7 @@ export default function LandingPage() {
             </Card>
 
             {/* Problem 2 */}
-            <Card 
+            <Card
               ref={cardRefs[1]}
               className={`relative border border-border/50 shadow-lg transition-all duration-700 ease-out ${
                 visibleCards[1] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
@@ -185,7 +185,7 @@ export default function LandingPage() {
             </Card>
 
             {/* Problem 3 */}
-            <Card 
+            <Card
               ref={cardRefs[2]}
               className={`relative border border-border/50 shadow-lg transition-all duration-700 ease-out ${
                 visibleCards[2] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
@@ -229,7 +229,7 @@ export default function LandingPage() {
       <section id="features" className="relative py-24 md:py-32 overflow-hidden">
         {/* 背景装饰 */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent"></div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-semibold mb-4 tracking-tight leading-tight">
@@ -242,7 +242,7 @@ export default function LandingPage() {
 
           <div className="max-w-7xl mx-auto space-y-20">
             {/* Feature 1 */}
-            <div 
+            <div
               ref={featureRefs[0]}
               className={`grid md:grid-cols-2 gap-12 items-center transition-all duration-700 ease-out ${
                 visibleFeatures[0] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
@@ -270,7 +270,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 2 */}
-            <div 
+            <div
               ref={featureRefs[1]}
               className={`grid md:grid-cols-2 gap-12 items-center transition-all duration-700 ease-out ${
                 visibleFeatures[1] ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
@@ -298,7 +298,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 3 */}
-            <div 
+            <div
               ref={featureRefs[2]}
               className={`grid md:grid-cols-2 gap-12 items-center transition-all duration-700 ease-out ${
                 visibleFeatures[2] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
@@ -341,10 +341,10 @@ export default function LandingPage() {
             <Button size="lg" className="text-lg px-8 relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-md overflow-hidden group border-0">
               {/* 持续的背景白色光晕 */}
               <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-60 animate-pulse-slow blur-sm"></span>
-              
+
               {/* 白色光晕扫过效果 */}
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></span>
-              
+
               {/* 内容 */}
               <span className="relative z-10 flex items-center">
                 {t('landingPage.getStarted')}

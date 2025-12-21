@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
-import {NextIntlClientProvider} from "next-intl";
 import {getUserLocale} from "@/lib/i18n/services";
+import I18NProvider from "@/components/client-components/i18n-provider";
+import {NextIntlClientProvider, useTranslations} from "next-intl";
 import UmamiScript from "@/components/user-tracking/UmamiScript";
 
 const geistSans = Geist({
@@ -41,8 +42,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider>
-          {children}
-          <Toaster />
+          <I18NProvider locale={locale}>
+            {children}
+            <Toaster />
+          </I18NProvider>
         </NextIntlClientProvider>
         <UmamiScript />
       </body>

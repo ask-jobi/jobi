@@ -54,7 +54,7 @@ const NewResumeCard = () => {
   });
 
   const router = useRouter();
-  
+
   const resetForm = () => {
     form.reset()
     setProgress(initialProgress)
@@ -87,7 +87,7 @@ const NewResumeCard = () => {
     methods.next();
   };
 
-  
+
 
   const createEmptyResume = async () => {
     try {
