@@ -1,5 +1,4 @@
 import React, {useEffect} from 'react';
-import {useTour} from "@/components/tour";
 import {AISuggestion} from "@/types/resume";
 import {Button} from "@/components/ui/button";
 import {diffWords} from "diff";
@@ -8,6 +7,7 @@ import {ResumeData} from "@/types/resume";
 import {useSetAtom} from "jotai";
 import {appendPatchHistoryAtom, undoPatchAtom} from "@/lib/store/suggestion-patch-history";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {useTour} from "@/components/client-components/tour";
 
 function SuggestionPatch({
   section,

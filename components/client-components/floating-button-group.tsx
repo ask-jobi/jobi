@@ -6,13 +6,13 @@ import { Trophy, Loader2, Download } from 'lucide-react'
 import { openRightPanelAtom, useResume } from '@/lib/store/resume'
 import { useFormContext } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { TourStep, useTour } from '@/components/tour'
 import SuggestionPatch from '@/components/client-components/suggestion-patch'
 import type { AISuggestion, ResumeData } from '@/types/resume'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { useSetAtom } from 'jotai'
 import { trackClickAiFullSuggestion, trackExportResume } from '@/lib/user-tracking/user-tracking'
+import {TourStep, useTour } from './tour'
 
 
 export function FloatingButtonGroup() {

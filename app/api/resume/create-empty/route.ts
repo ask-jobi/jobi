@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createEmptyResumeRecord } from "@/server/resume";
-import { JobInfoFormType } from "@/components/client-components/job-information-form";
+import {JobInfoFormType} from "@/components/forms/job-information-form";
 
 export const dynamic = 'force-dynamic'
 

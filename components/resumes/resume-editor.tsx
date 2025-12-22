@@ -2,8 +2,8 @@
 
 import useResumeTemplate from "@/lib/hooks/use-resume-template";
 import { openRightPanelAtom, useResume } from "@/lib/store/resume";
-import { FloatingButtonGroup } from "./floating-button-group";
 import { useSetAtom } from "jotai";
+import {FloatingButtonGroup} from "@/components/client-components/floating-button-group";
 
 
 export default function ResumeEditor() {

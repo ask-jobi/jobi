@@ -1,6 +1,6 @@
 import {ResumeData, SectionBlock, SortableSectionId} from "@/types/resume";
-import {store} from "@/components/client-components/resume-context";
 import {focusSectionAtom} from "@/lib/store/resume";
+import {store} from "@/components/resumes/resume-context";
 
 export abstract class BaseTemplate {
   data: ResumeData

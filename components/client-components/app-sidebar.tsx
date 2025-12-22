@@ -9,11 +9,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from "./ui/sidebar";
-import { Logo } from "./ui/logo";
+} from "../ui/sidebar";
+import { Logo } from "../ui/logo";
 import { LogoutButton } from "./logout-button";
 import {useTranslations} from "next-intl";
-import { CompactPlanDisplay } from "./client-components/compact-plan-display";
+import { CompactPlanDisplay } from "./compact-plan-display";
 
 const items = [
   {

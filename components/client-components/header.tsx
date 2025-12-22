@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { Logo } from "@/components/ui/logo";
 import { useTranslations } from 'next-intl';
 import { Skeleton } from "@/components/ui/skeleton";
 import { memo } from 'react';
+import { LanguageSwitcher } from "../client-components/language-switcher";
 
 interface HeaderProps {
   showLanguageSwitcher?: boolean;
@@ -17,9 +17,9 @@ interface HeaderProps {
 }
 
 // 使用 memo 来避免不必要的重新渲染
-export const Header = memo(function Header({ 
-  showLanguageSwitcher = true, 
-  showPricingLink = true, 
+export const Header = memo(function Header({
+  showLanguageSwitcher = true,
+  showPricingLink = true,
   showAuthButtons = true,
   className = ""
 }: HeaderProps) {

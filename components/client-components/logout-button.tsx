@@ -2,9 +2,9 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { LogOut } from 'lucide-react'
-import { SidebarMenuButton, SidebarMenuItem } from './ui/sidebar'
 import {useTranslations} from "next-intl";
 import {useRouter} from "next/navigation";
+import {SidebarMenuButton, SidebarMenuItem } from '../ui/sidebar';
 
 export function LogoutButton() {
   const router = useRouter()

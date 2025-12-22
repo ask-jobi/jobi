@@ -9,7 +9,7 @@ import { CheckCircle2, XCircle, AlertCircle, TrendingUp, TrendingDown, Target } 
 import {useTranslations} from "next-intl";
 import {Button} from "@/components/ui/button";
 import {useResume} from "@/lib/store/resume";
-import SkeletonCard from "@/components/client-components/skeletons/skeleton-card";
+import SkeletonCard from '../skeletons/skeleton-card'
 
 interface EvaluationReportProps {
   evaluation: ResumeEvaluationOutput

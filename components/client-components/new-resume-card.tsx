@@ -10,24 +10,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { defineStepper } from "@/components/stepper";
+import { defineStepper } from "@/components/ui/stepper";
 import JobInformationForm, {
   formSchema,
   JobInfoFormType,
-} from "@/components/client-components/job-information-form";
+} from "@/components/forms/job-information-form";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import ResumeUpload from "@/components/client-components/resume-upload";
 import { toast } from "sonner";
 import ResumeAnalyzeProgress, {
   ProgressType,
-} from "@/components/client-components/resume-analyze-progress";
+} from "@/components/resumes/resume-analyze-progress";
 import {fetchEventSource} from "@microsoft/fetch-event-source";
 import {useRouter} from "next/navigation";
 import {FileText} from "lucide-react";
 import {useTranslations} from "next-intl";
 import { trackStartResumeUpload, trackOpenResumeUploadDialog, trackSuccessResumeUpload, trackFailedResumeUpload, trackSelectResumeFile } from "@/lib/user-tracking/user-tracking";
+import ResumeUpload from "@/components/resumes/resume-upload";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information", i18n: "stepJobInfo" },

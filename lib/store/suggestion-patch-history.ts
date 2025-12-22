@@ -1,7 +1,7 @@
 "use client"
 import {atom} from "jotai";
 import {AISuggestion} from "@/types/resume";
-import {TourStep} from "@/components/tour";
+import { TourStep } from "@/components/client-components/tour";
 
 
 type SuggestionPatchHistory = {

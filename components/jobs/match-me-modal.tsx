@@ -5,7 +5,7 @@ import { Upload, FileText, Sparkles, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import ResumeUpload from '@/components/client-components/resume-upload'
+import ResumeUpload from "@/components/resumes/resume-upload";
 
 interface Resume {
   id: string
@@ -33,7 +33,7 @@ const mockResumes: Resume[] = [
     thumbnailUrl: '/api/resume/thumbnail?resume_id=1'
   },
   {
-    id: '2', 
+    id: '2',
     title: 'Product Manager Resume',
     company: 'StartupXYZ',
     position: 'Product Lead',

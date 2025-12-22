@@ -1,9 +1,9 @@
 "use server"
 
 import {createClient} from "@/lib/supabase/server";
-import {JobInfoFormType} from "@/components/client-components/job-information-form";
 import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
+import { JobInfoFormType } from "@/components/forms/job-information-form";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()

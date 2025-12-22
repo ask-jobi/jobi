@@ -11,7 +11,7 @@ import ResumeEditor from "./resume-editor";
 import {useDebouncedCallback} from "@mantine/hooks";
 import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 import {useAtom} from "jotai";
-import {ResumeRightPanel} from "@/components/client-components/resume-right-panel";
+import {ResumeRightPanel} from "@/components/resumes/resume-right-panel";
 
 
 export default function ResumePage() {

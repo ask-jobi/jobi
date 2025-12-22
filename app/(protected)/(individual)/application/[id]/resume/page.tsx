@@ -1,6 +1,6 @@
+import { TourProvider } from "@/components/client-components/tour"
 import "server-only"
-import ResumePage from "@/components/client-components/resume-page";
-import {TourProvider} from "@/components/tour";
+import ResumePage from "@/components/resumes/resume-page";
 
 export default function Page() {
   return (

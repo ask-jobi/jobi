@@ -1,15 +1,15 @@
 import {useAtom} from "jotai/index";
 import {rightPanelViewAtom, useResume} from "@/lib/store/resume";
-import {PersonalInfoForm} from "@/components/client-components/forms/personal-info-form";
-import {EducationForm} from "@/components/client-components/forms/education-form";
-import {EmploymentForm} from "@/components/client-components/forms/employment-form";
-import {SkillsForm} from "@/components/client-components/forms/skills-form";
 import {EvaluationReport} from "@/components/client-components/evaluation-report";
 import {Button} from "@/components/ui/button";
 import {useState} from "react";
 import {Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "../ui/empty";
 import { Spinner } from "../ui/spinner";
 import {useTranslations} from "next-intl";
+import {PersonalInfoForm} from "@/components/forms/personal-info-form";
+import {EducationForm} from "@/components/forms/education-form";
+import {EmploymentForm} from "@/components/forms/employment-form";
+import {SkillsForm} from "@/components/forms/skills-form";
 
 export function ResumeRightPanel() {
   const [rightPanelView] = useAtom(rightPanelViewAtom)
