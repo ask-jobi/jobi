@@ -4,7 +4,7 @@ import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
 import {getUserLocale} from "@/lib/i18n/services";
 import I18NProvider from "@/components/client-components/i18n-provider";
-import {NextIntlClientProvider, useTranslations} from "next-intl";
+import {NextIntlClientProvider} from "next-intl";
 import UmamiScript from "@/components/user-tracking/UmamiScript";
 
 const geistSans = Geist({
