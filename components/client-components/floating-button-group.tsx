@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Trophy, Loader2, Download } from 'lucide-react'
 import { openRightPanelAtom, useResume } from '@/lib/store/resume'
 import { useFormContext } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
 import SuggestionPatch from '@/components/client-components/suggestion-patch'
 import type { AISuggestion, ResumeData } from '@/types/resume'
 import { toast } from 'sonner'
@@ -19,7 +18,6 @@ export function FloatingButtonGroup() {
   const { application, isLoading, setLoading: setGlobalLoading, resumeEvaluation } = useResume()
   const openRightPanel = useSetAtom(openRightPanelAtom);
   const { getValues, setValue } = useFormContext<ResumeData>()
-  const router = useRouter()
   const { setSteps, startTour } = useTour()
 
   const score = resumeEvaluation?.matchScore
@@ -31,11 +29,9 @@ export function FloatingButtonGroup() {
     return 'bg-green-500'
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
     trackExportResume()
-    const currentResumeData = getValues()
-    sessionStorage.setItem('printResumeData', JSON.stringify(currentResumeData))
-    router.push('/resume-print')
+    window.location.href = `/api/resume/print?id=${application.resume.id}`
   }
 
   const handleFullResumeOptimizing = async () => {
@@ -61,6 +57,7 @@ export function FloatingButtonGroup() {
     }
   }
 
+  // todo 按钮title需要国际化
   return (
     <div className="flex flex-col gap-3 z-50">
       <Button

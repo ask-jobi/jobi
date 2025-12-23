@@ -17,7 +17,6 @@ export abstract class BaseTemplate {
   abstract renderSkills(): React.ReactNode;
 
   protected constructor(data: ResumeData, isInteractive?: boolean) {
-    console.log(data)
     this.isInteractive = isInteractive ?? true
     this.data = data
   }

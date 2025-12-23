@@ -69,6 +69,32 @@ export async function getJobApplication(jobApplicationId: string) {
   return jobApplications[0]
 }
 
+export async function getResumeData(id: string) {
+  const supabase = await createClient()
+
+  const {data: resume, error} = await supabase
+    .from("resumes")
+    .select(`
+      id,
+      resume_json
+    `)
+    .eq('id', id)
+
+  if (error) {
+    throw new Error(`Failed to fetch resume: ${error.message}`)
+  }
+
+  if (!resume || resume.length === 0) {
+    throw new Error(`No resume found with id: ${id}`)
+  }
+
+  if (resume.length > 1) {
+    throw new Error(`Multiple resume found with id: ${id}`)
+  }
+
+  return resume[0].resume_json
+}
+
 
 const BUCKET_NAME = 'upload-resumes'
 
