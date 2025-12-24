@@ -108,7 +108,7 @@ export abstract class BaseTemplate {
     const {data} = this
     const sections = getOrderedSections(data);
     return (
-      <article data-resume-ready="true" className="bg-white p-8 pdf">
+      <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
         {this.renderPersonalInfo()}
         {sections.map(({id}) => {
           switch (id) {
