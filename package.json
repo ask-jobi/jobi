@@ -103,6 +103,7 @@
     "jest-environment-node": "^30.0.5",
     "jest-mock-extended": "^4.0.0",
     "next-test-api-route-handler": "^5.0.0",
+    "puppeteer": "^24.34.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",

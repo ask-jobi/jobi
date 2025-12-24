@@ -6,6 +6,22 @@ import {NextRequest} from "next/server";
 
 export const runtime = "nodejs";
 
+const isVercel = !!process.env.VERCEL;
+export async function launchBrowser() {
+  if (!isVercel) {
+    const puppeteerLocal = await import("puppeteer");
+    return puppeteerLocal.launch({
+      headless: true,
+    });
+  }
+
+  return puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: true
+  });
+}
+
 export async function GET(request: NextRequest) {
   const {searchParams} = new URL(request.url)
   const resumeId = searchParams.get('id')
@@ -18,13 +34,7 @@ export async function GET(request: NextRequest) {
   const targetUrl = `${baseUrl}/resume-print/${resumeId}`;
 
   try {
-    console.log("[print] launching browser");
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true
-    });
-    console.log("[print] browser launched");
+    const browser = await launchBrowser()
 
     const domain = (await headers()).get("host")?.split(":")[0];
     const cookieStore = await cookies();
@@ -37,10 +47,12 @@ export async function GET(request: NextRequest) {
     })))
 
     const page = await browser.newPage();
-    console.log("[print] page created");
-    await page.goto(targetUrl);
+    await page.goto(targetUrl, { waitUntil: "networkidle0" });
 
     await page.evaluateHandle("document.fonts.ready");
+    await page.waitForSelector('[data-resume-ready]', {
+      timeout: 10_000,
+    })
 
     const pdf = await page.pdf({
       format: "A4",
@@ -52,10 +64,8 @@ export async function GET(request: NextRequest) {
         right: "15mm",
       },
     });
-    console.log("[print] pdf generated");
 
     await browser.close();
-    console.log("[print] pdf generated");
     // TODO 简历的打印的文件名需要调整？
     return new Response(Buffer.from(pdf), {
       headers: {
@@ -64,7 +74,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[print] failed", err);
-    return new Response(`print resume failed: ${err}`, { status: 500 });
+    console.error("print resume failed: ", err);
+    return new Response(null, { status: 204 })
   }
 }
