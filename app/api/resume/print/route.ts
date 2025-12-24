@@ -7,7 +7,7 @@ import {NextRequest} from "next/server";
 export const runtime = "nodejs";
 
 const isVercel = !!process.env.VERCEL;
-export async function launchBrowser() {
+async function launchBrowser() {
   if (!isVercel) {
     const puppeteerLocal = await import("puppeteer");
     return puppeteerLocal.launch({
