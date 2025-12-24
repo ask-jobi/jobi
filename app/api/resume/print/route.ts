@@ -66,15 +66,13 @@ export async function GET(request: NextRequest) {
     });
 
     await browser.close();
-    // TODO 简历的打印的文件名需要调整？
     return new Response(Buffer.from(pdf), {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="resume.pdf"'
+        "Content-Type": "application/pdf"
       },
     });
   } catch (err) {
-    console.error("print resume failed: ", err);
-    return new Response(null, { status: 204 })
+    console.error("export resume failed: ", err);
+    return new Response("export resume failed", { status: 500 });
   }
 }

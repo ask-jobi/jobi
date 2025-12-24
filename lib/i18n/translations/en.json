@@ -6,6 +6,8 @@
   "dashboard": "Dashboard",
   "jobs": "Job Search",
 
+  "exportResumeError": "export resume failed.",
+
   "landingPage": {
     "hero": {
       "slogan": "Make every resume hit the target.",

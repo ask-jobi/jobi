@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, {useState} from 'react'
 import { Button } from '@/components/ui/button'
 import { Trophy, Loader2, Download } from 'lucide-react'
 import { openRightPanelAtom, useResume } from '@/lib/store/resume'
@@ -12,13 +12,16 @@ import Image from 'next/image'
 import { useSetAtom } from 'jotai'
 import { trackClickAiFullSuggestion, trackExportResume } from '@/lib/user-tracking/user-tracking'
 import {TourStep, useTour } from './tour'
+import {useTranslations} from "next-intl";
 
 
 export function FloatingButtonGroup() {
+  const t = useTranslations()
   const { application, isLoading, setLoading: setGlobalLoading, resumeEvaluation } = useResume()
   const openRightPanel = useSetAtom(openRightPanelAtom);
   const { getValues, setValue } = useFormContext<ResumeData>()
   const { setSteps, startTour } = useTour()
+  const [exportLoading, setExportLoading] = useState<boolean>(false)
 
   const score = resumeEvaluation?.matchScore
 
@@ -31,7 +34,27 @@ export function FloatingButtonGroup() {
 
   const handleExport = async () => {
     trackExportResume()
-    window.location.href = `/api/resume/print?id=${application.resume.id}`
+    try {
+      setExportLoading(true)
+      const response = await fetch(`/api/resume/print?id=${application.resume.id}`);
+      if (!response.ok) {
+        toast.error(t("exportResumeError"))
+        return
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "resume.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      toast.error(`${t("exportResumeError")}: ${e}`)
+    } finally {
+      setExportLoading(false)
+    }
   }
 
   const handleFullResumeOptimizing = async () => {
@@ -79,10 +102,16 @@ export function FloatingButtonGroup() {
         size="icon"
         className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all"
         onClick={handleExport}
-        disabled={isLoading}
+        disabled={isLoading || exportLoading}
         title="导出简历"
       >
-        <Download className="w-5 h-5" />
+        {
+          exportLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Download className="w-5 h-5" />
+          )
+        }
       </Button>
 
       {/* AI Optimize 按钮 */}
@@ -94,11 +123,13 @@ export function FloatingButtonGroup() {
         disabled={isLoading}
         title="AI 优化"
       >
-        {isLoading ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <Image src="/gemini-color.svg" alt="Gemini" width={20} height={20} />
-        )}
+        {
+          isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Image src="/gemini-color.svg" alt="Gemini" width={20} height={20} />
+          )
+        }
       </Button>
     </div>
   )
