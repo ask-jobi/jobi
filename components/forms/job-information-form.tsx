@@ -63,7 +63,7 @@ function JobInformationForm({ form }: JobInformationFormProps) {
                 {t('desc')}
               </FormLabel>
               <FormControl>
-                <Textarea placeholder={t('descPlaceholder')} {...field} />
+                <Textarea className="max-h-48" placeholder={t('descPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
