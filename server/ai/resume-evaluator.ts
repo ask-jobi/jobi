@@ -1,10 +1,10 @@
 import "server-only"
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { z } from "zod";
-import {ResumeData} from '@/types/resume';
+import { ResumeData } from '@/types/resume';
 import type { ResumeEvaluationOutput } from "@/types/evaluation";
-import {resumeFormat} from "@/lib/utils";
+import { resumeFormat } from "@/lib/utils";
 import { resumeEvaluationPrompt } from "@/server/ai/prompts/resume-evaluation.prompt";
 
 // New unified evaluation schema for structured output
@@ -55,9 +55,11 @@ export const evaluateResume = async (
       formatInstructions,
     });
 
-    const { object: result } = await generateObject({
+    const { output: result } = await generateText({
       model: google("gemini-2.0-flash-lite"),
-      schema: evaluationSchema,
+      output: Output.object({
+        schema: evaluationSchema
+      }),
       prompt,
       temperature: 0.3,
       maxRetries: 0,

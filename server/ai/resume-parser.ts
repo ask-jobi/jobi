@@ -1,10 +1,10 @@
 import'server-only';
 import { z } from "zod";
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { ResumeData } from "@/types/resume";
 import { resumeParsePrompt } from "./prompts/resume-parse.prompt";
-import {Locale} from "@/lib/i18n/config";
+import { Locale } from "@/lib/i18n/config";
 
 const resumeSchema = z.object({
   // required
@@ -130,9 +130,11 @@ export const parseResume = async (resumeText: string): Promise<[ResumeData, Loca
     formatInstructions,
   });
 
-  const { object: result } = await generateObject({
+  const { output: result } = await generateText({
     model: google("gemini-2.0-flash-lite"),
-    schema: resumeSchema,
+    output: Output.object({
+      schema: resumeSchema
+    }),
     prompt,
     temperature: 0,
     maxRetries: 0,

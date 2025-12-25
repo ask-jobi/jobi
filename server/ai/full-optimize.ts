@@ -1,9 +1,9 @@
-import {AISuggestionQueue, ResumeData, ResumeJobDescription} from "@/types/resume";
+import { AISuggestionQueue, ResumeData, ResumeJobDescription } from "@/types/resume";
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { resumeFullOptimizePrompt } from "./prompts/resume-full-optimize.prompt";
 import z from "zod";
-import {ResumeEvaluationOutput} from "@/types/evaluation";
+import { ResumeEvaluationOutput } from "@/types/evaluation";
 
 const fullOptimizeSuggestionSchema = z.object({
   suggestions: z.array(z.object({
@@ -52,9 +52,9 @@ export async function generateAISuggestionQueue(
   });
 
   try {
-    const { object: result } = await generateObject({
+    const { output: result } = await generateText({
       model: google("gemini-2.0-flash-lite"),
-      schema: fullOptimizeSuggestionSchema,
+      output: Output.object({schema: fullOptimizeSuggestionSchema}),
       prompt,
       temperature: 0.3,
       maxRetries: 3,
