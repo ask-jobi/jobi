@@ -10,7 +10,9 @@ export default async function Dashboard() {
       <div className="grid xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         <NewResumeCard/>
         {
-          data?.map(it => {
+          data
+          ?.reverse()
+          .map(it => {
             // 生成缩略图 URL
             const thumbnailUrl = it.resumes?.id
               ? `/api/resume/thumbnail?resume_id=${encodeURIComponent(it.resumes.id)}`
