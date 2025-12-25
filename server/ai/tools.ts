@@ -1,6 +1,13 @@
 import "server-only"
 import { PDFParse } from "pdf-parse";
-import { Document } from "@langchain/core/documents";
+
+export interface Document {
+  pageContent: string;
+  metadata: {
+    totalPages: number;
+    currentPage?: number;
+  };
+}
 
 type LoadPdfOptions = {
   splitPages?: boolean;
@@ -20,13 +27,13 @@ export async function loadPdfToDoc(
   await pdf.destroy()
 
   const docs = data.pages.map(it => {
-    return new Document({
+    return {
       pageContent: it.text,
       metadata: {
         totalPages: data.total,
         currentPage: it.num
       },
-    })
+    } as Document
   })
 
   if (options.splitPages) {
@@ -34,11 +41,11 @@ export async function loadPdfToDoc(
   }
 
   return [
-    new Document({
+    {
       pageContent: data.text,
       metadata: {
         totalPages: data.total
       },
-    })
+    } as Document
   ]
 }

@@ -1,7 +1,7 @@
 import {AISuggestionQueue, ResumeData, ResumeJobDescription} from "@/types/resume";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { FULL_RESUME_OPTIMIZE_PROMPT } from "./prompts";
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import { resumeFullOptimizePrompt } from "./prompts/resume-full-optimize.prompt";
 import z from "zod";
 import {ResumeEvaluationOutput} from "@/lib/evaluation";
 
@@ -14,11 +14,6 @@ const fullOptimizeSuggestionSchema = z.object({
     optimizedContent: z.string().nullable(),
     highlight: z.array(z.string())
   }))
-});
-
-const promptTemplate = new PromptTemplate({
-  template: FULL_RESUME_OPTIMIZE_PROMPT,
-  inputVariables: ["resume", "job_description", "evaluation_report", "language"],
 });
 
 export async function generateAISuggestionQueue(
@@ -49,23 +44,22 @@ export async function generateAISuggestionQueue(
     }))
   };
 
-  const prompt = await promptTemplate.format({
+  const prompt = resumeFullOptimizePrompt.format({
     resume: resumeFormatted,
-    job_description: jobDescription,
-    evaluation_report: evaluationReport,
-    language
+    jobDescription: jobDescription,
+    evaluationReport: evaluationReport,
+    language,
   });
-  console.log(prompt)
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash-lite",
-    temperature: 0.3,
-    json: true,
-    maxRetries: 3
-  });
-  model.withStructuredOutput(fullOptimizeSuggestionSchema);
-  const response = await model.invoke(prompt);
+
   try {
-    const result  = fullOptimizeSuggestionSchema.parse(JSON.parse(response.content.toString()));
+    const { object: result } = await generateObject({
+      model: google("gemini-2.0-flash-lite"),
+      schema: fullOptimizeSuggestionSchema,
+      prompt,
+      temperature: 0.3,
+      maxRetries: 3,
+    });
+
     return result.suggestions.map(suggestion => ({
       section: suggestion.section,
       blockIndex: suggestion.blockIndex,
@@ -77,7 +71,7 @@ export async function generateAISuggestionQueue(
     }));
   } catch (err) {
     console.error("AI 输出解析错误:", err);
-    throw new Error("AI 输出格式异常：" + response.content);
+    throw new Error("AI 输出格式异常：" + (err instanceof Error ? err.message : String(err)));
   }
 }
 

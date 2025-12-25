@@ -3,7 +3,7 @@
  */
 import {POST} from './route';
 import {NextRequest} from 'next/server';
-import {parseResume} from '@/server/langchain/resume-parser';
+import {parseResume} from '@/server/ai/resume-parser';
 import {createResumeRecord, uploadResumeFile} from '@/server/resume';
 import {consumeQuota} from '@/server/quota';
 import path from 'node:path';
@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import {Locale} from "@/lib/i18n/config";
 
 // Mock the dependencies
-jest.mock('@/server/langchain/resume-parser', () => ({
+jest.mock('@/server/ai/resume-parser', () => ({
   parseResume: jest.fn(),
 }));
 

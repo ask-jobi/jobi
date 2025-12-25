@@ -1,12 +1,12 @@
 import { GET } from './route';
-import { generateAISuggestionQueue } from '@/server/langchain/full-optimize';
+import { generateAISuggestionQueue } from '@/server/ai/full-optimize';
 import { getJobApplication } from '@/server/resume';
 import type { ResumeData, AISuggestionQueue } from '@/types/resume';
 import { NextRequest } from 'next/server';
 import {Locale} from "@/lib/i18n/config";
 
 // Mock the dependencies
-jest.mock('@/server/langchain/full-optimize', () => ({
+jest.mock('@/server/ai/full-optimize', () => ({
   generateAISuggestionQueue: jest.fn(),
 }));
 

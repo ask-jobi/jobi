@@ -1,12 +1,11 @@
 "use server"
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
 import { z } from "zod";
 import {ResumeData} from '@/types/resume';
 import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
 import {resumeFormat} from "@/lib/utils";
+import { resumeEvaluationPrompt } from "@/server/ai/prompts/resume-evaluation.prompt";
 
 // New unified evaluation schema for structured output
 const evaluationSchema = z.object({
@@ -38,72 +37,33 @@ const evaluationSchema = z.object({
 
 type EvaluationSchemaType = ResumeEvaluationOutput;
 
-const parser = StructuredOutputParser.fromZodSchema(evaluationSchema)
-
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-2.0-flash-lite",
-  temperature: 0.3,
-  streaming: false,
-  maxRetries: 0,
-  json: true
-});
-
-const buildPrompt = (): string => {
-  return `You are an AI Resume Evaluation System.
-
-Your task is to analyze a candidate's resume and a job description (JD),
-then produce a structured JSON evaluation report that matches the given TypeScript interface.
-
-
-
-=== OUTPUT RULES ===
-
-- Output must be valid JSON, no explanations or extra text.
-- "matchScore" must reflect the overall fit between resume and JD (0–100).
-- Include at least 3–5 evaluation criteria (e.g., "Technical Skills", "Experience Fit", "Communication").
-- Each comment should be concise and factual.
-- Summarize key strengths and weaknesses clearly.
-- recommendation.decision must always be one of: "strong_hire", "hire", "neutral", "no_hire".
-- Include improvementSuggestions when possible.
-- Use "keywords" to reflect which important terms from JD are found or missing in the resume.
-- If unsure, make reasonable inferences from the resume content.
-
-Resume Content:
-{resumeContent}
-
-Job Description:
-{jobDescription}
-
-=== OUTPUT FORMAT ===
-{format_instructions}`;
-}
-
 export const evaluateResume = async (
   resumeData: ResumeData,
   jobDescription?: string
 ): Promise<EvaluationSchemaType> => {
   try {
-    const prompt = buildPrompt();
-
-    const chain = RunnableSequence.from([
-      ChatPromptTemplate.fromTemplate(prompt),
-      model,
-      parser,
-    ]);
-
     // Convert resume data to text format
     const resumeContent = resumeFormat(resumeData);
 
     // Default JD if not provided
     const defaultJD = jobDescription || 'General position requiring relevant experience and skills.';
 
-    const result = await chain.invoke({
+    const formatInstructions = evaluationSchema.shape;
+    const prompt = resumeEvaluationPrompt.format({
       resumeContent,
       jobDescription: defaultJD,
-      format_instructions: parser.getFormatInstructions(),
-    }) as EvaluationSchemaType;
+      formatInstructions,
+    });
 
-    return result;
+    const { object: result } = await generateObject({
+      model: google("gemini-2.0-flash-lite"),
+      schema: evaluationSchema,
+      prompt,
+      temperature: 0.3,
+      maxRetries: 0,
+    });
+
+    return result as EvaluationSchemaType;
   } catch (error) {
     throw new Error(`LLM evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

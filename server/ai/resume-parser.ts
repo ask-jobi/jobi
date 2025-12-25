@@ -1,11 +1,9 @@
 import'server-only';
 import { z } from "zod";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
 import { ResumeData } from "@/types/resume";
-import { RESUME_PARSE_PROMPT } from "./prompts";
+import { resumeParsePrompt } from "./prompts/resume-parse.prompt";
 import {Locale} from "@/lib/i18n/config";
 
 const resumeSchema = z.object({
@@ -124,27 +122,20 @@ const resumeSchema = z.object({
   }),
 });
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-2.0-flash-lite",
-  temperature: 0,
-  streaming: false,
-  maxRetries: 0,
-  json: true,
-})
-
-const parser = StructuredOutputParser.fromZodSchema(resumeSchema)
-
-const chain = RunnableSequence.from([
-  ChatPromptTemplate.fromTemplate(RESUME_PARSE_PROMPT),
-  model,
-  parser,
-])
-
-
 export const parseResume = async (resumeText: string): Promise<[ResumeData, Locale]> => {
-  const result = await chain.invoke({
-    resumeText: resumeText,
-    format_instructions: parser.getFormatInstructions(),
+  const formatInstructions = resumeSchema.shape;
+
+  const prompt = resumeParsePrompt.format({
+    resumeText,
+    formatInstructions,
+  });
+
+  const { object: result } = await generateObject({
+    model: google("gemini-2.0-flash-lite"),
+    schema: resumeSchema,
+    prompt,
+    temperature: 0,
+    maxRetries: 0,
   });
 
   // 验证并转换结果

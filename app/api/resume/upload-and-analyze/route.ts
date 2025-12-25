@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import { createResumeRecord, uploadResumeFile } from "@/server/resume";
-import {parseResume} from "@/server/langchain/resume-parser";
+import {parseResume} from "@/server/ai/resume-parser";
 import {verifyJobApplicationLimit} from "@/server/quota";
 import {
   registerWriter,
@@ -8,7 +8,7 @@ import {
   closeWriter,
 } from "@/server/sse/writer-manager";
 import { evaluateAndSaveResume } from "@/server/evaluation";
-import {loadPdfToDoc} from "@/server/langchain/tools";
+import {loadPdfToDoc} from "@/server/ai/tools";
 import {JobInfoFormType} from "@/components/forms/job-information-form";
 
 export const dynamic = 'force-dynamic'
