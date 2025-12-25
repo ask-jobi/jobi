@@ -6,6 +6,8 @@
   "dashboard": "控制台",
   "jobs": "职位搜索",
 
+  "exportResumeError": "导出简历失败",
+
   "landingPage": {
     "hero": {
       "slogan": "让每一份简历都命中靶心。",

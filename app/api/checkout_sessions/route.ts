@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   try {
     const headersList = await headers()
     const origin = headersList.get('origin')
-    console.log(origin)
     const body = await request.json()
     const { priceId, plan} = body
 
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
     // 检查用户是否已登录（中间件已经处理了会话更新）
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: '请先登录后再进行购买' },
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
         plan: plan,
       },
     });
-    
+
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     return NextResponse.json(

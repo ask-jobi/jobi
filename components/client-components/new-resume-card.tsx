@@ -10,23 +10,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { defineStepper } from "@/components/stepper";
+import { defineStepper } from "@/components/ui/stepper";
 import JobInformationForm, {
   formSchema,
   JobInfoFormType,
-} from "@/components/client-components/job-information-form";
+} from "@/components/forms/job-information-form";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import ResumeUpload from "@/components/client-components/resume-upload";
 import { toast } from "sonner";
 import ResumeAnalyzeProgress, {
   ProgressType,
-} from "@/components/client-components/resume-analyze-progress";
+} from "@/components/resumes/resume-analyze-progress";
 import {fetchEventSource} from "@microsoft/fetch-event-source";
 import {useRouter} from "next/navigation";
 import {FileText} from "lucide-react";
 import {useTranslations} from "next-intl";
+import { trackStartResumeUpload, trackOpenResumeUploadDialog, trackSuccessResumeUpload, trackFailedResumeUpload, trackSelectResumeFile } from "@/lib/user-tracking/user-tracking";
+import ResumeUpload from "@/components/resumes/resume-upload";
 
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information", i18n: "stepJobInfo" },
@@ -54,12 +55,20 @@ const NewResumeCard = () => {
 
   const router = useRouter();
 
+  const resetForm = () => {
+    form.reset()
+    setProgress(initialProgress)
+    setResumeFile(undefined)
+    setIsAnalyzing(false);
+  }
+
   const handleOpenDialog = (open: boolean) => {
     if (!open) {
       resetForm()
     }
     setCardOpen(open);
-  };
+    trackOpenResumeUploadDialog();
+  }
 
   const handleNext = async (methods: any) => {
     if (methods.current.id === "step-1") {
@@ -78,12 +87,7 @@ const NewResumeCard = () => {
     methods.next();
   };
 
-  const resetForm = () => {
-    form.reset()
-    setProgress(initialProgress)
-    setResumeFile(undefined)
-    setIsAnalyzing(false);
-  }
+
 
   const createEmptyResume = async () => {
     try {
@@ -122,6 +126,11 @@ const NewResumeCard = () => {
     setController(newController);
 
     try {
+      // 跟踪开始上传和分析简历的事件
+      trackStartResumeUpload({
+        fileName: resumeFile?.name || 'unknown'
+      });
+
       const formData = new FormData();
       formData.append("file", resumeFile!!);
       formData.append("jobInfo", JSON.stringify(form.getValues()));
@@ -139,6 +148,10 @@ const NewResumeCard = () => {
           setProgress([data.progress, data.message]);
 
           if (data.progress === 100) {
+            // 跟踪简历上传和分析成功的事件
+            trackSuccessResumeUpload({
+              fileName: resumeFile?.name || 'unknown',
+            });
             setTimeout(() => {
               resetForm()
               setCardOpen(false);
@@ -148,6 +161,11 @@ const NewResumeCard = () => {
         },
         onerror(err) {
           setIsAnalyzing(false);
+          // 跟踪简历上传失败的事件
+          trackFailedResumeUpload({
+            fileName: resumeFile?.name || 'unknown',
+            error: err instanceof Error ? err.message : 'unknown error',
+          });
           throw err;
         }
       });
@@ -165,6 +183,12 @@ const NewResumeCard = () => {
 
   const handleSelectFile = (file: File) => {
     setResumeFile(file);
+    // 跟踪用户选择简历文件的事件
+    trackSelectResumeFile({
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+    });
   };
 
   useEffect(() => {

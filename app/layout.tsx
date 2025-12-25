@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
-import {NextIntlClientProvider} from "next-intl";
 import {getUserLocale} from "@/lib/i18n/services";
-import Script from 'next/script'
+import I18NProvider from "@/components/client-components/i18n-provider";
+import {NextIntlClientProvider} from "next-intl";
+import UmamiScript from "@/components/user-tracking/UmamiScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,14 +42,12 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider>
-          {children}
-          <Toaster />
+          <I18NProvider locale={locale}>
+            {children}
+            <Toaster />
+          </I18NProvider>
         </NextIntlClientProvider>
-        <Script
-          src="https://cloud.umami.is/script.js"
-          data-website-id="dd508046-2ce0-4c69-bcd8-f2ee1ee50eba"
-          strategy="afterInteractive"
-        />
+        <UmamiScript />
       </body>
     </html>
   );

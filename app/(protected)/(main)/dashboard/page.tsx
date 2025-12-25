@@ -1,6 +1,6 @@
 import NewResumeCard from "@/components/client-components/new-resume-card";
-import ResumeThumbnailCard from "@/components/client-components/resume-thumbnail-card";
 import {fetchJobApplication} from "@/server/resume";
+import ResumeThumbnailCard from "@/components/resumes/resume-thumbnail-card";
 
 export default async function Dashboard() {
   const data = await fetchJobApplication()

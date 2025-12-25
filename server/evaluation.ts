@@ -1,8 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { evaluateResume } from "@/lib/evaluation/llm-evaluator"
-import type { ResumeEvaluationOutput } from "@/lib/evaluation/types"
+import { evaluateResume } from "@/server/ai/resume-evaluator"
+import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
 
 

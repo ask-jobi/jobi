@@ -1,8 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react';
-import { Header } from './header';
 import { Footer } from './footer';
+import {Header} from "@/components/client-components/header";
 
 interface LandingPageLayoutProps {
   children: ReactNode;
@@ -19,4 +19,4 @@ export function LandingPageLayout({ children, className = "" }: LandingPageLayou
       <Footer />
     </div>
   );
-} 
+}

@@ -1,11 +1,12 @@
 import { GET } from './route';
-import { generateAISuggestionQueue } from '@/server/langchain/full-optimize';
+import { generateAISuggestionQueue } from '@/server/ai/full-optimize';
 import { getJobApplication } from '@/server/resume';
 import type { ResumeData, AISuggestionQueue } from '@/types/resume';
 import { NextRequest } from 'next/server';
+import {Locale} from "@/lib/i18n/config";
 
 // Mock the dependencies
-jest.mock('@/server/langchain/full-optimize', () => ({
+jest.mock('@/server/ai/full-optimize', () => ({
   generateAISuggestionQueue: jest.fn(),
 }));
 
@@ -83,8 +84,9 @@ describe('GET /api/resume/full-suggestion', () => {
     resumes: {
       id: 'resume-123',
       upload_url: 'https://example.com/upload.pdf',
-      language: 'zh',
+      language: 'zh' as Locale,
       resume_json: mockResumeData,
+      evaluation_report: null
     },
     jobs: {
       id: 'job-123',
@@ -138,7 +140,7 @@ describe('GET /api/resume/full-suggestion', () => {
         ...mockJobApplication,
         resumes: {
           ...mockJobApplication.resumes,
-          language: 'en',
+          language: 'en' as Locale,
         },
       };
 
@@ -369,4 +371,4 @@ describe('GET /api/resume/full-suggestion', () => {
       );
     });
   });
-}); 
+});

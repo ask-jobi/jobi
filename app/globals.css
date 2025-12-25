@@ -246,6 +246,17 @@
   }
 }
 
+@font-face {
+  font-family: "SourceHanSansSC";
+  src: url("/fonts/SourceHanSansSC-VF.ttf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+#resume {
+  font-family: "SourceHanSansSC", serif;
+}
+
 @media print {
   [class*="header"],
   .toaster{

@@ -1,9 +1,9 @@
 "use server"
 
 import {createClient} from "@/lib/supabase/server";
-import {JobInfoFormType} from "@/components/client-components/job-information-form";
 import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
+import { JobInfoFormType } from "@/components/forms/job-information-form";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -67,6 +67,32 @@ export async function getJobApplication(jobApplicationId: string) {
     throw new Error(`Multiple job applications found with id: ${jobApplicationId}`)
   }
   return jobApplications[0]
+}
+
+export async function getResumeData(id: string) {
+  const supabase = await createClient()
+
+  const {data: resume, error} = await supabase
+    .from("resumes")
+    .select(`
+      id,
+      resume_json
+    `)
+    .eq('id', id)
+
+  if (error) {
+    throw new Error(`Failed to fetch resume: ${error.message}`)
+  }
+
+  if (!resume || resume.length === 0) {
+    throw new Error(`No resume found with id: ${id}`)
+  }
+
+  if (resume.length > 1) {
+    throw new Error(`Multiple resume found with id: ${id}`)
+  }
+
+  return resume[0].resume_json
 }
 
 

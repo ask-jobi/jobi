@@ -1,6 +1,6 @@
 import {ResumeData, SectionBlock, SortableSectionId} from "@/types/resume";
-import {store} from "@/components/client-components/resume-context";
 import {focusSectionAtom} from "@/lib/store/resume";
+import {store} from "@/components/resumes/resume-context";
 
 export abstract class BaseTemplate {
   data: ResumeData
@@ -17,7 +17,6 @@ export abstract class BaseTemplate {
   abstract renderSkills(): React.ReactNode;
 
   protected constructor(data: ResumeData, isInteractive?: boolean) {
-    console.log(data)
     this.isInteractive = isInteractive ?? true
     this.data = data
   }
@@ -109,7 +108,7 @@ export abstract class BaseTemplate {
     const {data} = this
     const sections = getOrderedSections(data);
     return (
-      <article className="bg-white p-8 pdf">
+      <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
         {this.renderPersonalInfo()}
         {sections.map(({id}) => {
           switch (id) {

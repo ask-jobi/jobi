@@ -4,12 +4,12 @@ import React, {useState} from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import type { ResumeEvaluationOutput } from '@/lib/evaluation/types'
+import type { ResumeEvaluationOutput } from '@/types/evaluation'
 import { CheckCircle2, XCircle, AlertCircle, TrendingUp, TrendingDown, Target } from 'lucide-react'
 import {useTranslations} from "next-intl";
 import {Button} from "@/components/ui/button";
 import {useResume} from "@/lib/store/resume";
-import SkeletonCard from "@/components/client-components/skeletons/skeleton-card";
+import SkeletonCard from '../skeletons/skeleton-card'
 
 interface EvaluationReportProps {
   evaluation: ResumeEvaluationOutput

@@ -1,11 +1,11 @@
 "use client"
-import JobInformationForm, {formSchema, JobInfoFormType} from "@/components/client-components/job-information-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {useResume} from "@/lib/store/resume";
 import { Button } from "@/components/ui/button";
 import {updateResumeJobDescription} from "@/server/resume";
 import {useEffect} from "react";
+import JobInformationForm, {formSchema, JobInfoFormType} from "@/components/forms/job-information-form";
 
 export default function Page() {
   const {jobDescription, setJobDescription} = useResume()

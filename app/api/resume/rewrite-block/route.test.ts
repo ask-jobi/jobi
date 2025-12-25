@@ -1,9 +1,9 @@
 import { POST } from './route';
-import { rewriteBlock } from '@/server/langchain/resume-rewriter';
+import { rewriteBlock } from '@/server/ai/resume-rewriter';
 import type { RewriteBlockRequest } from '@/types/api/requests';
 
 // Mock the rewriteBlock function
-jest.mock('@/server/langchain/resume-rewriter', () => ({
+jest.mock('@/server/ai/resume-rewriter', () => ({
   rewriteBlock: jest.fn(),
 }));
 

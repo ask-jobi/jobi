@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { generateAISuggestionQueue } from "@/server/langchain/full-optimize";
+import { generateAISuggestionQueue } from "@/server/ai/full-optimize";
 import { getJobApplication } from "@/server/resume";
 import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import { consumeQuota } from "@/server/quota";
-import {ResumeEvaluationOutput} from "@/lib/evaluation";
+import {ResumeEvaluationOutput} from "@/types/evaluation";
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

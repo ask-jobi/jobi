@@ -1,8 +1,8 @@
 import React from 'react';
-import {ResumeInitializer, store} from "@/components/client-components/resume-context";
 import {notFound} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {Provider} from "jotai";
+import { ResumeInitializer, store } from '@/components/resumes/resume-context';
 
 async function Layout(props: {
   children: React.ReactNode,

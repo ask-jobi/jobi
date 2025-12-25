@@ -3,14 +3,15 @@
  */
 import {POST} from './route';
 import {NextRequest} from 'next/server';
-import {parseResume} from '@/server/langchain/resume-parser';
+import {parseResume} from '@/server/ai/resume-parser';
 import {createResumeRecord, uploadResumeFile} from '@/server/resume';
 import {consumeQuota} from '@/server/quota';
 import path from 'node:path';
 import * as fs from 'node:fs';
+import {Locale} from "@/lib/i18n/config";
 
 // Mock the dependencies
-jest.mock('@/server/langchain/resume-parser', () => ({
+jest.mock('@/server/ai/resume-parser', () => ({
   parseResume: jest.fn(),
 }));
 
@@ -92,7 +93,9 @@ describe('POST /api/resume/upload-and-analyze', () => {
       user_id: 'user-123',
       job_id: 'job-123',
       upload_url: 'https://example.com/test-resume.pdf',
-      language: 'en',
+      evaluation_report: null,
+      evaluation_report_refresh_flag: false,
+      language: 'en' as Locale,
       resume_json: mockResumeData,
       created_at: '2024-01-01T00:00:00Z',
     },
