@@ -1,10 +1,3 @@
-// Evaluation result interface
-
-// Evaluation options
-export interface EvaluationOptions {
-  jobDescription?: string; // Job description for matching evaluation
-}
-
 /**
  * AI 简历评估报告（仅 output 部分）
  * 适配任意简历与职位描述 (JD)

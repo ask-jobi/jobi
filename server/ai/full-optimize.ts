@@ -3,7 +3,7 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { resumeFullOptimizePrompt } from "./prompts/resume-full-optimize.prompt";
 import z from "zod";
-import {ResumeEvaluationOutput} from "@/lib/evaluation";
+import {ResumeEvaluationOutput} from "@/types/evaluation";
 
 const fullOptimizeSuggestionSchema = z.object({
   suggestions: z.array(z.object({

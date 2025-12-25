@@ -1,5 +1,5 @@
 import { ResumeData } from "./resume"
-import type {ResumeEvaluationOutput} from "@/lib/evaluation";
+import type {ResumeEvaluationOutput} from "@/types/evaluation";
 import {Locale} from "@/lib/i18n/config";
 
 export type Json =

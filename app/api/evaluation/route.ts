@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {evaluateResume} from "@/lib/evaluation/llm-evaluator";
+import {evaluateResume} from "@/server/ai/resume-evaluator";
 
 export async function POST(request: NextRequest) {
   try {

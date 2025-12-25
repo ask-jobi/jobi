@@ -1,6 +1,6 @@
 import {atom, useAtom, useSetAtom} from 'jotai';
 import {ResumeData, JobApplication, ResumeMetadata, ResumeJobDescription} from '@/types/resume';
-import type { ResumeEvaluationOutput } from "@/lib/evaluation/types";
+import type { ResumeEvaluationOutput } from "@/types/evaluation";
 import {toast} from "sonner";
 import {updateResumeEvaluationReport} from "@/server/evaluation";
 

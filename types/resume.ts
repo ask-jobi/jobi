@@ -1,5 +1,5 @@
 import {Locale} from "@/lib/i18n/config";
-import type {ResumeEvaluationOutput} from "@/lib/evaluation";
+import type {ResumeEvaluationOutput} from "@/types/evaluation";
 
 export type ResumeJobDescription = {
   id: string
