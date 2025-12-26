@@ -226,7 +226,6 @@ const NewResumeCard = () => {
                   <Stepper.Step
                     key={step.id}
                     of={step.id}
-                    onClick={() => methods.goTo(step.id)}
                   >
                     <Stepper.Title>{t(`form.${step.i18n}`)}</Stepper.Title>
                   </Stepper.Step>

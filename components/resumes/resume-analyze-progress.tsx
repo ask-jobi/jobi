@@ -37,34 +37,35 @@ function StepItem({ title, status }: { title: string; status: StepStatus }) {
     <div
       className={cn(
         "flex items-center gap-3 rounded-md px-4 py-3 transition-all duration-300 relative overflow-hidden",
-        status === "pending" && "text-muted-foreground bg-muted/30",
-        status === "loading" && "text-primary bg-primary/10 border border-primary/20 shadow-sm animate-shimmer",
-        status === "success" && "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30",
-        status === "error" && "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30"
+        status === "pending" && "text-accent",
+        status === "loading" && "text-primary/75 bg-primary/10 border border-primary/20 animate-shimmer shadow-sm",
+        status === "success" && "text-green-600/75",
+        status === "error" && "text-red-500/75"
       )}
     >
-      {/* 左侧状态图标 */}
-      {status === "loading" && (
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      )}
-      {status === "success" && (
-        <CheckCircle className="h-5 w-5" />
-      )}
-      {status === "error" && (
-        <XCircle className="h-5 w-5" />
-      )}
-      {status === "pending" && (
-        <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-      )}
+      <div className="relative z-10 flex items-center gap-3 w-full">
+        {status === "loading" && (
+          <Loader2 className="h-5 w-5 animate-spin text-primary/75"/>
+        )}
+        {status === "success" && (
+          <CheckCircle className="h-5 w-5"/>
+        )}
+        {status === "error" && (
+          <XCircle className="h-5 w-5"/>
+        )}
+        {status === "pending" && (
+          <div className="h-2 w-2 rounded-full bg-accent"/>
+        )}
 
-      <span className="text-sm font-medium flex-1">
-        {title}
-      </span>
+        <span className="text-sm font-medium flex-1">
+          {title}
+        </span>
+      </div>
     </div>
   );
 }
 
-export default function ResumeAnalyzeProgress({ progress }: ResumeAnalyzeProps) {
+export default function ResumeAnalyzeProgress({progress}: ResumeAnalyzeProps) {
   const t = useTranslations("form.progress");
   const [steps, setSteps] = useState<Step[]>(initialSteps);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +74,7 @@ export default function ResumeAnalyzeProgress({ progress }: ResumeAnalyzeProps) 
   // 根据后端返回的 step 和 status 更新步骤状态
   useEffect(() => {
     setSteps((prevSteps) => {
-      const newSteps = prevSteps.map(s => ({ ...s }));
+      const newSteps = prevSteps.map(s => ({...s}));
 
       // 如果检测到错误，找到当前正在 loading 的步骤并设置为 error
       if (error !== undefined) {
