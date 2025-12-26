@@ -87,6 +87,14 @@
     "stepUpload": "上传简历",
     "stepAnalyze": "分析简历",
 
+    "progress": {
+      "upload": "上传简历文件",
+      "load": "读取简历文件",
+      "parse": "解析你的简历",
+      "prepare": "生成简历数据",
+      "evaluate": "评估简历与岗位的匹配度"
+    },
+
     "job": {
       "name": "岗位名称",
       "namePlaceholder": "岗位名称",

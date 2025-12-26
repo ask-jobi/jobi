@@ -35,7 +35,10 @@ const { Stepper } = defineStepper(
   { id: "step-3", title: "Analyze Resume", i18n: "stepAnalyze" }
 );
 
-const initialProgress: ProgressType = [0, "Ready to analyze"]
+const initialProgress: ProgressType = {
+  step: "upload",
+  status: "pending"
+}
 
 const NewResumeCard = () => {
   const [cardOpen, setCardOpen] = useState<boolean>(false);
@@ -145,9 +148,9 @@ const NewResumeCard = () => {
             toast.error(data.error);
             setIsAnalyzing(false);
           }
-          setProgress([data.progress, data.message]);
+          setProgress(data);
 
-          if (data.progress === 100) {
+          if (data.step === 'evaluate' && data.status === 'success') {
             // 跟踪简历上传和分析成功的事件
             trackSuccessResumeUpload({
               fileName: resumeFile?.name || 'unknown',

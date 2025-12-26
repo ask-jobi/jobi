@@ -84,8 +84,15 @@
 
   "form": {
     "stepJobInfo": "Job Information",
-    "stepUpload": "UploadResume",
+    "stepUpload": "Upload Resume",
     "stepAnalyze": "Analyze Resume",
+    "progress": {
+      "upload": "Upload Resume File",
+      "load": "Read Resume File",
+      "parse": "Parse Your Resume",
+      "prepare": "Generate Resume Data",
+      "evaluate": "Evaluate Resume and Job Match"
+    },
     "job": {
       "name": "Job Name",
       "namePlaceholder": "Job name",

@@ -4,6 +4,7 @@ import {createClient} from "@/lib/supabase/server";
 import {ResumeData, ResumeJobDescription} from "@/types/resume";
 import {Locale} from "@/lib/i18n/config";
 import { JobInfoFormType } from "@/components/forms/job-information-form";
+import {rollbackStorage} from "@/server/rollback";
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -147,6 +148,12 @@ export async function uploadResumeFile(resumeFile: File) {
     throw new Error(`Failed to upload file: ${uploadError.message}`)
   }
 
+  // 注册回滚：删除文件
+  const rollbackCtx = rollbackStorage.getStore()
+  rollbackCtx?.addRollback(async () => {
+    await supabase.storage.from(BUCKET_NAME).remove([fileName])
+  })
+
   const {data: {publicUrl}} = supabase
     .storage
     .from(BUCKET_NAME)
@@ -165,7 +172,7 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
   userId: string
 }, resumeJsonData: ResumeData, language: Locale) {
   const supabase = await createClient()
-  const createdIds: { jobId?: string, resumeId?: string } = {}
+  const rollbackCtx = rollbackStorage.getStore()
 
   try {
     const {data: jobData, error: jobError} = await supabase
@@ -175,7 +182,11 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
       .single()
 
     if (jobError) throw jobError
-    createdIds.jobId = jobData.id
+    
+    const savedJobId = jobData.id
+    rollbackCtx?.addRollback(async () => {
+      await supabase.from('jobs').delete().eq('id', savedJobId)
+    })
 
     const {data: resumeData, error: resumeError} = await supabase
       .from('resumes')
@@ -190,9 +201,13 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
       .single()
 
     if (resumeError) throw resumeError
-    createdIds.resumeId = resumeData.id
+    
+    const savedResumeId = resumeData.id
+    rollbackCtx?.addRollback(async () => {
+      await supabase.from('resumes').delete().eq('id', savedResumeId)
+    })
 
-    const {error: applicationError} = await supabase
+    const {data: applicationData, error: applicationError} = await supabase
       .from('job_applications')
       .insert({
         user_id: uploadResult.userId,
@@ -200,30 +215,22 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
         job_id: jobData.id,
         optimized_resume_url: null
       })
+      .select()
+      .single()
 
     if (applicationError) throw applicationError
+    
+    const savedApplicationId = applicationData.id
+    rollbackCtx?.addRollback(async () => {
+      await supabase.from('job_applications').delete().eq('id', savedApplicationId)
+    })
 
     return {jobData, resumeData}
 
   } catch (error: any) {
-    // 统一处理回滚
-    await rollbackChanges(supabase, createdIds, uploadResult.fileName)
+    // 错误会由外层 rollbackStorage.run() 的回滚逻辑处理
     throw new Error(`Failed to create resume record: ${error.message}`)
   }
-}
-
-async function rollbackChanges(
-  supabase: any,
-  createdIds: { jobId?: string, resumeId?: string },
-  fileName: string
-) {
-  if (createdIds.resumeId) {
-    await supabase.from('resumes').delete().eq('id', createdIds.resumeId)
-  }
-  if (createdIds.jobId) {
-    await supabase.from('jobs').delete().eq('id', createdIds.jobId)
-  }
-  await supabase.storage.from(BUCKET_NAME).remove([fileName])
 }
 
 export async function updateResumeJobDescription(jobDescription: ResumeJobDescription) {
@@ -259,12 +266,11 @@ export async function saveResumeChange(resumeId: string, data: ResumeData) {
 export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
   const supabase = await createClient()
   const user = await supabase.auth.getUser()
+  const rollbackCtx = rollbackStorage.getStore()
 
   if (!user.data.user) {
     throw new Error("User not authenticated")
   }
-
-  const createdIds: { jobId?: string, resumeId?: string, applicationId?: string } = {}
 
   try {
     const {data: jobData, error: jobError} = await supabase
@@ -274,7 +280,11 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
       .single()
 
     if (jobError) throw jobError
-    createdIds.jobId = jobData.id
+    
+    const savedJobId = jobData.id
+    rollbackCtx?.addRollback(async () => {
+      await supabase.from('jobs').delete().eq('id', savedJobId)
+    })
 
     // 创建空的简历数据
     const emptyResumeData: ResumeData = {
@@ -314,7 +324,11 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
       .single()
 
     if (resumeError) throw resumeError
-    createdIds.resumeId = resumeData.id
+    
+    const savedResumeId = resumeData.id
+    rollbackCtx?.addRollback(async () => {
+      await supabase.from('resumes').delete().eq('id', savedResumeId)
+    })
 
     const {data: applicationData, error: applicationError} = await supabase
       .from('job_applications')
@@ -328,7 +342,11 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
       .single()
 
     if (applicationError) throw applicationError
-    createdIds.applicationId = applicationData.id
+    
+    const savedApplicationId = applicationData.id
+      rollbackCtx?.addRollback(async () => {
+        await supabase.from('job_applications').delete().eq('id', savedApplicationId)
+      })
 
     // TODO Evaluate and save (do not block user in empty creation; still await here to persist immediately)
     // await evaluateAndSaveResume(resumeData.id, emptyResumeData, jobData.description)
@@ -340,23 +358,6 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
     }
 
   } catch (error: any) {
-    // 统一处理回滚
-    await rollbackEmptyResumeChanges(supabase, createdIds)
     throw new Error(`Failed to create empty resume record: ${error.message}`)
-  }
-}
-
-async function rollbackEmptyResumeChanges(
-  supabase: any,
-  createdIds: { jobId?: string, resumeId?: string, applicationId?: string }
-) {
-  if (createdIds.applicationId) {
-    await supabase.from('job_applications').delete().eq('id', createdIds.applicationId)
-  }
-  if (createdIds.resumeId) {
-    await supabase.from('resumes').delete().eq('id', createdIds.resumeId)
-  }
-  if (createdIds.jobId) {
-    await supabase.from('jobs').delete().eq('id', createdIds.jobId)
   }
 }

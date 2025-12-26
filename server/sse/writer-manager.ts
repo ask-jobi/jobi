@@ -6,7 +6,7 @@ export function registerWriter(processId: string, writer: WritableStreamDefaultW
   writers[processId] = writer;
 }
 
-export function sendData(processId: string, data: any) {
+export async function sendData(processId: string, data: any) {
   const encoder = new TextEncoder();
   const writer = writers[processId];
 
@@ -14,7 +14,9 @@ export function sendData(processId: string, data: any) {
 
   const formattedData = `data: ${JSON.stringify(data)}\n\n`;
   try {
-    writer.write(encoder.encode(formattedData));
+    // 等待写入完成，确保数据立即发送
+    await writer.ready;
+    await writer.write(encoder.encode(formattedData));
   } catch (err) {
     console.error("Failed to write SSE", err);
   }
