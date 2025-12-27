@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import {updateResumeJobDescription} from "@/server/resume";
 import {useEffect} from "react";
 import JobInformationForm, {formSchema, JobInfoFormType} from "@/components/forms/job-information-form";
+import {useTranslations} from "next-intl";
 
 export default function Page() {
+  const t = useTranslations()
   const {jobDescription, setJobDescription} = useResume()
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
@@ -38,7 +40,7 @@ export default function Page() {
       <div className="flex flex-col gap-4 mt-4 p-4">
         <JobInformationForm form={form}/>
         <div className="flex flex-row-reverse">
-          <Button onClick={handleSaveJd}>Save</Button>
+          <Button onClick={handleSaveJd}>{t("button.save")}</Button>
         </div>
       </div>
     </main>

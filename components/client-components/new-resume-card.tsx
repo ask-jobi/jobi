@@ -241,7 +241,7 @@ const NewResumeCard = () => {
                     />
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground">
-                        Or
+                        {t("modal.or")}
                       </div>
                       <Button
                         onClick={handleCreateEmpty}
@@ -250,7 +250,7 @@ const NewResumeCard = () => {
                         className="text-primary hover:text-primary/80"
                       >
                         <FileText className="size-4 mr-1"/>
-                        Create Empty Resume
+                        {t("button.createEmptyResume")}
                       </Button>
                     </div>
                   </div>

@@ -29,7 +29,7 @@ export default function ResumeThumbnailCard({
   thumbnailUrl,
   applicationId
 }: ResumeThumbnailCardProps) {
-  const t = useTranslations("modal")
+  const t = useTranslations()
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -151,19 +151,19 @@ export default function ResumeThumbnailCard({
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteJobAppTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("modal.deleteJobAppTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteJobAppDesc")}
+              {t("modal.deleteJobAppDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t("button.cancel")}</AlertDialogCancel>
             <Button
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
             >
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t("delete")}
+              {t("button.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Editor } from "@/components/blocks/editor-00/editor"
 import { Button } from "@/components/ui/button"
+import {useTranslations} from "next-intl";
 
 interface MarkdownModalProps {
   isOpen: boolean
@@ -26,6 +27,7 @@ export function MarkdownModal({
   onChange,
   title
 }: MarkdownModalProps) {
+  const t = useTranslations()
   const [tempContent, setTempContent] = React.useState(markdown);
 
   React.useEffect(() => {
@@ -61,10 +63,10 @@ export function MarkdownModal({
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t("button.cancel")}
           </Button>
           <Button onClick={handleSave}>
-            Save
+            {t("button.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

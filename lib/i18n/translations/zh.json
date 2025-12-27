@@ -5,6 +5,8 @@
   "home": "首页",
   "dashboard": "控制台",
   "jobs": "职位搜索",
+  "resume": "简历",
+  "jobDescription": "岗位信息",
 
   "exportResumeError": "导出简历失败",
 
@@ -240,9 +242,21 @@
     "low": "低"
   },
   "modal": {
-    "delete": "删除",
-    "cancel": "取消",
+    "or": "或者",
     "deleteJobAppTitle": "删除简历",
     "deleteJobAppDesc": "你确定要删除该简历吗？该操作不可逆。"
+  },
+
+  "button": {
+    "createEmptyResume": "创建空简历",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除"
+  },
+
+  "upload": {
+    "title": "拖拽文件到这里",
+    "desc": "或者点击选择文件，不超过5MB",
+    "button": "选择文件"
   }
 }

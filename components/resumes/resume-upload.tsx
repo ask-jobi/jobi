@@ -10,6 +10,7 @@ import {
 import {Upload, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {toast} from "sonner";
+import {useTranslations} from "next-intl";
 
 type ResumeUploadProps = {
   onSelectFile: (file: File) => void,
@@ -17,6 +18,7 @@ type ResumeUploadProps = {
 }
 
 function ResumeUpload(props: ResumeUploadProps) {
+  const t = useTranslations("upload")
   const onFileReject = React.useCallback((file: File, message: string) => {
     toast(message, {
       description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
@@ -40,14 +42,14 @@ function ResumeUpload(props: ResumeUploadProps) {
           <div className="flex items-center justify-center rounded-full border p-2.5">
             <Upload className="size-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-sm">Drag & drop files here</p>
+          <p className="font-medium text-sm">{t("title")}</p>
           <p className="text-muted-foreground text-xs">
-            Or click to browse one file, up to 5MB
+            {t("desc")}
           </p>
         </div>
         <FileUploadTrigger asChild>
           <Button variant="outline" size="sm" className="mt-2 w-fit">
-            Browse files
+            {t("button")}
           </Button>
         </FileUploadTrigger>
       </FileUploadDropzone>

@@ -3,14 +3,16 @@
 import {SidebarTrigger} from "@/components/ui/sidebar";
 import {Separator} from "@radix-ui/react-separator";
 import { usePathname } from "next/navigation";
+import {useTranslations} from "next-intl";
 
 function MainTemplate({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  
+  const pathname = usePathname()
+  const t = useTranslations()
+
   const getPageTitle = () => {
     if (pathname === '/jobs') {
       return (
@@ -20,7 +22,7 @@ function MainTemplate({
         </>
       );
     }
-    return 'Dashboard';
+    return t('dashboard');
   };
 
   return (

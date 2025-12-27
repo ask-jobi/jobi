@@ -5,6 +5,8 @@
   "home": "Home",
   "dashboard": "Dashboard",
   "jobs": "Job Search",
+  "resume": "Resume",
+  "jobDescription": "Job Description",
 
   "exportResumeError": "export resume failed.",
 
@@ -236,9 +238,21 @@
     "low": "Low"
   },
   "modal": {
-    "delete": "Delete",
-    "cancel": "Cancel",
+    "or": "Or",
     "deleteJobAppTitle": "Delete Job Application",
     "deleteJobAppDesc": "Are you sure you want to delete this job application? This action cannot be undone."
+  },
+
+  "button": {
+    "createEmptyResume": "Create Empty Resume",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+
+  "upload": {
+    "title": "Drag & drop files here",
+    "desc": "Or click to browse one file, up to 5MB",
+    "button": "Browse files"
   }
 }

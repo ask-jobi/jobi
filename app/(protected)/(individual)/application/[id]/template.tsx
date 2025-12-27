@@ -7,16 +7,17 @@ import * as React from "react";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import {useEffect, useState} from "react";
+import {useTranslations} from "next-intl";
 
 type NavigationLink = {
   href: string,
-  label: string,
+  i18n: string,
   active: boolean
 }
 
 const defaultNavigationLinks: NavigationLink[] = [
-  { href: 'resume', label: 'Resume', active: true },
-  { href: 'jd', label: 'Job Description', active: false }
+  { href: 'resume', i18n: 'resume', active: true },
+  { href: 'jd', i18n: 'jobDescription', active: false }
 ];
 
 function ApplicationTemplate({
@@ -24,6 +25,7 @@ function ApplicationTemplate({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations()
   const router = useRouter()
   const segment = useSelectedLayoutSegment();
   const [navigationLinks, setNavigationLinks] = useState(defaultNavigationLinks)
@@ -71,7 +73,7 @@ function ApplicationTemplate({
                     )}
                     data-active={link.active}
                   >
-                    {link.label}
+                    {t(link.i18n)}
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
