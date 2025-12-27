@@ -100,7 +100,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold mb-8 mt-8 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-8 mt-8 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent leading-tight md:whitespace-nowrap">
             {t('landingPage.hero.slogan')}
           </h1>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
