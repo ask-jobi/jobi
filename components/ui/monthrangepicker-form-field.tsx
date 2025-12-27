@@ -64,7 +64,7 @@ export const MonthRangePickerFormField: React.FC<MonthRangePickerFormFieldProps>
   // value => 到实际展示的值
   const formatDisplayValue = (val?: string, date?: Date) => {
     if (!val) return '';
-    if (val === 'present') return t('present');
+    if (val === 'present') return 'Present';
     return date ? formatDate(date) : val;
   }
 

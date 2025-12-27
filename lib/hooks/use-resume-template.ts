@@ -16,8 +16,6 @@ function useResumeTemplate(data?: ResumeData) {
 
     if (dataTemp) {
       const tmp = new DefaultTemplate(dataTemp)
-      // Localize "Present" for templates
-      tmp.setPresentLabel(t('present'))
       setTemplate(tmp)
     }
   }, [resumeData, data, t]);
