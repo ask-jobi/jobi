@@ -10,7 +10,6 @@ then produce a structured JSON evaluation report that matches the given TypeScri
 
 === OUTPUT RULES ===
 
-- Output must be valid JSON, no explanations or extra text.
 - "matchScore" must reflect the overall fit between resume and JD (0–100).
 - Include at least 3–5 evaluation criteria (e.g., "Technical Skills", "Experience Fit", "Communication").
 - Each comment should be concise and factual.
@@ -25,9 +24,5 @@ Resume Content:
 
 Job Description:
 {{jobDescription}}
-
-=== OUTPUT FORMAT ===
-Please return a JSON object matching this schema:
-{{formatInstructions}}
 `);
 

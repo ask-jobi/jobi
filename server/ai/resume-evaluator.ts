@@ -48,11 +48,9 @@ export const evaluateResume = async (
     // Default JD if not provided
     const defaultJD = jobDescription || 'General position requiring relevant experience and skills.';
 
-    const formatInstructions = evaluationSchema.shape;
     const prompt = resumeEvaluationPrompt.format({
       resumeContent,
       jobDescription: defaultJD,
-      formatInstructions,
     });
 
     const { output: result } = await generateText({

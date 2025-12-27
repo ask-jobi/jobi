@@ -123,11 +123,8 @@ const resumeSchema = z.object({
 });
 
 export const parseResume = async (resumeText: string): Promise<[ResumeData, Locale]> => {
-  const formatInstructions = resumeSchema.shape;
-
   const prompt = resumeParsePrompt.format({
     resumeText,
-    formatInstructions,
   });
 
   const { output: result } = await generateText({

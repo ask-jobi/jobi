@@ -17,12 +17,8 @@ You are a senior resume optimization expert, analyzing the {{section}} section o
 5. Output in markdown format.
 6. Output in {{language}}.
 
-Please output in the following JSON format:
-{{formatInstructions}}
-
 Notes:
-1. Ensure the output format strictly follows the requirements.
-2. The optimization reason should be concise.
-3. Highlighted content should be specific phrases or keywords.
+1. The optimization reason should be concise.
+2. Highlighted content should be specific phrases or keywords.
 `);
 

@@ -25,8 +25,6 @@ export const rewriteBlock = async (params: {
   const validatedLanguage = LanguageEnum.parse(params.language);
   const languageText = validatedLanguage === "zh" ? "中文" : "英文";
 
-  const formatInstructions = rewriteResponseSchema.shape;
-
   const prompt = resumeRewritePrompt.format({
     section: params.section,
     resumeSection: params.resumeSection,
@@ -34,7 +32,6 @@ export const rewriteBlock = async (params: {
     jd: params.jd,
     instruction: params.instruction,
     language: languageText,
-    formatInstructions: formatInstructions,
   });
 
   const { output: result } = await generateText({

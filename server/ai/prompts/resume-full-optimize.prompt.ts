@@ -84,35 +84,5 @@ Any violation of the above rules should be considered invalid output.
 7. Every optimization must bring **clearer structure, stronger JD alignment, better readability**
 8. If the original sentence is already optimal, return no suggestion
 9. Never add responsibilities or claims that are not explicitly stated or strongly implied
-
-========================  
-[Output Format — Extremely Important]  
-========================  
-
-Return ONLY this JSON object.  
-No explanations, no preface, no trailing text, no comments.  
-No sentences outside JSON.  
-No markdown outside "optimizedContent".
-
-{{
-"suggestions": [
-{{
-"section": "education | employment | skills | summary | projects",
-"blockIndex": 0,
-"suggestionType": "Concise Expression / Quantify Achievements / Highlight Tech Stack / Improve JD Alignment / Structure Optimization / English Expression / Other",
-"reason": "Explain briefly WHY this block needs improvement",
-"originalContent": "Exact original content",
-"optimizedContent": "Improved content in {{language}}, markdown allowed",
-"highlight": ["specific modified phrases", "inserted JD keywords", "enhanced structure"]
-}}
-]
-}}
-
-If no blocks require improvement → return:  
-{{ "suggestions": [] }}
-
-========================  
-Final rule: output ONLY valid JSON.  
-========================
 `);
 

@@ -14,16 +14,12 @@ Please analyze the resume content carefully and extract the following informatio
 4. Skills: grouped by category. If skills are not actively indicated in your resume, try to summarize and extract some key skills and technology stacks.
 5. The main language of the resume content (return as 'en' for English, 'zh' for Chinese, or ISO 639-1 code for other languages)
 
-Make sure to return data in the following format:
-{{formatInstructions}}
-
 Notes:
 1. Ensure all dates are in YYYY-MM format.
 2. If some information is not found in the resume, use an empty string or empty array.
-3. Keep the integrity of the JSON format.
-4. Ensure the extracted information is accurate.
-5. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
-6. Always ensure the language of the output content is consistent with the original text.
-7. skills split by english comma
+3. Ensure the extracted information is accurate.
+4. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
+5. Always ensure the language of the output content is consistent with the original text.
+6. skills split by english comma
 `);
 
