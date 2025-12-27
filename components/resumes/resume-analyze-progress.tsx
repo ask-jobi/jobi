@@ -37,7 +37,7 @@ function StepItem({ title, status }: { title: string; status: StepStatus }) {
     <div
       className={cn(
         "flex items-center gap-3 rounded-md px-4 py-3 transition-all duration-300 relative overflow-hidden",
-        status === "pending" && "text-accent",
+        status === "pending" && "text-muted-foreground/80",
         status === "loading" && "text-primary/75 bg-primary/10 border border-primary/20 animate-shimmer shadow-sm",
         status === "success" && "text-green-600/75",
         status === "error" && "text-red-500/75"
@@ -54,7 +54,7 @@ function StepItem({ title, status }: { title: string; status: StepStatus }) {
           <XCircle className="h-5 w-5"/>
         )}
         {status === "pending" && (
-          <div className="h-2 w-2 rounded-full bg-accent"/>
+          <div className="h-2 w-2 rounded-full bg-muted-foreground/80"/>
         )}
 
         <span className="text-sm font-medium flex-1">
