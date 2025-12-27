@@ -234,5 +234,11 @@
     "high": "High",
     "medium": "Medium",
     "low": "Low"
+  },
+  "modal": {
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "deleteJobAppTitle": "Delete Job Application",
+    "deleteJobAppDesc": "Are you sure you want to delete this job application? This action cannot be undone."
   }
 }

@@ -238,5 +238,11 @@
     "high": "高",
     "medium": "中",
     "low": "低"
+  },
+  "modal": {
+    "delete": "删除",
+    "cancel": "取消",
+    "deleteJobAppTitle": "删除简历",
+    "deleteJobAppDesc": "你确定要删除该简历吗？该操作不可逆。"
   }
 }
