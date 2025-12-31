@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const body: RewriteBlockRequest = await request.json();
 
-    if (!body.originalContent || !body.context.jd || !body.instruction) {
+    if (!body.originalContent || !body.jd || !body.instruction) {
       return NextResponse.json(
         { error: 'required fields are missed' },
         { status: 400 }
@@ -17,8 +17,7 @@ export async function POST(request: Request) {
     const response = await rewriteBlock({
       resumeSection: body.resumeSection,
       originalContent: body.originalContent,
-      section: body.context.sectionType,
-      jd: body.context.jd,
+      jd: body.jd,
       instruction: body.instruction,
       language: body.language,
     });

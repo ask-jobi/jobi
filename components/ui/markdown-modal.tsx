@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogFooter, DialogDescription,
 } from "@/components/ui/dialog"
-import { Editor } from "@/components/blocks/editor-00/editor"
+import { Editor } from "@/components/editor/editor"
 import { Button } from "@/components/ui/button"
 import {useTranslations} from "next-intl";
 

@@ -285,3 +285,34 @@
     box-shadow: none !important;
   }
 }
+
+.tiptap {
+  ul {
+    @apply list-disc
+  }
+
+  ol {
+    @apply list-decimal
+  }
+
+  li {
+    margin: 0 16px;
+  }
+
+  ins {
+    background: rgba(34, 197, 94, 0.2);
+    text-decoration: none;
+  }
+
+  del {
+    background: rgba(239, 68, 68, 0.15);
+    text-decoration: line-through;
+  }
+
+  .selection {
+    /*为了mock浏览器的selection样式*/
+    padding: 3px 0;
+    margin: -3px 0;
+    background-color: #b4d7ff;
+  }
+}

@@ -1,76 +1,60 @@
 import { motion } from 'motion/react';
 import React, {ReactNode, useEffect, useRef, useState} from 'react';
-import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
+import {Editor} from "@tiptap/react";
 import {CheckIcon, ListMinus, ListPlus, Loader, SparklesIcon, TrashIcon, WandIcon} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {useAtom} from "jotai";
-import {selectedSectionIdAtom, useResume, useResumeLanguage} from "@/lib/store/resume";
-import {NodeSelection} from "lexical";
+import {useResume, useResumeLanguage} from "@/lib/store/resume";
 import {RewriteBlockRequest} from "@/types/api/requests";
-import {$exportMarkdown} from "@/components/blocks/editor-00/plugins/markdown-plugin";
-import {
-  $calculateDiffWords,
-  $getMarkdownFromSelection,
-  $getSelectionElementNodes
-} from "@/components/blocks/editor-00/utils";
-import {APPLY_DIFF_COMMAND, REJECT_DIFF_COMMAND} from "@/components/blocks/editor-00/plugins/diff-md-plugin";
-import {
-  SHOW_SELECTION_HIGHLIGHT_COMMAND,
-  HIDE_SELECTION_HIGHLIGHT_COMMAND,
-} from "@/components/blocks/editor-00/plugins/preserve-selection-plugin";
 import {Command, CommandItem, CommandList} from '@/components/ui/command';
 import {toast} from "sonner";
 import {useClickOutside} from "@mantine/hooks";
+import {calculateDiffJsonContent} from "./diff";
+import {JSONContent} from "@tiptap/core";
 
 function FloatingToolbarAi({
-                             setMode
+                             setMode,
+                             mode,
+                             editor
                            }: {
-  setMode: (state: 'default' | 'ai' | 'closed') => void
+  setMode: (state: 'default' | 'ai' | 'confirm') => void,
+  mode: 'default' | 'ai' | 'confirm',
+  editor: Editor
 }) {
-  const [selectedSectionId] = useAtom(selectedSectionIdAtom);
   const {jobDescription} = useResume()
   const resumeLanguage = useResumeLanguage()
-  const [editor] = useLexicalComposerContext();
   const [loading, setLoading] = useState<boolean>(false)
   const [instruction, setInstruction] = useState<string>('')
-  const [AIState, setAIState] = useState<"asking" | "confirm">("asking")
   const commandRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (inputRef.current) {
-      // 这里必须延迟调用，似乎是SHOW_SELECTION_HIGHLIGHT_COMMAND的会打断input focus
       setTimeout(() => {
         inputRef.current!!.focus()
       })
     }
-    // Show selection highlight when AI toolbar appears
-    // TODO 处理回滚时，toolbar和highlight段落的展示方式
-    editor.dispatchCommand(SHOW_SELECTION_HIGHLIGHT_COMMAND, null);
-
-    return () => {
-      // Hide selection highlight when AI toolbar closes
-      editor.dispatchCommand(HIDE_SELECTION_HIGHLIGHT_COMMAND, null);
-    };
   }, [editor])
 
   const handleRejectAI = () => {
-    setTimeout(() => {
-      setMode("closed")
-      if (AIState === "confirm") {
-        editor.dispatchCommand(REJECT_DIFF_COMMAND, null)
+    if (mode === "confirm") {
+      const success = editor.chain().focus().rejectDiff().run()
+      if (success) {
+        setMode("default")
       }
-    }, 0)
+    }
   }
 
   const handleApplyAI = () => {
-    setTimeout(() => {
-      setMode("closed")
-      if (AIState === "confirm") {
-        editor.dispatchCommand(APPLY_DIFF_COMMAND, null)
+    if (mode === "confirm") {
+      const success = editor.chain().focus().applyDiff().run()
+      if (success) {
+        setMode("default")
+        toast.success("Changes applied")
+      } else {
+        toast.error("No content to apply")
       }
-    }, 0)
+    }
   }
 
   const ref = useClickOutside(() => {
@@ -78,25 +62,25 @@ function FloatingToolbarAi({
   })
 
   const submitAi = async (instruction: string) => {
-    let selection: NodeSelection
-    let originalContent = ""
-    let resumeSection = ""
+    setLoading(true)
 
-    editor.read(() => {
-      setLoading(true)
+    let {from, to} = editor.extensionStorage.selection
+    if (!from && !to) {
+      from = editor.state.selection.from
+      to = editor.state.selection.to
+    }
 
-      selection = $getSelectionElementNodes()
-      originalContent = $getMarkdownFromSelection(selection)
-      resumeSection = $exportMarkdown()
-    })
+    const slice = editor.state.doc.slice(from!!, to!!)
+    const json = slice.content.toJSON()
+
+    // {type: 'doc', content: json} 必须使用doc包装一层，不然导出的markdown格式有问题
+    const originalContent = editor.markdown!!.serialize({type: 'doc', content: json})
+    const resumeSection = editor.getMarkdown()
 
     const body: RewriteBlockRequest = {
       resumeSection: resumeSection,
       originalContent: originalContent,
-      context: {
-        sectionType: selectedSectionId!!,
-        jd: jobDescription?.description ?? 'Empty JD'
-      },
+      jd: jobDescription?.description ?? 'Empty JD',
       instruction: instruction,
       language: resumeLanguage
     }
@@ -111,16 +95,25 @@ function FloatingToolbarAi({
       return
     }
 
-    editor.update(() => {
-      $calculateDiffWords(selection, originalContent, result.optimizedContent)
-    }, {tag: 'historic'})
+    // 解析原始内容和AI生成的内容
+    const beforeJsonContent = editor.markdown!!.parse(originalContent)
+    const afterJsonContent = editor.markdown!!.parse(result)
+
+    // 计算差异
+    const diffContent = calculateDiffJsonContent(beforeJsonContent, afterJsonContent)
+
+    // 使用插件命令设置差异内容（会自动应用到编辑器）
+    editor.chain()
+      .setDiffContent({
+        originalSelection: { from: from!!, to: to!! },
+        originalContent: json as JSONContent,
+        diffContent
+      })
+      .run()
 
     setInstruction("")
-
-    // Restore text editor selection when prompt submitted
-    // editor.dispatchCommand(RESTORE_SELECTION_COMMAND, null);
     setLoading(false)
-    setAIState("confirm")
+    setMode("confirm")
   }
 
   const handleSubmitAi = async (e: any) => {
@@ -143,7 +136,10 @@ function FloatingToolbarAi({
           type: "spring",
           duration: 0.25,
         }}
-        style={{zIndex: 9999}}
+        style={{
+          zIndex: 9999,
+          width: editor.view.dom.clientWidth - 52
+        }}
       >
         <motion.div
           transition={{duration: 0}}
@@ -155,6 +151,10 @@ function FloatingToolbarAi({
             ref={inputRef}
             value={instruction}
             disabled={loading}
+            onMouseDownCapture={e => {
+              e.stopPropagation()
+              inputRef.current?.focus()
+            }}
             onChange={(e) => setInstruction(e.target.value)}
           />
           <Button
@@ -195,15 +195,11 @@ function FloatingToolbarAi({
             ref={commandRef}
             tabIndex={0}
             shouldFilter={false}
-            onMouseDown={(e) => {
-              // Prevent clicks outside of items from removing selection
-              e.preventDefault();
-            }}
             className="z-10 relative mt-1 rounded-lg border shadow-2xl border-gray-300/75 bg-card w-[210px] max-h-[360px] overflow-y-auto pointer-events-auto"
           >
             <CommandList className="rounded-lg">
               {
-                AIState === 'asking' &&
+                mode === 'ai' &&
                 <>
                   <CommandItemWithIcon
                     icon={<WandIcon className="h-full text-indigo-500" />}
@@ -232,7 +228,7 @@ function FloatingToolbarAi({
                 </>
               }
               {
-                AIState === 'confirm' &&
+                mode === 'confirm' &&
                 <>
                   <CommandItemWithIcon
                     icon={<CheckIcon className="h-full" />}

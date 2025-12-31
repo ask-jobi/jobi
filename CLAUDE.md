@@ -52,7 +52,7 @@ Key features include:
 - **Supabase** for authentication and database
 - **React Hook Form** for form handling
 - **Zod** for validation
-- **Lexical** rich text editor
+- **Tiptap** rich text editor
 - **Stripe** for payments
 
 ### Form System
@@ -60,12 +60,6 @@ Forms are built using `react-hook-form` and custom UI components:
 - Form components are in `components/ui/form.tsx`
 - Form fields use a composition pattern with `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, and `FormMessage`
 - Validation is handled by Zod schemas
-
-### Editor System
-The resume editor is built with Lexical:
-- Located in `components/blocks/editor-00/`
-- Custom plugins in `components/blocks/editor-00/plugins/`
-- Toolbar components in `components/blocks/editor-00/plugins/toolbar-plugin/`
 
 ### Testing
 - **Jest** for unit and integration tests

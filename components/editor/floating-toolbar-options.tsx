@@ -5,28 +5,17 @@ import {
   ItalicIcon, ListIcon, ListOrderedIcon, StrikethroughIcon
 } from "lucide-react";
 import {Toggle} from "@/components/ui/toggle";
-import {useLexicalComposerContext} from "@lexical/react/LexicalComposerContext";
-import {
-  $createParagraphNode,
-  $getSelection,
-  $isRangeSelection,
-  $isRootOrShadowRoot,
-  FORMAT_TEXT_COMMAND,
-  LexicalNode,
-  TextFormatType
-} from "lexical";
-import {$findMatchingParent} from "@lexical/utils";
-import {$isListNode, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND} from "@lexical/list";
-import {$setBlocksType} from "@lexical/selection";
+import { Editor } from '@tiptap/react'
 import Image from "next/image";
 import {Button} from "@/components/ui/button";
 
 function FloatingToolbarOptions({
-                                  setMode
+                                  setMode,
+                                  editor
                                 }: {
-  setMode: (state: 'default' | 'ai' | 'closed') => void
+  setMode: (state: 'default' | 'ai') => void,
+  editor: Editor
 }) {
-  const [editor] = useLexicalComposerContext();
 
   /**
    * 当前选中文本的格式，如 bold、italic 等
@@ -45,74 +34,74 @@ function FloatingToolbarOptions({
    * 注册一个编辑器状态更新的回调函数，在回调函数内读取选中文本的状态
    */
   useEffect(() => {
-    const unregister = editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(() => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection)) {
-          return;
-        }
+    const updateState = () => {
+      // text format
+      setIsBold(editor.isActive('bold'));
+      setIsItalic(editor.isActive('italic'));
+      setIsStrikethrough(editor.isActive('strike'));
+      setIsCode(editor.isActive('code'));
 
-        // text format
-        setIsBold(selection.hasFormat('bold'));
-        setIsItalic(selection.hasFormat('italic'));
-        setIsStrikethrough(selection.hasFormat('strikethrough'));
-        setIsCode(selection.hasFormat('code'));
+      // block type
+      if (editor.isActive('bulletList')) {
+        setBlockType('bullet');
+      } else if (editor.isActive('orderedList')) {
+        setBlockType('number');
+      } else if (editor.isActive('heading', { level: 1 })) {
+        setBlockType('h1');
+      } else if (editor.isActive('heading', { level: 2 })) {
+        setBlockType('h2');
+      } else if (editor.isActive('heading', { level: 3 })) {
+        setBlockType('h3');
+      } else {
+        setBlockType('paragraph');
+      }
+    };
 
-        // block type
-        const anchorNode = selection.anchor.getNode();
-        let element =
-          anchorNode.getKey() === 'root'
-            ? anchorNode
-            : $findMatchingParent(anchorNode, (node: LexicalNode) => {
-              const parent = node.getParent();
-              return parent !== null && $isRootOrShadowRoot(parent);
-            });
-        if (element === null) {
-          element = anchorNode.getTopLevelElementOrThrow();
-        }
+    editor.on('selectionUpdate', updateState);
+    editor.on('update', updateState);
+    updateState(); // 初始更新
 
-        if ($isListNode(element)) {
-          setBlockType(element.getListType());
-        } else {
-          setBlockType(element.getType());
-        }
-      });
-    });
-
-    return unregister;
+    return () => {
+      editor.off('selectionUpdate', updateState);
+      editor.off('update', updateState);
+    };
   }, [editor]);
 
   /**
    * 更新选中文本的格式
    */
-  const formatText = (type: TextFormatType) => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, type);
+  const formatText = (type: 'bold' | 'italic' | 'strike' | 'code') => {
+    if (type === 'bold') {
+      editor.chain().focus().toggleBold().run();
+    }
+    // else if (type === 'italic') {
+    //   editor.chain().focus().toggleItalic().run();
+    // } else if (type === 'strike') {
+    //   editor.chain().focus().toggleStrike().run();
+    // } else if (type === 'code') {
+    //   editor.chain().focus().toggleCode().run();
+    // }
   };
 
   /**
    * 设置为段落
    */
   const formatParagraph = () => {
-    editor.update(() => {
-      const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        $setBlocksType(selection, () => $createParagraphNode());
-      }
-    });
+    editor.chain().focus().setParagraph().run();
   };
 
   /**
    * 设置为无序列表
    */
   const formatUnorderedList = () => {
-    editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+    editor.chain().focus().toggleBulletList().run();
   };
 
   /**
    * 设置为有序列表
    */
   const formatOrderedList = () => {
-    editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+    editor.chain().focus().toggleOrderedList().run();
   };
 
   const handleBlockTypeChange = (type: string) => {
@@ -129,8 +118,8 @@ function FloatingToolbarOptions({
   };
 
   const intoAiMode = () => {
-    setMode('ai')
-    console.log("switch ai mode")
+    editor.commands.expandSelectionToNodeEdge()
+    setMode("ai")
   }
 
   return (
@@ -158,7 +147,7 @@ function FloatingToolbarOptions({
       <div className="w-px h-5 mx-2 bg-gray-200 rounded"></div>
       <div className="flex gap-x-1">
         <Toggle
-          aria-label="Blod"
+          aria-label="Bold"
           pressed={isBold}
           onPressedChange={() => formatText('bold')}
         >
@@ -174,7 +163,7 @@ function FloatingToolbarOptions({
         <Toggle
           aria-label="Strikethrough"
           pressed={isStrikethrough}
-          onPressedChange={() => formatText('strikethrough')}
+          onPressedChange={() => formatText('strike')}
         >
           <StrikethroughIcon/>
         </Toggle>
