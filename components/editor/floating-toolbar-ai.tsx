@@ -8,7 +8,6 @@ import {useResume, useResumeLanguage} from "@/lib/store/resume";
 import {RewriteBlockRequest} from "@/types/api/requests";
 import {Command, CommandItem, CommandList} from '@/components/ui/command';
 import {toast} from "sonner";
-import {useClickOutside} from "@mantine/hooks";
 import {calculateDiffJsonContent} from "./diff";
 import {JSONContent} from "@tiptap/core";
 
@@ -57,9 +56,9 @@ function FloatingToolbarAi({
     }
   }
 
-  const ref = useClickOutside(() => {
-    handleRejectAI()
-  })
+  // const ref = useClickOutside(() => {
+  //   handleRejectAI()
+  // })
 
   const submitAi = async (instruction: string) => {
     setLoading(true)
@@ -125,7 +124,6 @@ function FloatingToolbarAi({
   return (
     <>
       <motion.div
-        ref={ref}
         className="flex relative pointer-events-auto"
         initial={{opacity: 0, scale: 0.93}}
         animate={{

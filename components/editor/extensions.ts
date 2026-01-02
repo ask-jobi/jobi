@@ -1,51 +1,84 @@
 import {Extension, isNodeSelection} from "@tiptap/react";
 import {DiffStorage} from "@/types/tiptap";
-import {JSONContent} from "@tiptap/core";
+import {Range} from "@tiptap/core";
 import {Selection} from "@tiptap/extensions";
-import {Plugin, PluginKey} from "@tiptap/pm/state";
+import {Plugin, PluginKey, EditorState} from "@tiptap/pm/state";
 import {Decoration, DecorationSet} from "@tiptap/pm/view";
+import type {Node as ProseMirrorNode} from "@tiptap/pm/model";
 
-// 移除所有 diff 标记，只保留实际内容
-function removeDiffMarks(content: JSONContent): JSONContent | null {
-  if (content.type === "text") {
-    // 如果是删除的文本，直接忽略
-    if (content.marks?.some(m => m.type === "deleted")) {
-      return null // 返回 null 表示需要过滤掉
-    }
-    // 如果是插入的文本，移除 inserted 标记
-    if (content.marks?.some(m => m.type === "inserted")) {
-      return {
-        ...content,
-        marks: content.marks.filter(m => m.type !== "inserted")
-      }
-    }
-    return content
-  }
+const getShouldExpandRange = (state: EditorState, range: Range): Range => {
+  // from 和 to 如果是一个节点的开头和结尾，那么递归查找其父节点
+  const $from = state.doc.resolve(range.from);
 
-  if (content.content) {
-    const cleanedContent = content.content
-      .map(removeDiffMarks)
-      .filter((node): node is JSONContent => {
-        // 过滤掉 null 和空的文本节点
-        if (!node) return false
-        if (node.type === "text" && (!node.text || node.text === "")) {
-          return false
-        }
-        return true
-      })
+  // 最终确定的最外层范围
+  let finalFrom = range.from;
+  let finalTo = range.to;
 
-    // 如果清理后内容为空，返回空数组的节点
-    if (cleanedContent.length === 0) {
-      return null
-    }
+  // 从当前层级向上遍历
+  // depth 0 是 doc，通常我们搜寻到 depth 1 即可
+  for (let d = $from.depth; d > 0; d--) {
+    const parent = $from.node(d);
 
-    return {
-      ...content,
-      content: cleanedContent
+    // 关键判断：如果该层节点只有一个子节点，说明它的范围与子节点重合
+    if (parent.childCount === 1) {
+      finalFrom = $from.before(d);
+      finalTo = $from.after(d);
+    } else {
+      // 发现父节点包含多个子节点（比如 listItem 里除了这个 p 还有另一个 p）
+      // 停止向上，返回当前已知的最大范围
+      break;
     }
   }
+  // 返回应该被删除的最大父节点边界
+  return { from: finalFrom, to: finalTo };
+}
 
-  return content
+// 处理 diff 操作的辅助函数
+function processDiffOperation(
+  state: EditorState,
+  options: {
+    markToRemove: any; // 要移除的 mark
+    markToDelete: any; // 要删除的 mark（对应的节点会被删除）
+  }
+): boolean {
+  const { tr, schema, doc } = state
+  const { inserted, deleted } = schema.marks
+
+  if (!inserted || !deleted) return false
+
+  const rangeToRemove: Range[] = []
+
+  doc.descendants((node: ProseMirrorNode, pos: number) => {
+    if (!node.isText) return
+
+    // 如果节点有要删除的 mark，收集到删除范围
+    if (options.markToDelete && options.markToDelete.isInSet(node.marks)) {
+      rangeToRemove.push({ from: pos, to: pos + node.nodeSize })
+      return false
+    }
+
+    // 如果节点有要移除的 mark，移除 mark（保留内容）
+    if (options.markToRemove && options.markToRemove.isInSet(node.marks)) {
+      tr.removeMark(pos, pos + node.nodeSize, options.markToRemove)
+    }
+
+    return true
+  })
+
+  // 从后往前删除，避免位置偏移
+  rangeToRemove.reverse().forEach((range) => {
+    const {from, to} = getShouldExpandRange(state, range)
+    tr.deleteRange(from, to)
+  })
+
+  return tr.steps.length > 0
+}
+
+// 清理 diff 存储
+function clearDiffStorage(storage: DiffStorage) {
+  storage.originalSelection = null
+  storage.originalContent = null
+  storage.diffContent = null
 }
 
 export const Diff = Extension.create<object, DiffStorage>({
@@ -62,7 +95,7 @@ export const Diff = Extension.create<object, DiffStorage>({
   addCommands() {
     return {
       setDiffContent: ({ originalSelection, originalContent, diffContent }) =>
-        ({ chain }) => {
+        ({ chain, editor }) => {
           this.storage.originalSelection = originalSelection
           this.storage.originalContent = originalContent
           this.storage.diffContent = diffContent
@@ -73,32 +106,6 @@ export const Diff = Extension.create<object, DiffStorage>({
 
           // 将差异内容应用到编辑器（显示带标记的差异）
           const { from, to } = originalSelection
-          const nodeBefore = this.editor.$pos(from).node
-          const nodeAfter = this.editor.$pos(to).node
-          const [firstNewDiffNode, ...remainingNodes] = diffContent.content
-
-          const [lastNewDiffNode] = remainingNodes.slice(-1)
-          const middleNodes = remainingNodes.slice(0, -1)
-
-          console.log("firstNewDiffNode", JSON.stringify(firstNewDiffNode))
-          console.log("nodeBefore.toJSON()", JSON.stringify(nodeBefore.toJSON()))
-          console.log("middleNodes", JSON.stringify(middleNodes))
-          console.log("lastNewDiffNode", JSON.stringify(lastNewDiffNode))
-          console.log("nodeAfter.toJSON()", JSON.stringify(nodeAfter.toJSON()))
-
-          // first new node有三种情况
-          // 1.没有改动 -> 移除这个首次修改的节点
-          // 2.有新增节点 ->
-          // 3.作为删除节点 ->
-          // 如果前节点的内容和新插入的diff的前节点类型保持一致
-          // if(nodeBefore.toJSON().type === firstNewDiffNode.type) {
-          //
-          //
-          // }
-          //
-          // if (nodeAfter.toJSON().type === lastNewDiffNode.type) {
-          //
-          // }
 
           chain()
             .deleteRange({ from, to })
@@ -106,69 +113,55 @@ export const Diff = Extension.create<object, DiffStorage>({
             .clearSelection()
             .run()
 
+          editor.setEditable(false)
+
           return true
         },
       applyDiff: () =>
-        ({ chain, editor }) => {
-          const { originalSelection, diffContent } = this.storage
+        ({ state, dispatch, editor }) => {
+          const { schema } = state
+          const { inserted, deleted } = schema.marks
 
-          if (!originalSelection || !diffContent) {
-            return false
+          // apply: 接受更改
+          // 删除 deleted 节点，移除 inserted mark
+          const hasChanges = processDiffOperation(state, {
+            markToRemove: inserted, // 移除 inserted mark（保留内容）
+            markToDelete: deleted,   // 删除 deleted 节点
+          })
+
+          if (hasChanges && dispatch) {
+            clearDiffStorage(this.storage)
+            editor.setEditable(true)
+            state.tr.setMeta('addToHistory', false)
+            dispatch(state.tr)
           }
-
-          // 移除所有标记（deleted 和 inserted），只保留实际内容
-          const cleanContent = removeDiffMarks(diffContent)
-          if (!cleanContent) {
-            return false
-          }
-
-          const { from, to } = originalSelection
-
-          // 获取当前选择范围，可能需要调整因为内容已经改变
-          const currentFrom = Math.min(from, editor.state.doc.content.size)
-          const currentTo = Math.min(to, editor.state.doc.content.size)
-
-          // 如果 cleanContent 有 content 属性，使用它；否则直接使用 cleanContent
-          const contentToInsert = cleanContent.content || cleanContent
-
-          chain()
-            .deleteRange({ from: currentFrom, to: currentTo })
-            .insertContentAt(currentFrom, contentToInsert)
-            .clearDiff()
-            .run()
-
-          return true
+          return hasChanges
         },
       rejectDiff: () =>
-        ({ chain, editor }) => {
-          const { originalSelection, originalContent } = this.storage
+        ({ state, dispatch, editor }) => {
+          const { schema } = state
+          const { inserted, deleted } = schema.marks
 
-          if (!originalSelection || !originalContent) {
-            return false
+          // reject: 拒绝更改
+          // 删除 inserted 节点，移除 deleted mark
+          const hasChanges = processDiffOperation(state, {
+            markToRemove: deleted,   // 移除 deleted mark（保留内容）
+            markToDelete: inserted,  // 删除 inserted 节点
+          })
+
+          if (hasChanges && dispatch) {
+            clearDiffStorage(this.storage)
+            editor.setEditable(true)
+            state.tr.setMeta('addToHistory', false)
+            dispatch(state.tr)
           }
-
-          // 恢复原始内容
-          const { from, to } = originalSelection
-
-          // 获取当前选择范围，可能需要调整因为内容已经改变
-          const currentFrom = Math.min(from, editor.state.doc.content.size)
-          const currentTo = Math.min(to, editor.state.doc.content.size)
-
-          chain()
-            .deleteRange({ from: currentFrom, to: currentTo })
-            .insertContentAt(currentFrom, originalContent)
-            .clearDiff()
-            .run()
-
-          return true
+          return hasChanges
         },
       clearDiff: () =>
         () => {
-          this.storage.originalSelection = null
-          this.storage.originalContent = null
-          this.storage.diffContent = null
+          clearDiffStorage(this.storage)
           return true
-        },
+        }
     }
   },
 })

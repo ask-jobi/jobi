@@ -19,6 +19,7 @@ import {Diff, SelectionCustom} from "@/components/editor/extensions"
 
 export const Inserted = Mark.create({
   name: "inserted",
+  excludes: 'deleted',
 
   addAttributes() {
     return {
@@ -37,6 +38,7 @@ export const Inserted = Mark.create({
 
 export const Deleted = Mark.create({
   name: "deleted",
+  excludes: 'inserted',
 
   parseHTML() {
     return [{ tag: "del" }]
@@ -89,7 +91,6 @@ export function Editor({
     content: markdown,
     onUpdate: ({ editor }) => {
       const markdown = editor.getMarkdown()
-      console.log(markdown)
       onChange?.(markdown)
     },
     editorProps: {
