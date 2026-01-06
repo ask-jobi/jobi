@@ -1,11 +1,15 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Package, Info } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/utils'
+import { useEffect, useState } from "react"
+import { Package, Info } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 interface SubscriptionData {
   plan: 'FREE' | 'LITE' | 'PRO' | null
@@ -21,8 +25,10 @@ interface SubscriptionData {
 
 export function CompactPlanDisplay() {
   const t = useTranslations()
+  const router = useRouter()
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -75,103 +81,244 @@ export function CompactPlanDisplay() {
     "h-8 text-sm"
   )
 
-  if (loading) {
+  const buttonContent = () => {
+    if (loading) {
+      return (
+        <>
+          <div className="flex items-center gap-2 w-full">
+            <Package className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{t("currentPlan")}</span>
+          </div>
+          <div className="h-5 w-16 bg-muted rounded animate-pulse ml-auto" />
+        </>
+      )
+    }
+
+    if (!subscription) {
+      return (
+        <>
+          <div className="flex items-center gap-2 w-full">
+            <Package className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{t("currentPlan")}</span>
+          </div>
+          <Badge variant="outline" className="text-xs ml-auto">
+            {t("noPlan")}
+          </Badge>
+        </>
+      )
+    }
+
     return (
-      <div className={sidebarButtonStyle}>
+      <>
         <div className="flex items-center gap-2 w-full">
           <Package className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{t('currentPlan')}</span>
+          <span className="text-sm font-medium">{t("currentPlan")}</span>
         </div>
-        <div className="h-5 w-16 bg-muted rounded animate-pulse ml-auto"></div>
-      </div>
+        <Badge
+          className={cn(
+            "text-white border-0 text-xs",
+            getPlanGradient(subscription.plan)
+          )}
+        >
+          {t(getPlanName(subscription.plan))}
+        </Badge>
+      </>
     )
   }
 
-  if (!subscription) {
-    return (
-      <div className={sidebarButtonStyle}>
-        <div className="flex items-center gap-2 w-full">
-          <Package className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{t('currentPlan')}</span>
+  const dialogBody = () => {
+    if (loading) {
+      return (
+        <div className="space-y-4">
+          <div className="h-5 w-24 bg-muted rounded" />
+          <div className="space-y-2">
+            <div className="h-4 bg-muted rounded" />
+            <div className="h-4 bg-muted rounded" />
+            <div className="h-4 bg-muted rounded" />
+          </div>
         </div>
-        <Badge variant="outline" className="text-xs ml-auto">
-          {t('noPlan')}
-        </Badge>
+      )
+    }
+
+    if (!subscription) {
+      return (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {t("noPlan")}
+          </p>
+          <Button
+            type="button"
+            className="w-full"
+            onClick={() => router.push("/pricing")}
+          >
+            {t("buyPlan")}
+          </Button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">{t("planType")}</span>
+            <span className="font-medium">{t(getPlanName(subscription.plan))}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">{t("status")}</span>
+            <span className="font-medium">
+              {subscription.isActive ? t("active") : t("expired")}
+            </span>
+          </div>
+          {subscription.expiryDate && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t("validUntil")}</span>
+              <span className="font-medium">
+                {new Date(subscription.expiryDate).toLocaleDateString("zh-CN")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3 text-sm">
+          <div className="font-semibold">{t("detailedUsage")}</div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t("fullOptimization")}</span>
+              <span className="font-medium">
+                {subscription.quotas.fullOptimize.used} / {subscription.quotas.fullOptimize.total}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t("blockOptimization")}</span>
+              <span className="font-medium">
+                {subscription.quotas.blockOptimize.used} / {subscription.quotas.blockOptimize.total}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t("motivationLetter")}</span>
+              <span className="font-medium">
+                {subscription.quotas.motivationLetter.used} / {subscription.quotas.motivationLetter.total}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <Button
+            type="button"
+            className="flex-1"
+            variant={subscription.isActive ? "outline" : "default"}
+            onClick={() => router.push("/pricing")}
+          >
+            {subscription.isActive ? t("renewPlan") : t("buyPlan")}
+          </Button>
+          {subscription.plan === "LITE" && (
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => router.push("/pricing")}
+            >
+              {t("upgradeToPro")}
+            </Button>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={sidebarButtonStyle}>
-            {/* 套餐信息 */}
-            <div className="flex items-center gap-2 w-full">
-              <Package className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{t('currentPlan')}</span>
-            </div>
-            <Badge
-              className={`text-white border-0 text-xs ${getPlanGradient(subscription.plan)}`}
-            >
-              {t(getPlanName(subscription.plan))}
-            </Badge>
-          </div>
-        </TooltipTrigger>
-
-        <TooltipContent side="right" className="w-64 p-3">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              <h4 className="font-semibold text-sm">{t('planDetails')}</h4>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('planType')}</span>
-                <span className="font-medium">{t(getPlanName(subscription.plan))}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('status')}</span>
-                <span className="font-medium">
-                  {subscription.isActive ? t('active') : t('expired')}
-                </span>
-              </div>
-
-              {subscription.expiryDate && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('validUntil')}</span>
-                  <span className="font-medium">
-                    {new Date(subscription.expiryDate).toLocaleDateString('zh-CN')}
-                  </span>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className={sidebarButtonStyle}
+              >
+                {buttonContent()}
+              </button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          {subscription && !loading && (
+            <TooltipContent side="right" className="w-64 p-3">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  <h4 className="font-semibold text-sm">{t("planDetails")}</h4>
                 </div>
-              )}
-            </div>
 
-            <div className="pt-2 border-t space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{t('fullOptimization')}</span>
-                <span className="font-medium">
-                  {subscription.quotas.fullOptimize.used} / {subscription.quotas.fullOptimize.total}
-                </span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("planType")}</span>
+                    <span className="font-medium">
+                      {t(getPlanName(subscription.plan))}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("status")}</span>
+                    <span className="font-medium">
+                      {subscription.isActive ? t("active") : t("expired")}
+                    </span>
+                  </div>
+
+                  {subscription.expiryDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t("validUntil")}
+                      </span>
+                      <span className="font-medium">
+                        {new Date(subscription.expiryDate).toLocaleDateString(
+                          "zh-CN"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("fullOptimization")}
+                    </span>
+                    <span className="font-medium">
+                      {subscription.quotas.fullOptimize.used} /{" "}
+                      {subscription.quotas.fullOptimize.total}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("blockOptimization")}
+                    </span>
+                    <span className="font-medium">
+                      {subscription.quotas.blockOptimize.used} /{" "}
+                      {subscription.quotas.blockOptimize.total}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("motivationLetter")}
+                    </span>
+                    <span className="font-medium">
+                      {subscription.quotas.motivationLetter.used} /{" "}
+                      {subscription.quotas.motivationLetter.total}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{t('blockOptimization')}</span>
-                <span className="font-medium">
-                  {subscription.quotas.blockOptimize.used} / {subscription.quotas.blockOptimize.total}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{t('motivationLetter')}</span>
-                <span className="font-medium">
-                  {subscription.quotas.motivationLetter.used} / {subscription.quotas.motivationLetter.total}
-                </span>
-              </div>
-            </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("subscriptionAndUsage")}</DialogTitle>
+        </DialogHeader>
+        {dialogBody()}
+      </DialogContent>
+    </Dialog>
   )
 }

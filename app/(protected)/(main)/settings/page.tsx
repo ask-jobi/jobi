@@ -1,4 +1,5 @@
 "use client"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
@@ -6,7 +7,6 @@ import {useTransition} from "react";
 import {setUserLocale} from "@/lib/i18n/services";
 import {Locale} from "@/lib/i18n/config";
 import {cn} from "@/lib/utils";
-import { SubscriptionCard } from "@/components/client-components/subscription-card";
 
 export default function SettingsPage() {
   const [isPending, startTransition] = useTransition();
@@ -27,12 +27,6 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-bold mb-8">{t('settings')}</h1>
           
           <div className="space-y-8">
-            {/* 用量信息卡片 */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">{t('subscriptionAndUsage')}</h2>
-              <SubscriptionCard />
-            </div>
-
             {/* 语言设置 */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">{t('language')}</h2>

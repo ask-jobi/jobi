@@ -43,7 +43,7 @@ export function SubscriptionCard() {
 
   if (loading) {
     return (
-      <div className="w-full border rounded-xl p-6 bg-card/30 animate-pulse">
+      <div className="w-full animate-pulse">
         <div className="space-y-4">
           <div className="h-6 bg-muted rounded"></div>
           <div className="space-y-2">
@@ -57,7 +57,7 @@ export function SubscriptionCard() {
 
   if (error) {
     return (
-      <div className="w-full border rounded-xl p-6 bg-card/30">
+      <div className="w-full">
         <div className="text-center text-muted-foreground">
           <p>{t('loadingSubscriptionError')}</p>
           <p className="text-sm">{error}</p>
@@ -68,7 +68,7 @@ export function SubscriptionCard() {
 
   if (!subscription) {
     return (
-      <div className="w-full border rounded-xl p-6 bg-card/30">
+      <div className="w-full">
         <div className="text-center text-muted-foreground">
           <p>{t('failedToLoadSubscription')}</p>
         </div>
