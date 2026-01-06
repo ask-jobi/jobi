@@ -117,7 +117,7 @@ export default function LandingPage() {
 
                 {/* 内容 */}
                 <span className="relative z-10 flex items-center">
-                  {t('landingPage.hero.startFreeTrial')}
+                {t('landingPage.getStarted')}
                   <ArrowRight className="w-5 h-5 ml-2 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
               </Button>
