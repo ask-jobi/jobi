@@ -17,6 +17,9 @@ type Quota = {
 type DBAccessPass = Database["public"]["Tables"]["access_passes"]["Row"]
 
 type QuotaKey = keyof Quota
+// 单个用户允许创建的最大岗位申请数量，防止太多的垃圾数据。
+const JOB_APPLICATION_LIMIT = 20
+
 // 用户订阅信息类型
 type UserSubscription = {
   plan: 'FREE' | 'LITE' | 'PRO' | null
@@ -176,8 +179,7 @@ export async function verifyJobApplicationLimit() {
     throw error
   }
 
-  // TODO what is this number?
-  if (jobApplications.length >= 20) {
+  if (jobApplications.length >= JOB_APPLICATION_LIMIT) {
     throw new Error('You have reached the maximum job application limit, please try to delete some jobs you have applied for.')
   }
 }
