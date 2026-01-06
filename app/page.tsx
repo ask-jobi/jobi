@@ -197,13 +197,12 @@ export default function LandingPage() {
                 </div>
                 <CardTitle className="text-xl text-center mb-4 font-semibold">
                   <span className="inline-flex items-center flex-wrap justify-center gap-1.5">
-                    被
+                    {t('landingPage.problem.problem3').split('ATS')[0]}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="relative inline-block cursor-help">
+                          <span className="relative top-0.5 inline-block cursor-help border-b border-dashed border-muted-foreground/60 pb-0.5">
                             ATS
-                            <Info className="absolute top-1 -right-2 w-2 h-2 text-muted-foreground" />
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-xs p-3">
@@ -213,7 +212,7 @@ export default function LandingPage() {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    系统过滤
+                    {t('landingPage.problem.problem3').split('ATS')[1]}
                   </span>
                 </CardTitle>
                 <CardDescription className="text-center text-base leading-relaxed">
