@@ -219,7 +219,17 @@
 
   "evaluation": {
     "refreshEvaluation": "刷新报告",
-    "overallScore": "总体评分",
+    "oneClickOptimize": "一键润色简历",
+    "optimizing": "优化中...",
+    "screeningReadiness": "筛选就绪度",
+    "gates": {
+    "atsScreening": "ATS 筛选",
+    "hrScan": "HR 30 秒初筛",
+    "hiringManagerFit": "用人经理匹配度",
+    "pass": "通过",
+    "borderline": "边缘",
+    "needsAttention": "需重点优化"
+    },
     "recommendation": "推荐决策",
     "confidenceScore": "信心值",
     "decision": {
@@ -236,7 +246,33 @@
     "keywordsMatched": "匹配的关键词",
     "keywordsMissing": "缺失的关键词",
     "risks": "潜在风险",
-
+    "gaps": "差距分析",
+    "actions": "改进建议",
+    "dimension": {
+      "experience": "工作经验",
+      "skills": "技能",
+      "structure": "结构",
+      "metrics": "量化指标",
+      "keywords": "关键词"
+    },
+    "severity": {
+      "critical": "严重",
+      "important": "重要",
+      "minor": "轻微"
+    },
+    "targetSection": {
+      "work_experience": "工作经历",
+      "projects": "项目经历",
+      "skills": "技能",
+      "education": "教育背景"
+    },
+    "priority": {
+      "1": "高优先级",
+      "2": "中优先级",
+      "3": "低优先级"
+    },
+    "evidence": "证据",
+    "instruction": "改进指令",
     "high": "高",
     "medium": "中",
     "low": "低"
@@ -251,7 +287,10 @@
     "createEmptyResume": "创建空简历",
     "save": "保存",
     "cancel": "取消",
-    "delete": "删除"
+    "delete": "删除",
+    "viewEvaluationReport": "查看评估报告",
+    "exportResume": "导出简历",
+    "aiOptimize": "AI 优化"
   },
 
   "upload": {

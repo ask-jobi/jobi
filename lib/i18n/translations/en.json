@@ -215,7 +215,17 @@
 
   "evaluation": {
     "refreshEvaluation": "Refresh Evaluation",
-    "overallScore": "Overall Score",
+    "oneClickOptimize": "One-Click Optimize Resume",
+    "optimizing": "Optimizing...",
+    "screeningReadiness": "Screening Readiness",
+    "gates": {
+      "atsScreening": "ATS Screening",
+      "hrScan": "HR 30-Second Scan",
+      "hiringManagerFit": "Hiring Manager Fit",
+      "pass": "Pass",
+      "borderline": "Borderline",
+      "needsAttention": "Needs Attention"
+    },
     "recommendation": "Recommendation",
     "confidenceScore": "Confidence Score",
     "decision": {
@@ -232,7 +242,33 @@
     "keywordsMatched": "Keywords Matched",
     "keywordsMissing": "Keywords Missing",
     "risks": "Risks",
-
+    "gaps": "Gap Analysis",
+    "actions": "Improvement Actions",
+    "dimension": {
+      "experience": "Experience",
+      "skills": "Skills",
+      "structure": "Structure",
+      "metrics": "Metrics",
+      "keywords": "Keywords"
+    },
+    "severity": {
+      "critical": "Critical",
+      "important": "Important",
+      "minor": "Minor"
+    },
+    "targetSection": {
+      "work_experience": "Work Experience",
+      "projects": "Projects",
+      "skills": "Skills",
+      "education": "Education"
+    },
+    "priority": {
+      "1": "High Priority",
+      "2": "Medium Priority",
+      "3": "Low Priority"
+    },
+    "evidence": "Evidence",
+    "instruction": "Instruction",
     "high": "High",
     "medium": "Medium",
     "low": "Low"
@@ -247,7 +283,10 @@
     "createEmptyResume": "Create Empty Resume",
     "save": "Save",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "viewEvaluationReport": "View Evaluation Report",
+    "exportResume": "Export Resume",
+    "aiOptimize": "AI Optimize"
   },
 
   "upload": {

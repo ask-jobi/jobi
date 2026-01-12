@@ -23,14 +23,6 @@ export function FloatingButtonGroup() {
   const { setSteps, startTour } = useTour()
   const [exportLoading, setExportLoading] = useState<boolean>(false)
 
-  const score = resumeEvaluation?.matchScore
-
-  const getScoreColor = (score?: number) => {
-    if (!score) return 'bg-gray-500'
-    if (score < 30) return 'bg-red-500'
-    if (score < 70) return 'bg-orange-500'
-    return 'bg-green-500'
-  }
 
   const handleExport = async () => {
     trackExportResume()
@@ -80,12 +72,13 @@ export function FloatingButtonGroup() {
     }
   }
 
-  // todo 按钮title需要国际化
   return (
     <div className="flex flex-col gap-3 z-50">
       <Button
-        className={`rounded-full w-12 h-12 flex flex-col items-center justify-center gap-1 ${getScoreColor(score)} hover:${getScoreColor(score)}/75 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer`}
-        title={score !== undefined ? `Score: ${score}` : 'Loading...'}
+        variant="outline"
+        size="icon"
+        className="rounded-full w-12 h-12 bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all"
+        title={t("button.viewEvaluationReport")}
         onClick={() => {
           if (openRightPanel) {
             openRightPanel('evaluation')
@@ -93,7 +86,6 @@ export function FloatingButtonGroup() {
         }}
       >
         <Trophy className="w-5 h-5" />
-        <span className="text-xs font-bold">{score ?? '--'}</span>
       </Button>
 
       {/* Export 按钮 */}
@@ -103,7 +95,7 @@ export function FloatingButtonGroup() {
         className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all"
         onClick={handleExport}
         disabled={isLoading || exportLoading}
-        title="导出简历"
+        title={t("button.exportResume")}
       >
         {
           exportLoading ? (
@@ -121,7 +113,7 @@ export function FloatingButtonGroup() {
         className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all"
         onClick={handleFullResumeOptimizing}
         disabled={isLoading}
-        title="AI 优化"
+        title={t("button.aiOptimize")}
       >
         {
           isLoading ? (
