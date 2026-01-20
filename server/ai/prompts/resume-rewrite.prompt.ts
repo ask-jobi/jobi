@@ -1,4 +1,4 @@
-import { Prompt } from "./index";
+import { Prompt } from "./index"
 
 export const resumeRewritePrompt = Prompt.of(`
 # Role
@@ -25,5 +25,4 @@ Your goal is to rewrite specific resume segments to maximize impact and alignmen
 
 # Execution
 Please rewrite the \`originalContent\` now based on the \`instruction\` and \`jd\`.
-`);
-
+`)

@@ -1,17 +1,17 @@
 import "server-only"
-import { PDFParse } from "pdf-parse";
+import { PDFParse } from "pdf-parse"
 
 export interface Document {
-  pageContent: string;
+  pageContent: string
   metadata: {
-    totalPages: number;
-    currentPage?: number;
-  };
+    totalPages: number
+    currentPage?: number
+  }
 }
 
 type LoadPdfOptions = {
-  splitPages?: boolean;
-};
+  splitPages?: boolean
+}
 
 export async function loadPdfToDoc(
   file: File | Blob,
@@ -20,19 +20,19 @@ export async function loadPdfToDoc(
   // RSC 中：File / Blob → Buffer
   const buffer = Buffer.from(await file.arrayBuffer())
 
-  const pdf = new PDFParse({data: buffer})
+  const pdf = new PDFParse({ data: buffer })
 
   const data = await pdf.getText()
 
   await pdf.destroy()
 
-  const docs = data.pages.map(it => {
+  const docs = data.pages.map((it) => {
     return {
       pageContent: it.text,
       metadata: {
         totalPages: data.total,
         currentPage: it.num
-      },
+      }
     } as Document
   })
 
@@ -45,7 +45,7 @@ export async function loadPdfToDoc(
       pageContent: data.text,
       metadata: {
         totalPages: data.total
-      },
+      }
     } as Document
   ]
 }

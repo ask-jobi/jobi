@@ -1,12 +1,18 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Search, Briefcase, MapPin, Filter, Bell, Sparkles } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MatchMeModal } from './match-me-modal'
+import { useState } from "react"
+import { Search, Briefcase, MapPin, Filter, Bell, Sparkles } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import { MatchMeModal } from "./match-me-modal"
 
 interface JobSearchHeaderProps {
   searchQuery: string
@@ -31,19 +37,19 @@ export function JobSearchHeader({
   const [isMatchMeModalOpen, setIsMatchMeModalOpen] = useState(false)
 
   const contractTypes = [
-    { value: 'full-time', label: 'Full-time' },
-    { value: 'part-time', label: 'Part-time' },
-    { value: 'contract', label: 'Contract' },
-    { value: 'internship', label: 'Internship' },
-    { value: 'freelance', label: 'Freelance' }
+    { value: "full-time", label: "Full-time" },
+    { value: "part-time", label: "Part-time" },
+    { value: "contract", label: "Contract" },
+    { value: "internship", label: "Internship" },
+    { value: "freelance", label: "Freelance" }
   ]
 
   const locations = [
-    { value: 'paris', label: 'Paris, France' },
-    { value: 'lyon', label: 'Lyon, France' },
-    { value: 'marseille', label: 'Marseille, France' },
-    { value: 'toulouse', label: 'Toulouse, France' },
-    { value: 'remote', label: 'Remote' }
+    { value: "paris", label: "Paris, France" },
+    { value: "lyon", label: "Lyon, France" },
+    { value: "marseille", label: "Marseille, France" },
+    { value: "toulouse", label: "Toulouse, France" },
+    { value: "remote", label: "Remote" }
   ]
 
   return (
@@ -59,7 +65,7 @@ export function JobSearchHeader({
             className="pl-10 h-10 text-sm"
           />
         </div>
-        
+
         <div className="flex gap-2">
           <Select value={contractType} onValueChange={setContractType}>
             <SelectTrigger className="w-36 h-10">
@@ -68,7 +74,11 @@ export function JobSearchHeader({
             </SelectTrigger>
             <SelectContent>
               {contractTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value} icon={Briefcase}>
+                <SelectItem
+                  key={type.value}
+                  value={type.value}
+                  icon={Briefcase}
+                >
                   {type.label}
                 </SelectItem>
               ))}
@@ -94,18 +104,20 @@ export function JobSearchHeader({
       {/* Filter Buttons */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-         
           <Button variant="outline" className="h-8 relative">
             <Filter className="w-3.5 h-3.5 mr-1" />
             All filters
-            <Badge variant="secondary" className="ml-2 h-4 w-4 p-0 flex items-center justify-center text-xs">
+            <Badge
+              variant="secondary"
+              className="ml-2 h-4 w-4 p-0 flex items-center justify-center text-xs"
+            >
               {activeFilters}
             </Badge>
           </Button>
         </div>
 
         <div className="flex gap-2">
-          <Button 
+          <Button
             className="h-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm"
             onClick={() => setIsMatchMeModalOpen(true)}
           >
@@ -120,12 +132,12 @@ export function JobSearchHeader({
       </div>
 
       {/* Match Me Modal */}
-      <MatchMeModal 
+      <MatchMeModal
         isOpen={isMatchMeModalOpen}
         onClose={() => setIsMatchMeModalOpen(false)}
         onMatch={(resumeData) => {
           // TODO: 实现RAG搜索逻辑
-          console.log('Matching with resume:', resumeData)
+          console.log("Matching with resume:", resumeData)
           setIsMatchMeModalOpen(false)
         }}
       />

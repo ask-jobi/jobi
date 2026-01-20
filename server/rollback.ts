@@ -6,22 +6,23 @@ export class RollbackContext {
   rollbackActions: RollbackAction[] = []
   retryTimes = 3
 
-  constructor() {
-
-  }
+  constructor() {}
 
   addRollback(func: RollbackAction) {
     this.rollbackActions.push(func)
   }
 
-  private async rollbackRunWithRetry(func: RollbackAction, retryTimes: number = this.retryTimes) {
+  private async rollbackRunWithRetry(
+    func: RollbackAction,
+    retryTimes: number = this.retryTimes
+  ) {
     try {
       await func()
     } catch (e) {
       if (retryTimes === 0) {
         throw e
       }
-      retryTimes --
+      retryTimes--
       await this.rollbackRunWithRetry(func, retryTimes)
     }
   }

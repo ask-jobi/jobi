@@ -1,4 +1,4 @@
-import { Prompt } from "./index";
+import { Prompt } from "./index"
 
 export const resumeFullOptimizePrompt = Prompt.of(`
 You are a senior AI resume optimization engine.  
@@ -84,5 +84,4 @@ Any violation of the above rules should be considered invalid output.
 7. Every optimization must bring **clearer structure, stronger JD alignment, better readability**
 8. If the original sentence is already optimal, return no suggestion
 9. Never add responsibilities or claims that are not explicitly stated or strongly implied
-`);
-
+`)

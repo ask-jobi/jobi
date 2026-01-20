@@ -1,22 +1,30 @@
-import { MarkdownManager } from '@tiptap/markdown';
-import {calculateDiffJsonContent} from './diff';
-import Document from '@tiptap/extension-document';
-import Text from '@tiptap/extension-text';
-import Paragraph from "@tiptap/extension-paragraph";
-import Heading from "@tiptap/extension-heading";
-import {BulletList, ListItem, OrderedList} from "@tiptap/extension-list";
-import {Extension} from "@tiptap/react";
-import { TrailingNode } from '@tiptap/extensions'
-
+import { MarkdownManager } from "@tiptap/markdown"
+import { calculateDiffJsonContent } from "./diff"
+import Document from "@tiptap/extension-document"
+import Text from "@tiptap/extension-text"
+import Paragraph from "@tiptap/extension-paragraph"
+import Heading from "@tiptap/extension-heading"
+import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list"
+import { Extension } from "@tiptap/react"
+import { TrailingNode } from "@tiptap/extensions"
 
 describe("diff JSONContent", () => {
   let markdownManager: MarkdownManager
 
   beforeEach(() => {
     markdownManager = new MarkdownManager()
-    const extensions = [Document, Paragraph, Text, Heading, ListItem, OrderedList, BulletList, TrailingNode]
+    const extensions = [
+      Document,
+      Paragraph,
+      Text,
+      Heading,
+      ListItem,
+      OrderedList,
+      BulletList,
+      TrailingNode
+    ]
 
-    extensions.forEach(extension => {
+    extensions.forEach((extension) => {
       markdownManager.registerExtension(extension as Extension)
     })
   })
@@ -36,17 +44,20 @@ describe("diff JSONContent", () => {
             {
               type: "text",
               text: "12"
-            },{
+            },
+            {
               type: "text",
               text: "3",
-              marks: [{type: "deleted"}]
-            },{
+              marks: [{ type: "deleted" }]
+            },
+            {
               type: "text",
               text: "45"
-            },{
+            },
+            {
               type: "text",
               text: "6",
-              marks: [{type: "inserted"}]
+              marks: [{ type: "inserted" }]
             }
           ]
         }
@@ -97,17 +108,20 @@ describe("diff JSONContent", () => {
                     {
                       type: "text",
                       text: "12"
-                    },{
+                    },
+                    {
                       type: "text",
                       text: "3",
-                      marks: [{type: "deleted"}]
-                    },{
+                      marks: [{ type: "deleted" }]
+                    },
+                    {
                       type: "text",
                       text: "45"
-                    },{
+                    },
+                    {
                       type: "text",
                       text: "6",
-                      marks: [{type: "inserted"}]
+                      marks: [{ type: "inserted" }]
                     }
                   ]
                 }
@@ -140,20 +154,21 @@ describe("diff JSONContent", () => {
                     {
                       type: "text",
                       text: "12345",
-                      marks: [{type: "deleted"}]
+                      marks: [{ type: "deleted" }]
                     }
                   ]
                 }
               ]
             }
           ]
-        }, {
+        },
+        {
           type: "paragraph",
           content: [
             {
               type: "text",
               text: "12456",
-              marks: [{type: "inserted"}]
+              marks: [{ type: "inserted" }]
             }
           ]
         }
@@ -182,23 +197,25 @@ describe("diff JSONContent", () => {
                     {
                       type: "text",
                       text: "12345",
-                      marks: [{type: "deleted"}]
+                      marks: [{ type: "deleted" }]
                     }
                   ]
                 }
               ]
             }
           ]
-        }, {
+        },
+        {
           type: "paragraph",
           content: [
             {
               type: "text",
               text: "12456",
-              marks: [{type: "inserted"}]
+              marks: [{ type: "inserted" }]
             }
           ]
-        }, {
+        },
+        {
           type: "orderedList",
           content: [
             {
@@ -210,14 +227,16 @@ describe("diff JSONContent", () => {
                     {
                       type: "text",
                       text: "543"
-                    }, {
+                    },
+                    {
                       type: "text",
                       text: "21",
-                      marks: [{type: "deleted"}]
-                    }, {
+                      marks: [{ type: "deleted" }]
+                    },
+                    {
                       type: "text",
                       text: "33",
-                      marks: [{type: "inserted"}]
+                      marks: [{ type: "inserted" }]
                     }
                   ]
                 }

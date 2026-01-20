@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { QuotaDisplay } from './quota-display'
-import { useTranslations } from 'next-intl'
+import { useEffect, useState } from "react"
+import { QuotaDisplay } from "./quota-display"
+import { useTranslations } from "next-intl"
 
 interface SubscriptionData {
-  plan: 'FREE' | 'LITE' | 'PRO' | null
+  plan: "FREE" | "LITE" | "PRO" | null
   planName: string
   expiryDate: string | null
   isActive: boolean
@@ -18,21 +18,23 @@ interface SubscriptionData {
 
 export function SubscriptionCard() {
   const t = useTranslations()
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
-        const response = await fetch('/api/user/subscription')
+        const response = await fetch("/api/user/subscription")
         if (!response.ok) {
-          throw new Error('Failed to fetch subscription data')
+          throw new Error("Failed to fetch subscription data")
         }
         const data = await response.json()
         setSubscription(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        setError(err instanceof Error ? err.message : "Unknown error")
       } finally {
         setLoading(false)
       }
@@ -59,7 +61,7 @@ export function SubscriptionCard() {
     return (
       <div className="w-full">
         <div className="text-center text-muted-foreground">
-          <p>{t('loadingSubscriptionError')}</p>
+          <p>{t("loadingSubscriptionError")}</p>
           <p className="text-sm">{error}</p>
         </div>
       </div>
@@ -70,11 +72,11 @@ export function SubscriptionCard() {
     return (
       <div className="w-full">
         <div className="text-center text-muted-foreground">
-          <p>{t('failedToLoadSubscription')}</p>
+          <p>{t("failedToLoadSubscription")}</p>
         </div>
       </div>
     )
   }
 
   return <QuotaDisplay subscription={subscription} />
-} 
+}

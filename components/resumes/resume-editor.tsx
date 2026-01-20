@@ -1,26 +1,25 @@
 "use client"
 
-import useResumeTemplate from "@/lib/hooks/use-resume-template";
-import { openRightPanelAtom, useResume } from "@/lib/store/resume";
-import { useSetAtom } from "jotai";
-import {FloatingButtonGroup} from "@/components/client-components/floating-button-group";
-
+import useResumeTemplate from "@/lib/hooks/use-resume-template"
+import { openRightPanelAtom, useResume } from "@/lib/store/resume"
+import { useSetAtom } from "jotai"
+import { FloatingButtonGroup } from "@/components/client-components/floating-button-group"
 
 export default function ResumeEditor() {
   const template = useResumeTemplate()
   const { resumeData } = useResume()
-  const openRightPanel = useSetAtom(openRightPanelAtom);
+  const openRightPanel = useSetAtom(openRightPanelAtom)
 
-  if (!template) return null;
+  if (!template) return null
 
   // Override the template's onSectionClick to also expand the right panel
-  const originalOnSectionClick = template.onSectionClick;
+  const originalOnSectionClick = template.onSectionClick
   template.onSectionClick = (id, index) => {
-    originalOnSectionClick(id, index);
+    originalOnSectionClick(id, index)
     if (openRightPanel) {
-      openRightPanel('form');
+      openRightPanel("form")
     }
-  };
+  }
 
   return (
     <div className="w-full flex justify-center items-start relative py-4">
@@ -33,5 +32,5 @@ export default function ResumeEditor() {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,11 +1,17 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
-import { LandingPageLayout } from "@/components/ui/landing-page-layout";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { CheckCircle } from "lucide-react"
+import { LandingPageLayout } from "@/components/ui/landing-page-layout"
 
 export default async function SuccessPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<{ session_id?: string }>
 }) {
@@ -31,10 +37,10 @@ export default async function SuccessPage({
             <CardContent className="space-y-6">
               <div className="bg-muted/50 rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">
-                  订单号: {sessionId || 'N/A'}
+                  订单号: {sessionId || "N/A"}
                 </p>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">接下来您可以：</h3>
                 <div className="grid gap-3 text-left">
@@ -69,7 +75,6 @@ export default async function SuccessPage({
           </Card>
         </div>
       </section>
-
-      </LandingPageLayout>
-  );
-} 
+    </LandingPageLayout>
+  )
+}

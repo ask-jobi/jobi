@@ -1,15 +1,21 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Check, Crown, Loader2 } from 'lucide-react'
-import { PaymentError } from './payment-error'
-import { LoginRequiredModal } from './login-required-modal'
-import { useAuth } from '@/lib/hooks/use-auth'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Check, Crown, Loader2 } from "lucide-react"
+import { PaymentError } from "./payment-error"
+import { LoginRequiredModal } from "./login-required-modal"
+import { useAuth } from "@/lib/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 interface PricingCardProps {
   title: string
@@ -20,7 +26,7 @@ interface PricingCardProps {
   plan: string
   isPopular?: boolean
   buttonText: string
-  buttonVariant?: 'default' | 'outline'
+  buttonVariant?: "default" | "outline"
 }
 
 export function PricingCard({
@@ -32,9 +38,9 @@ export function PricingCard({
   plan,
   isPopular = false,
   buttonText,
-  buttonVariant = 'outline',
+  buttonVariant = "outline"
 }: PricingCardProps) {
-  const t = useTranslations();
+  const t = useTranslations()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -44,26 +50,26 @@ export function PricingCard({
   // 处理国际化文本
   const getTranslatedText = (text: string) => {
     // 如果text是国际化键值，则翻译；否则直接返回
-    if (text.startsWith('pricing.')) {
+    if (text.startsWith("pricing.")) {
       try {
-        return t(text as keyof typeof t);
+        return t(text as keyof typeof t)
       } catch {
         // 如果翻译键不存在，返回原文本
-        return text;
+        return text
       }
     }
-    return text;
-  };
+    return text
+  }
 
   const getTranslatedFeatures = () => {
-    return features.map(feature => getTranslatedText(feature));
-  };
+    return features.map((feature) => getTranslatedText(feature))
+  }
 
   const handleButtonClick = async () => {
     // 首先检查登录状态
     if (!user) {
       // 未登录，跳转到登录页面并传递回调URL
-      const callbackUrl = encodeURIComponent('/pricing')
+      const callbackUrl = encodeURIComponent("/pricing")
       router.push(`/auth/login?callbackUrl=${callbackUrl}`)
       return
     }
@@ -73,36 +79,36 @@ export function PricingCard({
       // 免费套餐：处理免费通行证的逻辑
       try {
         setIsLoading(true)
-        
+
         // 调用API创建免费通行证（API会自动检查用户历史）
-        const response = await fetch('/api/access-passes/create-free', {
-          method: 'POST',
+        const response = await fetch("/api/access-passes/create-free", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-          },
+            "Content-Type": "application/json"
+          }
         })
 
         const result = await response.json()
 
         if (response.ok) {
-          if (result.message === 'Free pass created successfully') {
+          if (result.message === "Free pass created successfully") {
             // 新创建了免费通行证，跳转到仪表板
-            router.push('/dashboard')
-          } else if (result.message === 'User already has an active pass') {
+            router.push("/dashboard")
+          } else if (result.message === "User already has an active pass") {
             // 用户已有有效通行证，直接跳转到仪表板
-            router.push('/dashboard')
+            router.push("/dashboard")
           }
         } else {
           // 创建失败，显示错误信息
-          if (result.code === 'ALREADY_TRIED') {
-            setError(t('pricing.freePass.alreadyTried'))
+          if (result.code === "ALREADY_TRIED") {
+            setError(t("pricing.freePass.alreadyTried"))
           } else {
-            setError(result.error || t('pricing.freePass.createFailed'))
+            setError(result.error || t("pricing.freePass.createFailed"))
           }
         }
       } catch (error) {
-        console.error('Error creating free access pass:', error)
-        setError(t('pricing.freePass.createError'))
+        console.error("Error creating free access pass:", error)
+        setError(t("pricing.freePass.createError"))
       } finally {
         setIsLoading(false)
       }
@@ -120,29 +126,29 @@ export function PricingCard({
     setError(undefined)
 
     try {
-      const response = await fetch('/api/checkout_sessions', {
-        method: 'POST',
+      const response = await fetch("/api/checkout_sessions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           priceId,
-          plan,
-        }),
+          plan
+        })
       })
 
       const { url, error } = await response.json()
 
       if (response.status === 401) {
         // 如果后端返回401，跳转到登录页面
-        const callbackUrl = encodeURIComponent('/pricing')
+        const callbackUrl = encodeURIComponent("/pricing")
         router.push(`/auth/login?callbackUrl=${callbackUrl}`)
         return
       }
 
       if (error) {
-        console.error('Payment error:', error)
-        setError(error || t('pricing.paymentError'))
+        console.error("Payment error:", error)
+        setError(error || t("pricing.paymentError"))
         return
       }
 
@@ -150,16 +156,16 @@ export function PricingCard({
         window.location.href = url
       }
     } catch (error) {
-      console.error('Payment error:', error)
-      setError(t('pricing.paymentError'))
+      console.error("Payment error:", error)
+      setError(t("pricing.paymentError"))
     } finally {
       setIsLoading(false)
     }
   }
 
   const getButtonText = () => {
-    if (authLoading) return t('pricing.loading')
-    if (!user) return t('pricing.loginToPurchase')
+    if (authLoading) return t("pricing.loading")
+    if (!user) return t("pricing.loginToPurchase")
     if (!priceId) return getTranslatedText(buttonText) // 免费套餐
     return getTranslatedText(buttonText)
   }
@@ -179,12 +185,14 @@ export function PricingCard({
         onClose={() => setShowLoginModal(false)}
         planName={getTranslatedText(title)}
       />
-      <Card className={`border-0 shadow-lg relative ${isPopular ? 'border-2 border-primary' : ''}`}>
+      <Card
+        className={`border-0 shadow-lg relative ${isPopular ? "border-2 border-primary" : ""}`}
+      >
         {isPopular && (
           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
             <Badge className="bg-primary text-primary-foreground px-4 py-1">
               <Crown className="w-4 h-4 mr-1" />
-              {t('pricing.mostPopular')}
+              {t("pricing.mostPopular")}
             </Badge>
           </div>
         )}

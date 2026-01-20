@@ -1,11 +1,16 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Upload, FileText, Sparkles, Check } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import ResumeUpload from "@/components/resumes/resume-upload";
+import { useState, useEffect } from "react"
+import { Upload, FileText, Sparkles, Check } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import ResumeUpload from "@/components/resumes/resume-upload"
 
 interface Resume {
   id: string
@@ -19,53 +24,57 @@ interface Resume {
 interface MatchMeModalProps {
   isOpen: boolean
   onClose: () => void
-  onMatch: (resumeData: { type: 'existing' | 'new', resumeId?: string, file?: File }) => void
+  onMatch: (resumeData: {
+    type: "existing" | "new"
+    resumeId?: string
+    file?: File
+  }) => void
 }
 
 // Mock data for existing resumes
 const mockResumes: Resume[] = [
   {
-    id: '1',
-    title: 'Software Engineer Resume',
-    company: 'TechCorp',
-    position: 'Senior Developer',
-    updatedAt: '2024-01-15',
-    thumbnailUrl: '/api/resume/thumbnail?resume_id=1'
+    id: "1",
+    title: "Software Engineer Resume",
+    company: "TechCorp",
+    position: "Senior Developer",
+    updatedAt: "2024-01-15",
+    thumbnailUrl: "/api/resume/thumbnail?resume_id=1"
   },
   {
-    id: '2',
-    title: 'Product Manager Resume',
-    company: 'StartupXYZ',
-    position: 'Product Lead',
-    updatedAt: '2024-01-10',
-    thumbnailUrl: '/api/resume/thumbnail?resume_id=2'
+    id: "2",
+    title: "Product Manager Resume",
+    company: "StartupXYZ",
+    position: "Product Lead",
+    updatedAt: "2024-01-10",
+    thumbnailUrl: "/api/resume/thumbnail?resume_id=2"
   },
   {
-    id: '3',
-    title: 'Data Scientist Resume',
-    company: 'DataFlow Inc',
-    position: 'ML Engineer',
-    updatedAt: '2024-01-08',
-    thumbnailUrl: '/api/resume/thumbnail?resume_id=3'
+    id: "3",
+    title: "Data Scientist Resume",
+    company: "DataFlow Inc",
+    position: "ML Engineer",
+    updatedAt: "2024-01-08",
+    thumbnailUrl: "/api/resume/thumbnail?resume_id=3"
   }
 ]
 
 export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
   const [selectedResume, setSelectedResume] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [step, setStep] = useState<'select' | 'upload'>('select')
+  const [step, setStep] = useState<"select" | "upload">("select")
 
   useEffect(() => {
     if (isOpen) {
       setSelectedResume(null)
       setUploadedFile(null)
-      setStep('select')
+      setStep("select")
     }
   }, [isOpen])
 
   // Reset file when switching to upload step
   useEffect(() => {
-    if (step === 'upload') {
+    if (step === "upload") {
       setUploadedFile(null)
     }
   }, [step])
@@ -79,20 +88,20 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
   }
 
   const handleMatch = () => {
-    if (step === 'select' && selectedResume) {
-      onMatch({ type: 'existing', resumeId: selectedResume })
-    } else if (step === 'upload' && uploadedFile) {
-      onMatch({ type: 'new', file: uploadedFile })
+    if (step === "select" && selectedResume) {
+      onMatch({ type: "existing", resumeId: selectedResume })
+    } else if (step === "upload" && uploadedFile) {
+      onMatch({ type: "new", file: uploadedFile })
     }
   }
 
   const canProceed = () => {
-    if (step === 'select') return selectedResume !== null
-    if (step === 'upload') return uploadedFile !== null
+    if (step === "select") return selectedResume !== null
+    if (step === "upload") return uploadedFile !== null
     return false
   }
 
-  const selectedResumeData = mockResumes.find(r => r.id === selectedResume)
+  const selectedResumeData = mockResumes.find((r) => r.id === selectedResume)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -107,16 +116,16 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
         {/* Step Selection */}
         <div className="flex gap-4 mb-2">
           <Button
-            variant={step === 'select' ? 'default' : 'outline'}
-            onClick={() => setStep('select')}
+            variant={step === "select" ? "default" : "outline"}
+            onClick={() => setStep("select")}
             className="flex-1"
           >
             <FileText className="w-4 h-4 mr-2" />
             Use Existing Resume
           </Button>
           <Button
-            variant={step === 'upload' ? 'default' : 'outline'}
-            onClick={() => setStep('upload')}
+            variant={step === "upload" ? "default" : "outline"}
+            onClick={() => setStep("upload")}
             className="flex-1"
           >
             <Upload className="w-4 h-4 mr-2" />
@@ -125,7 +134,7 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
         </div>
 
         {/* Existing Resumes Selection */}
-        {step === 'select' && (
+        {step === "select" && (
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Select a Resume</h3>
             <div className="grid gap-2 max-h-60 overflow-y-auto pr-4">
@@ -134,8 +143,8 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
                   key={resume.id}
                   className={`cursor-pointer transition-all ${
                     selectedResume === resume.id
-                      ? 'border-2 border-purple-500 bg-purple-50/50'
-                      : 'hover:bg-muted/50 border border-border'
+                      ? "border-2 border-purple-500 bg-purple-50/50"
+                      : "hover:bg-muted/50 border border-border"
                   }`}
                   onClick={() => handleExistingResumeSelect(resume.id)}
                 >
@@ -164,7 +173,7 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
         )}
 
         {/* File Upload */}
-        {step === 'upload' && (
+        {step === "upload" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Upload Resume</h3>
             <ResumeUpload
@@ -175,9 +184,11 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
         )}
 
         {/* Selected Resume Preview */}
-        {selectedResumeData && step === 'select' && (
+        {selectedResumeData && step === "select" && (
           <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="font-semibold text-purple-900 mb-2">Selected Resume</h4>
+            <h4 className="font-semibold text-purple-900 mb-2">
+              Selected Resume
+            </h4>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                 <FileText className="w-4 h-4 text-purple-600" />
@@ -201,9 +212,9 @@ export function MatchMeModal({ isOpen, onClose, onMatch }: MatchMeModalProps) {
             onClick={handleMatch}
             disabled={!canProceed()}
             className={`flex-1 ${
-              canProceed() 
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700' 
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
+              canProceed()
+                ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}
           >
             <Sparkles className="w-4 h-4 mr-2" />

@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "husky",
     "dev": "next dev --turbopack",
     "dev:test": "next dev -p 3001 --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "e2e-test": "NODE_ENV=test pnpm exec playwright test --ui"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,tsx,jsx,json,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",
@@ -97,10 +105,12 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
     "jest-environment-node": "^30.0.5",
     "jest-mock-extended": "^4.0.0",
+    "lint-staged": "^16.2.7",
     "next-test-api-route-handler": "^5.0.0",
     "puppeteer": "^24.34.0",
     "tailwindcss": "^4",

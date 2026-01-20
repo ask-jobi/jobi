@@ -1,8 +1,8 @@
-import {JSONContent} from "@tiptap/core";
-import {diffChars} from "diff";
+import { JSONContent } from "@tiptap/core"
+import { diffChars } from "diff"
 
 function unwrapDoc(json: JSONContent): JSONContent[] {
-  if (json.type === 'doc') {
+  if (json.type === "doc") {
     return json.content ?? []
   }
   return [json]
@@ -49,18 +49,26 @@ function diffText(beforeText: string, afterText: string): JSONContent[] {
 // 合并相邻的相同标记的文本节点
 function mergeTextNodes(nodes: JSONContent[]): JSONContent[] {
   if (nodes.length === 0) return []
-  
+
   const result: JSONContent[] = []
   let current = { ...nodes[0] } as JSONContent
 
   for (let i = 1; i < nodes.length; i++) {
     const node = nodes[i]
     if (node.type === "text" && current.type === "text") {
-      const currentMarks = current.marks?.map(m => m.type).sort().join(',') || ''
-      const nodeMarks = node.marks?.map(m => m.type).sort().join(',') || ''
-      
+      const currentMarks =
+        current.marks
+          ?.map((m) => m.type)
+          .sort()
+          .join(",") || ""
+      const nodeMarks =
+        node.marks
+          ?.map((m) => m.type)
+          .sort()
+          .join(",") || ""
+
       if (currentMarks === nodeMarks) {
-        current.text = (current.text || '') + (node.text || '')
+        current.text = (current.text || "") + (node.text || "")
       } else {
         result.push(current)
         current = { ...node }
@@ -71,19 +79,19 @@ function mergeTextNodes(nodes: JSONContent[]): JSONContent[] {
     }
   }
   result.push(current)
-  
+
   return result
 }
 
 // 比较两个节点是否结构相同（类型和关键属性相同）
 function isSameNodeType(before: JSONContent, after: JSONContent): boolean {
   if (before.type !== after.type) return false
-  
+
   // 对于列表，还需要比较列表类型（bulletList vs orderedList）
   if (before.type === "bulletList" || before.type === "orderedList") {
     return before.type === after.type
   }
-  
+
   return true
 }
 
@@ -91,32 +99,29 @@ function isSameNodeType(before: JSONContent, after: JSONContent): boolean {
 function diffNodes(before: JSONContent, after: JSONContent): JSONContent[] {
   // 如果节点类型不同，整个节点都标记为删除和插入
   if (!isSameNodeType(before, after)) {
-    return [
-      markNodeAsDeleted(before),
-      markNodeAsInserted(after)
-    ]
+    return [markNodeAsDeleted(before), markNodeAsInserted(after)]
   }
 
   // 如果是文本节点，进行文本 diff
   if (before.type === "text" && after.type === "text") {
-    const beforeText = before.text || ''
-    const afterText = after.text || ''
+    const beforeText = before.text || ""
+    const afterText = after.text || ""
     return diffText(beforeText, afterText)
   }
 
   // 对于有内容的节点，递归比较子节点
   const beforeContent = before.content || []
   const afterContent = after.content || []
-  
+
   // 比较子节点
   const diffedContent = diffNodeArrays(beforeContent, afterContent)
-  
+
   // 构建结果节点，使用 after 的结构但保留 diff 后的内容
   const result: JSONContent = {
     ...after,
     content: diffedContent
   }
-  
+
   return [result]
 }
 
@@ -128,7 +133,7 @@ function markNodeAsDeleted(node: JSONContent): JSONContent {
       marks: [{ type: "deleted" }, ...(node.marks || [])]
     }
   }
-  
+
   // 对于非文本节点，递归标记所有文本子节点
   const markTextNodesDeleted = (n: JSONContent): JSONContent => {
     if (n.type === "text") {
@@ -137,17 +142,17 @@ function markNodeAsDeleted(node: JSONContent): JSONContent {
         marks: [{ type: "deleted" }, ...(n.marks || [])]
       }
     }
-    
+
     if (n.content) {
       return {
         ...n,
         content: n.content.map(markTextNodesDeleted)
       }
     }
-    
+
     return n
   }
-  
+
   return markTextNodesDeleted(node)
 }
 
@@ -159,7 +164,7 @@ function markNodeAsInserted(node: JSONContent): JSONContent {
       marks: [{ type: "inserted" }, ...(node.marks || [])]
     }
   }
-  
+
   // 对于非文本节点，递归标记所有文本子节点
   const markTextNodesInserted = (n: JSONContent): JSONContent => {
     if (n.type === "text") {
@@ -168,22 +173,25 @@ function markNodeAsInserted(node: JSONContent): JSONContent {
         marks: [{ type: "inserted" }, ...(n.marks || [])]
       }
     }
-    
+
     if (n.content) {
       return {
         ...n,
         content: n.content.map(markTextNodesInserted)
       }
     }
-    
+
     return n
   }
-  
+
   return markTextNodesInserted(node)
 }
 
 // 比较两个节点数组
-function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): JSONContent[] {
+function diffNodeArrays(
+  beforeArray: JSONContent[],
+  afterArray: JSONContent[]
+): JSONContent[] {
   const result: JSONContent[] = []
   let beforeIndex = 0
   let afterIndex = 0
@@ -194,7 +202,7 @@ function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): 
       result.push(...afterArray.slice(afterIndex).map(markNodeAsInserted))
       break
     }
-    
+
     if (afterIndex >= afterArray.length) {
       // 只有 before 数组还有节点，全部标记为删除
       result.push(...beforeArray.slice(beforeIndex).map(markNodeAsDeleted))
@@ -213,12 +221,14 @@ function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): 
     } else {
       // 节点类型不同，尝试匹配后面的节点
       let matched = false
-      
+
       // 尝试在 after 数组中查找匹配的 before 节点
       for (let j = afterIndex + 1; j < afterArray.length; j++) {
         if (isSameNodeType(beforeNode, afterArray[j])) {
           // 找到了匹配，中间的节点都是插入的
-          result.push(...afterArray.slice(afterIndex, j).map(markNodeAsInserted))
+          result.push(
+            ...afterArray.slice(afterIndex, j).map(markNodeAsInserted)
+          )
           const diffed = diffNodes(beforeNode, afterArray[j])
           result.push(...diffed)
           beforeIndex++
@@ -227,13 +237,15 @@ function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): 
           break
         }
       }
-      
+
       // 尝试在 before 数组中查找匹配的 after 节点
       if (!matched) {
         for (let i = beforeIndex + 1; i < beforeArray.length; i++) {
           if (isSameNodeType(beforeArray[i], afterNode)) {
             // 找到了匹配，中间的节点都是删除的
-            result.push(...beforeArray.slice(beforeIndex, i).map(markNodeAsDeleted))
+            result.push(
+              ...beforeArray.slice(beforeIndex, i).map(markNodeAsDeleted)
+            )
             const diffed = diffNodes(beforeArray[i], afterNode)
             result.push(...diffed)
             beforeIndex = i + 1
@@ -243,7 +255,7 @@ function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): 
           }
         }
       }
-      
+
       // 如果都没找到匹配，当前节点类型不同，标记为删除和插入
       if (!matched) {
         result.push(markNodeAsDeleted(beforeNode))
@@ -257,7 +269,10 @@ function diffNodeArrays(beforeArray: JSONContent[], afterArray: JSONContent[]): 
   return result
 }
 
-export function calculateDiffJsonContent(beforeContent: JSONContent, afterContent: JSONContent): JSONContent {
+export function calculateDiffJsonContent(
+  beforeContent: JSONContent,
+  afterContent: JSONContent
+): JSONContent {
   const beforeArray = unwrapDoc(beforeContent)
   const afterArray = unwrapDoc(afterContent)
 

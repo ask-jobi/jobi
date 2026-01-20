@@ -1,19 +1,22 @@
 "use client"
-import React from 'react';
+import React from "react"
 import {
   FileUpload,
   FileUploadDropzone,
-  FileUploadItem, FileUploadItemDelete, FileUploadItemMetadata, FileUploadItemPreview,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
   FileUploadList,
   FileUploadTrigger
-} from "@/components/ui/file-upload";
-import {Upload, X} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {toast} from "sonner";
-import {useTranslations} from "next-intl";
+} from "@/components/ui/file-upload"
+import { Upload, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 type ResumeUploadProps = {
-  onSelectFile: (file: File) => void,
+  onSelectFile: (file: File) => void
   file: File | undefined
 }
 
@@ -21,9 +24,9 @@ function ResumeUpload(props: ResumeUploadProps) {
   const t = useTranslations("upload")
   const onFileReject = React.useCallback((file: File, message: string) => {
     toast(message, {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
-    });
-  }, []);
+      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`
+    })
+  }, [])
 
   const handleSelectFile = (files: File[]) => {
     props.onSelectFile(files[0])
@@ -33,7 +36,7 @@ function ResumeUpload(props: ResumeUploadProps) {
     <FileUpload
       maxSize={5 * 1024 * 1024}
       className="w-full"
-      value={props.file ? [props.file]: []}
+      value={props.file ? [props.file] : []}
       onValueChange={handleSelectFile}
       onFileReject={onFileReject}
     >
@@ -43,9 +46,7 @@ function ResumeUpload(props: ResumeUploadProps) {
             <Upload className="size-6 text-muted-foreground" />
           </div>
           <p className="font-medium text-sm">{t("title")}</p>
-          <p className="text-muted-foreground text-xs">
-            {t("desc")}
-          </p>
+          <p className="text-muted-foreground text-xs">{t("desc")}</p>
         </div>
         <FileUploadTrigger asChild>
           <Button variant="outline" size="sm" className="mt-2 w-fit">
@@ -54,7 +55,7 @@ function ResumeUpload(props: ResumeUploadProps) {
         </FileUploadTrigger>
       </FileUploadDropzone>
       <FileUploadList>
-        {props.file &&
+        {props.file && (
           <FileUploadItem value={props.file}>
             <FileUploadItemPreview />
             <FileUploadItemMetadata />
@@ -64,10 +65,10 @@ function ResumeUpload(props: ResumeUploadProps) {
               </Button>
             </FileUploadItemDelete>
           </FileUploadItem>
-        }
+        )}
       </FileUploadList>
     </FileUpload>
-  );
+  )
 }
 
-export default ResumeUpload;
+export default ResumeUpload

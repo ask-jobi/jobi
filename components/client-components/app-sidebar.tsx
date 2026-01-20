@@ -1,4 +1,4 @@
-import {LayoutDashboard, Settings, Briefcase} from "lucide-react";
+import { LayoutDashboard, Settings, Briefcase } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -9,24 +9,24 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from "../ui/sidebar";
-import { Logo } from "../ui/logo";
-import { LogoutButton } from "./logout-button";
-import {useTranslations} from "next-intl";
-import { CompactPlanDisplay } from "./compact-plan-display";
+} from "../ui/sidebar"
+import { Logo } from "../ui/logo"
+import { LogoutButton } from "./logout-button"
+import { useTranslations } from "next-intl"
+import { CompactPlanDisplay } from "./compact-plan-display"
 
 const items = [
   {
     title: "dashboard",
     url: "/dashboard",
-    icon: LayoutDashboard,
+    icon: LayoutDashboard
   },
   {
     title: "jobs",
     url: "/jobs",
-    icon: Briefcase,
-  },
-];
+    icon: Briefcase
+  }
+]
 
 export default function AppSidebar() {
   const t = useTranslations()
@@ -34,7 +34,7 @@ export default function AppSidebar() {
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
-        <Logo size="md"/>
+        <Logo size="md" />
       </SidebarHeader>
 
       <SidebarContent>
@@ -45,7 +45,7 @@ export default function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
-                      <item.icon/>
+                      <item.icon />
                       <span>{t(item.title)}</span>
                     </a>
                   </SidebarMenuButton>
@@ -65,7 +65,7 @@ export default function AppSidebar() {
             <SidebarMenuButton asChild>
               <a href="/settings">
                 <Settings />
-                <span>{t('settings')}</span>
+                <span>{t("settings")}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -73,5 +73,5 @@ export default function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

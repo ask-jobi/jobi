@@ -1,10 +1,14 @@
 import "server-only"
-import {getResumeData} from "@/server/resume";
-import {notFound} from "next/navigation";
-import ResumeViewer from "@/components/resumes/resume-viewer";
+import { getResumeData } from "@/server/resume"
+import { notFound } from "next/navigation"
+import ResumeViewer from "@/components/resumes/resume-viewer"
 
-export default async function PrintResumePage({ params }: { params: Promise<{ id: string }> }) {
-  const {id} = await params
+export default async function PrintResumePage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
 
   let resumeData = null
 
@@ -20,7 +24,7 @@ export default async function PrintResumePage({ params }: { params: Promise<{ id
 
   return (
     <div className="w-full h-full p-8">
-      <ResumeViewer resumeData={resumeData}/>
+      <ResumeViewer resumeData={resumeData} />
     </div>
-  );
+  )
 }

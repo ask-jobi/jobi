@@ -1,25 +1,25 @@
-import {NextRequest, NextResponse} from "next/server";
-import { createResumeRecord, uploadResumeFile } from "@/server/resume";
-import {parseResume} from "@/server/ai/resume-parser";
-import {verifyJobApplicationLimit} from "@/server/quota";
+import { NextRequest, NextResponse } from "next/server"
+import { createResumeRecord, uploadResumeFile } from "@/server/resume"
+import { parseResume } from "@/server/ai/resume-parser"
+import { verifyJobApplicationLimit } from "@/server/quota"
 import {
   registerWriter,
   sendData,
-  closeWriter,
-} from "@/server/sse/writer-manager";
-import { evaluateAndSaveResume } from "@/server/evaluation";
-import {loadPdfToDoc} from "@/server/ai/tools";
-import {JobInfoFormType} from "@/components/forms/job-information-form";
-import {RollbackContext, rollbackStorage} from "@/server/rollback";
+  closeWriter
+} from "@/server/sse/writer-manager"
+import { evaluateAndSaveResume } from "@/server/evaluation"
+import { loadPdfToDoc } from "@/server/ai/tools"
+import { JobInfoFormType } from "@/components/forms/job-information-form"
+import { RollbackContext, rollbackStorage } from "@/server/rollback"
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
-  const processId = Date.now().toString();
-  const responseStream = new TransformStream();
-  const writer = responseStream.writable.getWriter();
-  registerWriter(processId, writer);
+  const processId = Date.now().toString()
+  const responseStream = new TransformStream()
+  const writer = responseStream.writable.getWriter()
+  registerWriter(processId, writer)
 
   try {
     await verifyJobApplicationLimit()
@@ -39,32 +39,31 @@ export async function POST(request: NextRequest) {
       closeWriter(processId)
     }
 
-    processFile(processId, file, jobInfo).catch(async error => {
-      console.log('error', error)
+    processFile(processId, file, jobInfo).catch(async (error) => {
+      console.log("error", error)
       await sendData(processId, {
-        error: error.message,
+        error: error.message
       })
       closeWriter(processId)
     })
   } catch (error: any) {
-    console.log('error', error)
+    console.log("error", error)
     await sendData(processId, {
-      error: error.message,
+      error: error.message
     })
     closeWriter(processId)
   }
 
   return new NextResponse(responseStream.readable, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Connection': 'keep-alive',
-      'Cache-Control': 'no-cache, no-transform',
-      'X-Accel-Buffering': 'no', // 禁用 nginx 缓冲
-      'Transfer-Encoding': 'chunked', // 启用分块传输
-    },
-  });
+      "Content-Type": "text/event-stream",
+      Connection: "keep-alive",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no", // 禁用 nginx 缓冲
+      "Transfer-Encoding": "chunked" // 启用分块传输
+    }
+  })
 }
-
 
 async function processFile(
   processId: string,
@@ -73,7 +72,7 @@ async function processFile(
 ) {
   await rollbackStorage.run(new RollbackContext(), async () => {
     try {
-      if (file.type !== 'application/pdf') {
+      if (file.type !== "application/pdf") {
         throw new Error("Only support upload pdf file as resume")
       }
 
@@ -81,66 +80,69 @@ async function processFile(
       await sendData(processId, {
         step: "upload",
         status: "loading"
-      });
-      const uploadResult = await uploadResumeFile(file);
+      })
+      const uploadResult = await uploadResumeFile(file)
       await sendData(processId, {
         step: "upload",
         status: "success"
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      })
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       await sendData(processId, {
         step: "load",
         status: "loading"
-      });
+      })
       const docs = await loadPdfToDoc(file, {
         splitPages: false
-      });
+      })
       console.log(docs)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       await sendData(processId, {
         step: "load",
         status: "success"
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      })
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       await sendData(processId, {
         step: "parse",
         status: "loading"
-      });
-      const [resumeTextData, language] = await parseResume(docs[0].pageContent);
+      })
+      const [resumeTextData, language] = await parseResume(docs[0].pageContent)
       await sendData(processId, {
         step: "parse",
         status: "success"
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      })
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       await sendData(processId, {
         step: "prepare",
         status: "loading"
-      });
-      const {resumeData, jobData} = await createResumeRecord(
+      })
+      const { resumeData, jobData } = await createResumeRecord(
         jobInfo,
         uploadResult,
         resumeTextData,
         language
-      );
+      )
       await sendData(processId, {
         step: "prepare",
         status: "success"
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      })
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       await sendData(processId, {
         step: "evaluate",
         status: "loading"
-      });
-      await evaluateAndSaveResume(resumeData.id, resumeData.resume_json!!, jobData.description)
+      })
+      await evaluateAndSaveResume(
+        resumeData.id,
+        resumeData.resume_json!!,
+        jobData.description
+      )
       await sendData(processId, {
         step: "evaluate",
         status: "success"
-      });
-
+      })
     } catch (error: any) {
       console.error(error)
 
@@ -151,11 +153,11 @@ async function processFile(
       }
 
       await sendData(processId, {
-        error: error.message,
-      });
+        error: error.message
+      })
       throw error
     } finally {
-      closeWriter(processId);
+      closeWriter(processId)
     }
   })
 }

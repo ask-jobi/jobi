@@ -125,7 +125,8 @@
   }
 
   @keyframes pulse-subtle {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 59, 130, 246), 0.4);
     }
     50% {
@@ -134,7 +135,8 @@
   }
 
   @keyframes pulse-slow {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.6;
     }
     50% {
@@ -147,7 +149,8 @@
       transform: scale(1);
       opacity: 1;
     }
-    75%, 100% {
+    75%,
+    100% {
       transform: scale(1.05);
       opacity: 0;
     }
@@ -189,7 +192,9 @@
 .card-hidden {
   opacity: 0;
   transform: translateX(-50px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
 }
 
 .animate-shimmer {
@@ -198,17 +203,17 @@
 }
 
 .animate-shimmer::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: linear-gradient(
-          to right,
-          rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.8) 50%,
-          rgba(255, 255, 255, 0) 100%
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0) 100%
   );
   filter: blur(5px);
   animation: shimmer 3s infinite linear;
@@ -259,7 +264,7 @@
 
 @media print {
   [class*="header"],
-  .toaster{
+  .toaster {
     display: none;
   }
 
@@ -288,11 +293,11 @@
 
 .tiptap {
   ul {
-    @apply list-disc
+    @apply list-disc;
   }
 
   ol {
-    @apply list-decimal
+    @apply list-decimal;
   }
 
   li {

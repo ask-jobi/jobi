@@ -1,44 +1,44 @@
-import {Extension, isNodeSelection} from "@tiptap/react";
-import {DiffStorage, ToolbarMode} from "@/types/tiptap";
-import {Range} from "@tiptap/core";
-import {Selection} from "@tiptap/extensions";
-import {Plugin, PluginKey, EditorState} from "@tiptap/pm/state";
-import {Decoration, DecorationSet} from "@tiptap/pm/view";
-import type {Node as ProseMirrorNode} from "@tiptap/pm/model";
+import { Extension, isNodeSelection } from "@tiptap/react"
+import { DiffStorage, ToolbarMode } from "@/types/tiptap"
+import { Range } from "@tiptap/core"
+import { Selection } from "@tiptap/extensions"
+import { Plugin, PluginKey, EditorState } from "@tiptap/pm/state"
+import { Decoration, DecorationSet } from "@tiptap/pm/view"
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model"
 
 const getShouldExpandRange = (state: EditorState, range: Range): Range => {
   // from 和 to 如果是一个节点的开头和结尾，那么递归查找其父节点
-  const $from = state.doc.resolve(range.from);
+  const $from = state.doc.resolve(range.from)
 
   // 最终确定的最外层范围
-  let finalFrom = range.from;
-  let finalTo = range.to;
+  let finalFrom = range.from
+  let finalTo = range.to
 
   // 从当前层级向上遍历
   // depth 0 是 doc，通常我们搜寻到 depth 1 即可
   for (let d = $from.depth; d > 0; d--) {
-    const parent = $from.node(d);
+    const parent = $from.node(d)
 
     // 关键判断：如果该层节点只有一个子节点，说明它的范围与子节点重合
     if (parent.childCount === 1) {
-      finalFrom = $from.before(d);
-      finalTo = $from.after(d);
+      finalFrom = $from.before(d)
+      finalTo = $from.after(d)
     } else {
       // 发现父节点包含多个子节点（比如 listItem 里除了这个 p 还有另一个 p）
       // 停止向上，返回当前已知的最大范围
-      break;
+      break
     }
   }
   // 返回应该被删除的最大父节点边界
-  return { from: finalFrom, to: finalTo };
+  return { from: finalFrom, to: finalTo }
 }
 
 // 处理 diff 操作的辅助函数
 function processDiffOperation(
   state: EditorState,
   options: {
-    markToRemove: any; // 要移除的 mark
-    markToDelete: any; // 要删除的 mark（对应的节点会被删除）
+    markToRemove: any // 要移除的 mark
+    markToDelete: any // 要删除的 mark（对应的节点会被删除）
   }
 ): boolean {
   const { tr, schema, doc } = state
@@ -67,7 +67,7 @@ function processDiffOperation(
 
   // 从后往前删除，避免位置偏移
   rangeToRemove.reverse().forEach((range) => {
-    const {from, to} = getShouldExpandRange(state, range)
+    const { from, to } = getShouldExpandRange(state, range)
     tr.deleteRange(from, to)
   })
 
@@ -82,19 +82,20 @@ function clearDiffStorage(storage: DiffStorage) {
 }
 
 export const Diff = Extension.create<object, DiffStorage>({
-  name: 'diff',
+  name: "diff",
 
   addStorage() {
     return {
       originalSelection: null,
       originalContent: null,
-      diffContent: null,
+      diffContent: null
     }
   },
 
   addCommands() {
     return {
-      setDiffContent: ({ originalSelection, originalContent, diffContent }) =>
+      setDiffContent:
+        ({ originalSelection, originalContent, diffContent }) =>
         ({ chain, editor }) => {
           this.storage.originalSelection = originalSelection
           this.storage.originalContent = originalContent
@@ -117,7 +118,8 @@ export const Diff = Extension.create<object, DiffStorage>({
 
           return true
         },
-      applyDiff: () =>
+      applyDiff:
+        () =>
         ({ state, dispatch, editor }) => {
           const { schema } = state
           const { inserted, deleted } = schema.marks
@@ -126,18 +128,19 @@ export const Diff = Extension.create<object, DiffStorage>({
           // 删除 deleted 节点，移除 inserted mark
           const hasChanges = processDiffOperation(state, {
             markToRemove: inserted, // 移除 inserted mark（保留内容）
-            markToDelete: deleted,   // 删除 deleted 节点
+            markToDelete: deleted // 删除 deleted 节点
           })
 
           if (hasChanges && dispatch) {
             clearDiffStorage(this.storage)
             editor.setEditable(true)
-            state.tr.setMeta('addToHistory', false)
+            state.tr.setMeta("addToHistory", false)
             dispatch(state.tr)
           }
           return hasChanges
         },
-      rejectDiff: () =>
+      rejectDiff:
+        () =>
         ({ state, dispatch, editor }) => {
           const { schema } = state
           const { inserted, deleted } = schema.marks
@@ -145,45 +148,43 @@ export const Diff = Extension.create<object, DiffStorage>({
           // reject: 拒绝更改
           // 删除 inserted 节点，移除 deleted mark
           const hasChanges = processDiffOperation(state, {
-            markToRemove: deleted,   // 移除 deleted mark（保留内容）
-            markToDelete: inserted,  // 删除 inserted 节点
+            markToRemove: deleted, // 移除 deleted mark（保留内容）
+            markToDelete: inserted // 删除 inserted 节点
           })
 
           if (hasChanges && dispatch) {
             clearDiffStorage(this.storage)
             editor.setEditable(true)
-            state.tr.setMeta('addToHistory', false)
+            state.tr.setMeta("addToHistory", false)
             dispatch(state.tr)
           }
           return hasChanges
         },
-      clearDiff: () =>
-        () => {
-          clearDiffStorage(this.storage)
-          return true
-        }
+      clearDiff: () => () => {
+        clearDiffStorage(this.storage)
+        return true
+      }
     }
-  },
+  }
 })
-
 
 export const SelectionCustom = Selection.extend({
   addStorage() {
     return {
       from: null,
-      to: null,
+      to: null
     }
   },
   addCommands() {
     return {
-      clearSelection: () =>
-        () => {
-          this.storage.from = null
-          this.storage.to = null
-          return true
-        },
-      expandSelectionToNodeEdge: () =>
-        ({editor}) => {
+      clearSelection: () => () => {
+        this.storage.from = null
+        this.storage.to = null
+        return true
+      },
+      expandSelectionToNodeEdge:
+        () =>
+        ({ editor }) => {
           const { $from, $to } = editor.state.selection
           const range = $from.blockRange($to)
           if (range) {
@@ -199,7 +200,7 @@ export const SelectionCustom = Selection.extend({
 
     return [
       new Plugin({
-        key: new PluginKey('selection'),
+        key: new PluginKey("selection"),
         props: {
           handleDOMEvents: {
             mousedown: (view) => {
@@ -220,13 +221,11 @@ export const SelectionCustom = Selection.extend({
             // 如果 Storage 为空，且满足以下任一条件，则不渲染高亮
             if (
               !hasStorageRange &&
-              (
-                state.selection.empty ||
+              (state.selection.empty ||
                 editor.isFocused ||
                 !editor.isEditable ||
                 isNodeSelection(state.selection) ||
-                editor.view.dragging
-              )
+                editor.view.dragging)
             ) {
               return null
             }
@@ -236,8 +235,12 @@ export const SelectionCustom = Selection.extend({
             // console.log(!hasStorageRange, state.selection.empty, editor.isFocused, !editor.isEditable, isNodeSelection(state.selection), editor.view.dragging)
 
             // 3. 确定最终的 from 和 to
-            const from = hasStorageRange ? (storage.from as number) : state.selection.from
-            const to = hasStorageRange ? (storage.to as number) : state.selection.to
+            const from = hasStorageRange
+              ? (storage.from as number)
+              : state.selection.from
+            const to = hasStorageRange
+              ? (storage.to as number)
+              : state.selection.to
 
             // 确保坐标在当前文档范围内，防止报错
             const docSize = state.doc.content.size
@@ -250,32 +253,30 @@ export const SelectionCustom = Selection.extend({
 
             return DecorationSet.create(state.doc, [
               Decoration.inline(finalFrom, finalTo, {
-                class: options.className,
-              }),
+                class: options.className
+              })
             ])
-          },
-        },
-      }),
+          }
+        }
+      })
     ]
-  },
+  }
 })
 
-
 export const FloatingToolbar = Extension.create({
-  name: 'floatingToolbar',
+  name: "floatingToolbar",
   addStorage() {
     return {
-      mode: 'default'
+      mode: "default"
     }
   },
 
   addCommands() {
     return {
-      setMode: (mode: ToolbarMode) =>
-          () => {
-            this.storage.mode = mode
-            return true
-          },
+      setMode: (mode: ToolbarMode) => () => {
+        this.storage.mode = mode
+        return true
+      }
     }
-  },
+  }
 })

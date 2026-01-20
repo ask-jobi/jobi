@@ -6,11 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter, DialogDescription,
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog"
 import { Editor } from "@/components/editor/editor"
 import { Button } from "@/components/ui/button"
-import {useTranslations} from "next-intl";
+import { useTranslations } from "next-intl"
 
 interface MarkdownModalProps {
   isOpen: boolean
@@ -28,23 +29,23 @@ export function MarkdownModal({
   title
 }: MarkdownModalProps) {
   const t = useTranslations()
-  const [tempContent, setTempContent] = React.useState(markdown);
+  const [tempContent, setTempContent] = React.useState(markdown)
 
   React.useEffect(() => {
     if (isOpen) {
-      setTempContent(markdown);
+      setTempContent(markdown)
     }
-  }, [markdown, isOpen]);
+  }, [markdown, isOpen])
 
   const handleSave = () => {
-    onChange(tempContent);
-    onClose();
-  };
+    onChange(tempContent)
+    onClose()
+  }
 
   const handleCancel = () => {
-    setTempContent(markdown);
-    onClose();
-  };
+    setTempContent(markdown)
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCancel}>
@@ -52,22 +53,17 @@ export function MarkdownModal({
         <DialogHeader>
           <DialogTitle>
             {title}
-            <DialogDescription/>
+            <DialogDescription />
           </DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          <Editor
-            markdown={tempContent}
-            onChange={setTempContent}
-          />
+          <Editor markdown={tempContent} onChange={setTempContent} />
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={handleCancel}>
             {t("button.cancel")}
           </Button>
-          <Button onClick={handleSave}>
-            {t("button.save")}
-          </Button>
+          <Button onClick={handleSave}>{t("button.save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

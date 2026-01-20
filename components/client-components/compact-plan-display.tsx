@@ -7,12 +7,23 @@ import { useRouter } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 interface SubscriptionData {
-  plan: 'FREE' | 'LITE' | 'PRO' | null
+  plan: "FREE" | "LITE" | "PRO" | null
   expiryDate: string | null
   isActive: boolean
   quotas: {
@@ -22,24 +33,25 @@ interface SubscriptionData {
   }
 }
 
-
 export function CompactPlanDisplay() {
   const t = useTranslations()
   const router = useRouter()
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
-        const response = await fetch('/api/user/subscription')
+        const response = await fetch("/api/user/subscription")
         if (response.ok) {
           const data = await response.json()
           setSubscription(data)
         }
       } catch (error) {
-        console.error('Error fetching subscription:', error)
+        console.error("Error fetching subscription:", error)
       } finally {
         setLoading(false)
       }
@@ -50,30 +62,29 @@ export function CompactPlanDisplay() {
 
   const getPlanGradient = (plan: string | null) => {
     switch (plan) {
-      case 'PRO':
-        return 'bg-gradient-to-r from-purple-500 to-pink-500'
-      case 'LITE':
-        return 'bg-gradient-to-r from-blue-500 to-cyan-500'
-      case 'FREE':
-        return 'bg-gradient-to-r from-gray-500 to-gray-600'
+      case "PRO":
+        return "bg-gradient-to-r from-purple-500 to-pink-500"
+      case "LITE":
+        return "bg-gradient-to-r from-blue-500 to-cyan-500"
+      case "FREE":
+        return "bg-gradient-to-r from-gray-500 to-gray-600"
       default:
-        return 'bg-gradient-to-r from-gray-400 to-gray-500'
+        return "bg-gradient-to-r from-gray-400 to-gray-500"
     }
   }
 
   const getPlanName = (plan: string | null) => {
     switch (plan) {
-      case 'PRO':
-        return 'pro30Days'
-      case 'LITE':
-        return 'lite14Days'
-      case 'FREE':
-        return 'freeTrial'
+      case "PRO":
+        return "pro30Days"
+      case "LITE":
+        return "lite14Days"
+      case "FREE":
+        return "freeTrial"
       default:
-        return 'noPlan'
+        return "noPlan"
     }
   }
-
 
   // 使用与侧边栏按钮相同的样式类
   const sidebarButtonStyle = cn(
@@ -143,9 +154,7 @@ export function CompactPlanDisplay() {
     if (!subscription) {
       return (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {t("noPlan")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("noPlan")}</p>
           <Button
             type="button"
             className="w-full"
@@ -162,7 +171,9 @@ export function CompactPlanDisplay() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("planType")}</span>
-            <span className="font-medium">{t(getPlanName(subscription.plan))}</span>
+            <span className="font-medium">
+              {t(getPlanName(subscription.plan))}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("status")}</span>
@@ -184,21 +195,30 @@ export function CompactPlanDisplay() {
           <div className="font-semibold">{t("detailedUsage")}</div>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("fullOptimization")}</span>
+              <span className="text-muted-foreground">
+                {t("fullOptimization")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.fullOptimize.used} / {subscription.quotas.fullOptimize.total}
+                {subscription.quotas.fullOptimize.used} /{" "}
+                {subscription.quotas.fullOptimize.total}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("blockOptimization")}</span>
+              <span className="text-muted-foreground">
+                {t("blockOptimization")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.blockOptimize.used} / {subscription.quotas.blockOptimize.total}
+                {subscription.quotas.blockOptimize.used} /{" "}
+                {subscription.quotas.blockOptimize.total}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("motivationLetter")}</span>
+              <span className="text-muted-foreground">
+                {t("motivationLetter")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.motivationLetter.used} / {subscription.quotas.motivationLetter.total}
+                {subscription.quotas.motivationLetter.used} /{" "}
+                {subscription.quotas.motivationLetter.total}
               </span>
             </div>
           </div>
@@ -233,10 +253,7 @@ export function CompactPlanDisplay() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <button
-                type="button"
-                className={sidebarButtonStyle}
-              >
+              <button type="button" className={sidebarButtonStyle}>
                 {buttonContent()}
               </button>
             </DialogTrigger>
@@ -251,7 +268,9 @@ export function CompactPlanDisplay() {
 
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("planType")}</span>
+                    <span className="text-muted-foreground">
+                      {t("planType")}
+                    </span>
                     <span className="font-medium">
                       {t(getPlanName(subscription.plan))}
                     </span>

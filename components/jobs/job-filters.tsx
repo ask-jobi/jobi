@@ -1,28 +1,28 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 export function JobFilters() {
   const [activeFilters, setActiveFilters] = useState<string[]>([])
 
   const filterOptions = [
-    { id: 'remote', label: 'Remote', count: 45 },
-    { id: 'full-time', label: 'Full-time', count: 120 },
-    { id: 'part-time', label: 'Part-time', count: 67 },
-    { id: 'contract', label: 'Contract', count: 89 },
-    { id: 'internship', label: 'Internship', count: 34 },
-    { id: 'startup', label: 'Startup', count: 23 },
-    { id: 'big-company', label: 'Big Company', count: 156 },
-    { id: 'high-salary', label: 'High Salary', count: 78 }
+    { id: "remote", label: "Remote", count: 45 },
+    { id: "full-time", label: "Full-time", count: 120 },
+    { id: "part-time", label: "Part-time", count: 67 },
+    { id: "contract", label: "Contract", count: 89 },
+    { id: "internship", label: "Internship", count: 34 },
+    { id: "startup", label: "Startup", count: 23 },
+    { id: "big-company", label: "Big Company", count: 156 },
+    { id: "high-salary", label: "High Salary", count: 78 }
   ]
 
   const toggleFilter = (filterId: string) => {
-    setActiveFilters(prev => 
-      prev.includes(filterId) 
-        ? prev.filter(id => id !== filterId)
+    setActiveFilters((prev) =>
+      prev.includes(filterId)
+        ? prev.filter((id) => id !== filterId)
         : [...prev, filterId]
     )
   }
@@ -43,7 +43,7 @@ export function JobFilters() {
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {filterOptions.map((option) => (
           <div

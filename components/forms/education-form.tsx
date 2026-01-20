@@ -1,21 +1,24 @@
 "use client"
 
-import { useFormContext, useFieldArray } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash } from "lucide-react";
-import { ResumeData } from "@/types/resume";
-import { MarkdownModal } from "@/components/ui/markdown-modal";
-import { useState } from "react";
-import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field";
+import { useFormContext, useFieldArray } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Plus, Edit, Trash } from "lucide-react"
+import { ResumeData } from "@/types/resume"
+import { MarkdownModal } from "@/components/ui/markdown-modal"
+import { useState } from "react"
+import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
 
 export function EducationForm() {
-  const { control, register, setValue, getValues } = useFormContext<ResumeData>();
+  const { control, register, setValue, getValues } =
+    useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "education.blocks",
-  });
-  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
+    name: "education.blocks"
+  })
+  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(
+    null
+  )
 
   const handleAddBlock = () => {
     append({
@@ -23,9 +26,9 @@ export function EducationForm() {
       degree: "",
       start: "",
       end: "",
-      content: "",
-    });
-  };
+      content: ""
+    })
+  }
 
   const handleContentChange = (md: string) => {
     if (editingBlockIndex !== null) {
@@ -33,20 +36,20 @@ export function EducationForm() {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true
-      });
+      })
     }
-  };
+  }
 
   const handleRemoveBlock = (index: number) => {
-    remove(index);
+    remove(index)
     if (editingBlockIndex !== null) {
       if (editingBlockIndex === index) {
-        setEditingBlockIndex(null);
+        setEditingBlockIndex(null)
       } else if (editingBlockIndex > index) {
-        setEditingBlockIndex(editingBlockIndex - 1);
+        setEditingBlockIndex(editingBlockIndex - 1)
       }
     }
-  };
+  }
 
   return (
     <div className="space-y-4 pb-[70vh]">
@@ -69,15 +72,11 @@ export function EducationForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">School</label>
-              <Input
-                {...register(`education.blocks.${blockIndex}.school`)}
-              />
+              <Input {...register(`education.blocks.${blockIndex}.school`)} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Degree</label>
-              <Input
-                {...register(`education.blocks.${blockIndex}.degree`)}
-              />
+              <Input {...register(`education.blocks.${blockIndex}.degree`)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -118,10 +117,14 @@ export function EducationForm() {
       <MarkdownModal
         isOpen={editingBlockIndex !== null}
         onClose={() => setEditingBlockIndex(null)}
-        markdown={editingBlockIndex !== null ? getValues(`education.blocks.${editingBlockIndex}.content`) || "" : ""}
+        markdown={
+          editingBlockIndex !== null
+            ? getValues(`education.blocks.${editingBlockIndex}.content`) || ""
+            : ""
+        }
         onChange={handleContentChange}
         title="Edit Education Content"
       />
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import {JSONContent} from "@tiptap/core";
+import { JSONContent } from "@tiptap/core"
 
 export interface DiffStorage {
   originalSelection: { from: number; to: number } | null
@@ -11,16 +11,16 @@ export interface SelectionStorage {
   to: number
 }
 
-export type ToolbarMode = 'default' | 'ai' | 'confirm'
+export type ToolbarMode = "default" | "ai" | "confirm"
 
 export interface ToolbarStorage {
   mode: ToolbarMode
 }
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Storage {
-    diff: DiffStorage,
-    selection: SelectionStorage,
+    diff: DiffStorage
+    selection: SelectionStorage
     floatingToolbar: ToolbarStorage
   }
 
@@ -34,11 +34,11 @@ declare module '@tiptap/core' {
       applyDiff: () => ReturnType
       rejectDiff: () => ReturnType
       clearDiff: () => ReturnType
-    },
+    }
     selection: {
       expandSelectionToNodeEdge: () => ReturnType
       clearSelection: () => ReturnType
-    },
+    }
     floatingToolbar: {
       setMode: (mode: ToolbarMode) => ReturnType
     }

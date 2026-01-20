@@ -6,7 +6,7 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {useMemo} from "react";
+import { useMemo } from "react"
 
 type InputTagsProps = Omit<
   React.ComponentProps<"input">,
@@ -17,15 +17,15 @@ type InputTagsProps = Omit<
 }
 
 const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
-({ className, value, onChange, ...props }, ref) => {
+  ({ className, value, onChange, ...props }, ref) => {
     const [pendingDataPoint, setPendingDataPoint] = React.useState("")
-    const valueList = useMemo(() => value ? value?.split(",") : [], [value])
+    const valueList = useMemo(() => (value ? value?.split(",") : []), [value])
 
     React.useEffect(() => {
       if (pendingDataPoint.includes(",")) {
         const newDataPoints = new Set([
           ...valueList,
-          ...pendingDataPoint.split(",").map((chunk) => chunk.trim()),
+          ...pendingDataPoint.split(",").map((chunk) => chunk.trim())
         ])
         console.log(newDataPoints)
         onChange(Array.from(newDataPoints).join(","))

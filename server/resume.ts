@@ -1,18 +1,22 @@
 "use server"
 
-import {createClient} from "@/lib/supabase/server";
-import {ResumeData, ResumeJobDescription} from "@/types/resume";
-import {Locale} from "@/lib/i18n/config";
-import {JobInfoFormType} from "@/components/forms/job-information-form";
-import {rollbackStorage} from "@/server/rollback";
-import {BUCKET_NAME, extractFilePathFromPublicUrl, getUniqueFileName} from "./utils";
+import { createClient } from "@/lib/supabase/server"
+import { ResumeData, ResumeJobDescription } from "@/types/resume"
+import { Locale } from "@/lib/i18n/config"
+import { JobInfoFormType } from "@/components/forms/job-information-form"
+import { rollbackStorage } from "@/server/rollback"
+import {
+  BUCKET_NAME,
+  extractFilePathFromPublicUrl,
+  getUniqueFileName
+} from "./utils"
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
 
-  const {data: jobApplications, error} = await supabase
-    .from('job_applications')
-    .select(`
+  const { data: jobApplications, error } = await supabase.from(
+    "job_applications"
+  ).select(`
             id,
             optimized_resume_url,
             created_at,
@@ -29,15 +33,16 @@ export async function fetchJobApplication() {
             )
         `)
 
-  return jobApplications;
+  return jobApplications
 }
 
 export async function getJobApplication(jobApplicationId: string) {
   const supabase = await createClient()
 
-  const {data: jobApplications, error} = await supabase
-    .from('job_applications')
-    .select(`
+  const { data: jobApplications, error } = await supabase
+    .from("job_applications")
+    .select(
+      `
           id,
           optimized_resume_url,
           created_at,
@@ -54,8 +59,9 @@ export async function getJobApplication(jobApplicationId: string) {
               company,
               description
           )
-      `)
-    .eq('id', jobApplicationId)
+      `
+    )
+    .eq("id", jobApplicationId)
 
   if (error) {
     throw new Error(`Failed to fetch job application: ${error.message}`)
@@ -66,7 +72,9 @@ export async function getJobApplication(jobApplicationId: string) {
   }
 
   if (jobApplications.length > 1) {
-    throw new Error(`Multiple job applications found with id: ${jobApplicationId}`)
+    throw new Error(
+      `Multiple job applications found with id: ${jobApplicationId}`
+    )
   }
   return jobApplications[0]
 }
@@ -74,13 +82,15 @@ export async function getJobApplication(jobApplicationId: string) {
 export async function getResumeData(id: string) {
   const supabase = await createClient()
 
-  const {data: resume, error} = await supabase
+  const { data: resume, error } = await supabase
     .from("resumes")
-    .select(`
+    .select(
+      `
       id,
       resume_json
-    `)
-    .eq('id', id)
+    `
+    )
+    .eq("id", id)
 
   if (error) {
     throw new Error(`Failed to fetch resume: ${error.message}`)
@@ -106,10 +116,13 @@ export async function uploadResumeFile(resumeFile: File) {
   }
 
   // 获取唯一的文件名
-  const fileName = await getUniqueFileName(supabase, user.data.user.id, resumeFile.name);
+  const fileName = await getUniqueFileName(
+    supabase,
+    user.data.user.id,
+    resumeFile.name
+  )
 
-  const {data: uploadData, error: uploadError} = await supabase
-    .storage
+  const { data: uploadData, error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(fileName, resumeFile)
 
@@ -123,10 +136,9 @@ export async function uploadResumeFile(resumeFile: File) {
     await supabase.storage.from(BUCKET_NAME).remove([fileName])
   })
 
-  const {data: {publicUrl}} = supabase
-    .storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(fileName)
+  const {
+    data: { publicUrl }
+  } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName)
 
   return {
     fileName,
@@ -135,17 +147,22 @@ export async function uploadResumeFile(resumeFile: File) {
   }
 }
 
-export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult: {
-  fileName: string,
-  publicUrl: string,
-  userId: string
-}, resumeJsonData: ResumeData, language: Locale) {
+export async function createResumeRecord(
+  jobInfos: JobInfoFormType,
+  uploadResult: {
+    fileName: string
+    publicUrl: string
+    userId: string
+  },
+  resumeJsonData: ResumeData,
+  language: Locale
+) {
   const supabase = await createClient()
   const rollbackCtx = rollbackStorage.getStore()
 
   try {
-    const {data: jobData, error: jobError} = await supabase
-      .from('jobs')
+    const { data: jobData, error: jobError } = await supabase
+      .from("jobs")
       .insert(jobInfos)
       .select()
       .single()
@@ -154,11 +171,11 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
 
     const savedJobId = jobData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('jobs').delete().eq('id', savedJobId)
+      await supabase.from("jobs").delete().eq("id", savedJobId)
     })
 
-    const {data: resumeData, error: resumeError} = await supabase
-      .from('resumes')
+    const { data: resumeData, error: resumeError } = await supabase
+      .from("resumes")
       .insert({
         user_id: uploadResult.userId,
         job_id: jobData.id,
@@ -173,11 +190,11 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
 
     const savedResumeId = resumeData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('resumes').delete().eq('id', savedResumeId)
+      await supabase.from("resumes").delete().eq("id", savedResumeId)
     })
 
-    const {data: applicationData, error: applicationError} = await supabase
-      .from('job_applications')
+    const { data: applicationData, error: applicationError } = await supabase
+      .from("job_applications")
       .insert({
         user_id: uploadResult.userId,
         resume_id: resumeData.id,
@@ -191,45 +208,48 @@ export async function createResumeRecord(jobInfos: JobInfoFormType, uploadResult
 
     const savedApplicationId = applicationData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('job_applications').delete().eq('id', savedApplicationId)
+      await supabase
+        .from("job_applications")
+        .delete()
+        .eq("id", savedApplicationId)
     })
 
-    return {jobData, resumeData}
-
+    return { jobData, resumeData }
   } catch (error: any) {
     // 错误会由外层 rollbackStorage.run() 的回滚逻辑处理
     throw new Error(`Failed to create resume record: ${error.message}`)
   }
 }
 
-export async function updateResumeJobDescription(jobDescription: ResumeJobDescription) {
+export async function updateResumeJobDescription(
+  jobDescription: ResumeJobDescription
+) {
   const supabase = await createClient()
-  const {id, ...payload} = jobDescription
-  const {error} = await supabase
-    .from('jobs')
-    .update(payload)
-    .eq('id', id)
+  const { id, ...payload } = jobDescription
+  const { error } = await supabase.from("jobs").update(payload).eq("id", id)
 
   if (error) throw error
 
-  const {error: flagError} = await supabase
-    .from('resumes')
-    .update({evaluation_report_refresh_flag: true})
-    .eq('job_id', id)
+  const { error: flagError } = await supabase
+    .from("resumes")
+    .update({ evaluation_report_refresh_flag: true })
+    .eq("job_id", id)
 
   if (flagError) {
-    throw new Error(`Failed to mark evaluation refresh flag: ${flagError.message}`)
+    throw new Error(
+      `Failed to mark evaluation refresh flag: ${flagError.message}`
+    )
   }
 }
 
 export async function saveResumeChange(resumeId: string, data: ResumeData) {
   const supabase = await createClient()
-  const {error} = await supabase
-    .from('resumes')
-    .update({resume_json: data, evaluation_report_refresh_flag: true})
-    .eq('id', resumeId)
+  const { error } = await supabase
+    .from("resumes")
+    .update({ resume_json: data, evaluation_report_refresh_flag: true })
+    .eq("id", resumeId)
 
-  if (error) throw error;
+  if (error) throw error
 }
 
 export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
@@ -242,8 +262,8 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
   }
 
   try {
-    const {data: jobData, error: jobError} = await supabase
-      .from('jobs')
+    const { data: jobData, error: jobError } = await supabase
+      .from("jobs")
       .insert(jobInfos)
       .select()
       .single()
@@ -252,7 +272,7 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
 
     const savedJobId = jobData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('jobs').delete().eq('id', savedJobId)
+      await supabase.from("jobs").delete().eq("id", savedJobId)
     })
 
     // 创建空的简历数据
@@ -278,15 +298,15 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
         order: 2,
         blocks: []
       }
-    };
+    }
 
-    const {data: resumeData, error: resumeError} = await supabase
-      .from('resumes')
+    const { data: resumeData, error: resumeError } = await supabase
+      .from("resumes")
       .insert({
         user_id: user.data.user.id,
         job_id: jobData.id,
         upload_url: null, // 空简历没有上传文件
-        language: 'en', // 默认英语
+        language: "en", // 默认英语
         resume_json: emptyResumeData
       })
       .select()
@@ -296,11 +316,11 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
 
     const savedResumeId = resumeData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('resumes').delete().eq('id', savedResumeId)
+      await supabase.from("resumes").delete().eq("id", savedResumeId)
     })
 
-    const {data: applicationData, error: applicationError} = await supabase
-      .from('job_applications')
+    const { data: applicationData, error: applicationError } = await supabase
+      .from("job_applications")
       .insert({
         user_id: user.data.user.id,
         resume_id: resumeData.id,
@@ -314,7 +334,10 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
 
     const savedApplicationId = applicationData.id
     rollbackCtx?.addRollback(async () => {
-      await supabase.from('job_applications').delete().eq('id', savedApplicationId)
+      await supabase
+        .from("job_applications")
+        .delete()
+        .eq("id", savedApplicationId)
     })
 
     // TODO Evaluate and save (do not block user in empty creation; still await here to persist immediately)
@@ -325,12 +348,10 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
       resumeData,
       applicationData
     }
-
   } catch (error: any) {
     throw new Error(`Failed to create empty resume record: ${error.message}`)
   }
 }
-
 
 export async function deleteJobApplication(jobApplicationId: string) {
   const supabase = await createClient()
@@ -341,9 +362,10 @@ export async function deleteJobApplication(jobApplicationId: string) {
   }
 
   // 先验证该 jobApplication 是否存在且属于当前用户，同时获取关联的 resume 信息
-  const {data: jobApplication, error: fetchError} = await supabase
-    .from('job_applications')
-    .select(`
+  const { data: jobApplication, error: fetchError } = await supabase
+    .from("job_applications")
+    .select(
+      `
       id, 
       resumes:resume_id (
         id,
@@ -352,8 +374,9 @@ export async function deleteJobApplication(jobApplicationId: string) {
       jobs:job_id (
         id
       )
-    `)
-    .eq('id', jobApplicationId)
+    `
+    )
+    .eq("id", jobApplicationId)
     .single()
 
   if (fetchError) {
@@ -366,43 +389,47 @@ export async function deleteJobApplication(jobApplicationId: string) {
 
   console.log(jobApplication)
 
-  const {error: deleteError} = await supabase
-    .from('job_applications')
+  const { error: deleteError } = await supabase
+    .from("job_applications")
     .delete()
-    .eq('id', jobApplicationId)
+    .eq("id", jobApplicationId)
 
   if (deleteError) {
     throw new Error(`Failed to delete job application: ${deleteError.message}`)
   }
 
-  const {error: deleteResumeError} = await supabase
-    .from('resumes')
+  const { error: deleteResumeError } = await supabase
+    .from("resumes")
     .delete()
-    .eq('id', jobApplication.resumes.id)
+    .eq("id", jobApplication.resumes.id)
 
   if (deleteResumeError) {
     throw new Error(`Failed to delete resume: ${deleteResumeError.message}`)
   }
 
-  const {error: deleteJobError} = await supabase
-    .from('jobs')
+  const { error: deleteJobError } = await supabase
+    .from("jobs")
     .delete()
-    .eq('id', jobApplication.jobs.id)
+    .eq("id", jobApplication.jobs.id)
 
   if (deleteJobError) {
     throw new Error(`Failed to delete job: ${deleteJobError.message}`)
   }
 
   if (jobApplication.resumes.upload_url) {
-    const filePath = extractFilePathFromPublicUrl(jobApplication.resumes.upload_url)
+    const filePath = extractFilePathFromPublicUrl(
+      jobApplication.resumes.upload_url
+    )
     if (filePath) {
-      const {error: fileDeleteError} = await supabase
-        .storage
+      const { error: fileDeleteError } = await supabase.storage
         .from(BUCKET_NAME)
         .remove([filePath])
 
       if (fileDeleteError) {
-        console.warn(`Failed to delete resume file (${filePath}):`, fileDeleteError.message)
+        console.warn(
+          `Failed to delete resume file (${filePath}):`,
+          fileDeleteError.message
+        )
       }
     }
   }

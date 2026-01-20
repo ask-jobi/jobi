@@ -1,4 +1,4 @@
-import { Prompt } from "./index";
+import { Prompt } from "./index"
 
 export const resumeParsePrompt = Prompt.of(`
 You are a professional resume parsing expert. Please parse the following resume content into the specified JSON format.
@@ -21,5 +21,4 @@ Notes:
 4. For all content fields, markdown format can be used if necessary. For example, for list display or keyword emphasis.
 5. Always ensure the language of the output content is consistent with the original text.
 6. skills split by english comma
-`);
-
+`)

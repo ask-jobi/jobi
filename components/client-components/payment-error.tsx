@@ -1,10 +1,16 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, X } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { AlertCircle, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 interface PaymentErrorProps {
   error?: string
@@ -12,7 +18,7 @@ interface PaymentErrorProps {
 }
 
 export function PaymentError({ error, onClose }: PaymentErrorProps) {
-  const t = useTranslations();
+  const t = useTranslations()
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -36,7 +42,9 @@ export function PaymentError({ error, onClose }: PaymentErrorProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-5 h-5 text-red-600" />
-              <CardTitle className="text-red-800 text-lg">{t('pricing.paymentError.title')}</CardTitle>
+              <CardTitle className="text-red-800 text-lg">
+                {t("pricing.paymentError.title")}
+              </CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -52,11 +60,9 @@ export function PaymentError({ error, onClose }: PaymentErrorProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <CardDescription className="text-red-700">
-            {error}
-          </CardDescription>
+          <CardDescription className="text-red-700">{error}</CardDescription>
         </CardContent>
       </Card>
     </div>
   )
-} 
+}

@@ -1,26 +1,26 @@
 "use client"
 
-import {useFormContext, useFieldArray, Controller} from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
-import { ResumeData } from "@/types/resume";
-import {InputTags} from "@/components/ui/input-tags";
-import React from "react";
+import { useFormContext, useFieldArray, Controller } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Plus, Trash } from "lucide-react"
+import { ResumeData } from "@/types/resume"
+import { InputTags } from "@/components/ui/input-tags"
+import React from "react"
 
 export function SkillsForm() {
-  const { control, register, setValue } = useFormContext<ResumeData>();
+  const { control, register, setValue } = useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "skills.blocks",
-  });
+    name: "skills.blocks"
+  })
 
   const handleAddBlock = () => {
     append({
       group: "",
-      content: "",
-    });
-  };
+      content: ""
+    })
+  }
 
   const handleRemoveSkills = (index: number) => {
     remove(index)
@@ -30,30 +30,34 @@ export function SkillsForm() {
     <div className="space-y-4 pb-[70vh]">
       {fields.map((field, blockIndex) => {
         return (
-          <div id={`form-skills-${blockIndex}`} key={field.id} className="space-y-4">
+          <div
+            id={`form-skills-${blockIndex}`}
+            key={field.id}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <label className="text-sm font-medium">Group</label>
-              <Input
-                {...register(`skills.blocks.${blockIndex}.group`)}
-              />
+              <Input {...register(`skills.blocks.${blockIndex}.group`)} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Skills</label>
               <Controller
                 control={control}
                 name={`skills.blocks.${blockIndex}.content`}
-                render={({field}) => {
-                  return <InputTags
-                    {...field}
-                    onChange={(value) => {
-                      setValue(`skills.blocks.${blockIndex}.content`, value, {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true
-                      })
-                    }}
-                    placeholder="Input skill and press Enter or comma to add"
-                  />
+                render={({ field }) => {
+                  return (
+                    <InputTags
+                      {...field}
+                      onChange={(value) => {
+                        setValue(`skills.blocks.${blockIndex}.content`, value, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                          shouldValidate: true
+                        })
+                      }}
+                      placeholder="Input skill and press Enter or comma to add"
+                    />
+                  )
                 }}
               />
             </div>
@@ -76,9 +80,9 @@ export function SkillsForm() {
         className="w-full mt-4"
         onClick={handleAddBlock}
       >
-        <Plus className="h-4 w-4 mr-2"/>
+        <Plus className="h-4 w-4 mr-2" />
         Add Skill Group
       </Button>
     </div>
-  );
+  )
 }

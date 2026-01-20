@@ -1,11 +1,11 @@
 "use client"
 
-import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { ResumeData } from "@/types/resume";
+import { useFormContext } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { ResumeData } from "@/types/resume"
 
 export function PersonalInfoForm() {
-  const { register } = useFormContext<ResumeData>();
+  const { register } = useFormContext<ResumeData>()
 
   return (
     <div className="space-y-4">
@@ -28,5 +28,5 @@ export function PersonalInfoForm() {
         <Input {...register("personalInfo.phone")} />
       </div>
     </div>
-  );
-} 
+  )
+}

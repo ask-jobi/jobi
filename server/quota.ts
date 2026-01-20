@@ -1,16 +1,16 @@
 import "server-only"
-import {createClient} from "@/lib/supabase/server";
-import {Database} from "@/types/supabase";
+import { createClient } from "@/lib/supabase/server"
+import { Database } from "@/types/supabase"
 
 type QuotaObj<Col> = {
-  total: number,
-  used: number,
+  total: number
+  used: number
   colName: Col
 }
 
 type Quota = {
-  fullOptimize: QuotaObj<"full_optimize">,
-  blockOptimize: QuotaObj<"block_optimize">,
+  fullOptimize: QuotaObj<"full_optimize">
+  blockOptimize: QuotaObj<"block_optimize">
   motivationLetter: QuotaObj<"motivation_letter">
 }
 
@@ -22,7 +22,7 @@ const JOB_APPLICATION_LIMIT = 20
 
 // 用户订阅信息类型
 type UserSubscription = {
-  plan: 'FREE' | 'LITE' | 'PRO' | null
+  plan: "FREE" | "LITE" | "PRO" | null
   expiryDate: string | null
   isActive: boolean
   quotas: {
@@ -33,34 +33,38 @@ type UserSubscription = {
 }
 
 // 获取用户有效订阅的方法
-export async function getActiveAccessPass(userId: string): Promise<DBAccessPass | null> {
+export async function getActiveAccessPass(
+  userId: string
+): Promise<DBAccessPass | null> {
   const supabase = await createClient()
 
   const { data: accessPass, error } = await supabase
-    .from('access_passes')
-    .select('*')
-    .eq('user_id', userId)
-    .gt('end_at', new Date().toISOString())
-    .order('end_at', { ascending: false })
+    .from("access_passes")
+    .select("*")
+    .eq("user_id", userId)
+    .gt("end_at", new Date().toISOString())
+    .order("end_at", { ascending: false })
     .limit(1)
     .single()
 
-  if (error && error.code !== 'PGRST116') {
+  if (error && error.code !== "PGRST116") {
     throw error
   }
 
   return accessPass
 }
 
-
 // 新增：获取用户订阅信息
 export async function getUserSubscription(): Promise<UserSubscription> {
   const supabase = await createClient()
 
   // 获取当前用户
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
   if (userError || !user) {
-    throw new Error('用户未登录')
+    throw new Error("用户未登录")
   }
 
   // 获取用户有效订阅
@@ -123,9 +127,10 @@ const buildQuotas = (accessPass: DBAccessPass): Quota => {
 
 export async function consumeQuota(key: QuotaKey) {
   const supabase = await createClient()
-  const {data: accessPass, error} = await supabase
+  const { data: accessPass, error } = await supabase
     .from("access_passes")
-    .select("*").single()
+    .select("*")
+    .single()
 
   if (error) {
     throw error
@@ -135,18 +140,18 @@ export async function consumeQuota(key: QuotaKey) {
 
   const updateParams = verifyAndUpdateQuota(key, quotas)
 
-  const {error: updateError} = await supabase
+  const { error: updateError } = await supabase
     .from("access_passes")
     .update({
       ...updateParams
     })
-    .eq('id', accessPass.id)
+    .eq("id", accessPass.id)
 
   if (updateError) {
     throw updateError
   }
 
-  console.log('consuming quota', key, 'success');
+  console.log("consuming quota", key, "success")
 }
 
 function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
@@ -165,12 +170,15 @@ export async function verifyJobApplicationLimit() {
   const supabase = await createClient()
 
   // 获取当前用户
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
   if (userError || !user) {
-    throw new Error('User not logged in')
+    throw new Error("User not logged in")
   }
 
-  const {data: jobApplications, error} = await supabase
+  const { data: jobApplications, error } = await supabase
     .from("job_applications")
     .select("*")
     .eq("user_id", user.id)
@@ -180,7 +188,8 @@ export async function verifyJobApplicationLimit() {
   }
 
   if (jobApplications.length >= JOB_APPLICATION_LIMIT) {
-    throw new Error('You have reached the maximum job application limit, please try to delete some jobs you have applied for.')
+    throw new Error(
+      "You have reached the maximum job application limit, please try to delete some jobs you have applied for."
+    )
   }
 }
-

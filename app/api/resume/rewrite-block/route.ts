@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
-import type { RewriteBlockRequest } from '@/types/api/requests';
-import {rewriteBlock} from '@/server/ai/resume-rewriter';
-import { consumeQuota } from '@/server/quota';
+import { NextResponse } from "next/server"
+import type { RewriteBlockRequest } from "@/types/api/requests"
+import { rewriteBlock } from "@/server/ai/resume-rewriter"
+import { consumeQuota } from "@/server/quota"
 
 export async function POST(request: Request) {
   try {
-    const body: RewriteBlockRequest = await request.json();
+    const body: RewriteBlockRequest = await request.json()
 
     if (!body.originalContent || !body.jd || !body.instruction) {
       return NextResponse.json(
-        { error: 'required fields are missed' },
+        { error: "required fields are missed" },
         { status: 400 }
-      );
+      )
     }
 
     const response = await rewriteBlock({
@@ -19,17 +19,17 @@ export async function POST(request: Request) {
       originalContent: body.originalContent,
       jd: body.jd,
       instruction: body.instruction,
-      language: body.language,
-    });
+      language: body.language
+    })
 
-    await consumeQuota('blockOptimize');
+    await consumeQuota("blockOptimize")
 
-    return NextResponse.json(response);
+    return NextResponse.json(response)
   } catch (error) {
-    console.error('an error occurred while processing the request:', error);
+    console.error("an error occurred while processing the request:", error)
     return NextResponse.json(
-      { error: 'internal server error' },
+      { error: "internal server error" },
       { status: 500 }
-    );
+    )
   }
 }

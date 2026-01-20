@@ -1,4 +1,4 @@
-import { Prompt } from "./index";
+import { Prompt } from "./index"
 
 export const resumeEvaluationPrompt = Prompt.of(`
 You are a senior IT recruiter and resume screening system designer.
@@ -108,5 +108,4 @@ Resume Content:
 Job Description:
 
 {{jobDescription}}
-`);
-
+`)

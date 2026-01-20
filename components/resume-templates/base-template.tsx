@@ -1,19 +1,19 @@
-import {ResumeData, SectionBlock, SortableSectionId} from "@/types/resume";
-import {focusSectionAtom} from "@/lib/store/resume";
-import {store} from "@/components/resumes/resume-context";
+import { ResumeData, SectionBlock, SortableSectionId } from "@/types/resume"
+import { focusSectionAtom } from "@/lib/store/resume"
+import { store } from "@/components/resumes/resume-context"
 
 export abstract class BaseTemplate {
   data: ResumeData
-  isInteractive: boolean;
-  abstract name: string;
+  isInteractive: boolean
+  abstract name: string
 
-  abstract renderHeader(): React.ReactNode;
+  abstract renderHeader(): React.ReactNode
 
-  abstract renderEducation(): React.ReactNode;
+  abstract renderEducation(): React.ReactNode
 
-  abstract renderEmployment(): React.ReactNode;
+  abstract renderEmployment(): React.ReactNode
 
-  abstract renderSkills(): React.ReactNode;
+  abstract renderSkills(): React.ReactNode
 
   protected constructor(data: ResumeData, isInteractive?: boolean) {
     this.isInteractive = isInteractive ?? true
@@ -21,26 +21,30 @@ export abstract class BaseTemplate {
   }
 
   localizePresent(value: string): string {
-    const v = value ?? ''
-    const isPresent = v.toLowerCase?.() === 'present' || v === '现在' || v === '至今'
-    return isPresent ? 'Present' : value
+    const v = value ?? ""
+    const isPresent =
+      v.toLowerCase?.() === "present" || v === "现在" || v === "至今"
+    return isPresent ? "Present" : value
   }
 
-
-
-  onSectionClick: (id: keyof ResumeData, index?: number) => void = (id, index) => {
+  onSectionClick: (id: keyof ResumeData, index?: number) => void = (
+    id,
+    index
+  ) => {
     store.set(focusSectionAtom, id, index)
-  };
+  }
 
   renderPersonalInfo(): React.ReactNode {
     const handleClick = () => {
-      if (this.isInteractive && this.onSectionClick) this.onSectionClick("personalInfo");
-    };
+      if (this.isInteractive && this.onSectionClick)
+        this.onSectionClick("personalInfo")
+    }
     return (
       <div
         id={`section-personalInfo`}
         onClick={handleClick}
-        className={`${this.isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}`}>
+        className={`${this.isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}`}
+      >
         {this.renderHeader()}
       </div>
     )
@@ -48,23 +52,26 @@ export abstract class BaseTemplate {
 
   renderSectionBlocks<
     ID extends SortableSectionId,
-    S extends NonNullable<ResumeData[ID]> extends SectionBlock<infer B> ? SectionBlock<B> : never,
-    B = S extends SectionBlock<infer U> ? U : never>({
-                           sectionId,
-                           headRender,
-                           blockRender,
-                           sectionClassName = "",
-                           sectionStyle,
-                           sectionContainerRender,
-                           titleRender,
-                         }: {
-    sectionId: ID;
-    headRender: (block: B, index: number) => React.ReactNode;
-    blockRender: (block: B, index: number) => React.ReactNode;
-    sectionClassName?: string;
-    sectionStyle?: React.CSSProperties;
-    sectionContainerRender?: (children: React.ReactNode) => React.ReactNode;
-    titleRender?: (title: string) => React.ReactNode;
+    S extends NonNullable<ResumeData[ID]> extends SectionBlock<infer B>
+      ? SectionBlock<B>
+      : never,
+    B = S extends SectionBlock<infer U> ? U : never
+  >({
+    sectionId,
+    headRender,
+    blockRender,
+    sectionClassName = "",
+    sectionStyle,
+    sectionContainerRender,
+    titleRender
+  }: {
+    sectionId: ID
+    headRender: (block: B, index: number) => React.ReactNode
+    blockRender: (block: B, index: number) => React.ReactNode
+    sectionClassName?: string
+    sectionStyle?: React.CSSProperties
+    sectionContainerRender?: (children: React.ReactNode) => React.ReactNode
+    titleRender?: (title: string) => React.ReactNode
   }) {
     const section = this.data[sectionId] as SectionBlock
     const content = (
@@ -74,11 +81,16 @@ export abstract class BaseTemplate {
         className={`mb-5 p-2 ${sectionClassName}`}
         style={sectionStyle}
       >
-        {titleRender ? titleRender(section.title) : <h2 className={`text-lg font-bold mb-2`}>{section.title}</h2>}
+        {titleRender ? (
+          titleRender(section.title)
+        ) : (
+          <h2 className={`text-lg font-bold mb-2`}>{section.title}</h2>
+        )}
         {section.blocks.map((block, index) => {
           const handleClick = () => {
-            if (this.isInteractive && this.onSectionClick) this.onSectionClick(sectionId, index);
-          };
+            if (this.isInteractive && this.onSectionClick)
+              this.onSectionClick(sectionId, index)
+          }
           return (
             <div
               id={`section-${sectionId}-${index}`}
@@ -92,20 +104,24 @@ export abstract class BaseTemplate {
               </div>
               {blockRender(block, index)}
             </div>
-          );
+          )
         })}
       </div>
-    );
-    return sectionContainerRender ? sectionContainerRender(content) : content;
+    )
+    return sectionContainerRender ? sectionContainerRender(content) : content
   }
 
   renderDocument() {
-    const {data} = this
-    const sections = getOrderedSections(data);
+    const { data } = this
+    const sections = getOrderedSections(data)
     return (
-      <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
+      <article
+        id="resume"
+        data-resume-ready="true"
+        className="bg-white p-8 pdf"
+      >
         {this.renderPersonalInfo()}
-        {sections.map(({id}) => {
+        {sections.map(({ id }) => {
           switch (id) {
             case "education":
               return this.renderEducation()
@@ -114,22 +130,21 @@ export abstract class BaseTemplate {
             case "skills":
               return this.renderSkills()
             default:
-              return <div className="hidden" key={id}></div>;
+              return <div className="hidden" key={id}></div>
           }
         })}
       </article>
-    );
+    )
   }
 }
-
 
 type OrderedSection = SectionBlock & { id: keyof ResumeData }
 
 export const getOrderedSections = (data: ResumeData): OrderedSection[] => {
   // TODO employment可能为空?
   return [
-    {id: "education" as const, ...data.education},
-    {id: "employment" as const, ...data.employment!!},
-    {id: "skills" as const, ...data.skills}
-  ];
-};
+    { id: "education" as const, ...data.education },
+    { id: "employment" as const, ...data.employment!! },
+    { id: "skills" as const, ...data.skills }
+  ]
+}

@@ -1,16 +1,16 @@
-'use client'
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Calendar, Package, RefreshCw, ArrowUpRight, Info } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Calendar, Package, RefreshCw, ArrowUpRight, Info } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 interface QuotaDisplayProps {
   subscription: {
-    plan: 'FREE' | 'LITE' | 'PRO' | null
+    plan: "FREE" | "LITE" | "PRO" | null
     planName: string
     expiryDate: string | null
     isActive: boolean
@@ -27,37 +27,37 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
   const t = useTranslations()
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('noActivePlan')
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+    if (!dateString) return t("noActivePlan")
+    return new Date(dateString).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
     })
   }
 
   const getPlanGradient = (plan: string | null) => {
     switch (plan) {
-      case 'PRO':
-        return 'bg-gradient-to-r from-purple-500 to-pink-500'
-      case 'LITE':
-        return 'bg-gradient-to-r from-blue-500 to-cyan-500'
-      case 'FREE':
-        return 'bg-gradient-to-r from-gray-500 to-gray-600'
+      case "PRO":
+        return "bg-gradient-to-r from-purple-500 to-pink-500"
+      case "LITE":
+        return "bg-gradient-to-r from-blue-500 to-cyan-500"
+      case "FREE":
+        return "bg-gradient-to-r from-gray-500 to-gray-600"
       default:
-        return 'bg-gradient-to-r from-gray-400 to-gray-500'
+        return "bg-gradient-to-r from-gray-400 to-gray-500"
     }
   }
 
   const getPlanName = (plan: string | null) => {
     switch (plan) {
-      case 'PRO':
-        return 'pro30Days'
-      case 'LITE':
-        return 'lite14Days'
-      case 'FREE':
-        return 'freeTrial'
+      case "PRO":
+        return "pro30Days"
+      case "LITE":
+        return "lite14Days"
+      case "FREE":
+        return "freeTrial"
       default:
-        return 'noPlan'
+        return "noPlan"
     }
   }
 
@@ -67,11 +67,11 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
   }
 
   const handleUpgrade = () => {
-    router.push('/pricing')
+    router.push("/pricing")
   }
 
   const handleRenew = () => {
-    router.push('/pricing')
+    router.push("/pricing")
   }
 
   return (
@@ -80,7 +80,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Package className="w-5 h-5 text-muted-foreground" />
-            {t('currentPlan')}
+            {t("currentPlan")}
           </CardTitle>
           <Badge
             className={`text-white border-0 ${getPlanGradient(subscription.plan)}`}
@@ -95,7 +95,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm">
             <Calendar className="w-5 h-5 text-muted-foreground" />
-            <span className="text-muted-foreground">{t('validUntil')}</span>
+            <span className="text-muted-foreground">{t("validUntil")}</span>
           </div>
           <span className="font-semibold text-sm">
             {formatDate(subscription.expiryDate)}
@@ -106,19 +106,25 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-muted-foreground" />
-            <h4 className="font-semibold text-sm">{t('detailedUsage')}</h4>
+            <h4 className="font-semibold text-sm">{t("detailedUsage")}</h4>
           </div>
 
           {/* 整体优化 */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('fullOptimization')}</span>
+              <span className="text-muted-foreground">
+                {t("fullOptimization")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.fullOptimize.used} / {subscription.quotas.fullOptimize.total}
+                {subscription.quotas.fullOptimize.used} /{" "}
+                {subscription.quotas.fullOptimize.total}
               </span>
             </div>
             <Progress
-              value={getUsagePercentage(subscription.quotas.fullOptimize.used, subscription.quotas.fullOptimize.total)}
+              value={getUsagePercentage(
+                subscription.quotas.fullOptimize.used,
+                subscription.quotas.fullOptimize.total
+              )}
               className="h-2"
             />
           </div>
@@ -126,13 +132,19 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
           {/* 区块优化 */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('blockOptimization')}</span>
+              <span className="text-muted-foreground">
+                {t("blockOptimization")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.blockOptimize.used} / {subscription.quotas.blockOptimize.total}
+                {subscription.quotas.blockOptimize.used} /{" "}
+                {subscription.quotas.blockOptimize.total}
               </span>
             </div>
             <Progress
-              value={getUsagePercentage(subscription.quotas.blockOptimize.used, subscription.quotas.blockOptimize.total)}
+              value={getUsagePercentage(
+                subscription.quotas.blockOptimize.used,
+                subscription.quotas.blockOptimize.total
+              )}
               className="h-2"
             />
           </div>
@@ -140,13 +152,19 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
           {/* 动机信生成 */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('motivationLetter')}</span>
+              <span className="text-muted-foreground">
+                {t("motivationLetter")}
+              </span>
               <span className="font-medium">
-                {subscription.quotas.motivationLetter.used} / {subscription.quotas.motivationLetter.total}
+                {subscription.quotas.motivationLetter.used} /{" "}
+                {subscription.quotas.motivationLetter.total}
               </span>
             </div>
             <Progress
-              value={getUsagePercentage(subscription.quotas.motivationLetter.used, subscription.quotas.motivationLetter.total)}
+              value={getUsagePercentage(
+                subscription.quotas.motivationLetter.used,
+                subscription.quotas.motivationLetter.total
+              )}
               className="h-2"
             />
           </div>
@@ -162,7 +180,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               onClick={handleRenew}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              {t('renewPlan')}
+              {t("renewPlan")}
             </Button>
           ) : (
             <Button
@@ -172,11 +190,11 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               onClick={handleUpgrade}
             >
               <ArrowUpRight className="w-4 h-4 mr-2" />
-              {t('buyPlan')}
+              {t("buyPlan")}
             </Button>
           )}
 
-          {subscription.plan === 'LITE' && (
+          {subscription.plan === "LITE" && (
             <Button
               variant="default"
               size="default"
@@ -184,7 +202,7 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               onClick={handleUpgrade}
             >
               <ArrowUpRight className="w-4 h-4 mr-2" />
-              {t('upgradeToPro')}
+              {t("upgradeToPro")}
             </Button>
           )}
         </div>

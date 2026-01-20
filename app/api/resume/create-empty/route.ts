@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createEmptyResumeRecord } from "@/server/resume";
-import {JobInfoFormType} from "@/components/forms/job-information-form";
+import { NextRequest, NextResponse } from "next/server"
+import { createEmptyResumeRecord } from "@/server/resume"
+import { JobInfoFormType } from "@/components/forms/job-information-form"
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,17 +10,20 @@ export async function POST(request: NextRequest) {
     const jobInfo = body.jobInfo as JobInfoFormType
 
     if (!jobInfo) {
-      return NextResponse.json({ error: "No job info provided" }, { status: 400 })
+      return NextResponse.json(
+        { error: "No job info provided" },
+        { status: 400 }
+      )
     }
 
-    const result = await createEmptyResumeRecord(jobInfo);
+    const result = await createEmptyResumeRecord(jobInfo)
 
     return NextResponse.json({
       success: true,
       data: result
-    });
+    })
   } catch (error: any) {
-    console.error('Create empty resume failed:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Create empty resume failed:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

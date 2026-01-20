@@ -198,11 +198,7 @@
       "title": "需要登录",
       "description": "购买 {planName} 需要先登录您的账户",
       "benefitsTitle": "登录后您可以：",
-      "benefits": [
-        "安全完成支付",
-        "管理您的订阅",
-        "查看购买历史"
-      ],
+      "benefits": ["安全完成支付", "管理您的订阅", "查看购买历史"],
       "loginButton": "登录",
       "signUpButton": "注册",
       "laterButton": "稍后再说"
@@ -223,12 +219,12 @@
     "optimizing": "优化中...",
     "screeningReadiness": "筛选就绪度",
     "gates": {
-    "atsScreening": "ATS 筛选",
-    "hrScan": "HR 30 秒初筛",
-    "hiringManagerFit": "用人经理匹配度",
-    "pass": "通过",
-    "borderline": "边缘",
-    "needsAttention": "需重点优化"
+      "atsScreening": "ATS 筛选",
+      "hrScan": "HR 30 秒初筛",
+      "hiringManagerFit": "用人经理匹配度",
+      "pass": "通过",
+      "borderline": "边缘",
+      "needsAttention": "需重点优化"
     },
     "recommendation": "推荐决策",
     "confidenceScore": "信心值",

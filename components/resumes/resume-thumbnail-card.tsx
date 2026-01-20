@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, X } from "lucide-react";
-import { toast } from "sonner";
-import { trackViewResume } from "@/lib/user-tracking/user-tracking";
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Loader2, X } from "lucide-react"
+import { toast } from "sonner"
+import { trackViewResume } from "@/lib/user-tracking/user-tracking"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,14 +15,14 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {Button} from "@/components/ui/button";
-import {useTranslations} from "next-intl";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 
 interface ResumeThumbnailCardProps {
-  thumbnailUrl: string | null;
-  applicationId: string;
+  thumbnailUrl: string | null
+  applicationId: string
 }
 
 export default function ResumeThumbnailCard({
@@ -30,66 +30,73 @@ export default function ResumeThumbnailCard({
   applicationId
 }: ResumeThumbnailCardProps) {
   const t = useTranslations()
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
   const handleImageLoad = () => {
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   const handleImageError = () => {
-    setIsLoading(false);
-    setHasError(true);
-  };
+    setIsLoading(false)
+    setHasError(true)
+  }
 
   const handleCardClick = () => {
     // 跟踪用户点击简历卡片的事件
     trackViewResume({
-      applicationId,
-    });
-  };
+      applicationId
+    })
+  }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDeleteDialogOpen(true);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDeleteDialogOpen(true)
+  }
 
   const handleDeleteConfirm = async () => {
-    setIsDeleting(true);
+    setIsDeleting(true)
     try {
       const response = await fetch("/api/application/delete", {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ id: applicationId }),
-      });
+        body: JSON.stringify({ id: applicationId })
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete job application");
+        throw new Error(data.error || "Failed to delete job application")
       }
 
-      toast.success("Job application deleted successfully");
-      setIsDeleteDialogOpen(false);
-      router.refresh();
+      toast.success("Job application deleted successfully")
+      setIsDeleteDialogOpen(false)
+      router.refresh()
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete job application";
-      toast.error(errorMessage);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to delete job application"
+      toast.error(errorMessage)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   return (
     <>
       <div className="aspect-[1/1.414] group hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-105 bg-white border-gray-200 relative">
-        <Link href={`/application/${applicationId}`} onClick={handleCardClick} className="block h-full">
+        <Link
+          href={`/application/${applicationId}`}
+          onClick={handleCardClick}
+          className="block h-full"
+        >
           <div className="h-full relative bg-white border border-gray-300 rounded-sm shadow-sm overflow-hidden">
             {/* 删除按钮 - hover 时显示 */}
             <button
@@ -148,7 +155,10 @@ export default function ResumeThumbnailCard({
         </Link>
       </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("modal.deleteJobAppTitle")}</AlertDialogTitle>
@@ -157,11 +167,10 @@ export default function ResumeThumbnailCard({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>{t("button.cancel")}</AlertDialogCancel>
-            <Button
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-            >
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("button.cancel")}
+            </AlertDialogCancel>
+            <Button onClick={handleDeleteConfirm} disabled={isDeleting}>
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t("button.delete")}
             </Button>
@@ -169,5 +178,5 @@ export default function ResumeThumbnailCard({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

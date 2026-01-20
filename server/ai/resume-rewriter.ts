@@ -1,8 +1,8 @@
-import { google } from "@ai-sdk/google";
-import { generateText, Output } from "ai";
-import { z } from "zod";
-import { resumeRewritePrompt } from "./prompts/resume-rewrite.prompt";
-import { locales } from "@/lib/i18n/config";
+import { google } from "@ai-sdk/google"
+import { generateText, Output } from "ai"
+import { z } from "zod"
+import { resumeRewritePrompt } from "./prompts/resume-rewrite.prompt"
+import { locales } from "@/lib/i18n/config"
 
 // const rewriteResponseSchema = z.object({
 //   optimizedContent: z.string().describe("改写后的内容"),
@@ -10,35 +10,34 @@ import { locales } from "@/lib/i18n/config";
 //   aiReason: z.string().describe("AI 优化理由说明"),
 // });
 
-const LanguageEnum = z.enum(locales);
-type Language = z.infer<typeof LanguageEnum>;
-
+const LanguageEnum = z.enum(locales)
+type Language = z.infer<typeof LanguageEnum>
 
 export const rewriteBlock = async (params: {
   resumeSection: string
-  originalContent: string;
-  jd: string;
-  instruction: string;
-  language: Language;
+  originalContent: string
+  jd: string
+  instruction: string
+  language: Language
 }) => {
-  const validatedLanguage = LanguageEnum.parse(params.language);
-  const languageText = validatedLanguage === "zh" ? "中文" : "英文";
+  const validatedLanguage = LanguageEnum.parse(params.language)
+  const languageText = validatedLanguage === "zh" ? "中文" : "英文"
 
   const prompt = resumeRewritePrompt.format({
     resumeSection: params.resumeSection,
     originalContent: params.originalContent,
     jd: params.jd,
     instruction: params.instruction,
-    language: languageText,
-  });
+    language: languageText
+  })
 
   const { output: result } = await generateText({
     model: google("gemini-2.0-flash-lite"),
     output: Output.text(),
     prompt,
     temperature: 0.7,
-    maxRetries: 3,
-  });
+    maxRetries: 3
+  })
 
-  return result;
+  return result
 }

@@ -1,4 +1,4 @@
-import {loadEnvConfig} from "@next/env";
+import { loadEnvConfig } from "@next/env"
 
 loadEnvConfig(process.cwd())
-jest.mock('server-only', () => ({}));
+jest.mock("server-only", () => ({}))

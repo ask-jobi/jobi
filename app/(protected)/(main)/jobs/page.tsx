@@ -1,16 +1,16 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { JobSearchHeader } from '@/components/jobs/job-search-header'
-import { JobListings } from '@/components/jobs/job-listings'
-import { SavedSearches } from '@/components/jobs/saved-searches'
+import { useState } from "react"
+import { JobSearchHeader } from "@/components/jobs/job-search-header"
+import { JobListings } from "@/components/jobs/job-listings"
+import { SavedSearches } from "@/components/jobs/saved-searches"
 
 export default function JobsPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [contractType, setContractType] = useState('')
-  const [location, setLocation] = useState('')
+  const [searchQuery, setSearchQuery] = useState("")
+  const [contractType, setContractType] = useState("")
+  const [location, setLocation] = useState("")
   const [filters, setFilters] = useState({})
-  const [sortBy, setSortBy] = useState('relevance')
+  const [sortBy, setSortBy] = useState("relevance")
 
   return (
     <div className="h-[calc(100vh-3rem)] flex flex-col">

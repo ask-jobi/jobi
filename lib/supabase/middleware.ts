@@ -1,7 +1,10 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
 
-export async function updateSession(request: NextRequest, response: NextResponse) {
+export async function updateSession(
+  request: NextRequest,
+  response: NextResponse
+) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -11,14 +14,14 @@ export async function updateSession(request: NextRequest, response: NextResponse
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({name, value}) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
-          );
-          cookiesToSet.forEach(({name, value, options}) =>
+          )
+          cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
-          );
-        },
-      },
+          )
+        }
+      }
     }
   )
 
@@ -29,20 +32,20 @@ export async function updateSession(request: NextRequest, response: NextResponse
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api/stripe/webhook') && // 排除 webhook
-    request.nextUrl.pathname !== '/' &&
-    !request.nextUrl.pathname.startsWith('/pricing')
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/auth") &&
+    !request.nextUrl.pathname.startsWith("/api/stripe/webhook") && // 排除 webhook
+    request.nextUrl.pathname !== "/" &&
+    !request.nextUrl.pathname.startsWith("/pricing")
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = "/auth/login"
     return NextResponse.redirect(url)
   }
 
