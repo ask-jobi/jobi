@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {
-  ALargeSmallIcon, BoldIcon, CodeIcon,
-  ItalicIcon, ListIcon, ListOrderedIcon, StrikethroughIcon
+  ALargeSmallIcon, BoldIcon, ListIcon, ListOrderedIcon
 } from "lucide-react";
 import {Toggle} from "@/components/ui/toggle";
 import { Editor } from '@tiptap/react'
@@ -10,24 +9,12 @@ import Image from "next/image";
 import {Button} from "@/components/ui/button";
 
 function FloatingToolbarOptions({
-                                  setMode,
                                   editor
                                 }: {
-  setMode: (state: 'default' | 'ai') => void,
   editor: Editor
 }) {
-
-  /**
-   * 当前选中文本的格式，如 bold、italic 等
-   */
+  const [open, setOpen] = useState<boolean>(false)
   const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isStrikethrough, setIsStrikethrough] = useState(false);
-  const [isCode, setIsCode] = useState(false);
-
-  /**
-   * 当前选中文本的类型，如 h1、h2、p、blockquote 等
-   */
   const [blockType, setBlockType] = useState('paragraph');
 
   /**
@@ -37,21 +24,12 @@ function FloatingToolbarOptions({
     const updateState = () => {
       // text format
       setIsBold(editor.isActive('bold'));
-      setIsItalic(editor.isActive('italic'));
-      setIsStrikethrough(editor.isActive('strike'));
-      setIsCode(editor.isActive('code'));
 
       // block type
       if (editor.isActive('bulletList')) {
         setBlockType('bullet');
       } else if (editor.isActive('orderedList')) {
         setBlockType('number');
-      } else if (editor.isActive('heading', { level: 1 })) {
-        setBlockType('h1');
-      } else if (editor.isActive('heading', { level: 2 })) {
-        setBlockType('h2');
-      } else if (editor.isActive('heading', { level: 3 })) {
-        setBlockType('h3');
       } else {
         setBlockType('paragraph');
       }
@@ -72,16 +50,17 @@ function FloatingToolbarOptions({
    */
   const formatText = (type: 'bold' | 'italic' | 'strike' | 'code') => {
     if (type === 'bold') {
-      editor.chain().focus().toggleBold().run();
+      editor.chain()
+        .focus()
+        .toggleBold()
+        .run();
     }
-    // else if (type === 'italic') {
-    //   editor.chain().focus().toggleItalic().run();
-    // } else if (type === 'strike') {
-    //   editor.chain().focus().toggleStrike().run();
-    // } else if (type === 'code') {
-    //   editor.chain().focus().toggleCode().run();
-    // }
   };
+
+  const stopBubbleClose = (e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
 
   /**
    * 设置为段落
@@ -118,8 +97,10 @@ function FloatingToolbarOptions({
   };
 
   const intoAiMode = () => {
-    editor.commands.expandSelectionToNodeEdge()
-    setMode("ai")
+    editor.chain()
+      .expandSelectionToNodeEdge()
+      .setMode("ai")
+      .run()
   }
 
   return (
@@ -133,11 +114,15 @@ function FloatingToolbarOptions({
         <Image src="/gemini-color.svg" alt="Gemini" width={16} height={16} />
       </Button>
       <div className="w-px h-5 mx-2 bg-gray-200 rounded"></div>
-      <Select value={blockType} onValueChange={handleBlockTypeChange}>
-        <SelectTrigger className="w-[180px]">
+      <Select open={open} onOpenChange={(open) => {
+        setOpen(open)
+      }} value={blockType} onValueChange={handleBlockTypeChange}>
+        <SelectTrigger onPointerDown={(e) => {
+          stopBubbleClose(e)
+        }} className="w-[180px]">
           <SelectValue placeholder=""/>
         </SelectTrigger>
-        <SelectContent className="shadow-xl z-102">
+        <SelectContent onPointerDown={stopBubbleClose} className="shadow-xl z-102">
           <SelectItem value="paragraph" icon={ALargeSmallIcon}>Normal</SelectItem>
           <SelectSeparator/>
           <SelectItem value="bullet" icon={ListIcon}>Bullet List</SelectItem>
@@ -149,30 +134,10 @@ function FloatingToolbarOptions({
         <Toggle
           aria-label="Bold"
           pressed={isBold}
+          onPointerDown={stopBubbleClose}
           onPressedChange={() => formatText('bold')}
         >
           <BoldIcon/>
-        </Toggle>
-        <Toggle
-          aria-label="Italic"
-          pressed={isItalic}
-          onPressedChange={() => formatText('italic')}
-        >
-          <ItalicIcon/>
-        </Toggle>
-        <Toggle
-          aria-label="Strikethrough"
-          pressed={isStrikethrough}
-          onPressedChange={() => formatText('strike')}
-        >
-          <StrikethroughIcon/>
-        </Toggle>
-        <Toggle
-          aria-label="Code"
-          pressed={isCode}
-          onPressedChange={() => formatText('code')}
-        >
-          <CodeIcon/>
         </Toggle>
       </div>
     </div>

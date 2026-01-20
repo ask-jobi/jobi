@@ -11,10 +11,17 @@ export interface SelectionStorage {
   to: number
 }
 
+export type ToolbarMode = 'default' | 'ai' | 'confirm'
+
+export interface ToolbarStorage {
+  mode: ToolbarMode
+}
+
 declare module '@tiptap/core' {
   interface Storage {
     diff: DiffStorage,
-    selection: SelectionStorage
+    selection: SelectionStorage,
+    floatingToolbar: ToolbarStorage
   }
 
   interface Commands<ReturnType> {
@@ -31,6 +38,9 @@ declare module '@tiptap/core' {
     selection: {
       expandSelectionToNodeEdge: () => ReturnType
       clearSelection: () => ReturnType
+    },
+    floatingToolbar: {
+      setMode: (mode: ToolbarMode) => ReturnType
     }
   }
 }

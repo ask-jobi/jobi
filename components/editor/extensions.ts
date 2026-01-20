@@ -1,5 +1,5 @@
 import {Extension, isNodeSelection} from "@tiptap/react";
-import {DiffStorage} from "@/types/tiptap";
+import {DiffStorage, ToolbarMode} from "@/types/tiptap";
 import {Range} from "@tiptap/core";
 import {Selection} from "@tiptap/extensions";
 import {Plugin, PluginKey, EditorState} from "@tiptap/pm/state";
@@ -218,17 +218,22 @@ export const SelectionCustom = Selection.extend({
             const hasStorageRange = storage.from !== null && storage.to !== null
 
             // 如果 Storage 为空，且满足以下任一条件，则不渲染高亮
-            if (!hasStorageRange) {
-              if (
+            if (
+              !hasStorageRange &&
+              (
                 state.selection.empty ||
                 editor.isFocused ||
                 !editor.isEditable ||
                 isNodeSelection(state.selection) ||
                 editor.view.dragging
-              ) {
-                return null
-              }
+              )
+            ) {
+              return null
             }
+
+            // console.log(state.selection.from, state.selection.to)
+            // console.log(storage.from, storage.to)
+            // console.log(!hasStorageRange, state.selection.empty, editor.isFocused, !editor.isEditable, isNodeSelection(state.selection), editor.view.dragging)
 
             // 3. 确定最终的 from 和 to
             const from = hasStorageRange ? (storage.from as number) : state.selection.from
@@ -252,5 +257,25 @@ export const SelectionCustom = Selection.extend({
         },
       }),
     ]
+  },
+})
+
+
+export const FloatingToolbar = Extension.create({
+  name: 'floatingToolbar',
+  addStorage() {
+    return {
+      mode: 'default'
+    }
+  },
+
+  addCommands() {
+    return {
+      setMode: (mode: ToolbarMode) =>
+          () => {
+            this.storage.mode = mode
+            return true
+          },
+    }
   },
 })

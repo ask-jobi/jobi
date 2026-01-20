@@ -1,6 +1,6 @@
 "use client"
 
-import {useEditor, EditorContent, Mark, mergeAttributes} from '@tiptap/react'
+import {useEditor, EditorContent, Mark, mergeAttributes, useEditorState} from '@tiptap/react'
 import Document from '@tiptap/extension-document'
 import Paragraph from '@tiptap/extension-paragraph'
 import Text from '@tiptap/extension-text'
@@ -12,10 +12,10 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { Markdown } from "@tiptap/markdown";
 import Heading from "@tiptap/extension-heading";
 import {BubbleMenu} from "@tiptap/react/menus";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect} from "react";
 import FloatingToolbarAi from './floating-toolbar-ai'
 import FloatingToolbarOptions from './floating-toolbar-options'
-import {Diff, SelectionCustom} from "@/components/editor/extensions"
+import {Diff, FloatingToolbar, SelectionCustom} from "@/components/editor/extensions"
 
 export const Inserted = Mark.create({
   name: "inserted",
@@ -56,7 +56,6 @@ export function Editor({
   markdown: string
   onChange?: (md: string) => void
 }) {
-  const [mode, setMode] = useState<"default" | "ai" | "confirm">("default");
   const editor = useEditor({
     contentType: "markdown",
     immediatelyRender: false,
@@ -67,6 +66,7 @@ export function Editor({
         }
       }),
       SelectionCustom,
+      FloatingToolbar,
       Diff,
       Heading,
       Document,
@@ -98,7 +98,15 @@ export function Editor({
         class: 'mx-auto focus:outline-none min-h-full px-3 py-2',
       },
     },
+  })!!
+
+  const { mode } = useEditorState({
+    editor,
+    selector: snap => ({
+      mode: snap.editor?.extensionStorage.floatingToolbar.mode
+    })
   })
+
 
   const menuRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return
@@ -108,8 +116,10 @@ export function Editor({
 
   useEffect(() => {
     editor?.on("focus", () => {
-      setMode("default")
-      editor?.commands.setTextSelection(0)
+      editor?.chain()
+        .setMode("default")
+        .setTextSelection(0)
+        .run()
     })
 
     return () => {
@@ -121,6 +131,7 @@ export function Editor({
     return null
   }
 
+
   return (
     <div className="h-full bg-background overflow-y-scroll rounded-lg border shadow">
       <TooltipProvider>
@@ -130,12 +141,14 @@ export function Editor({
           editor={editor}
           shouldShow={({ editor }) => {
             const { selection } = editor.state
+
             return (!selection.empty && editor.isFocused) || editor.isActive("inserted") || editor.isActive("deleted")
           }}
           options={{
             placement: 'bottom',
             offset: 8,
-            flip: true,
+            inline: false,
+            flip: true
           }}
           className="pointer-events-none"
           pluginKey={"toolbar"}
@@ -143,11 +156,11 @@ export function Editor({
 
           {
             mode === 'default' &&
-            <FloatingToolbarOptions setMode={setMode} editor={editor}/>
+            <FloatingToolbarOptions editor={editor}/>
           }
           {
             (mode === 'ai' || mode === 'confirm') &&
-            <FloatingToolbarAi mode={mode} setMode={setMode} editor={editor}/>
+            <FloatingToolbarAi mode={mode} editor={editor}/>
           }
         </BubbleMenu>
 

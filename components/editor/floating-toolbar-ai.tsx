@@ -12,11 +12,9 @@ import {calculateDiffJsonContent} from "./diff";
 import {JSONContent} from "@tiptap/core";
 
 function FloatingToolbarAi({
-                             setMode,
                              mode,
                              editor
                            }: {
-  setMode: (state: 'default' | 'ai' | 'confirm') => void,
   mode: 'default' | 'ai' | 'confirm',
   editor: Editor
 }) {
@@ -39,7 +37,7 @@ function FloatingToolbarAi({
     if (mode === "confirm") {
       const success = editor.chain().focus().rejectDiff().run()
       if (success) {
-        setMode("default")
+        editor.commands.setMode("default")
       }
     }
   }
@@ -48,7 +46,7 @@ function FloatingToolbarAi({
     if (mode === "confirm") {
       const success = editor.chain().focus().applyDiff().run()
       if (success) {
-        setMode("default")
+        editor.commands.setMode("default")
         toast.success("Changes applied")
       } else {
         toast.error("No content to apply")
@@ -112,7 +110,7 @@ function FloatingToolbarAi({
 
     setInstruction("")
     setLoading(false)
-    setMode("confirm")
+    editor.commands.setMode("confirm")
   }
 
   const handleSubmitAi = async (e: any) => {
