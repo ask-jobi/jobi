@@ -154,7 +154,7 @@ export async function consumeQuota(key: QuotaKey) {
   console.log("consuming quota", key, "success")
 }
 
-function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
+export function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
   const quotaItem = quotas[key]
   if (quotaItem.used >= quotaItem.total) {
     throw new Error("Limit reached")

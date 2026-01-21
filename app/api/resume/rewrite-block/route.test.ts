@@ -1,5 +1,6 @@
 import { POST } from "./route"
 import { rewriteBlock } from "@/server/ai/resume-rewriter"
+import { consumeQuota } from "@/server/quota"
 import type { RewriteBlockRequest } from "@/types/api/requests"
 
 // Mock the rewriteBlock function
@@ -7,13 +8,21 @@ jest.mock("@/server/ai/resume-rewriter", () => ({
   rewriteBlock: jest.fn()
 }))
 
+jest.mock("@/server/quota", () => ({
+  consumeQuota: jest.fn()
+}))
+
 const mockRewriteBlock = rewriteBlock as jest.MockedFunction<
   typeof rewriteBlock
+>
+const mockConsumeQuota = consumeQuota as jest.MockedFunction<
+  typeof consumeQuota
 >
 
 describe("POST /api/resume/rewrite-block", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockConsumeQuota.mockResolvedValue(undefined)
   })
 
   const createMockRequest = (body: RewriteBlockRequest): Request => {
@@ -29,21 +38,14 @@ describe("POST /api/resume/rewrite-block", () => {
   const validRequestBody: RewriteBlockRequest = {
     resumeSection: "工作经验部分",
     originalContent: "负责前端开发工作",
-    context: {
-      sectionType: "experience",
-      jd: "需要3年前端开发经验，熟悉React和TypeScript"
-    },
+    jd: "需要3年前端开发经验，熟悉React和TypeScript",
     instruction: "量化成果",
     language: "zh"
   }
 
   describe("Success scenarios", () => {
     it("should successfully process valid request and return rewrite results", async () => {
-      const mockResponse = {
-        optimizedContent: "负责前端开发工作，提升了30%的用户体验",
-        highlight: ["前端开发", "用户体验"],
-        aiReason: "添加了具体的量化成果"
-      }
+      const mockResponse = "负责前端开发工作，提升了30%的用户体验"
 
       mockRewriteBlock.mockResolvedValue(mockResponse)
 
@@ -56,8 +58,7 @@ describe("POST /api/resume/rewrite-block", () => {
       expect(mockRewriteBlock).toHaveBeenCalledWith({
         resumeSection: validRequestBody.resumeSection,
         originalContent: validRequestBody.originalContent,
-        section: validRequestBody.context.sectionType,
-        jd: validRequestBody.context.jd,
+        jd: validRequestBody.jd,
         instruction: validRequestBody.instruction,
         language: validRequestBody.language
       })
@@ -69,11 +70,7 @@ describe("POST /api/resume/rewrite-block", () => {
         language: "en"
       }
 
-      const mockResponse = {
-        optimizedContent: "Responsible for frontend development",
-        highlight: ["frontend", "development"],
-        aiReason: "Optimized content for English"
-      }
+      const mockResponse = "Responsible for frontend development"
 
       mockRewriteBlock.mockResolvedValue(mockResponse)
 
@@ -98,17 +95,14 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe("缺少必要字段")
+      expect(data.error).toBe("required fields are missed")
       expect(mockRewriteBlock).not.toHaveBeenCalled()
     })
 
     it("should return 400 error when jd is missing", async () => {
       const invalidBody = {
         ...validRequestBody,
-        context: {
-          ...validRequestBody.context,
-          jd: ""
-        }
+        jd: ""
       }
 
       const request = createMockRequest(invalidBody as RewriteBlockRequest)
@@ -116,7 +110,7 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe("缺少必要字段")
+      expect(data.error).toBe("required fields are missed")
       expect(mockRewriteBlock).not.toHaveBeenCalled()
     })
 
@@ -131,7 +125,7 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe("缺少必要字段")
+      expect(data.error).toBe("required fields are missed")
       expect(mockRewriteBlock).not.toHaveBeenCalled()
     })
 
@@ -146,7 +140,7 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe("缺少必要字段")
+      expect(data.error).toBe("required fields are missed")
       expect(mockRewriteBlock).not.toHaveBeenCalled()
     })
   })
@@ -161,7 +155,7 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe("服务器内部错误")
+      expect(data.error).toBe("internal server error")
     })
 
     it("should return 500 error when request body parsing fails", async () => {
@@ -180,7 +174,7 @@ describe("POST /api/resume/rewrite-block", () => {
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe("服务器内部错误")
+      expect(data.error).toBe("internal server error")
     })
   })
 
@@ -193,12 +187,8 @@ describe("POST /api/resume/rewrite-block", () => {
         instruction: "突出技术栈 & 量化成果"
       }
 
-      const mockResponse = {
-        optimizedContent:
-          "使用React和TypeScript进行前端开发，解决了100多个技术问题",
-        highlight: ["React", "TypeScript", "100+"],
-        aiReason: "优化了技术栈表达和量化成果"
-      }
+      const mockResponse =
+        "使用React和TypeScript进行前端开发，解决了100多个技术问题"
 
       mockRewriteBlock.mockResolvedValue(mockResponse)
 
@@ -217,11 +207,7 @@ describe("POST /api/resume/rewrite-block", () => {
         originalContent: longContent
       }
 
-      const mockResponse = {
-        optimizedContent: "优化后的长内容",
-        highlight: ["重点1", "重点2"],
-        aiReason: "处理了长内容"
-      }
+      const mockResponse = "优化后的长内容"
 
       mockRewriteBlock.mockResolvedValue(mockResponse)
 

@@ -1,6 +1,7 @@
 import { GET } from "./route"
 import { generateAISuggestionQueue } from "@/server/ai/full-optimize"
 import { getJobApplication } from "@/server/resume"
+import { consumeQuota } from "@/server/quota"
 import type { ResumeData, AISuggestionQueue } from "@/types/resume"
 import { NextRequest } from "next/server"
 import { Locale } from "@/lib/i18n/config"
@@ -14,6 +15,10 @@ jest.mock("@/server/resume", () => ({
   getJobApplication: jest.fn()
 }))
 
+jest.mock("@/server/quota", () => ({
+  consumeQuota: jest.fn()
+}))
+
 const mockGenerateAISuggestionQueue =
   generateAISuggestionQueue as jest.MockedFunction<
     typeof generateAISuggestionQueue
@@ -21,10 +26,14 @@ const mockGenerateAISuggestionQueue =
 const mockGetJobApplication = getJobApplication as jest.MockedFunction<
   typeof getJobApplication
 >
+const mockConsumeQuota = consumeQuota as jest.MockedFunction<
+  typeof consumeQuota
+>
 
 describe("GET /api/resume/full-suggestion", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockConsumeQuota.mockResolvedValue(undefined)
   })
 
   const createMockRequest = (jobApplicationId?: string): NextRequest => {
@@ -137,6 +146,8 @@ describe("GET /api/resume/full-suggestion", () => {
       expect(mockGetJobApplication).toHaveBeenCalledWith("job-app-123")
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(
         mockResumeData,
+        mockJobApplication.jobs,
+        null,
         "zh"
       )
     })
@@ -159,6 +170,8 @@ describe("GET /api/resume/full-suggestion", () => {
       expect(response.status).toBe(200)
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(
         mockResumeData,
+        englishJobApplication.jobs,
+        null,
         "en"
       )
     })
@@ -232,6 +245,8 @@ describe("GET /api/resume/full-suggestion", () => {
       expect(mockGetJobApplication).toHaveBeenCalledWith("job-app-123")
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(
         mockResumeData,
+        mockJobApplication.jobs,
+        null,
         "zh"
       )
     })
@@ -284,6 +299,8 @@ describe("GET /api/resume/full-suggestion", () => {
       expect(data).toEqual(emptySuggestions)
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(
         minimalResumeData,
+        minimalJobApplication.jobs,
+        null,
         "zh"
       )
     })
@@ -375,6 +392,8 @@ describe("GET /api/resume/full-suggestion", () => {
       expect(data).toEqual(complexSuggestions)
       expect(mockGenerateAISuggestionQueue).toHaveBeenCalledWith(
         complexResumeData,
+        complexJobApplication.jobs,
+        null,
         "zh"
       )
     })
