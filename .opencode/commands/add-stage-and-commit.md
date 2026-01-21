@@ -1,0 +1,37 @@
+---
+description: 根据当前 git staged changes 生成 commit message 并提交
+agent: build
+---
+!`git add .`
+以下是本次提交的修改记录：
+!`git diff --staged`
+
+要求：
+1. commit message 必须严格遵循以下格式：
+   [AIRS-$1] {action}: {summary}
+
+2. 其中：
+    - action 必须从以下列表中选择最合适的一个：
+        - feat: 新功能、新需求
+        - fix: 修复某个问题
+        - doc: 文档（如 README / md 文件）改动
+        - build: CI/CD、pipeline、构建脚本变动
+        - chore: 杂项、非功能性修改（格式化、配置、依赖等）
+        - refactor: 不改变功能的代码重构
+        - test: 测试相关改动
+        - perf: 性能优化
+
+3. summary 要求：
+    - 使用英文
+    - 简洁、明确，不超过 30 个单词
+    - 描述「做了什么」，而不是「为什么」
+
+4. 不要输出多行 message
+5. 不要包含 emoji、句号或多余说明
+6. 最终只输出一行 commit message
+7. 不需要查看过去的git提交记录
+
+工作流程：
+- 先分析代码变更的主要意图
+- 如果无法判断 action，选择最保守的一个（feat）
+- 将message通过git commit提交

@@ -118,9 +118,8 @@ function FloatingToolbarOptions({ editor }: { editor: Editor }) {
         onValueChange={handleBlockTypeChange}
       >
         <SelectTrigger
-          onPointerDown={(e) => {
-            stopBubbleClose(e)
-          }}
+          onPointerDown={stopBubbleClose}
+          onClick={() => setOpen((prev) => !prev)}
           className="w-[180px]"
         >
           <SelectValue placeholder="" />
