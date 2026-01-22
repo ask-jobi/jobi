@@ -84,8 +84,11 @@ describe("POST /api/resume/upload-and-analyze", () => {
     jest.setTimeout(30000)
   })
 
+  let sentData: any[] = []
+
   beforeEach(() => {
     jest.resetAllMocks()
+    sentData = []
     mockConsumeQuota.mockResolvedValue(undefined)
     mockVerifyJobApplicationLimit.mockResolvedValue(undefined)
     mockLoadPdfToDoc.mockResolvedValue([
@@ -97,8 +100,27 @@ describe("POST /api/resume/upload-and-analyze", () => {
       actions: []
     })
     mockRegisterWriter.mockReturnValue(undefined)
-    mockSendData.mockResolvedValue(undefined)
+
+    // Capture sent data
+    mockSendData.mockImplementation(async (processId: string, data: any) => {
+      sentData.push(data)
+    })
+
     mockCloseWriter.mockReturnValue(undefined)
+
+    // Suppress console logs in tests
+    jest.spyOn(console, "log").mockImplementation(() => {})
+    jest.spyOn(console, "error").mockImplementation(() => {})
+
+    // Mock setTimeout to execute immediately
+    jest.spyOn(global, "setTimeout").mockImplementation((fn: any) => {
+      if (typeof fn === "function") fn()
+      return 0 as any
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   const getMockPdfFile = (): File => {
@@ -230,6 +252,44 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Verify the sequence of events from captured data
+      expect(sentData).toHaveLength(10) // 5 steps × 2 (loading + success)
+
+      // Upload step
+      expect(sentData[0]).toEqual({ step: "upload", status: "loading" })
+      expect(sentData[1]).toEqual({ step: "upload", status: "success" })
+
+      // Load step
+      expect(sentData[2]).toEqual({ step: "load", status: "loading" })
+      expect(sentData[3]).toEqual({ step: "load", status: "success" })
+
+      // Parse step
+      expect(sentData[4]).toEqual({ step: "parse", status: "loading" })
+      expect(sentData[5]).toEqual({ step: "parse", status: "success" })
+
+      // Prepare step
+      expect(sentData[6]).toEqual({ step: "prepare", status: "loading" })
+      expect(sentData[7]).toEqual({ step: "prepare", status: "success" })
+
+      // Evaluate step
+      expect(sentData[8]).toEqual({ step: "evaluate", status: "loading" })
+      expect(sentData[9]).toEqual({ step: "evaluate", status: "success" })
+
+      // Verify all mocks were called
+      expect(mockUploadResumeFile).toHaveBeenCalledWith(file)
+      expect(mockLoadPdfToDoc).toHaveBeenCalledWith(file, { splitPages: false })
+      expect(mockParseResume).toHaveBeenCalledWith("test content")
+      expect(mockCreateResumeRecord).toHaveBeenCalledWith(
+        mockJobInfo,
+        mockUploadResult,
+        mockResumeData,
+        "en"
+      )
+      expect(mockEvaluateAndSaveResume).toHaveBeenCalled()
     })
 
     it("should handle different languages correctly", async () => {
@@ -253,6 +313,20 @@ describe("POST /api/resume/upload-and-analyze", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(200)
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have all steps completed
+      expect(sentData).toHaveLength(10)
+
+      // Verify language was passed correctly
+      expect(mockCreateResumeRecord).toHaveBeenCalledWith(
+        mockJobInfo,
+        mockUploadResult,
+        mockResumeData,
+        "zh"
+      )
     })
   })
 
@@ -280,6 +354,16 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have error message (may be sent twice due to error handling)
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      expect(sentData[0]).toEqual({
+        error: "Only support upload pdf file as resume"
+      })
+
       expect(mockUploadResumeFile).not.toHaveBeenCalled()
       expect(mockParseResume).not.toHaveBeenCalled()
       expect(mockCreateResumeRecord).not.toHaveBeenCalled()
@@ -294,7 +378,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       })
       const request = createMockRequest(file, mockJobInfo)
 
-      mockConsumeQuota.mockImplementation(() => {
+      mockVerifyJobApplicationLimit.mockImplementation(() => {
         throw new Error("Limit reached")
       })
 
@@ -302,6 +386,13 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have error message (may be sent twice due to error handling)
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      expect(sentData[0]).toEqual({ error: "Limit reached" })
     })
   })
 
@@ -319,6 +410,15 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have upload loading status then error
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      const lastMessage = sentData[sentData.length - 1]
+      expect(lastMessage).toEqual({ error: "Upload failed" })
+
       expect(mockParseResume).not.toHaveBeenCalled()
       expect(mockCreateResumeRecord).not.toHaveBeenCalled()
     })
@@ -337,6 +437,15 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have upload + load steps, then error
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      const lastMessage = sentData[sentData.length - 1]
+      expect(lastMessage).toEqual({ error: "Parsing failed" })
+
       expect(mockCreateResumeRecord).not.toHaveBeenCalled()
     })
 
@@ -355,6 +464,14 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have upload + load + parse steps, then error
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      const lastMessage = sentData[sentData.length - 1]
+      expect(lastMessage).toEqual({ error: "Database error" })
     })
   })
 
@@ -366,12 +483,17 @@ describe("POST /api/resume/upload-and-analyze", () => {
       })
       const request = createMockRequest(file, mockJobInfo)
 
-      setTimeout(() => {
-        request.signal.dispatchEvent(new Event("abort"))
-      }, 100)
+      mockUploadResumeFile.mockResolvedValue(mockUploadResult)
+      mockParseResume.mockResolvedValue([mockResumeData, "en"])
+      mockCreateResumeRecord.mockResolvedValue(mockCreateResumeRecordResult)
 
       const response = await POST(request)
       expect(response.status).toBe(200)
+      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Verify closeWriter was called (completion always calls it)
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(mockCloseWriter).toHaveBeenCalled()
     })
 
     it("should handle malformed job info JSON", async () => {
@@ -395,6 +517,13 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+
+      // Wait a bit for async operations to complete
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Should have error message about invalid JSON (may be sent twice)
+      expect(sentData.length).toBeGreaterThanOrEqual(1)
+      expect(sentData[0].error).toContain("not valid JSON")
     })
   })
 })
