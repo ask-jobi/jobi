@@ -229,6 +229,33 @@ describe("getActiveAccessPass", () => {
 
     await expect(getActiveAccessPass("user-id")).rejects.toThrow("DB Error")
   })
+
+  it("should return null when database error is PGRST116", async () => {
+    const mockSupabase = {
+      from: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            gt: jest.fn().mockReturnValue({
+              order: jest.fn().mockReturnValue({
+                limit: jest.fn().mockReturnValue({
+                  single: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: { code: "PGRST116", message: "Row not found" }
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
+    }
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    const result = await getActiveAccessPass("user-id")
+    expect(result).toBeNull()
+  })
 })
 
 describe("getUserSubscription", () => {
@@ -440,6 +467,74 @@ describe("consumeQuota", () => {
     )
 
     await expect(consumeQuota("fullOptimize")).rejects.toThrow("DB Error")
+  })
+
+  it("should throw error when update fails", async () => {
+    const mockSupabase = {
+      from: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: {
+              id: "pass-id",
+              user_id: "user-id",
+              plan: "PRO" as const,
+              end_at: "2025-12-31",
+              quota_full_optimize: 10,
+              used_full_optimize: 5,
+              quota_block_optimize: 20,
+              used_block_optimize: 10,
+              quota_motivation_letter: 5,
+              used_motivation_letter: 2
+            }
+          })
+        }),
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            error: { message: "Update failed" }
+          })
+        })
+      })
+    }
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    await expect(consumeQuota("fullOptimize")).rejects.toEqual({
+      message: "Update failed"
+    })
+  })
+
+  it("should successfully consume quota with update success", async () => {
+    const mockSupabase = {
+      from: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: {
+              id: "pass-id",
+              user_id: "user-id",
+              plan: "PRO" as const,
+              end_at: "2025-12-31",
+              quota_full_optimize: 10,
+              used_full_optimize: 5,
+              quota_block_optimize: 20,
+              used_block_optimize: 10,
+              quota_motivation_letter: 5,
+              used_motivation_letter: 2
+            }
+          })
+        }),
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: null })
+        })
+      })
+    }
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    await consumeQuota("fullOptimize")
+
+    expect(mockSupabase.from).toHaveBeenCalledWith("access_passes")
   })
 })
 
