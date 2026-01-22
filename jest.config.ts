@@ -22,7 +22,12 @@ const config: Config = {
   // collectCoverage: false,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  // collectCoverageFrom: undefined,
+  collectCoverageFrom: [
+    // "app/**/*.{ts,tsx}",
+    "components/client-components/**/*.{ts,tsx}",
+    "server/*.{ts,tsx}",
+    "server/sse/*.{ts,tsx}"
+  ],
 
   // The directory where Jest should output its coverage files
   // coverageDirectory: undefined,
@@ -172,7 +177,13 @@ const config: Config = {
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: ["test/e2e/", "components/ui/", "node_modules/"]
+  testPathIgnorePatterns: [
+    "test/e2e/",
+    "components/ui/",
+    "node_modules/",
+    "lib/",
+    "server/ai/prompts"
+  ]
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],
