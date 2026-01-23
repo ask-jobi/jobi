@@ -38,6 +38,7 @@ export async function getActiveAccessPass(
 ): Promise<DBAccessPass | null> {
   const supabase = await createClient()
 
+  // todo 拆分所有的supabase出去为单独的方法，方便测试进行mock
   const { data: accessPass, error } = await supabase
     .from("access_passes")
     .select("*")

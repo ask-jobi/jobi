@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 import { AsyncLocalStorage } from "node:async_hooks"
 
@@ -20,24 +20,23 @@ import { createClient } from "@/lib/supabase/server"
 import { rollbackStorage, RollbackContext } from "./rollback"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { ResumeData } from "@/types/resume"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
-jest.mock("@/lib/supabase/server")
-jest.mock("./rollback", () => ({
-  ...jest.requireActual("./rollback"),
+vi.mock("@/lib/supabase/server")
+vi.mock("./rollback", () => ({
+  ...vi.importActual("./rollback"),
   rollbackStorage: {
-    getStore: jest.fn(),
-    run: jest.fn()
+    getStore: vi.fn(),
+    run: vi.fn()
   }
 }))
 
-const mockCreateClient = createClient as jest.MockedFunction<
-  typeof createClient
->
-const mockRollbackStorage = jest.mocked(rollbackStorage)
+const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
+const mockRollbackStorage = vi.mocked(rollbackStorage)
 
 describe("fetchJobApplication", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should return job applications", async () => {
@@ -60,8 +59,8 @@ describe("fetchJobApplication", () => {
     ]
 
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockResolvedValue({ data: mockData, error: null })
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: mockData, error: null })
       })
     }
     mockCreateClient.mockResolvedValue(
@@ -76,8 +75,8 @@ describe("fetchJobApplication", () => {
 
   it("should return null on database error", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest
+      from: vi.fn().mockReturnValue({
+        select: vi
           .fn()
           .mockResolvedValue({ data: null, error: new Error("DB Error") })
       })
@@ -94,7 +93,7 @@ describe("fetchJobApplication", () => {
 
 describe("getJobApplication", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should return job application when exists", async () => {
@@ -112,9 +111,9 @@ describe("getJobApplication", () => {
     }
 
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [mockData], error: null })
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [mockData], error: null })
         })
       })
     }
@@ -129,9 +128,9 @@ describe("getJobApplication", () => {
 
   it("should throw error when not found", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [], error: null })
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [], error: null })
         })
       })
     }
@@ -146,9 +145,9 @@ describe("getJobApplication", () => {
 
   it("should throw error when multiple found", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
             data: [{ id: "app-1" }, { id: "app-2" }],
             error: null
           })
@@ -167,16 +166,16 @@ describe("getJobApplication", () => {
 
 describe("getResumeData", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should return resume data when exists", async () => {
     const mockResumeJson = { personalInfo: { firstName: "John" } }
 
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
             data: [{ resume_json: mockResumeJson }],
             error: null
           })
@@ -194,9 +193,9 @@ describe("getResumeData", () => {
 
   it("should throw error when not found", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [], error: null })
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [], error: null })
         })
       })
     }
@@ -211,9 +210,9 @@ describe("getResumeData", () => {
 
   it("should throw error when multiple found", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
             data: [{ resume_json: {} }, { resume_json: {} }],
             error: null
           })
@@ -232,7 +231,7 @@ describe("getResumeData", () => {
 
 describe("uploadResumeFile", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should upload file successfully", async () => {
@@ -242,21 +241,19 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-123" } },
           error: null
         })
       },
       storage: {
-        from: jest.fn().mockReturnValue({
-          list: jest.fn().mockResolvedValue({ data: [], error: null }),
-          upload: jest
-            .fn()
-            .mockResolvedValue({
-              data: { path: "user-123/resume.pdf" },
-              error: null
-            }),
-          getPublicUrl: jest.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          list: vi.fn().mockResolvedValue({ data: [], error: null }),
+          upload: vi.fn().mockResolvedValue({
+            data: { path: "user-123/resume.pdf" },
+            error: null
+          }),
+          getPublicUrl: vi.fn().mockReturnValue({
             data: { publicUrl: "https://example.com/user-123/resume.pdf" }
           })
         })
@@ -280,7 +277,7 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: null
         })
@@ -302,15 +299,15 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-123" } },
           error: null
         })
       },
       storage: {
-        from: jest.fn().mockReturnValue({
-          list: jest.fn().mockResolvedValue({ data: [], error: null }),
-          upload: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnValue({
+          list: vi.fn().mockResolvedValue({ data: [], error: null }),
+          upload: vi.fn().mockResolvedValue({
             data: null,
             error: { message: "Upload failed" }
           })
@@ -329,7 +326,7 @@ describe("uploadResumeFile", () => {
 
 describe("createResumeRecord", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should create resume record successfully", async () => {
@@ -360,17 +357,17 @@ describe("createResumeRecord", () => {
     const mockRollbackContext = {
       rollbackActions: [],
       retryTimes: 3,
-      addRollback: jest.fn()
+      addRollback: vi.fn()
     }
     mockRollbackStorage.getStore.mockReturnValue(
       mockRollbackContext as unknown as RollbackContext
     )
 
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi
               .fn()
               .mockResolvedValueOnce({ data: { id: "job-123" }, error: null })
               .mockResolvedValueOnce({
@@ -426,17 +423,17 @@ describe("createResumeRecord", () => {
     const mockRollbackContext = {
       rollbackActions: [],
       retryTimes: 3,
-      addRollback: jest.fn()
+      addRollback: vi.fn()
     }
     mockRollbackStorage.getStore.mockReturnValue(
       mockRollbackContext as unknown as RollbackContext
     )
 
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: "Job insert failed" }
             })
@@ -456,13 +453,13 @@ describe("createResumeRecord", () => {
 
 describe("updateResumeJobDescription", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should update job description and flag", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null })
+    const mockFrom = vi.fn().mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
       })
     })
 
@@ -485,20 +482,20 @@ describe("updateResumeJobDescription", () => {
 
   it("should throw error when update fails", async () => {
     let callCount = 0
-    const mockFrom = jest.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation(() => {
       callCount++
       if (callCount === 1) {
         return {
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
               error: { message: "Update failed" }
             })
           })
         }
       }
       return {
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       }
     })
@@ -523,7 +520,7 @@ describe("updateResumeJobDescription", () => {
 
 describe("saveResumeChange", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should save resume change successfully", async () => {
@@ -539,9 +536,9 @@ describe("saveResumeChange", () => {
       skills: { title: "Skills", order: 2, blocks: [] }
     }
 
-    const mockFrom = jest.fn().mockReturnValue({
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null })
+    const mockFrom = vi.fn().mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null })
       })
     })
 
@@ -570,9 +567,9 @@ describe("saveResumeChange", () => {
       skills: { title: "Skills", order: 2, blocks: [] }
     }
 
-    const mockFrom = jest.fn().mockReturnValue({
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
           error: { message: "Save failed" }
         })
       })
@@ -593,7 +590,7 @@ describe("saveResumeChange", () => {
 
 describe("createEmptyResumeRecord", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should create empty resume record successfully", async () => {
@@ -606,7 +603,7 @@ describe("createEmptyResumeRecord", () => {
     const mockRollbackContext = {
       rollbackActions: [],
       retryTimes: 3,
-      addRollback: jest.fn()
+      addRollback: vi.fn()
     }
     mockRollbackStorage.getStore.mockReturnValue(
       mockRollbackContext as unknown as RollbackContext
@@ -614,15 +611,15 @@ describe("createEmptyResumeRecord", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-123" } },
           error: null
         })
       },
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi
               .fn()
               .mockResolvedValueOnce({ data: { id: "job-123" }, error: null })
               .mockResolvedValueOnce({
@@ -654,7 +651,7 @@ describe("createEmptyResumeRecord", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: null
         })
@@ -672,16 +669,16 @@ describe("createEmptyResumeRecord", () => {
 
 describe("deleteJobApplication", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should delete job application successfully", async () => {
-    const mockFrom = jest.fn()
+    const mockFrom = vi.fn()
     mockFrom
       .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: "app-123",
                 resumes: {
@@ -697,32 +694,32 @@ describe("deleteJobApplication", () => {
         })
       })
       .mockReturnValueOnce({
-        delete: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       })
       .mockReturnValueOnce({
-        delete: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       })
       .mockReturnValueOnce({
-        delete: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       })
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-123" } },
           error: null
         })
       },
       from: mockFrom,
       storage: {
-        from: jest.fn().mockReturnValue({
-          remove: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          remove: vi.fn().mockResolvedValue({ error: null })
         })
       }
     }
@@ -739,7 +736,7 @@ describe("deleteJobApplication", () => {
   it("should throw error when user not authenticated", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: null
         })
@@ -757,15 +754,15 @@ describe("deleteJobApplication", () => {
   it("should throw error when job application not found", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-123" } },
           error: null
         })
       },
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: "Not found" }
             })

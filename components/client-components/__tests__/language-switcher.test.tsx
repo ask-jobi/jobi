@@ -1,20 +1,25 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 import { render, screen, fireEvent } from "@testing-library/react"
-
-jest.mock("@/lib/i18n/services")
-jest.mock("next-intl")
+import { vi, describe, it, expect, beforeEach } from "vitest"
+import * as nextIntl from "next-intl"
+import * as i18nServices from "@/lib/i18n/services"
 
 import { LanguageSwitcher } from "../language-switcher"
 
 describe("LanguageSwitcher", () => {
+  const mockUseLocale = vi.spyOn(nextIntl, "useLocale").mockReturnValue("en")
+  const mockSetUserLocale = vi
+    .spyOn(i18nServices, "setUserLocale")
+    .mockImplementation(() => Promise.resolve())
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
+    mockSetUserLocale.mockImplementation(() => Promise.resolve())
   })
 
   it("should render with current locale as English", () => {
-    require("next-intl").useLocale = () => "en"
+    mockUseLocale.mockReturnValue("en")
 
     render(<LanguageSwitcher />)
 
@@ -23,7 +28,7 @@ describe("LanguageSwitcher", () => {
   })
 
   it("should render with current locale as Chinese", () => {
-    require("next-intl").useLocale = () => "zh"
+    mockUseLocale.mockReturnValue("zh")
 
     render(<LanguageSwitcher />)
 
@@ -32,9 +37,7 @@ describe("LanguageSwitcher", () => {
   })
 
   it("should call setUserLocale when toggled from zh to en", () => {
-    const mockSetUserLocale = require("@/lib/i18n/services")
-      .setUserLocale as jest.Mock
-    require("next-intl").useLocale = () => "zh"
+    mockUseLocale.mockReturnValue("zh")
 
     render(<LanguageSwitcher />)
 
@@ -44,9 +47,7 @@ describe("LanguageSwitcher", () => {
   })
 
   it("should call setUserLocale when toggled from en to zh", () => {
-    const mockSetUserLocale = require("@/lib/i18n/services")
-      .setUserLocale as jest.Mock
-    require("next-intl").useLocale = () => "en"
+    mockUseLocale.mockReturnValue("en")
 
     render(<LanguageSwitcher />)
 
@@ -56,7 +57,7 @@ describe("LanguageSwitcher", () => {
   })
 
   it("should render button with correct classes", () => {
-    require("next-intl").useLocale = () => "en"
+    mockUseLocale.mockReturnValue("en")
 
     render(<LanguageSwitcher />)
 
@@ -66,7 +67,7 @@ describe("LanguageSwitcher", () => {
   })
 
   it("should contain globe icon", () => {
-    require("next-intl").useLocale = () => "en"
+    mockUseLocale.mockReturnValue("en")
 
     render(<LanguageSwitcher />)
 

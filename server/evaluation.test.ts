@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import {
@@ -10,20 +10,18 @@ import {
 import { createClient } from "@/lib/supabase/server"
 import { evaluateResume } from "@/server/ai/resume-evaluator"
 import type { ResumeData } from "@/types/resume"
+import { vi, describe, it, expect, beforeEach } from "vitest"
+import { ResumeEvaluationOutput } from "@/types/evaluation"
 
-jest.mock("@/lib/supabase/server")
-jest.mock("@/server/ai/resume-evaluator")
+vi.mock("@/lib/supabase/server")
+vi.mock("@/server/ai/resume-evaluator")
 
-const mockCreateClient = createClient as jest.MockedFunction<
-  typeof createClient
->
-const mockEvaluateResume = evaluateResume as jest.MockedFunction<
-  typeof evaluateResume
->
+const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
+const mockEvaluateResume = evaluateResume as unknown as ReturnType<typeof vi.fn>
 
 describe("evaluation", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   const mockResumeData: ResumeData = {
@@ -38,21 +36,35 @@ describe("evaluation", () => {
     skills: { title: "Skills", order: 2, blocks: [] }
   }
 
-  const mockReport = {
-    overallScore: 85,
-    atsScore: 80,
-    summary: "Good resume",
-    suggestions: [
-      { type: "content", severity: "medium", text: "Add more details" }
+  const mockReport: ResumeEvaluationOutput = {
+    gates: {
+      ats: "pass",
+      hr: "pass",
+      hiringManager: "borderline"
+    },
+    gaps: [
+      {
+        dimension: "metrics",
+        severity: "important",
+        description: "Add more quantifiable achievements",
+        evidence: "Current experience lacks specific metrics"
+      }
+    ],
+    actions: [
+      {
+        priority: "1",
+        targetSection: "work_experience",
+        instruction: "Add metrics and numbers to demonstrate impact"
+      }
     ]
   }
 
   describe("evaluateAndSaveResume", () => {
     it("should evaluate and save resume successfully", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -71,9 +83,9 @@ describe("evaluation", () => {
 
     it("should evaluate with job description when provided", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -93,9 +105,9 @@ describe("evaluation", () => {
 
     it("should throw error when database update fails", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
               error: { message: "Update failed" }
             })
           })
@@ -113,9 +125,9 @@ describe("evaluation", () => {
 
     it("should throw error when AI evaluation fails", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -131,9 +143,9 @@ describe("evaluation", () => {
 
     it("should set evaluation_report_refresh_flag to false", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -155,9 +167,9 @@ describe("evaluation", () => {
   describe("updateResumeEvaluationReport", () => {
     it("should update evaluation report successfully", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -181,9 +193,9 @@ describe("evaluation", () => {
 
     it("should throw error when update fails", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
               error: { message: "Database error" }
             })
           })
@@ -200,9 +212,9 @@ describe("evaluation", () => {
 
     it("should use correct resume ID for update", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -220,9 +232,9 @@ describe("evaluation", () => {
   describe("updateResumeEvaluationReportRefreshFlag", () => {
     it("should set refresh flag to true by default", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -240,9 +252,9 @@ describe("evaluation", () => {
 
     it("should set refresh flag to false when explicitly specified", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }
@@ -260,9 +272,9 @@ describe("evaluation", () => {
 
     it("should throw error when update fails", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
               error: { message: "Update flag failed" }
             })
           })
@@ -281,9 +293,9 @@ describe("evaluation", () => {
 
     it("should use correct resume ID for update", async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnValue({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null })
+        from: vi.fn().mockReturnValue({
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
           })
         })
       }

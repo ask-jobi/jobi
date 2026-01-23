@@ -1,24 +1,27 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import { registerWriter, sendData, closeWriter } from "./writer-manager"
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
 describe("writer-manager", () => {
-  let mockWriter: jest.Mocked<WritableStreamDefaultWriter>
+  let mockWriter: WritableStreamDefaultWriter
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockWriter = {
       ready: Promise.resolve(),
-      write: jest.fn().mockResolvedValue(undefined),
-      close: jest.fn().mockResolvedValue(undefined),
-      releaseLock: jest.fn()
-    } as unknown as jest.Mocked<WritableStreamDefaultWriter>
+      write: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+      releaseLock: vi.fn(),
+      closed: Promise.resolve(),
+      desiredSize: null
+    } as unknown as WritableStreamDefaultWriter
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("registerWriter", () => {
@@ -31,9 +34,12 @@ describe("writer-manager", () => {
     it("should allow overwriting existing writer", async () => {
       const newWriter = {
         ready: Promise.resolve(),
-        write: jest.fn().mockResolvedValue(undefined),
-        close: jest.fn().mockResolvedValue(undefined)
-      } as unknown as jest.Mocked<WritableStreamDefaultWriter>
+        write: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined),
+        releaseLock: vi.fn(),
+        closed: Promise.resolve(),
+        desiredSize: null
+      } as unknown as WritableStreamDefaultWriter
 
       registerWriter("process-123", mockWriter)
       registerWriter("process-123", newWriter)
@@ -53,7 +59,8 @@ describe("writer-manager", () => {
 
       expect(mockWriter.ready).toBeDefined()
       expect(mockWriter.write).toHaveBeenCalledWith(expect.any(Uint8Array))
-      const writtenData = mockWriter.write.mock.calls[0][0]
+      const writtenData = (mockWriter.write as ReturnType<typeof vi.fn>).mock
+        .calls[0][0]
       const decoded = new TextDecoder().decode(writtenData)
       expect(decoded).toBe('data: {"message":"hello"}\n\n')
     })
@@ -75,7 +82,8 @@ describe("writer-manager", () => {
         }
       })
 
-      const writtenData = mockWriter.write.mock.calls[0][0]
+      const writtenData = (mockWriter.write as ReturnType<typeof vi.fn>).mock
+        .calls[0][0]
       const decoded = new TextDecoder().decode(writtenData)
       expect(decoded).toContain('"type":"update"')
       expect(decoded).toContain('"progress":50')

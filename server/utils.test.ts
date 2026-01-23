@@ -3,23 +3,24 @@ import {
   extractFilePathFromPublicUrl,
   BUCKET_NAME
 } from "./utils"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
 describe("getUniqueFileName", () => {
   let mockSupabase: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockSupabase = {
       storage: {
-        from: jest.fn().mockReturnValue({
-          list: jest.fn()
+        from: vi.fn().mockReturnValue({
+          list: vi.fn()
         })
       }
     }
   })
 
   it("should return original filename when file does not exist", async () => {
-    const listMock = jest.fn().mockResolvedValue({ data: [], error: null })
+    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
     mockSupabase.storage.from(BUCKET_NAME).list = listMock
 
     const result = await getUniqueFileName(
@@ -35,7 +36,7 @@ describe("getUniqueFileName", () => {
   })
 
   it("should append counter when file exists", async () => {
-    const listMock = jest
+    const listMock = vi
       .fn()
       .mockResolvedValueOnce({ data: [{ name: "resume.pdf" }], error: null })
       .mockResolvedValueOnce({ data: [], error: null })
@@ -52,7 +53,7 @@ describe("getUniqueFileName", () => {
   })
 
   it("should increment counter for multiple duplicates", async () => {
-    const listMock = jest
+    const listMock = vi
       .fn()
       .mockResolvedValueOnce({ data: [{ name: "resume.pdf" }], error: null })
       .mockResolvedValueOnce({ data: [{ name: "resume-1.pdf" }], error: null })
@@ -70,7 +71,7 @@ describe("getUniqueFileName", () => {
   })
 
   it("should throw error when storage list fails", async () => {
-    const listMock = jest.fn().mockResolvedValue({
+    const listMock = vi.fn().mockResolvedValue({
       data: null,
       error: { message: "Permission denied" }
     })
@@ -82,7 +83,7 @@ describe("getUniqueFileName", () => {
   })
 
   it("should handle filenames with multiple dots", async () => {
-    const listMock = jest.fn().mockResolvedValue({ data: [], error: null })
+    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
     mockSupabase.storage.from(BUCKET_NAME).list = listMock
 
     const result = await getUniqueFileName(
@@ -95,7 +96,7 @@ describe("getUniqueFileName", () => {
   })
 
   it("should handle empty file extension edge case", async () => {
-    const listMock = jest.fn().mockResolvedValue({ data: [], error: null })
+    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
     mockSupabase.storage.from(BUCKET_NAME).list = listMock
 
     const result = await getUniqueFileName(mockSupabase, "user-123", "resume")

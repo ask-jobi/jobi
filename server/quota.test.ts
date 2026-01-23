@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 import {
   verifyAndUpdateQuota,
@@ -9,12 +9,11 @@ import {
   verifyJobApplicationLimit
 } from "./quota"
 import { createClient } from "@/lib/supabase/server"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
-jest.mock("@/lib/supabase/server")
+vi.mock("@/lib/supabase/server")
 
-const mockCreateClient = createClient as jest.MockedFunction<
-  typeof createClient
->
+const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
 
 describe("verifyAndUpdateQuota", () => {
   it("should return update params when used is less than total", () => {
@@ -142,18 +141,18 @@ describe("verifyAndUpdateQuota", () => {
 
 describe("getActiveAccessPass", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should return access pass when valid subscription exists", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gt: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
                     data: {
                       id: "pass-id",
                       user_id: "user-id",
@@ -181,13 +180,13 @@ describe("getActiveAccessPass", () => {
 
   it("should return null when no valid subscription exists", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gt: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
                     data: null,
                     error: { code: "PGRST116" }
                   })
@@ -209,13 +208,13 @@ describe("getActiveAccessPass", () => {
 
   it("should throw error on database error", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gt: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockRejectedValue(new Error("DB Error"))
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockRejectedValue(new Error("DB Error"))
                 })
               })
             })
@@ -232,13 +231,13 @@ describe("getActiveAccessPass", () => {
 
   it("should return null when database error is PGRST116", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gt: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
                     data: null,
                     error: { code: "PGRST116", message: "Row not found" }
                   })
@@ -260,17 +259,17 @@ describe("getActiveAccessPass", () => {
 
 describe("getUserSubscription", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should return subscription data when user has active pass", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          gt: jest.fn().mockReturnValue({
-            order: jest.fn().mockReturnValue({
-              limit: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
                   data: {
                     id: "pass-id",
                     user_id: "user-id",
@@ -293,7 +292,7 @@ describe("getUserSubscription", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-id" } },
           error: null
         })
@@ -315,13 +314,13 @@ describe("getUserSubscription", () => {
   })
 
   it("should return default values when user has no active pass", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          gt: jest.fn().mockReturnValue({
-            order: jest.fn().mockReturnValue({
-              limit: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
                   data: null,
                   error: { code: "PGRST116" }
                 })
@@ -334,7 +333,7 @@ describe("getUserSubscription", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-id" } },
           error: null
         })
@@ -358,7 +357,7 @@ describe("getUserSubscription", () => {
   it("should throw error when user is not logged in", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: null
         })
@@ -374,7 +373,7 @@ describe("getUserSubscription", () => {
   it("should throw error when getUser fails", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: new Error("Auth failed")
         })
@@ -390,14 +389,14 @@ describe("getUserSubscription", () => {
 
 describe("consumeQuota", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should successfully consume quota", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
             data: {
               id: "pass-id",
               user_id: "user-id",
@@ -412,8 +411,8 @@ describe("consumeQuota", () => {
             }
           })
         }),
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       })
     }
@@ -428,9 +427,9 @@ describe("consumeQuota", () => {
 
   it("should throw error when quota is exhausted", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
             data: {
               id: "pass-id",
               user_id: "user-id",
@@ -456,9 +455,9 @@ describe("consumeQuota", () => {
 
   it("should throw error when database fails on select", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockRejectedValue(new Error("DB Error"))
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockRejectedValue(new Error("DB Error"))
         })
       })
     }
@@ -471,9 +470,9 @@ describe("consumeQuota", () => {
 
   it("should throw error when update fails", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
             data: {
               id: "pass-id",
               user_id: "user-id",
@@ -488,8 +487,8 @@ describe("consumeQuota", () => {
             }
           })
         }),
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
             error: { message: "Update failed" }
           })
         })
@@ -506,9 +505,9 @@ describe("consumeQuota", () => {
 
   it("should successfully consume quota with update success", async () => {
     const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
             data: {
               id: "pass-id",
               user_id: "user-id",
@@ -523,8 +522,8 @@ describe("consumeQuota", () => {
             }
           })
         }),
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null })
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null })
         })
       })
     }
@@ -540,13 +539,13 @@ describe("consumeQuota", () => {
 
 describe("verifyJobApplicationLimit", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should pass when under limit", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
           data: [{ id: "app-1" }, { id: "app-2" }],
           error: null
         })
@@ -555,7 +554,7 @@ describe("verifyJobApplicationLimit", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-id" } },
           error: null
         })
@@ -570,9 +569,9 @@ describe("verifyJobApplicationLimit", () => {
   })
 
   it("should throw error when over limit", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
           data: Array(20).fill({ id: "app" }),
           error: null
         })
@@ -581,7 +580,7 @@ describe("verifyJobApplicationLimit", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-id" } },
           error: null
         })
@@ -600,7 +599,7 @@ describe("verifyJobApplicationLimit", () => {
   it("should throw error when user is not logged in", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: null
         })
@@ -618,7 +617,7 @@ describe("verifyJobApplicationLimit", () => {
   it("should throw error when getUser fails", async () => {
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: null },
           error: new Error("User not logged in")
         })
@@ -634,9 +633,9 @@ describe("verifyJobApplicationLimit", () => {
   })
 
   it("should throw error when database query fails", async () => {
-    const mockFrom = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
           data: null,
           error: new Error("DB Error")
         })
@@ -645,7 +644,7 @@ describe("verifyJobApplicationLimit", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: jest.fn().mockResolvedValue({
+        getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "user-id" } },
           error: null
         })

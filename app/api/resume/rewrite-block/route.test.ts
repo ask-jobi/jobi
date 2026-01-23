@@ -2,26 +2,23 @@ import { POST } from "./route"
 import { rewriteBlock } from "@/server/ai/resume-rewriter"
 import { consumeQuota } from "@/server/quota"
 import type { RewriteBlockRequest } from "@/types/api/requests"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
 // Mock the rewriteBlock function
-jest.mock("@/server/ai/resume-rewriter", () => ({
-  rewriteBlock: jest.fn()
+vi.mock("@/server/ai/resume-rewriter", () => ({
+  rewriteBlock: vi.fn()
 }))
 
-jest.mock("@/server/quota", () => ({
-  consumeQuota: jest.fn()
+vi.mock("@/server/quota", () => ({
+  consumeQuota: vi.fn()
 }))
 
-const mockRewriteBlock = rewriteBlock as jest.MockedFunction<
-  typeof rewriteBlock
->
-const mockConsumeQuota = consumeQuota as jest.MockedFunction<
-  typeof consumeQuota
->
+const mockRewriteBlock = rewriteBlock as unknown as ReturnType<typeof vi.fn>
+const mockConsumeQuota = consumeQuota as unknown as ReturnType<typeof vi.fn>
 
 describe("POST /api/resume/rewrite-block", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockConsumeQuota.mockResolvedValue(undefined)
   })
 

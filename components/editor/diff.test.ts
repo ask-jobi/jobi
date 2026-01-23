@@ -7,6 +7,7 @@ import Heading from "@tiptap/extension-heading"
 import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list"
 import { Extension } from "@tiptap/react"
 import { TrailingNode } from "@tiptap/extensions"
+import { describe, it, expect, beforeEach } from "vitest"
 
 describe("diff JSONContent", () => {
   let markdownManager: MarkdownManager

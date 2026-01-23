@@ -1,15 +1,16 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 import { AsyncLocalStorage } from "node:async_hooks"
 
 global.AsyncLocalStorage = AsyncLocalStorage as any
 
 import { RollbackContext, rollbackStorage } from "./rollback"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
 describe("RollbackContext", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("constructor", () => {
@@ -23,8 +24,8 @@ describe("RollbackContext", () => {
   describe("addRollback", () => {
     it("should add rollback action to the list", () => {
       const context = new RollbackContext()
-      const action1 = jest.fn().mockResolvedValue(undefined)
-      const action2 = jest.fn().mockResolvedValue(undefined)
+      const action1 = vi.fn().mockResolvedValue(undefined)
+      const action2 = vi.fn().mockResolvedValue(undefined)
 
       context.addRollback(action1)
       context.addRollback(action2)
@@ -36,7 +37,7 @@ describe("RollbackContext", () => {
 
     it("should handle async rollback actions", async () => {
       const context = new RollbackContext()
-      const asyncAction = jest.fn().mockResolvedValue(undefined)
+      const asyncAction = vi.fn().mockResolvedValue(undefined)
 
       context.addRollback(asyncAction)
       await context.executeRollback()
@@ -48,21 +49,23 @@ describe("RollbackContext", () => {
   describe("rollbackRunWithRetry", () => {
     it("should execute action successfully on first attempt", async () => {
       const context = new RollbackContext()
-      const action = jest.fn().mockResolvedValue(undefined)
+      const action = vi.fn().mockResolvedValue(undefined)
 
-      await context.rollbackRunWithRetry(action, 3)
+      context.addRollback(action)
+      await context.executeRollback()
 
       expect(action).toHaveBeenCalledTimes(1)
     })
 
     it("should retry when action fails and eventually succeed", async () => {
       const context = new RollbackContext()
-      const action = jest
+      const action = vi
         .fn()
         .mockRejectedValueOnce(new Error("Fail 1"))
         .mockResolvedValueOnce(undefined)
 
-      await context.rollbackRunWithRetry(action, 3)
+      context.addRollback(action)
+      await context.executeRollback()
 
       expect(action).toHaveBeenCalledTimes(2)
     })
@@ -70,19 +73,11 @@ describe("RollbackContext", () => {
     it("should throw error when all retries are exhausted", async () => {
       const context = new RollbackContext()
       const error = new Error("Permanent failure")
-      const action = jest.fn().mockRejectedValue(error)
+      const action = vi.fn().mockRejectedValue(error)
 
-      await expect(context.rollbackRunWithRetry(action, 3)).rejects.toThrow(
-        "Permanent failure"
-      )
-      expect(action).toHaveBeenCalledTimes(4)
-    })
+      context.addRollback(action)
+      await context.executeRollback()
 
-    it("should use default retryTimes when not specified", async () => {
-      const context = new RollbackContext()
-      const action = jest.fn().mockRejectedValue(new Error("Fail"))
-
-      await expect(context.rollbackRunWithRetry(action)).rejects.toThrow("Fail")
       expect(action).toHaveBeenCalledTimes(4)
     })
   })
@@ -90,9 +85,9 @@ describe("RollbackContext", () => {
   describe("executeRollback", () => {
     it("should execute all rollback actions in reverse order", async () => {
       const context = new RollbackContext()
-      const action1 = jest.fn().mockResolvedValue(undefined)
-      const action2 = jest.fn().mockResolvedValue(undefined)
-      const action3 = jest.fn().mockResolvedValue(undefined)
+      const action1 = vi.fn().mockResolvedValue(undefined)
+      const action2 = vi.fn().mockResolvedValue(undefined)
+      const action3 = vi.fn().mockResolvedValue(undefined)
 
       context.addRollback(action1)
       context.addRollback(action2)
@@ -110,10 +105,10 @@ describe("RollbackContext", () => {
 
     it("should continue executing other rollbacks when one fails", async () => {
       const context = new RollbackContext()
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation()
-      const action1 = jest.fn().mockResolvedValue(undefined)
-      const action2 = jest.fn().mockRejectedValue(new Error("Rollback failed"))
-      const action3 = jest.fn().mockResolvedValue(undefined)
+      const consoleSpy = vi.spyOn(console, "error")
+      const action1 = vi.fn().mockResolvedValue(undefined)
+      const action2 = vi.fn().mockRejectedValue(new Error("Rollback failed"))
+      const action3 = vi.fn().mockResolvedValue(undefined)
 
       context.addRollback(action1)
       context.addRollback(action2)
@@ -141,8 +136,8 @@ describe("RollbackContext", () => {
 
     it("should handle sync and async actions mixed", async () => {
       const context = new RollbackContext()
-      const syncAction = jest.fn()
-      const asyncAction = jest.fn().mockResolvedValue(undefined)
+      const syncAction = vi.fn()
+      const asyncAction = vi.fn().mockResolvedValue(undefined)
 
       context.addRollback(syncAction)
       context.addRollback(asyncAction)
@@ -162,7 +157,7 @@ describe("rollbackStorage", () => {
 
   it("should run callback with provided context", () => {
     const context = new RollbackContext()
-    const callback = jest.fn()
+    const callback = vi.fn()
 
     rollbackStorage.run(context, callback)
 

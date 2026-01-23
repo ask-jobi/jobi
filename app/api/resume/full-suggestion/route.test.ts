@@ -5,34 +5,31 @@ import { consumeQuota } from "@/server/quota"
 import type { ResumeData, AISuggestionQueue } from "@/types/resume"
 import { NextRequest } from "next/server"
 import { Locale } from "@/lib/i18n/config"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 
 // Mock the dependencies
-jest.mock("@/server/ai/full-optimize", () => ({
-  generateAISuggestionQueue: jest.fn()
+vi.mock("@/server/ai/full-optimize", () => ({
+  generateAISuggestionQueue: vi.fn()
 }))
 
-jest.mock("@/server/resume", () => ({
-  getJobApplication: jest.fn()
+vi.mock("@/server/resume", () => ({
+  getJobApplication: vi.fn()
 }))
 
-jest.mock("@/server/quota", () => ({
-  consumeQuota: jest.fn()
+vi.mock("@/server/quota", () => ({
+  consumeQuota: vi.fn()
 }))
 
 const mockGenerateAISuggestionQueue =
-  generateAISuggestionQueue as jest.MockedFunction<
-    typeof generateAISuggestionQueue
-  >
-const mockGetJobApplication = getJobApplication as jest.MockedFunction<
-  typeof getJobApplication
+  generateAISuggestionQueue as unknown as ReturnType<typeof vi.fn>
+const mockGetJobApplication = getJobApplication as unknown as ReturnType<
+  typeof vi.fn
 >
-const mockConsumeQuota = consumeQuota as jest.MockedFunction<
-  typeof consumeQuota
->
+const mockConsumeQuota = consumeQuota as unknown as ReturnType<typeof vi.fn>
 
 describe("GET /api/resume/full-suggestion", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockConsumeQuota.mockResolvedValue(undefined)
   })
 
