@@ -41,6 +41,7 @@ export function PaymentCancelledAlert({
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
       <Card
+        data-testid="payment-cancelled-alert"
         className={`border-orange-200 bg-orange-50 transition-all duration-300 ${
           isAnimating
             ? "translate-y-0 opacity-100"
