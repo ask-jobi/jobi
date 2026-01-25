@@ -4,17 +4,6 @@
 import { render, screen } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
-vi.mock("next-intl", () => ({
-  useTranslations: vi.fn(() => (key: string) => {
-    const translations: Record<string, string> = {
-      dashboard: "Dashboard",
-      jobs: "Jobs",
-      settings: "Settings"
-    }
-    return translations[key] || key
-  })
-}))
-
 vi.mock("../compact-plan-display", () => ({
   CompactPlanDisplay: () => (
     <div data-testid="compact-plan-display">Plan Display</div>
@@ -25,38 +14,7 @@ vi.mock("../logout-button", () => ({
   LogoutButton: () => <button data-testid="logout-button">Logout</button>
 }))
 
-vi.mock("@/components/ui/sidebar", () => ({
-  Sidebar: ({ children }: { children: ReactNode }) => (
-    <aside data-testid="sidebar">{children}</aside>
-  ),
-  SidebarContent: ({ children }: { children: ReactNode }) => (
-    <div data-testid="sidebar-content">{children}</div>
-  ),
-  SidebarFooter: ({ children }: { children: ReactNode }) => (
-    <footer data-testid="sidebar-footer">{children}</footer>
-  ),
-  SidebarGroup: ({ children }: { children: ReactNode }) => (
-    <div data-testid="sidebar-group">{children}</div>
-  ),
-  SidebarGroupContent: ({ children }: { children: ReactNode }) => (
-    <div data-testid="sidebar-group-content">{children}</div>
-  ),
-  SidebarHeader: ({ children }: { children: ReactNode }) => (
-    <header data-testid="sidebar-header">{children}</header>
-  ),
-  SidebarMenu: ({ children }: { children: ReactNode }) => (
-    <ul data-testid="sidebar-menu">{children}</ul>
-  ),
-  SidebarMenuButton: ({ children }: { children: ReactNode }) => (
-    <div data-testid="sidebar-menu-button">{children}</div>
-  ),
-  SidebarMenuItem: ({ children }: { children: ReactNode }) => (
-    <li data-testid="sidebar-menu-item">{children}</li>
-  )
-}))
-
 import AppSidebar from "../app-sidebar"
-import { ReactNode } from "react"
 
 describe("AppSidebar", () => {
   beforeEach(() => {
@@ -75,9 +33,9 @@ describe("AppSidebar", () => {
   it("should render dashboard and jobs menu items", () => {
     render(<AppSidebar />)
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Jobs" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "dashboard" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "jobs" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "settings" })).toBeInTheDocument()
   })
 
   it("should render logout button", () => {
@@ -95,15 +53,15 @@ describe("AppSidebar", () => {
   it("should have correct href for menu items", () => {
     render(<AppSidebar />)
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "dashboard" })).toHaveAttribute(
       "href",
       "/dashboard"
     )
-    expect(screen.getByRole("link", { name: "Jobs" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "jobs" })).toHaveAttribute(
       "href",
       "/jobs"
     )
-    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "settings" })).toHaveAttribute(
       "href",
       "/settings"
     )

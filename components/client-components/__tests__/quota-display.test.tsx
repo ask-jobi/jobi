@@ -1,107 +1,13 @@
 /**
  * @vitest-environment jsdom
  */
-import type { ReactNode } from "react"
 import { render, screen } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-
-vi.mock("next-intl", () => ({
-  useTranslations: vi.fn(() => (key: string) => {
-    const translations: Record<string, string> = {
-      currentPlan: "Current Plan",
-      validUntil: "Valid Until",
-      detailedUsage: "Detailed Usage",
-      fullOptimization: "Full Optimization",
-      blockOptimization: "Block Optimization",
-      motivationLetter: "Motivation Letter",
-      renewPlan: "Renew Plan",
-      buyPlan: "Buy Plan",
-      upgradeToPro: "Upgrade to Pro",
-      noActivePlan: "No Active Plan"
-    }
-    return translations[key] || key
-  })
-}))
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn()
   })
-}))
-
-vi.mock("@/components/ui/card", () => ({
-  Card: ({
-    children,
-    className
-  }: {
-    children: ReactNode
-    className?: string
-  }) => (
-    <div data-testid="card" className={className}>
-      {children}
-    </div>
-  ),
-  CardContent: ({ children }: { children: ReactNode }) => (
-    <div data-testid="card-content">{children}</div>
-  ),
-  CardHeader: ({ children }: { children: ReactNode }) => (
-    <div data-testid="card-header">{children}</div>
-  ),
-  CardTitle: ({
-    children,
-    className
-  }: {
-    children: ReactNode
-    className?: string
-  }) => (
-    <h3 data-testid="card-title" className={className}>
-      {children}
-    </h3>
-  )
-}))
-
-vi.mock("@/components/ui/button", () => ({
-  Button: ({
-    children,
-    onClick,
-    className
-  }: {
-    children: ReactNode
-    onClick?: () => void
-    className?: string
-  }) => (
-    <button data-testid="button" onClick={onClick} className={className}>
-      {children}
-    </button>
-  )
-}))
-
-vi.mock("@/components/ui/badge", () => ({
-  Badge: ({
-    children,
-    className
-  }: {
-    children: ReactNode
-    className?: string
-  }) => (
-    <span data-testid="badge" className={className}>
-      {children}
-    </span>
-  )
-}))
-
-vi.mock("@/components/ui/progress", () => ({
-  Progress: ({ value }: { value: number }) => (
-    <progress data-testid="progress" value={value} max="100" />
-  )
-}))
-
-vi.mock("lucide-react", () => ({
-  Calendar: () => <svg data-testid="icon-calendar" />,
-  Package: () => <svg data-testid="icon-package" />,
-  RefreshCw: () => <svg data-testid="icon-refresh" />,
-  ArrowUpRight: () => <svg data-testid="icon-arrow" />,
-  Info: () => <svg data-testid="icon-info" />
 }))
 
 import { QuotaDisplay } from "../quota-display"
@@ -140,16 +46,16 @@ describe("QuotaDisplay", () => {
   it("should display expiry date", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByText("Valid Until")).toBeInTheDocument()
+    expect(screen.getByText("validUntil")).toBeInTheDocument()
     expect(screen.getByText(/2025/)).toBeInTheDocument()
   })
 
   it("should display quota usage with progress bars", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByText("Full Optimization")).toBeInTheDocument()
-    expect(screen.getByText("Block Optimization")).toBeInTheDocument()
-    expect(screen.getByText("Motivation Letter")).toBeInTheDocument()
+    expect(screen.getByText("fullOptimization")).toBeInTheDocument()
+    expect(screen.getByText("blockOptimization")).toBeInTheDocument()
+    expect(screen.getByText("motivationLetter")).toBeInTheDocument()
     expect(screen.getAllByTestId("progress")).toHaveLength(3)
   })
 
@@ -165,7 +71,7 @@ describe("QuotaDisplay", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
     expect(
-      screen.getByRole("button", { name: "Renew Plan" })
+      screen.getByRole("button", { name: "renewPlan" })
     ).toBeInTheDocument()
   })
 
@@ -173,7 +79,7 @@ describe("QuotaDisplay", () => {
     const inactiveSubscription = { ...defaultSubscription, isActive: false }
     render(<QuotaDisplay subscription={inactiveSubscription} />)
 
-    expect(screen.getByRole("button", { name: "Buy Plan" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "buyPlan" })).toBeInTheDocument()
   })
 
   it("should show upgrade button for LITE plan", () => {
@@ -181,7 +87,7 @@ describe("QuotaDisplay", () => {
     render(<QuotaDisplay subscription={liteSubscription} />)
 
     expect(
-      screen.getByRole("button", { name: "Upgrade to Pro" })
+      screen.getByRole("button", { name: "upgradeToPro" })
     ).toBeInTheDocument()
   })
 
@@ -198,7 +104,7 @@ describe("QuotaDisplay", () => {
     const noPlanSubscription = { ...defaultSubscription, expiryDate: null }
     render(<QuotaDisplay subscription={noPlanSubscription} />)
 
-    expect(screen.getByText("No Active Plan")).toBeInTheDocument()
+    expect(screen.getByText("noActivePlan")).toBeInTheDocument()
   })
 
   it("should handle zero total quota", () => {

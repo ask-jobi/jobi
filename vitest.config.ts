@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
     globals: true,
-    setupFiles: ["./vitest.env-setup.ts", "./vitest.component-setup.ts"],
+    setupFiles: ["./vitest.env-setup.tsx", "./vitest.component-setup.tsx"],
     exclude: ["test/e2e/**", "node_modules/**", "lib/**", ".next/**", "out/**"],
     coverage: {
       provider: "v8",

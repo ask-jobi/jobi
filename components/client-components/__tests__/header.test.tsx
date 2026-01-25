@@ -34,7 +34,9 @@ describe("Header", () => {
 
     const { container } = render(<Header />)
 
-    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(2)
+    expect(container.querySelectorAll('[data-testid="skeleton"]')).toHaveLength(
+      2
+    )
   })
 
   it("should render dashboard link when user is logged in", () => {
