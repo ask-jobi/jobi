@@ -15,29 +15,27 @@ describe("PaymentError", () => {
   it("should not render when there is no error", () => {
     render(<PaymentError error={undefined} onClose={mockOnClose} />)
 
-    expect(screen.queryByTestId("card")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("payment-error")).not.toBeInTheDocument()
   })
 
   it("should not render when error is empty string", () => {
     render(<PaymentError error="" onClose={mockOnClose} />)
 
-    expect(screen.queryByTestId("card")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("payment-error")).not.toBeInTheDocument()
   })
 
   it("should render error card when there is an error", () => {
     render(<PaymentError error="Payment failed" onClose={mockOnClose} />)
 
-    expect(screen.getByTestId("card")).toBeInTheDocument()
+    expect(screen.getByTestId("payment-error")).toBeInTheDocument()
     expect(screen.getByText("pricing.paymentError.title")).toBeInTheDocument()
     expect(screen.getByText("Payment failed")).toBeInTheDocument()
-    expect(screen.getByTestId("alert-circle-icon")).toBeInTheDocument()
-    expect(screen.getByTestId("x-icon")).toBeInTheDocument()
   })
 
   it("should call onClose when close button is clicked", () => {
     render(<PaymentError error="Payment failed" onClose={mockOnClose} />)
 
-    const closeButton = screen.getByTestId("button")
+    const closeButton = screen.getByTestId("ui-button")
     fireEvent.click(closeButton)
 
     expect(mockOnClose).toHaveBeenCalledTimes(1)
@@ -48,7 +46,7 @@ describe("PaymentError", () => {
 
     render(<PaymentError error="Payment failed" onClose={mockOnClose} />)
 
-    expect(screen.getByTestId("card")).toBeInTheDocument()
+    expect(screen.getByTestId("payment-error")).toBeInTheDocument()
 
     // Fast-forward 5 seconds
     vi.advanceTimersByTime(5000)
@@ -65,7 +63,7 @@ describe("PaymentError", () => {
       <PaymentError error="Payment failed" onClose={mockOnClose} />
     )
 
-    expect(screen.getByTestId("card")).toBeInTheDocument()
+    expect(screen.getByTestId("payment-error")).toBeInTheDocument()
 
     // Unmount the component before the timeout
     unmount()

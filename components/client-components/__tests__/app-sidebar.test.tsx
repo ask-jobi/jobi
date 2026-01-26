@@ -4,17 +4,14 @@
 import { render, screen } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
-vi.mock("../compact-plan-display", () => ({
-  CompactPlanDisplay: () => (
-    <div data-testid="compact-plan-display">Plan Display</div>
-  )
-}))
-
-vi.mock("../logout-button", () => ({
-  LogoutButton: () => <button data-testid="logout-button">Logout</button>
-}))
-
 import AppSidebar from "../app-sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
+
+const TestAppSidebar = (
+  <SidebarProvider>
+    <AppSidebar />
+  </SidebarProvider>
+)
 
 describe("AppSidebar", () => {
   beforeEach(() => {
@@ -22,16 +19,16 @@ describe("AppSidebar", () => {
   })
 
   it("should render sidebar with correct structure", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
-    expect(screen.getByTestId("sidebar")).toBeInTheDocument()
-    expect(screen.getByTestId("sidebar-header")).toBeInTheDocument()
-    expect(screen.getByTestId("sidebar-content")).toBeInTheDocument()
-    expect(screen.getByTestId("sidebar-footer")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-sidebar")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-sidebar-header")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-sidebar-content")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-sidebar-footer")).toBeInTheDocument()
   })
 
   it("should render dashboard and jobs menu items", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
     expect(screen.getByRole("link", { name: "dashboard" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "jobs" })).toBeInTheDocument()
@@ -39,19 +36,19 @@ describe("AppSidebar", () => {
   })
 
   it("should render logout button", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
-    expect(screen.getByTestId("logout-button")).toBeInTheDocument()
+    expect(screen.getByText("logout")).toBeInTheDocument()
   })
 
   it("should render compact plan display", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
-    expect(screen.getByTestId("compact-plan-display")).toBeInTheDocument()
+    expect(screen.getByText("currentPlan")).toBeInTheDocument()
   })
 
   it("should have correct href for menu items", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
     expect(screen.getByRole("link", { name: "dashboard" })).toHaveAttribute(
       "href",
@@ -68,9 +65,9 @@ describe("AppSidebar", () => {
   })
 
   it("should render logo in sidebar header", () => {
-    render(<AppSidebar />)
+    render(TestAppSidebar)
 
-    expect(screen.getByTestId("sidebar-header")).toContainElement(
+    expect(screen.getByTestId("ui-sidebar-header")).toContainElement(
       screen.getByAltText("Jobi Logo")
     )
   })

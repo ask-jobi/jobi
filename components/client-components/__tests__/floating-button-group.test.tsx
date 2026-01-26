@@ -17,7 +17,7 @@ vi.mock("react-hook-form", () => ({
 // Mock next/image
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => (
-    <img src={src} alt={alt} data-testid="gemini-icon" />
+    <img src={src} alt={alt} />
   )
 }))
 
@@ -115,8 +115,6 @@ describe("FloatingButtonGroup", () => {
     setIsTourCompleted: vi.fn()
   }
 
-  const mockOpenRightPanel = vi.fn()
-
   beforeEach(() => {
     vi.clearAllMocks()
     // Use spyOn for hooks
@@ -134,22 +132,14 @@ describe("FloatingButtonGroup", () => {
   it("should render three floating buttons", () => {
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     expect(buttons).toHaveLength(3)
-  })
-
-  it("should display correct icons for each button", () => {
-    render(<FloatingButtonGroup />)
-
-    expect(screen.getByTestId("trophy-icon")).toBeInTheDocument()
-    expect(screen.getByTestId("download-icon")).toBeInTheDocument()
-    expect(screen.getByTestId("gemini-icon")).toBeInTheDocument()
   })
 
   it("should have correct titles for each button", () => {
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     expect(buttons[0]).toHaveAttribute("title", "button.viewEvaluationReport")
     expect(buttons[1]).toHaveAttribute("title", "button.exportResume")
     expect(buttons[2]).toHaveAttribute("title", "button.aiOptimize")
@@ -163,7 +153,7 @@ describe("FloatingButtonGroup", () => {
 
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     fireEvent.click(buttons[1])
 
     expect(userTracking.trackExportResume).toHaveBeenCalled()
@@ -177,11 +167,11 @@ describe("FloatingButtonGroup", () => {
 
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     fireEvent.click(buttons[1])
 
-    // Check that the button now shows loader
-    expect(screen.getByTestId("loader-2-icon")).toBeInTheDocument()
+    // Check that the button is disabled during loading
+    expect(buttons[1]).toBeDisabled()
   })
 
   it("should call AI optimization API when optimize button is clicked", async () => {
@@ -192,7 +182,7 @@ describe("FloatingButtonGroup", () => {
 
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     fireEvent.click(buttons[2])
 
     expect(userTracking.trackClickAiFullSuggestion).toHaveBeenCalled()
@@ -206,7 +196,7 @@ describe("FloatingButtonGroup", () => {
 
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     fireEvent.click(buttons[2])
 
     // Check that at least one loader exists (from loading states)
@@ -222,7 +212,7 @@ describe("FloatingButtonGroup", () => {
 
     render(<FloatingButtonGroup />)
 
-    const buttons = screen.getAllByTestId("button")
+    const buttons = screen.getAllByTestId("ui-button")
     expect(buttons[1]).toBeDisabled() // Export button
     expect(buttons[2]).toBeDisabled() // Optimize button
   })

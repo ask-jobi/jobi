@@ -30,10 +30,6 @@ vi.mock("next/image", () => ({
   )
 }))
 
-vi.mock("../skeletons/skeleton-card", () => ({
-  default: () => <div data-testid="skeleton-card" />
-}))
-
 vi.mock("../tour", () => ({
   useTour: vi.fn(),
   TourStep: vi.fn()
@@ -201,6 +197,6 @@ describe("EvaluationReport", () => {
     })
     fireEvent.click(refreshButton)
 
-    expect(screen.getAllByTestId("card")).toHaveLength(4)
+    expect(screen.getAllByTestId("ui-card")).toHaveLength(4)
   })
 })

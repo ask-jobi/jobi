@@ -32,15 +32,15 @@ describe("QuotaDisplay", () => {
   it("should render with subscription data", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByTestId("card")).toBeInTheDocument()
-    expect(screen.getByTestId("card-header")).toBeInTheDocument()
-    expect(screen.getByTestId("card-content")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-card")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-card-header")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-card-content")).toBeInTheDocument()
   })
 
   it("should display plan name as badge", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByTestId("badge")).toHaveTextContent("pro30Days")
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("pro30Days")
   })
 
   it("should display expiry date", () => {
@@ -56,7 +56,7 @@ describe("QuotaDisplay", () => {
     expect(screen.getByText("fullOptimization")).toBeInTheDocument()
     expect(screen.getByText("blockOptimization")).toBeInTheDocument()
     expect(screen.getByText("motivationLetter")).toBeInTheDocument()
-    expect(screen.getAllByTestId("progress")).toHaveLength(3)
+    expect(screen.getAllByTestId("ui-progress")).toHaveLength(3)
   })
 
   it("should display used/total quotas", () => {
@@ -94,10 +94,13 @@ describe("QuotaDisplay", () => {
   it("should calculate correct usage percentage", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    const progressBars = screen.getAllByTestId("progress")
-    expect(progressBars[0]).toHaveAttribute("value", "50")
-    expect(progressBars[1]).toHaveAttribute("value", "15")
-    expect(progressBars[2]).toHaveAttribute("value", "40")
+    const progressBars = screen.getAllByTestId("ui-progress")
+    const indicators = progressBars.map((bar) =>
+      bar.querySelector('[data-slot="progress-indicator"]')
+    )
+    expect(indicators[0]).toHaveStyle({ transform: "translateX(-50%)" })
+    expect(indicators[1]).toHaveStyle({ transform: "translateX(-85%)" })
+    expect(indicators[2]).toHaveStyle({ transform: "translateX(-60%)" })
   })
 
   it("should display no active plan message when expiry date is null", () => {

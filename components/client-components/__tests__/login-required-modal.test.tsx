@@ -21,13 +21,13 @@ describe("LoginRequiredModal", () => {
   it("should render dialog when isOpen is true", () => {
     render(<LoginRequiredModal {...defaultProps} />)
 
-    expect(screen.getByTestId("dialog")).toBeInTheDocument()
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
   })
 
   it("should not render dialog content when isOpen is false", () => {
     render(<LoginRequiredModal {...defaultProps} isOpen={false} />)
 
-    expect(screen.queryByTestId("dialog-content")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("ui-dialog-content")).not.toBeInTheDocument()
   })
 
   it("should display title when open", () => {
@@ -127,7 +127,7 @@ describe("LoginRequiredModal", () => {
   it("should render dialog content structure", () => {
     render(<LoginRequiredModal {...defaultProps} />)
 
-    expect(screen.getByTestId("dialog")).toBeInTheDocument()
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.getByText("pricing.loginRequired.title")).toBeInTheDocument()
   })
 })

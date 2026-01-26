@@ -59,6 +59,7 @@ export function PaymentCancelledAlert({
             <Button
               variant="ghost"
               size="sm"
+              data-testid="close-button"
               onClick={() => {
                 setIsAnimating(false)
                 setTimeout(onClose, 300)

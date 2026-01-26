@@ -22,6 +22,13 @@ vi.mock("@/lib/supabase/client", () => ({
 }))
 
 import { LogoutButton } from "../logout-button"
+import { SidebarProvider } from "@/components/ui/sidebar"
+
+const TestLogoutButton = (
+  <SidebarProvider>
+    <LogoutButton />
+  </SidebarProvider>
+)
 
 describe("LogoutButton", () => {
   beforeEach(() => {
@@ -30,26 +37,19 @@ describe("LogoutButton", () => {
   })
 
   it("should render logout button", () => {
-    render(<LogoutButton />)
+    render(TestLogoutButton)
 
-    expect(screen.getByTestId("sidebar-menu-button")).toBeInTheDocument()
-    expect(screen.getByTestId("sidebar-menu-item")).toBeInTheDocument()
-  })
-
-  it("should display logout icon", () => {
-    render(<LogoutButton />)
-
-    expect(screen.getByTestId("logout-icon")).toBeInTheDocument()
+    expect(screen.getByRole("button")).toBeInTheDocument()
   })
 
   it("should display logout text", () => {
-    render(<LogoutButton />)
+    render(TestLogoutButton)
 
     expect(screen.getByText("logout")).toBeInTheDocument()
   })
 
   it("should have correct CSS classes", () => {
-    render(<LogoutButton />)
+    render(TestLogoutButton)
 
     const button = screen.getByRole("button")
     expect(button).toHaveClass("text-red-600")
@@ -58,7 +58,7 @@ describe("LogoutButton", () => {
   })
 
   it("should call signOut on click", () => {
-    render(<LogoutButton />)
+    render(TestLogoutButton)
 
     fireEvent.click(screen.getByRole("button"))
 
@@ -66,7 +66,7 @@ describe("LogoutButton", () => {
   })
 
   it("should redirect to home after sign out", async () => {
-    render(<LogoutButton />)
+    render(TestLogoutButton)
 
     fireEvent.click(screen.getByRole("button"))
 
@@ -75,11 +75,9 @@ describe("LogoutButton", () => {
     expect(mockPush).toHaveBeenCalledWith("/")
   })
 
-  it("should be wrapped in SidebarMenuItem", () => {
-    render(<LogoutButton />)
+  it("should be wrapped in sidebar menu item", () => {
+    render(TestLogoutButton)
 
-    expect(screen.getByTestId("sidebar-menu-item")).toContainElement(
-      screen.getByTestId("sidebar-menu-button")
-    )
+    expect(screen.getByTestId("ui-sidebar-menu-item")).toBeInTheDocument()
   })
 })

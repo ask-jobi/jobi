@@ -28,25 +28,6 @@ vi.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>
 }))
 
-// Mock UI components
-vi.mock("@/components/ui/card", () => ({
-  Card: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="card">{children}</div>
-  ),
-  CardContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="card-content">{children}</div>
-  ),
-  CardHeader: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="card-header">{children}</div>
-  ),
-  CardTitle: ({ children }: { children: React.ReactNode }) => (
-    <h3 data-testid="card-title">{children}</h3>
-  ),
-  CardDescription: ({ children }: { children: React.ReactNode }) => (
-    <p data-testid="card-description">{children}</p>
-  )
-}))
-
 // Mock Supabase client - use a module-level object that can be updated
 const supabaseMock = {
   auth: {
@@ -76,7 +57,7 @@ describe("ForgotPasswordForm", () => {
         "Type in your email and we'll send you a link to reset your password"
       )
     ).toBeInTheDocument()
-    expect(screen.getByTestId("input")).toBeInTheDocument()
+    expect(screen.getByTestId("ui-input")).toBeInTheDocument()
     expect(screen.getByText("Email")).toBeInTheDocument()
     expect(screen.getByText("Send reset email")).toBeInTheDocument()
   })
@@ -85,7 +66,7 @@ describe("ForgotPasswordForm", () => {
     setupLocationMock()
     render(<ForgotPasswordForm />)
 
-    const input = screen.getByTestId("input")
+    const input = screen.getByTestId("ui-input")
     fireEvent.change(input, { target: { value: "test@example.com" } })
 
     expect(input).toHaveValue("test@example.com")
@@ -95,7 +76,7 @@ describe("ForgotPasswordForm", () => {
     setupLocationMock()
     render(<ForgotPasswordForm />)
 
-    const input = screen.getByTestId("input")
+    const input = screen.getByTestId("ui-input")
     fireEvent.change(input, { target: { value: "test@example.com" } })
 
     const button = screen.getByText("Send reset email")
@@ -114,7 +95,7 @@ describe("ForgotPasswordForm", () => {
 
     render(<ForgotPasswordForm />)
 
-    const input = screen.getByTestId("input")
+    const input = screen.getByTestId("ui-input")
     fireEvent.change(input, { target: { value: "test@example.com" } })
 
     const button = screen.getByText("Send reset email")
@@ -149,7 +130,7 @@ describe("ForgotPasswordForm", () => {
 
     render(<ForgotPasswordForm />)
 
-    const input = screen.getByTestId("input")
+    const input = screen.getByTestId("ui-input")
     fireEvent.change(input, { target: { value: "test@example.com" } })
 
     const button = screen.getByText("Send reset email")
@@ -183,7 +164,7 @@ describe("ForgotPasswordForm", () => {
 
     render(<ForgotPasswordForm />)
 
-    const input = screen.getByTestId("input")
+    const input = screen.getByTestId("ui-input")
     fireEvent.change(input, { target: { value: "test@example.com" } })
 
     const button = screen.getByText("Send reset email")

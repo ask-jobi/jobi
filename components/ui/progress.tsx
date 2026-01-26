@@ -22,6 +22,8 @@ function Progress({
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
+      data-testid="ui-progress"
+      value={value}
       className={cn(
         "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
         className

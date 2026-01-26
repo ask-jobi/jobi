@@ -37,7 +37,7 @@ export function PaymentError({ error, onClose }: PaymentErrorProps) {
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-sm">
-      <Card className="border-red-200 bg-red-50">
+      <Card data-testid="payment-error" className="border-red-200 bg-red-50">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

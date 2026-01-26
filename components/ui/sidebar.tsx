@@ -168,6 +168,7 @@ function Sidebar({
   if (collapsible === "none") {
     return (
       <div
+        data-testid="ui-sidebar"
         data-slot="sidebar"
         className={cn(
           "bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
@@ -207,6 +208,7 @@ function Sidebar({
 
   return (
     <div
+      data-testid="ui-sidebar"
       className="group peer text-sidebar-foreground hidden md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
@@ -262,6 +264,7 @@ function SidebarTrigger({
 
   return (
     <Button
+      data-testid="ui-sidebar-trigger"
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
@@ -284,6 +287,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 
   return (
     <button
+      data-testid="ui-sidebar-rail"
       data-sidebar="rail"
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"
@@ -307,6 +311,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
+      data-testid="ui-sidebar-inset"
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",
@@ -324,6 +329,7 @@ function SidebarInput({
 }: React.ComponentProps<typeof Input>) {
   return (
     <Input
+      data-testid="ui-sidebar-input"
       data-slot="sidebar-input"
       data-sidebar="input"
       className={cn("bg-background h-8 w-full shadow-none", className)}
@@ -335,6 +341,7 @@ function SidebarInput({
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-testid="ui-sidebar-header"
       data-slot="sidebar-header"
       data-sidebar="header"
       className={cn("flex flex-col gap-2 p-2", className)}
@@ -346,6 +353,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-testid="ui-sidebar-footer"
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn("flex flex-col gap-2 p-2", className)}
@@ -360,6 +368,7 @@ function SidebarSeparator({
 }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
+      data-testid="ui-sidebar-separator"
       data-slot="sidebar-separator"
       data-sidebar="separator"
       className={cn("bg-sidebar-border mx-2 w-auto", className)}
@@ -371,6 +380,7 @@ function SidebarSeparator({
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-testid="ui-sidebar-content"
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
@@ -385,6 +395,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-testid="ui-sidebar-group"
       data-slot="sidebar-group"
       data-sidebar="group"
       className={cn("relative flex w-full min-w-0 flex-col p-2", className)}
@@ -423,6 +434,7 @@ function SidebarGroupAction({
 
   return (
     <Comp
+      data-testid="ui-sidebar-group-action"
       data-slot="sidebar-group-action"
       data-sidebar="group-action"
       className={cn(
@@ -454,6 +466,7 @@ function SidebarGroupContent({
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
+      data-testid="ui-sidebar-menu"
       data-slot="sidebar-menu"
       data-sidebar="menu"
       className={cn("flex w-full min-w-0 flex-col gap-1", className)}
@@ -465,6 +478,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
+      data-testid="ui-sidebar-menu-item"
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
       className={cn("group/menu-item relative", className)}
@@ -513,6 +527,7 @@ function SidebarMenuButton({
 
   const button = (
     <Comp
+      data-testid="ui-sidebar-menu-button"
       data-slot="sidebar-menu-button"
       data-sidebar="menu-button"
       data-size={size}
@@ -558,6 +573,7 @@ function SidebarMenuAction({
 
   return (
     <Comp
+      data-testid="ui-sidebar-menu-action"
       data-slot="sidebar-menu-action"
       data-sidebar="menu-action"
       className={cn(

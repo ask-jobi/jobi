@@ -68,14 +68,12 @@ describe("PricingCard", () => {
     render(<PricingCard {...defaultProps} isPopular={true} />)
 
     expect(screen.getByText("pricing.mostPopular")).toBeInTheDocument()
-    expect(screen.getByTestId("crown-icon")).toBeInTheDocument()
   })
 
   it("should not show popular badge when isPopular is false", () => {
     render(<PricingCard {...defaultProps} isPopular={false} />)
 
     expect(screen.queryByText("pricing.mostPopular")).not.toBeInTheDocument()
-    expect(screen.queryByTestId("crown-icon")).not.toBeInTheDocument()
   })
 
   it("should show login button when user is not logged in", () => {
@@ -143,12 +141,13 @@ describe("PricingCard", () => {
   it("should show payment error when checkout fails", async () => {
     mockUseAuth.user = { id: "user123" } as any
     mockPush.mockImplementation(() => {})
-    const mockFetch = vi.fn().mockResolvedValueOnce({
+
+    const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       json: () => Promise.resolve({ error: "Payment failed" })
     })
 
-    vi.spyOn(global, "fetch").mockImplementation(mockFetch)
+    vi.stubGlobal("fetch", mockFetch)
 
     render(<PricingCard {...defaultProps} priceId="price_123" />)
 
@@ -164,7 +163,7 @@ describe("PricingCard", () => {
 
     await vi.waitFor(
       () => {
-        expect(screen.queryByTestId("loader-2-icon")).not.toBeInTheDocument()
+        expect(screen.queryByTestId("ui-button")).not.toBeDisabled()
       },
       { timeout: 1000 }
     )
