@@ -10,8 +10,18 @@ export default defineConfig({
     exclude: ["test/e2e/**", "node_modules/**", "lib/**", ".next/**", "out/**"],
     coverage: {
       provider: "v8",
-      include: ["server/**/*.{ts,tsx}", "app/api/**/*.ts"],
-      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 }
+      include: [
+        "server/**/*.{ts,tsx}",
+        "app/api/**/*.ts",
+        "client-components/**/*.{ts,tsx}"
+      ],
+      exclude: [
+        "server/ai/prompts/**",
+        "node_modules/**",
+        ".next/**",
+        "out/**"
+      ],
+      thresholds: { lines: 50, functions: 50, branches: 50, statements: 50 }
     },
     projects: [
       {

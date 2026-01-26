@@ -3,8 +3,8 @@ description: 根据当前 git staged changes 生成 commit message 并提交
 agent: build
 ---
 !`git add .`
-以下是本次提交的修改记录：
-!`git diff --staged`
+以下是测试覆盖率报告
+!`vitest run --coverage`
 
 要求：
 1. commit message 必须严格遵循以下格式：
@@ -30,8 +30,10 @@ agent: build
 5. 不要包含 emoji、句号或多余说明
 6. 最终只输出一行 commit message
 7. 不需要查看过去的git提交记录
+8. 确保测试覆盖率报告达标后才能提交
 
 工作流程：
-- 先分析代码变更的主要意图
+- 分析测试覆盖率报告，在达标后进行以下流程
+- 分析代码变更的主要意图
 - 如果无法判断 action，选择最保守的一个（feat）
 - 将message通过git commit提交
