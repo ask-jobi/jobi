@@ -25,11 +25,7 @@ type UserSubscription = {
   plan: "FREE" | "LITE" | "PRO" | null
   expiryDate: string | null
   isActive: boolean
-  quotas: {
-    fullOptimize: { used: number; total: number }
-    blockOptimize: { used: number; total: number }
-    motivationLetter: { used: number; total: number }
-  }
+  quotas: Quota
 }
 
 // 获取用户有效订阅的方法
@@ -78,9 +74,9 @@ export async function getUserSubscription(): Promise<UserSubscription> {
       expiryDate: null,
       isActive: false,
       quotas: {
-        fullOptimize: { used: 0, total: 0 },
-        blockOptimize: { used: 0, total: 0 },
-        motivationLetter: { used: 0, total: 0 }
+        fullOptimize: { used: 0, total: 0, colName: "full_optimize" },
+        blockOptimize: { used: 0, total: 0, colName: "block_optimize" },
+        motivationLetter: { used: 0, total: 0, colName: "motivation_letter" }
       }
     }
   }
@@ -92,21 +88,24 @@ export async function getUserSubscription(): Promise<UserSubscription> {
     quotas: {
       fullOptimize: {
         used: accessPass.used_full_optimize,
-        total: accessPass.quota_full_optimize
+        total: accessPass.quota_full_optimize,
+        colName: "full_optimize"
       },
       blockOptimize: {
         used: accessPass.used_block_optimize,
-        total: accessPass.quota_block_optimize
+        total: accessPass.quota_block_optimize,
+        colName: "block_optimize"
       },
       motivationLetter: {
         used: accessPass.used_motivation_letter,
-        total: accessPass.quota_motivation_letter
+        total: accessPass.quota_motivation_letter,
+        colName: "motivation_letter"
       }
     }
   }
 }
 
-const buildQuotas = (accessPass: DBAccessPass): Quota => {
+export const buildQuotas = (accessPass: DBAccessPass): Quota => {
   return {
     fullOptimize: {
       total: accessPass.quota_full_optimize!!,
@@ -153,6 +152,13 @@ export async function consumeQuota(key: QuotaKey) {
   }
 
   console.log("consuming quota", key, "success")
+}
+
+export function verifyQuota(key: QuotaKey, quotas: Quota): void {
+  const quotaItem = quotas[key]
+  if (quotaItem.used >= quotaItem.total) {
+    throw new Error("Limit reached")
+  }
 }
 
 export function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {

@@ -2,8 +2,9 @@ import { NextRequest } from "next/server"
 import { generateAISuggestionQueue } from "@/server/ai/full-optimize"
 import { getJobApplication } from "@/server/resume"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
-import { consumeQuota } from "@/server/quota"
+import { consumeQuota, verifyQuota, getUserSubscription } from "@/server/quota"
 import { ResumeEvaluationOutput } from "@/types/evaluation"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -20,6 +21,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return Response.json({ error: "用户未登录" }, { status: 401 })
+    }
+
     const jobApplication = await getJobApplication(jobApplicationId)
     if (!jobApplication) {
       return Response.json({ error: "未找到对应的简历" }, { status: 404 })
@@ -30,6 +40,9 @@ export async function GET(request: NextRequest) {
     const resumeEvaluationReport = jobApplication.resumes
       .evaluation_report as ResumeEvaluationOutput
 
+    const subscription = await getUserSubscription()
+    verifyQuota("fullOptimize", subscription.quotas)
+
     const suggestions = await generateAISuggestionQueue(
       resumeData,
       jobDescription,
@@ -37,7 +50,6 @@ export async function GET(request: NextRequest) {
       jobApplication.resumes.language
     )
 
-    // 消耗一次 fullOptimize 用量
     await consumeQuota("fullOptimize")
 
     return Response.json(suggestions)

@@ -308,9 +308,21 @@ describe("getUserSubscription", () => {
     expect(result.plan).toBe("PRO")
     expect(result.isActive).toBe(true)
     expect(result.expiryDate).toBe("2025-12-31")
-    expect(result.quotas.fullOptimize).toEqual({ used: 3, total: 10 })
-    expect(result.quotas.blockOptimize).toEqual({ used: 5, total: 20 })
-    expect(result.quotas.motivationLetter).toEqual({ used: 1, total: 5 })
+    expect(result.quotas.fullOptimize).toEqual({
+      used: 3,
+      total: 10,
+      colName: "full_optimize"
+    })
+    expect(result.quotas.blockOptimize).toEqual({
+      used: 5,
+      total: 20,
+      colName: "block_optimize"
+    })
+    expect(result.quotas.motivationLetter).toEqual({
+      used: 1,
+      total: 5,
+      colName: "motivation_letter"
+    })
   })
 
   it("should return default values when user has no active pass", async () => {
@@ -349,9 +361,21 @@ describe("getUserSubscription", () => {
     expect(result.plan).toBeNull()
     expect(result.isActive).toBe(false)
     expect(result.expiryDate).toBeNull()
-    expect(result.quotas.fullOptimize).toEqual({ used: 0, total: 0 })
-    expect(result.quotas.blockOptimize).toEqual({ used: 0, total: 0 })
-    expect(result.quotas.motivationLetter).toEqual({ used: 0, total: 0 })
+    expect(result.quotas.fullOptimize).toEqual({
+      used: 0,
+      total: 0,
+      colName: "full_optimize"
+    })
+    expect(result.quotas.blockOptimize).toEqual({
+      used: 0,
+      total: 0,
+      colName: "block_optimize"
+    })
+    expect(result.quotas.motivationLetter).toEqual({
+      used: 0,
+      total: 0,
+      colName: "motivation_letter"
+    })
   })
 
   it("should throw error when user is not logged in", async () => {

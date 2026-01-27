@@ -1,10 +1,11 @@
 import { GET } from "./route"
 import { generateAISuggestionQueue } from "@/server/ai/full-optimize"
 import { getJobApplication } from "@/server/resume"
-import { consumeQuota } from "@/server/quota"
+import { consumeQuota, verifyQuota, getUserSubscription } from "@/server/quota"
 import type { ResumeData, AISuggestionQueue } from "@/types/resume"
 import { NextRequest } from "next/server"
 import { Locale } from "@/lib/i18n/config"
+import { createClient } from "@/lib/supabase/server"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 // Mock the dependencies
@@ -17,7 +18,13 @@ vi.mock("@/server/resume", () => ({
 }))
 
 vi.mock("@/server/quota", () => ({
-  consumeQuota: vi.fn()
+  consumeQuota: vi.fn(),
+  verifyQuota: vi.fn(),
+  getUserSubscription: vi.fn()
+}))
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn()
 }))
 
 const mockGenerateAISuggestionQueue =
@@ -26,11 +33,35 @@ const mockGetJobApplication = getJobApplication as unknown as ReturnType<
   typeof vi.fn
 >
 const mockConsumeQuota = consumeQuota as unknown as ReturnType<typeof vi.fn>
+const mockVerifyQuota = verifyQuota as unknown as ReturnType<typeof vi.fn>
+const mockGetUserSubscription = getUserSubscription as unknown as ReturnType<
+  typeof vi.fn
+>
+const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
 
 describe("GET /api/resume/full-suggestion", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockConsumeQuota.mockResolvedValue(undefined)
+    mockVerifyQuota.mockReturnValue(undefined)
+    mockGetUserSubscription.mockResolvedValue({
+      plan: "PRO",
+      isActive: true,
+      expiryDate: "2025-12-31",
+      quotas: {
+        fullOptimize: { used: 3, total: 10, colName: "full_optimize" },
+        blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+        motivationLetter: { used: 1, total: 5, colName: "motivation_letter" }
+      }
+    })
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-id" } },
+          error: null
+        })
+      }
+    })
   })
 
   const createMockRequest = (jobApplicationId?: string): NextRequest => {
