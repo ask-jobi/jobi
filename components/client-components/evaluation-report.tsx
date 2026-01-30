@@ -19,11 +19,10 @@ import { Button } from "@/components/ui/button"
 import { useResume } from "@/lib/store/resume"
 import SkeletonCard from "../skeletons/skeleton-card"
 import { useFormContext } from "react-hook-form"
-import SuggestionPatch from "@/components/client-components/suggestion-patch"
-import type { AISuggestion, ResumeData } from "@/types/resume"
+import type { ResumeData } from "@/types/resume"
 import { toast } from "sonner"
 import { trackClickAiFullSuggestion } from "@/lib/user-tracking/user-tracking"
-import { TourStep, useTour } from "./tour"
+import { applyResumeEditOps } from "@/lib/resume/agent-ops"
 
 interface EvaluationReportProps {
   evaluation: ResumeEvaluationOutput
@@ -35,7 +34,6 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const [optimizeLoading, setOptimizeLoading] = useState<boolean>(false)
   const { refreshEvaluationReport, application } = useResume()
   const { getValues, setValue } = useFormContext<ResumeData>()
-  const { setSteps, startTour } = useTour()
 
   const getGateStatus = (status: "pass" | "borderline" | "fail") => {
     switch (status) {
@@ -116,25 +114,26 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       trackClickAiFullSuggestion()
       setOptimizeLoading(true)
       const result = await fetch(
-        `/api/resume/full-suggestion?jobApplicationId=${application.id}`
+        `/api/resume/ops-from-evaluation?jobApplicationId=${application.id}`
       )
       if (!result.ok) {
         throw new Error(await result.text())
       }
-      const suggestions = await result.json()
+      const { ops, errors } = await result.json()
+      const current = getValues()
+      const { updatedResumeData } = applyResumeEditOps(current, ops)
 
-      const steps: TourStep[] = suggestions.map((item: AISuggestion) => ({
-        content: () => (
-          <SuggestionPatch
-            section={item}
-            getValues={getValues}
-            setValue={setValue}
-          />
-        ),
-        selectorId: `${item.section}-${item.blockIndex}-head`
-      }))
-      setSteps(steps)
-      startTour()
+      Object.entries(updatedResumeData).forEach(([key, value]) => {
+        setValue(key as keyof ResumeData, value as any, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true
+        })
+      })
+
+      if (errors?.length) {
+        toast.error(`部分操作未应用: ${errors.length}`)
+      }
     } catch (e: any) {
       toast.error(e.toString())
     } finally {
