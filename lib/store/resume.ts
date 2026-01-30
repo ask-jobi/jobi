@@ -7,7 +7,6 @@ import {
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
-import { updateResumeEvaluationReport } from "@/server/evaluation"
 
 export const applicationAtom = atom<JobApplication | null>(null)
 export const resumeDataAtom = atom(
@@ -175,6 +174,7 @@ export function useResume() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        resumeId: application?.resume.id,
         resumeData: resumeData,
         jobDescription: jobDescription
       })
@@ -183,7 +183,6 @@ export function useResume() {
     if (!response.ok) {
       toast.error(result.error)
     } else {
-      await updateResumeEvaluationReport(application!!.resume.id, result)
       setResumeEvaluation(result)
       setEvaluationRefreshFlag(false)
     }
