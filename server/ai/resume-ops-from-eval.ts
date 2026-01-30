@@ -1,6 +1,6 @@
 import { google } from "@ai-sdk/google"
 import { generateText, Output } from "ai"
-import z from "zod"
+import { z } from "zod"
 import type { Locale } from "@/lib/i18n/config"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
