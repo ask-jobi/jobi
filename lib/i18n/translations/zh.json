@@ -278,6 +278,8 @@
     "aiSuggestionsNext": "下一条",
     "aiSuggestionsApply": "应用",
     "aiSuggestionsSkip": "跳过",
+    "aiSuggestionsUndo": "撤销",
+    "aiSuggestionsNoChange": "该建议未检测到任何改动。",
     "aiSuggestionsEmpty": "暂无建议",
     "aiSuggestionsStatus": {
       "pending": "未处理",

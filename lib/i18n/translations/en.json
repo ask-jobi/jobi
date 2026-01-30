@@ -278,6 +278,8 @@
     "aiSuggestionsNext": "Next",
     "aiSuggestionsApply": "Apply",
     "aiSuggestionsSkip": "Skip",
+    "aiSuggestionsUndo": "Undo",
+    "aiSuggestionsNoChange": "No changes detected for this suggestion.",
     "aiSuggestionsEmpty": "No suggestions available.",
     "aiSuggestionsStatus": {
       "pending": "Pending",

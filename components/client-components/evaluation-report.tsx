@@ -44,9 +44,13 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const [loading, setLoading] = useState<boolean>(false)
   const [optimizeLoading, setOptimizeLoading] = useState<boolean>(false)
   const [opPreviews, setOpPreviews] = useState<ResumeOpPreview[]>([])
+  const [hasOptimized, setHasOptimized] = useState<boolean>(false)
   const [currentOpIndex, setCurrentOpIndex] = useState(0)
   const [opStatus, setOpStatus] = useState<
     Record<string, "pending" | "applied" | "skipped">
+  >({})
+  const [appliedSnapshots, setAppliedSnapshots] = useState<
+    Record<string, ResumeData>
   >({})
   const { refreshEvaluationReport, application } = useResume()
   const { getValues, setValue } = useFormContext<ResumeData>()
@@ -128,6 +132,11 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const handleFullResumeOptimizing = async () => {
     try {
       trackClickAiFullSuggestion()
+      setOpPreviews([])
+      setCurrentOpIndex(0)
+      setOpStatus({})
+      setAppliedSnapshots({})
+      setHasOptimized(false)
       setOptimizeLoading(true)
       const result = await fetch(
         `/api/resume/ops-from-evaluation?jobApplicationId=${application.id}`
@@ -137,6 +146,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       }
       const { opPreviews: previews, errors } = await result.json()
       setOpPreviews(previews ?? [])
+      setHasOptimized(true)
       setCurrentOpIndex(0)
       setOpStatus({})
       if (errors?.length) {
@@ -156,7 +166,12 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
 
   const applyCurrentOp = () => {
     if (!currentPreview) return
+    if (opStatus[currentPreview.opId] === "applied") return
     const current = getValues()
+    const snapshot =
+      typeof structuredClone === "function"
+        ? structuredClone(current)
+        : (JSON.parse(JSON.stringify(current)) as ResumeData)
     const { updatedResumeData } = applyResumeEditOps(current, [
       currentPreview.op
     ])
@@ -168,9 +183,33 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       })
     })
     setOpStatus((prev) => ({ ...prev, [currentPreview.opId]: "applied" }))
+    setAppliedSnapshots((prev) => ({
+      ...prev,
+      [currentPreview.opId]: snapshot
+    }))
     if (currentOpIndex < opPreviews.length - 1) {
       setCurrentOpIndex((idx) => idx + 1)
     }
+  }
+
+  const undoCurrentOp = () => {
+    if (!currentPreview) return
+    if (opStatus[currentPreview.opId] !== "applied") return
+    const snapshot = appliedSnapshots[currentPreview.opId]
+    if (!snapshot) return
+    Object.entries(snapshot).forEach(([key, value]) => {
+      setValue(key as keyof ResumeData, value as any, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      })
+    })
+    setOpStatus((prev) => ({ ...prev, [currentPreview.opId]: "pending" }))
+    setAppliedSnapshots((prev) => {
+      const next = { ...prev }
+      delete next[currentPreview.opId]
+      return next
+    })
   }
 
   const skipCurrentOp = () => {
@@ -183,6 +222,14 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
 
   const renderDiff = (before = "", after = "") => {
     const words = diffWords(before, after)
+    const hasChange = words.some((word) => word.added || word.removed)
+    if (!hasChange) {
+      return (
+        <div className="text-sm text-muted-foreground">
+          {t("aiSuggestionsNoChange")}
+        </div>
+      )
+    }
     return (
       <div className="text-sm leading-6">
         {words.map((it, index) => {
@@ -235,44 +282,48 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
         )}
       </div>
 
-      {opPreviews.length > 0 && (
+      {(opPreviews.length > 0 || hasOptimized) && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">
-              {t("aiSuggestionsTitle")}
-            </CardTitle>
+            <CardTitle className="text-lg">{t("aiSuggestionsTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 animate-pulse">
               {t("aiSuggestionsGuide")}
             </div>
-            <div className="max-h-40 overflow-auto border rounded p-2 space-y-2">
-              {opPreviews.map((preview, index) => {
-                const status = opStatus[preview.opId] ?? "pending"
-                const statusText =
-                  status === "applied"
-                    ? t("aiSuggestionsStatus.applied")
-                    : status === "skipped"
-                      ? t("aiSuggestionsStatus.skipped")
-                      : t("aiSuggestionsStatus.pending")
-                return (
-                  <button
-                    key={preview.opId}
-                    onClick={() => setCurrentOpIndex(index)}
-                    className={`w-full text-left p-2 rounded border ${index === currentOpIndex ? "bg-gray-100 border-blue-400 ring-2 ring-blue-200" : "hover:bg-gray-50 border-transparent"}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {preview.title}
-                      </span>
-                      <Badge variant={index === currentOpIndex ? "default" : "secondary"}>
-                        {statusText}
-                      </Badge>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+            {opPreviews.length > 0 ? (
+              <div className="max-h-40 overflow-auto border rounded p-2 space-y-2">
+                {opPreviews.map((preview, index) => {
+                  const status = opStatus[preview.opId] ?? "pending"
+                  const statusText =
+                    status === "applied"
+                      ? t("aiSuggestionsStatus.applied")
+                      : status === "skipped"
+                        ? t("aiSuggestionsStatus.skipped")
+                        : t("aiSuggestionsStatus.pending")
+                  return (
+                    <button
+                      key={preview.opId}
+                      onClick={() => setCurrentOpIndex(index)}
+                      className={`w-full text-left p-2 rounded border ${index === currentOpIndex ? "bg-gray-100 border-blue-400 ring-2 ring-blue-200" : "hover:bg-gray-50 border-transparent"}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          {preview.title}
+                        </span>
+                        <Badge
+                          variant={
+                            index === currentOpIndex ? "default" : "secondary"
+                          }
+                        >
+                          {statusText}
+                        </Badge>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
 
             {currentPreview ? (
               <div className="space-y-3">
@@ -286,7 +337,10 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
                     </div>
                   ) : null}
                 </div>
-                {renderDiff(currentPreview.before ?? "", currentPreview.after ?? "")}
+                {renderDiff(
+                  currentPreview.before ?? "",
+                  currentPreview.after ?? ""
+                )}
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -310,11 +364,25 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
                   >
                     {t("aiSuggestionsNext")}
                   </Button>
-                  <Button size="sm" onClick={applyCurrentOp}>
+                  <Button
+                    size="sm"
+                    onClick={applyCurrentOp}
+                    disabled={opStatus[currentPreview.opId] === "applied"}
+                  >
                     {t("aiSuggestionsApply")}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={skipCurrentOp}>
-                    {t("aiSuggestionsSkip")}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={
+                      opStatus[currentPreview.opId] === "applied"
+                        ? undoCurrentOp
+                        : skipCurrentOp
+                    }
+                  >
+                    {opStatus[currentPreview.opId] === "applied"
+                      ? t("aiSuggestionsUndo")
+                      : t("aiSuggestionsSkip")}
                   </Button>
                 </div>
               </div>
