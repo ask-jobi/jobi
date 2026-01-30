@@ -1,7 +1,6 @@
 import "server-only"
-import { google } from "@ai-sdk/google"
-import { generateText, Output, zodSchema } from "ai"
-import { z } from "zod/v4"
+import { generateText, Output } from "ai"
+import { z } from "zod"
 import type { Locale } from "@/lib/i18n/config"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
@@ -28,6 +27,34 @@ export type GenerateOpsResult = {
 }
 
 const createOutputSchema = () => {
+  // Define payload schema with all possible block fields (all optional)
+  // This covers: EducationBlock, EmploymentBlock, SkillBlock, ProjectBlock,
+  // ResearchBlock, PublicationBlock, AwardBlock, CertificationBlock
+  const payloadSchema = z.object({
+    // Common field
+    content: z.string().optional(),
+    // Education fields
+    school: z.string().optional(),
+    degree: z.string().optional(),
+    // Employment fields
+    company: z.string().optional(),
+    jobTitle: z.string().optional(),
+    // Date fields (used by multiple block types)
+    start: z.string().optional(),
+    end: z.string().optional(),
+    date: z.string().optional(),
+    isCurrent: z.boolean().optional(),
+    // Skills field
+    group: z.string().optional(),
+    // Project/Research fields
+    title: z.string().optional(),
+    role: z.string().optional(),
+    // Award/Certification fields
+    issuer: z.string().optional(),
+    description: z.string().optional(),
+    name: z.string().optional()
+  })
+
   const resumeEditOpSchema = z.object({
     op: z.enum(["addBlock", "updateBlock", "removeBlock"]),
     section: z.enum([
@@ -41,7 +68,7 @@ const createOutputSchema = () => {
       "certifications"
     ]),
     blockIndex: z.number().int().optional(),
-    payload: z.record(z.any()).optional()
+    payload: payloadSchema.optional()
   })
 
   return z.object({
@@ -61,7 +88,11 @@ const mapTargetSection = (
 
 const buildSectionSummary = (resume: ResumeData, section: keyof ResumeData) => {
   const data = resume[section]
-  if (!data || typeof data !== "object" || !Array.isArray((data as any).blocks)) {
+  if (
+    !data ||
+    typeof data !== "object" ||
+    !Array.isArray((data as any).blocks)
+  ) {
     return []
   }
 
@@ -99,21 +130,10 @@ export async function generateResumeEditOpsFromEvaluation(
   })
 
   const outputSchema = createOutputSchema()
-  let outputStrategy: ReturnType<typeof Output.object>
-
-  try {
-    outputStrategy = Output.object({ schema: outputSchema })
-  } catch (error) {
-    console.error(
-      "ops-from-eval Output.object failed for zod schema, falling back",
-      error
-    )
-    outputStrategy = Output.object({ schema: zodSchema(outputSchema) })
-  }
 
   const { output } = await generateText({
-    model: google("gemini-2.0-flash-lite"),
-    output: outputStrategy,
+    model: "google/gemini-3-flash",
+    output: Output.object({ schema: outputSchema }),
     prompt,
     temperature: 0.2,
     maxRetries: 2
