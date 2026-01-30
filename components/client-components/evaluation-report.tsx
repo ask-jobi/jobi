@@ -238,29 +238,36 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       {opPreviews.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">AI 优化建议</CardTitle>
+            <CardTitle className="text-lg">
+              {t("aiSuggestionsTitle")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 animate-pulse">
+              {t("aiSuggestionsGuide")}
+            </div>
             <div className="max-h-40 overflow-auto border rounded p-2 space-y-2">
               {opPreviews.map((preview, index) => {
                 const status = opStatus[preview.opId] ?? "pending"
                 const statusText =
                   status === "applied"
-                    ? "已应用"
+                    ? t("aiSuggestionsStatus.applied")
                     : status === "skipped"
-                      ? "已跳过"
-                      : "未处理"
+                      ? t("aiSuggestionsStatus.skipped")
+                      : t("aiSuggestionsStatus.pending")
                 return (
                   <button
                     key={preview.opId}
                     onClick={() => setCurrentOpIndex(index)}
-                    className={`w-full text-left p-2 rounded ${index === currentOpIndex ? "bg-gray-100" : "hover:bg-gray-50"}`}
+                    className={`w-full text-left p-2 rounded border ${index === currentOpIndex ? "bg-gray-100 border-blue-400 ring-2 ring-blue-200" : "hover:bg-gray-50 border-transparent"}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">
                         {preview.title}
                       </span>
-                      <Badge variant="secondary">{statusText}</Badge>
+                      <Badge variant={index === currentOpIndex ? "default" : "secondary"}>
+                        {statusText}
+                      </Badge>
                     </div>
                   </button>
                 )
@@ -289,7 +296,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
                       setCurrentOpIndex((idx) => Math.max(0, idx - 1))
                     }
                   >
-                    上一条
+                    {t("aiSuggestionsPrev")}
                   </Button>
                   <Button
                     variant="outline"
@@ -301,18 +308,20 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
                       )
                     }
                   >
-                    下一条
+                    {t("aiSuggestionsNext")}
                   </Button>
                   <Button size="sm" onClick={applyCurrentOp}>
-                    应用
+                    {t("aiSuggestionsApply")}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={skipCurrentOp}>
-                    跳过
+                    {t("aiSuggestionsSkip")}
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground">暂无建议</div>
+              <div className="text-sm text-muted-foreground">
+                {t("aiSuggestionsEmpty")}
+              </div>
             )}
           </CardContent>
         </Card>
