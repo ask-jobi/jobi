@@ -1,33 +1,25 @@
-import { GET } from "./route"
-import { getJobApplication } from "@/server/resume"
-import { generateResumeEditOpsFromEvaluation } from "@/server/ai/resume-ops-from-eval"
-import { consumeQuota } from "@/server/quota"
 import { NextRequest } from "next/server"
 import type { ResumeData } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
+import { jest } from "@jest/globals"
 
-jest.mock("@/server/resume", () => ({
-  getJobApplication: jest.fn()
+let GET: typeof import("./route").GET
+const mockGetJobApplication = jest.fn()
+const mockGenerateOps = jest.fn()
+const mockConsumeQuota = jest.fn()
+
+jest.unstable_mockModule("@/server/resume", () => ({
+  getJobApplication: (...args: any[]) => mockGetJobApplication(...args)
 }))
 
-jest.mock("@/server/ai/resume-ops-from-eval", () => ({
-  generateResumeEditOpsFromEvaluation: jest.fn()
+jest.unstable_mockModule("@/server/ai/resume-ops-from-eval", () => ({
+  generateResumeEditOpsFromEvaluation: (...args: any[]) =>
+    mockGenerateOps(...args)
 }))
 
-jest.mock("@/server/quota", () => ({
-  consumeQuota: jest.fn()
+jest.unstable_mockModule("@/server/quota", () => ({
+  consumeQuota: (...args: any[]) => mockConsumeQuota(...args)
 }))
-
-const mockGetJobApplication = getJobApplication as jest.MockedFunction<
-  typeof getJobApplication
->
-const mockGenerateOps =
-  generateResumeEditOpsFromEvaluation as jest.MockedFunction<
-    typeof generateResumeEditOpsFromEvaluation
-  >
-const mockConsumeQuota = consumeQuota as jest.MockedFunction<
-  typeof consumeQuota
->
 
 const mockResumeData: ResumeData = {
   personalInfo: {
@@ -82,6 +74,11 @@ const createMockRequest = (jobApplicationId?: string) => {
 }
 
 describe("GET /api/resume/ops-from-evaluation", () => {
+  beforeAll(async () => {
+    const module = await import("./route")
+    GET = module.GET
+  })
+
   beforeEach(() => jest.clearAllMocks())
 
   it("returns op previews", async () => {
@@ -106,5 +103,55 @@ describe("GET /api/resume/ops-from-evaluation", () => {
     expect(Array.isArray(data.opPreviews)).toBe(true)
     expect(data.opPreviews.length).toBe(1)
     expect(data.errors).toEqual([])
+  })
+
+  it("filters no-op updates and reports an error", async () => {
+    mockGetJobApplication.mockResolvedValue(mockJobApplication as any)
+    mockGenerateOps.mockResolvedValue({
+      ops: [
+        {
+          op: "updateBlock",
+          section: "employment",
+          blockIndex: 0,
+          payload: { content: "Original content" }
+        }
+      ],
+      errors: []
+    })
+    mockConsumeQuota.mockResolvedValue(undefined as any)
+
+    const response = await GET(createMockRequest("job-app-123"))
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.opPreviews.length).toBe(0)
+    expect(data.errors).toEqual([
+      { opIndex: 0, message: "no changes detected" }
+    ])
+  })
+
+  it("filters payloads without valid fields and reports an error", async () => {
+    mockGetJobApplication.mockResolvedValue(mockJobApplication as any)
+    mockGenerateOps.mockResolvedValue({
+      ops: [
+        {
+          op: "updateBlock",
+          section: "employment",
+          blockIndex: 0,
+          payload: { title: "Not a valid field" }
+        }
+      ],
+      errors: []
+    })
+    mockConsumeQuota.mockResolvedValue(undefined as any)
+
+    const response = await GET(createMockRequest("job-app-123"))
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.opPreviews.length).toBe(0)
+    expect(data.errors).toEqual([
+      { opIndex: 0, message: "payload has no valid fields" }
+    ])
   })
 })
