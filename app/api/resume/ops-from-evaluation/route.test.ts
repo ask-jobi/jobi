@@ -37,7 +37,19 @@ const mockResumeData: ResumeData = {
     phone: "123-456-7890"
   },
   education: { title: "Education", order: 1, blocks: [] },
-  employment: { title: "Employment", order: 2, blocks: [] },
+  employment: {
+    title: "Employment",
+    order: 2,
+    blocks: [
+      {
+        company: "Acme",
+        jobTitle: "Engineer",
+        start: "2020",
+        end: "2022",
+        content: "Original content"
+      }
+    ]
+  },
   skills: { title: "Skills", order: 3, blocks: [] }
 }
 
@@ -72,15 +84,27 @@ const createMockRequest = (jobApplicationId?: string) => {
 describe("GET /api/resume/ops-from-evaluation", () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it("returns ops payload", async () => {
+  it("returns op previews", async () => {
     mockGetJobApplication.mockResolvedValue(mockJobApplication as any)
-    mockGenerateOps.mockResolvedValue({ ops: [], errors: [] })
+    mockGenerateOps.mockResolvedValue({
+      ops: [
+        {
+          op: "updateBlock",
+          section: "employment",
+          blockIndex: 0,
+          payload: { content: "Updated content" }
+        }
+      ],
+      errors: []
+    })
     mockConsumeQuota.mockResolvedValue(undefined as any)
 
     const response = await GET(createMockRequest("job-app-123"))
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data).toEqual({ ops: [], errors: [] })
+    expect(Array.isArray(data.opPreviews)).toBe(true)
+    expect(data.opPreviews.length).toBe(1)
+    expect(data.errors).toEqual([])
   })
 })

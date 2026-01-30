@@ -27,15 +27,35 @@ export async function GET(request: NextRequest) {
     const evaluationReport = jobApplication.resumes
       .evaluation_report as ResumeEvaluationOutput
 
-    const result = await generateResumeEditOpsFromEvaluation(
+    const { ops, errors } = await generateResumeEditOpsFromEvaluation(
       evaluationReport,
       resumeData,
       jobApplication.resumes.language
     )
 
+    const opPreviews = ops.map((op, index) => {
+      const sectionData = (resumeData as any)[op.section]
+      const block =
+        typeof op.blockIndex === "number"
+          ? sectionData?.blocks?.[op.blockIndex]
+          : null
+      const before = block?.content ?? ""
+      const after =
+        op.op === "updateBlock" ? op.payload?.content ?? before : before
+
+      return {
+        opId: `${op.section}-${op.blockIndex ?? "new"}-${index}`,
+        op,
+        title: `${op.op} ${op.section} #${op.blockIndex ?? "new"}`,
+        description: "",
+        before,
+        after
+      }
+    })
+
     await consumeQuota("fullOptimize")
 
-    return Response.json(result)
+    return Response.json({ opPreviews, errors })
   } catch (error: any) {
     console.error("生成简历编辑操作失败:", error)
     return Response.json({ error: error.message }, { status: 500 })
