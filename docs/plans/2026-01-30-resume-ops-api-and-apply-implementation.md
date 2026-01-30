@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Rename `/api/resume/full-suggestion` to `/api/resume/ops-from-evaluation`, return edit ops, and update one frontend button to call it and apply ops via `applyResumeEditOps`.
+**Goal:** Add `/api/resume/ops-from-evaluation`, return edit ops, and update one frontend button to call it and apply ops via `applyResumeEditOps`.
 
-**Architecture:** Add a new API route that returns `{ ops, errors }` from `generateResumeEditOpsFromEvaluation`. Update `EvaluationReport` "one-click optimize" button to call the new route and apply ops to form state. Leave old route in place (not deleted) for minimal change.
+**Architecture:** Add a new API route that returns `{ ops, errors }` from `generateResumeEditOpsFromEvaluation`. Update `EvaluationReport` "one-click optimize" button to call the new route and apply ops to form state.
 
 **Tech Stack:** Next.js App Router, TypeScript, React Hook Form, Jest
 
@@ -204,4 +204,3 @@ if (errors?.length) toast.error(`部分操作未应用: ${errors.length}`)
 git add components/client-components/evaluation-report.tsx
 git commit -m "feat: apply resume ops from evaluation on optimize"
 ```
-
