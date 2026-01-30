@@ -1,38 +1,53 @@
+import "server-only"
 import { google } from "@ai-sdk/google"
-import { generateText, Output } from "ai"
-import { z } from "zod"
+import { generateText, Output, zodSchema } from "ai"
+import { z } from "zod/v4"
 import type { Locale } from "@/lib/i18n/config"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
 import { resumeOpsFromEvalPrompt } from "@/server/ai/prompts/resume-ops-from-eval.prompt"
 
-const resumeEditOpSchema = z.object({
-  op: z.enum(["addBlock", "updateBlock", "removeBlock"]),
-  section: z.enum([
-    "education",
-    "employment",
-    "skills",
-    "research",
-    "projects",
-    "publications",
-    "awards",
-    "certifications"
-  ]),
-  blockIndex: z.number().int().optional(),
-  payload: z.record(z.any()).optional()
-})
-
-const outputSchema = z.object({
-  ops: z.array(resumeEditOpSchema)
-})
-
-export type ResumeEditOpFromEval = z.infer<typeof resumeEditOpSchema>
+export type ResumeEditOpFromEval = {
+  op: "addBlock" | "updateBlock" | "removeBlock"
+  section:
+    | "education"
+    | "employment"
+    | "skills"
+    | "research"
+    | "projects"
+    | "publications"
+    | "awards"
+    | "certifications"
+  blockIndex?: number
+  payload?: Record<string, any>
+}
 
 export type GenerateOpsResult = {
   ops: ResumeEditOpFromEval[]
   errors: Array<{ opIndex: number; message: string }>
 }
 
+const createOutputSchema = () => {
+  const resumeEditOpSchema = z.object({
+    op: z.enum(["addBlock", "updateBlock", "removeBlock"]),
+    section: z.enum([
+      "education",
+      "employment",
+      "skills",
+      "research",
+      "projects",
+      "publications",
+      "awards",
+      "certifications"
+    ]),
+    blockIndex: z.number().int().optional(),
+    payload: z.record(z.any()).optional()
+  })
+
+  return z.object({
+    ops: z.array(resumeEditOpSchema)
+  })
+}
 const mapTargetSection = (
   target: ResumeEvaluationOutput["actions"][number]["targetSection"]
 ) => {
@@ -83,9 +98,22 @@ export async function generateResumeEditOpsFromEvaluation(
     language
   })
 
+  const outputSchema = createOutputSchema()
+  let outputStrategy: ReturnType<typeof Output.object>
+
+  try {
+    outputStrategy = Output.object({ schema: outputSchema })
+  } catch (error) {
+    console.error(
+      "ops-from-eval Output.object failed for zod schema, falling back",
+      error
+    )
+    outputStrategy = Output.object({ schema: zodSchema(outputSchema) })
+  }
+
   const { output } = await generateText({
     model: google("gemini-2.0-flash-lite"),
-    output: Output.object({ schema: outputSchema }),
+    output: outputStrategy,
     prompt,
     temperature: 0.2,
     maxRetries: 2
