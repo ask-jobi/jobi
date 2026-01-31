@@ -3,8 +3,8 @@ description: 根据当前 git staged changes 生成 commit message 并提交
 agent: build
 ---
 !`git add .`
-以下是测试覆盖率报告
-!`vitest run --coverage`
+执行以下命令获取测试覆盖率报告
+`vitest run --coverage`
 
 要求：
 1. commit message 必须严格遵循以下格式：

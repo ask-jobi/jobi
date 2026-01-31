@@ -10,6 +10,11 @@
 
   "exportResumeError": "导出简历失败",
 
+  "jd": {
+    "saveSuccess": "岗位描述保存成功",
+    "saveError": "保存岗位描述失败"
+  },
+
   "landingPage": {
     "hero": {
       "slogan": "让每一份简历都命中靶心",

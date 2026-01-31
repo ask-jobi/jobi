@@ -4,16 +4,19 @@ import { useForm } from "react-hook-form"
 import { useResume } from "@/lib/store/resume"
 import { Button } from "@/components/ui/button"
 import { updateResumeJobDescription } from "@/server/resume"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import JobInformationForm, {
   formSchema,
   JobInfoFormType
 } from "@/components/forms/job-information-form"
 import { useTranslations } from "next-intl"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function Page() {
   const t = useTranslations()
   const { jobDescription, setJobDescription } = useResume()
+  const [loading, setLoading] = useState(false)
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,20 +33,31 @@ export default function Page() {
   }, [jobDescription, form])
 
   const handleSaveJd = async () => {
-    const data = {
-      id: jobDescription!!.id,
-      ...form.getValues()
+    setLoading(true)
+    try {
+      const data = {
+        id: jobDescription!!.id,
+        ...form.getValues()
+      }
+      setJobDescription(data)
+      await updateResumeJobDescription(data)
+      toast.success(t("jd.saveSuccess"))
+    } catch {
+      toast.error(t("jd.saveError"))
+    } finally {
+      setLoading(false)
     }
-    setJobDescription(data)
-    await updateResumeJobDescription(data)
   }
 
   return (
     <main className="mx-24">
       <div className="flex flex-col gap-4 mt-4 p-4">
-        <JobInformationForm form={form} />
+        <JobInformationForm form={form} disabled={loading} />
         <div className="flex flex-row-reverse">
-          <Button onClick={handleSaveJd}>{t("button.save")}</Button>
+          <Button onClick={handleSaveJd} disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t("button.save")}
+          </Button>
         </div>
       </div>
     </main>

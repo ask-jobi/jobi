@@ -10,6 +10,11 @@
 
   "exportResumeError": "export resume failed.",
 
+  "jd": {
+    "saveSuccess": "Job description saved successfully",
+    "saveError": "Failed to save job description"
+  },
+
   "landingPage": {
     "hero": {
       "slogan": "Make every resume hit the target",

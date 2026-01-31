@@ -22,11 +22,12 @@ export const formSchema = z.object({
 
 type JobInformationFormProps = {
   form: UseFormReturn<JobInfoFormType>
+  disabled?: boolean
 }
 
 export type JobInfoFormType = z.infer<typeof formSchema>
 
-function JobInformationForm({ form }: JobInformationFormProps) {
+function JobInformationForm({ form, disabled }: JobInformationFormProps) {
   const t = useTranslations("form.job")
   return (
     <Form {...form}>
@@ -40,7 +41,11 @@ function JobInformationForm({ form }: JobInformationFormProps) {
                 {t("name")}
               </FormLabel>
               <FormControl>
-                <Input placeholder={t("namePlaceholder")} {...field} />
+                <Input
+                  placeholder={t("namePlaceholder")}
+                  disabled={disabled}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -55,7 +60,11 @@ function JobInformationForm({ form }: JobInformationFormProps) {
                 {t("company")}
               </FormLabel>
               <FormControl>
-                <Input placeholder={t("companyPlaceholder")} {...field} />
+                <Input
+                  placeholder={t("companyPlaceholder")}
+                  disabled={disabled}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -73,6 +82,7 @@ function JobInformationForm({ form }: JobInformationFormProps) {
                 <Textarea
                   className="max-h-48"
                   placeholder={t("descPlaceholder")}
+                  disabled={disabled}
                   {...field}
                 />
               </FormControl>
