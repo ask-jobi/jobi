@@ -124,4 +124,52 @@ describe("QuotaDisplay", () => {
     const usages = screen.getAllByText(/0 \/ 0/)
     expect(usages).toHaveLength(3)
   })
+
+  it("should display correct badge for LITE plan", () => {
+    const liteSubscription = { ...defaultSubscription, plan: "LITE" as const }
+    render(<QuotaDisplay subscription={liteSubscription} />)
+
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("lite14Days")
+  })
+
+  it("should display correct badge for FREE plan", () => {
+    const freeSubscription = { ...defaultSubscription, plan: "FREE" as const }
+    render(<QuotaDisplay subscription={freeSubscription} />)
+
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("freeTrial")
+  })
+
+  it("should handle subscription with null plan", () => {
+    const nullPlanSubscription = { ...defaultSubscription, plan: null }
+    render(<QuotaDisplay subscription={nullPlanSubscription} />)
+
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("noPlan")
+  })
+
+  it("should show upgrade button for FREE plan", () => {
+    const freeSubscription = {
+      ...defaultSubscription,
+      plan: "FREE" as const,
+      isActive: false
+    }
+    render(<QuotaDisplay subscription={freeSubscription} />)
+
+    expect(screen.getByRole("button", { name: "buyPlan" })).toBeInTheDocument()
+  })
+
+  it("should show both renew and upgrade buttons for LITE plan when active", () => {
+    const liteActiveSubscription = {
+      ...defaultSubscription,
+      plan: "LITE" as const,
+      isActive: true
+    }
+    render(<QuotaDisplay subscription={liteActiveSubscription} />)
+
+    expect(
+      screen.getByRole("button", { name: "renewPlan" })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "upgradeToPro" })
+    ).toBeInTheDocument()
+  })
 })

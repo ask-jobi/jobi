@@ -8,7 +8,7 @@ type QuotaObj<Col> = {
   colName: Col
 }
 
-type Quota = {
+export type Quota = {
   fullOptimize: QuotaObj<"full_optimize">
   blockOptimize: QuotaObj<"block_optimize">
   motivationLetter: QuotaObj<"motivation_letter">

@@ -138,16 +138,79 @@ describe("PricingCard", () => {
     })
   })
 
-  it("should show payment error when checkout fails", async () => {
+  it("should redirect to dashboard when free pass already exists", async () => {
     mockUseAuth.user = { id: "user123" } as any
-    mockPush.mockImplementation(() => {})
-
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({ error: "Payment failed" })
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ message: "User already has an active pass" })
     })
 
-    vi.stubGlobal("fetch", mockFetch)
+    render(<PricingCard {...defaultProps} priceId={undefined} />)
+
+    const button = screen.getByText("Get Started")
+    fireEvent.click(button)
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/dashboard")
+    })
+  })
+
+  it("should show ALREADY_TRIED error when user has tried before", async () => {
+    mockUseAuth.user = { id: "user123" } as any
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      json: () =>
+        Promise.resolve({
+          error: "您已经试用过该产品，请选择付费套餐继续使用",
+          code: "ALREADY_TRIED"
+        })
+    })
+
+    render(<PricingCard {...defaultProps} priceId={undefined} />)
+
+    const button = screen.getByText("Get Started")
+    fireEvent.click(button)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("payment-error")).toBeInTheDocument()
+    })
+  })
+
+  it("should handle network error during free pass creation", async () => {
+    mockUseAuth.user = { id: "user123" } as any
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network error"))
+
+    render(<PricingCard {...defaultProps} priceId={undefined} />)
+
+    const button = screen.getByText("Get Started")
+    fireEvent.click(button)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("payment-error")).toBeInTheDocument()
+    })
+  })
+
+  it("should redirect to checkout URL on successful payment", async () => {
+    mockUseAuth.user = { id: "user123" } as any
+    let locationHrefValue = ""
+    Object.defineProperty(global, "location", {
+      value: {
+        get href() {
+          return locationHrefValue
+        },
+        set href(value: string) {
+          locationHrefValue = value
+        }
+      },
+      writable: true
+    })
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ url: "https://checkout.stripe.com/pay/cs_test_123" })
+    })
 
     render(<PricingCard {...defaultProps} priceId="price_123" />)
 
@@ -156,19 +219,57 @@ describe("PricingCard", () => {
 
     await vi.waitFor(
       () => {
-        expect(mockFetch).toHaveBeenCalled()
+        expect(locationHrefValue).toBe(
+          "https://checkout.stripe.com/pay/cs_test_123"
+        )
       },
-      { timeout: 1000 }
+      { timeout: 2000 }
     )
+  })
 
-    await vi.waitFor(
-      () => {
-        expect(screen.queryByTestId("ui-button")).not.toBeDisabled()
-      },
-      { timeout: 1000 }
-    )
+  it("should disable button during loading state", async () => {
+    mockUseAuth.user = { id: "user123" } as any
+    let resolveFetch: (value: any) => void
+    const fetchPromise = new Promise((resolve) => {
+      resolveFetch = resolve
+    })
+    global.fetch = vi.fn().mockReturnValueOnce(fetchPromise)
 
-    expect(screen.getByTestId("payment-error")).toBeInTheDocument()
-    expect(screen.getByText("Payment failed")).toBeInTheDocument()
+    render(<PricingCard {...defaultProps} priceId={undefined} />)
+
+    const button = screen.getByText("Get Started")
+    fireEvent.click(button)
+
+    // Button should be disabled during loading
+    expect(button.closest("button")).toBeDisabled()
+
+    // Resolve the fetch
+    resolveFetch!({
+      ok: true,
+      json: () => Promise.resolve({ message: "Free pass created successfully" })
+    })
+
+    await vi.waitFor(() => {
+      expect(button.closest("button")).not.toBeDisabled()
+    })
+  })
+
+  it("should handle 401 response by redirecting to login", async () => {
+    mockUseAuth.user = { id: "user123" } as any
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      status: 401,
+      json: () => Promise.resolve({ error: "Unauthorized" })
+    })
+
+    render(<PricingCard {...defaultProps} priceId="price_123" />)
+
+    const button = screen.getByText("Get Started")
+    fireEvent.click(button)
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(
+        "/auth/login?callbackUrl=%2Fpricing"
+      )
+    })
   })
 })

@@ -8,7 +8,7 @@ agent: build
 
 要求：
 1. commit message 必须严格遵循以下格式：
-   [AIRS-$1] {action}: {summary}
+   [AIRS-$1] {action}: {message}
 
 2. 其中：
     - action 必须从以下列表中选择最合适的一个：
@@ -21,7 +21,7 @@ agent: build
         - test: 测试相关改动
         - perf: 性能优化
 
-3. summary 要求：
+3. 自动生成的 message 的要求：
     - 使用英文
     - 简洁、明确，不超过 30 个单词
     - 描述「做了什么」，而不是「为什么」
@@ -34,6 +34,6 @@ agent: build
 
 工作流程：
 - 分析测试覆盖率报告，在达标后进行以下流程
-- 分析代码变更的主要意图
+- 分析代码变更的主要意图，并生成message
 - 如果无法判断 action，选择最保守的一个（feat）
 - 将message通过git commit提交

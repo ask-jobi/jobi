@@ -2,11 +2,14 @@
  * @vitest-environment node
  */
 import {
+  buildQuotas,
   verifyAndUpdateQuota,
+  verifyQuota,
   getActiveAccessPass,
   getUserSubscription,
   consumeQuota,
-  verifyJobApplicationLimit
+  verifyJobApplicationLimit,
+  Quota
 } from "./quota"
 import { createClient } from "@/lib/supabase/server"
 import { vi, describe, it, expect, beforeEach } from "vitest"
@@ -680,5 +683,156 @@ describe("verifyJobApplicationLimit", () => {
     )
 
     await expect(verifyJobApplicationLimit()).rejects.toThrow("DB Error")
+  })
+})
+
+describe("buildQuotas", () => {
+  it("should build quotas for PRO plan", () => {
+    const accessPass = {
+      id: "pass-id",
+      user_id: "user-id",
+      plan: "PRO" as const,
+      source: "purchase",
+      stripe_checkout_session_id: "cs_test_123",
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 10,
+      used_full_optimize: 3,
+      quota_block_optimize: 20,
+      used_block_optimize: 5,
+      quota_motivation_letter: 5,
+      used_motivation_letter: 1
+    }
+
+    const result = buildQuotas(accessPass)
+
+    expect(result.fullOptimize).toEqual({
+      used: 3,
+      total: 10,
+      colName: "full_optimize"
+    })
+    expect(result.blockOptimize).toEqual({
+      used: 5,
+      total: 20,
+      colName: "block_optimize"
+    })
+    expect(result.motivationLetter).toEqual({
+      used: 1,
+      total: 5,
+      colName: "motivation_letter"
+    })
+  })
+
+  it("should build quotas for LITE plan", () => {
+    const accessPass = {
+      id: "pass-id",
+      user_id: "user-id",
+      plan: "LITE" as const,
+      source: "purchase",
+      stripe_checkout_session_id: "cs_test_123",
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 5,
+      used_full_optimize: 1,
+      quota_block_optimize: 15,
+      used_block_optimize: 2,
+      quota_motivation_letter: 3,
+      used_motivation_letter: 0
+    }
+
+    const result = buildQuotas(accessPass)
+
+    expect(result.fullOptimize.total).toBe(5)
+    expect(result.blockOptimize.total).toBe(15)
+    expect(result.motivationLetter.total).toBe(3)
+  })
+
+  it("should build quotas for FREE plan", () => {
+    const accessPass = {
+      id: "pass-id",
+      user_id: "user-id",
+      plan: "FREE" as const,
+      source: "free_trial",
+      stripe_checkout_session_id: null,
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 2,
+      used_full_optimize: 0,
+      quota_block_optimize: 10,
+      used_block_optimize: 0,
+      quota_motivation_letter: 1,
+      used_motivation_letter: 0
+    }
+
+    const result = buildQuotas(accessPass)
+
+    expect(result.fullOptimize.total).toBe(2)
+    expect(result.blockOptimize.total).toBe(10)
+    expect(result.motivationLetter.total).toBe(1)
+  })
+})
+
+describe("verifyQuota", () => {
+  it("should not throw when quota is available", () => {
+    const quotas: Quota = {
+      fullOptimize: { used: 3, total: 10, colName: "full_optimize" },
+      blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+      motivationLetter: { used: 0, total: 1, colName: "motivation_letter" }
+    }
+
+    expect(() => verifyQuota("fullOptimize", quotas)).not.toThrow()
+    expect(() => verifyQuota("blockOptimize", quotas)).not.toThrow()
+  })
+
+  it("should throw when quota is exhausted", () => {
+    const quotas: Quota = {
+      fullOptimize: { used: 10, total: 10, colName: "full_optimize" },
+      blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+      motivationLetter: { used: 1, total: 1, colName: "motivation_letter" }
+    }
+
+    expect(() => verifyQuota("fullOptimize", quotas)).toThrow("Limit reached")
+    expect(() => verifyQuota("motivationLetter", quotas)).toThrow(
+      "Limit reached"
+    )
+  })
+
+  it("should throw when quota is over limit", () => {
+    const quotas: Quota = {
+      fullOptimize: { used: 15, total: 10, colName: "full_optimize" },
+      blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+      motivationLetter: { used: 0, total: 1, colName: "motivation_letter" }
+    }
+
+    expect(() => verifyQuota("fullOptimize", quotas)).toThrow("Limit reached")
+  })
+})
+
+describe("verifyAndUpdateQuota", () => {
+  it("should return update params when quota is available", () => {
+    const quotas: Quota = {
+      fullOptimize: { used: 3, total: 10, colName: "full_optimize" },
+      blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+      motivationLetter: { used: 0, total: 1, colName: "motivation_letter" }
+    }
+
+    const result = verifyAndUpdateQuota("fullOptimize", quotas)
+
+    expect(result).toEqual({ used_full_optimize: 4 })
+  })
+
+  it("should throw when quota is exhausted", () => {
+    const quotas: Quota = {
+      fullOptimize: { used: 10, total: 10, colName: "full_optimize" },
+      blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
+      motivationLetter: { used: 0, total: 1, colName: "motivation_letter" }
+    }
+
+    expect(() => verifyAndUpdateQuota("fullOptimize", quotas)).toThrow(
+      "Limit reached"
+    )
   })
 })
