@@ -41,6 +41,13 @@ export default defineConfig({
         storageState: "test/e2e/.auth/user.json"
       },
       dependencies: ["setup"]
+    },
+    {
+      name: "chromium-no-auth",
+      use: {
+        ...devices["Desktop Chrome"]
+      },
+      testMatch: /.*chat\.spec\.ts/
     }
 
     // {

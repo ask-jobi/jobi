@@ -17,97 +17,111 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
-# AGENTS.md - Coding Guidelines for Jobi
+# AGENTS.md - Jobi 项目开发指南
 
-## Common Commands
+## 常用命令
 
-### Development
-- `pnpm dev` - Start development server with Turbopack
-- `pnpm dev:test` - Start dev server on port 3001 (for E2E tests)
+### 开发
+- `pnpm dev` - 启动开发服务器 (Turbopack)
+- `pnpm dev:test` - 在 3001 端口启动开发服务器 (用于 E2E 测试)
 
-### Building
-- `pnpm build` - Build application for production
+### 构建
+- `pnpm build` - 构建生产环境应用
 
-### Testing
-- `pnpm test` - Run all Jest unit tests
-- `pnpm test [filename]` - Run a specific test file
-- `pnpm test --watch` - Run tests in watch mode
-- `pnpm e2e-test` - Run all Playwright E2E tests
-- `pnpm exec playwright test --ui` - Run Playwright tests in UI mode
+### 测试
+- `pnpm test` - 运行所有 vitest 单元测试
+- `pnpm test [filename]` - 运行指定测试文件
+- `pnpm test --watch` - 以 watch 模式运行测试
+- `pnpm e2e-test` - 运行所有 Playwright E2E 测试
+- `pnpm exec playwright test --ui` - 以 UI 模式运行 Playwright 测试
 
-### Code Quality
-- `pnpm lint` - Run ESLint to check for code issues
-- `pnpm format` - Format all files with Prettier
-- `pnpm format:check` - Check formatting without modifying
+### 代码质量
+- `pnpm lint` - 运行 ESLint 检查代码问题
+- `pnpm format` - 用 Prettier 格式化所有文件
+- `pnpm format:check` - 检查格式化而不修改
 
-## Code Style Guidelines
+## 代码风格指南
 
 ### TypeScript
-- Use TypeScript for all components and functions
-- Avoid `any` - use proper type definitions or `unknown` with type guards
-- Use interfaces for props, avoid type aliases for complex objects
-- Generate Supabase types: `types/supabase.ts` must stay synced with database schema
+- 所有组件和函数使用 TypeScript
+- 禁止使用 `any` - 使用适当的类型定义或 `unknown` + 类型守卫
+- 使用 interface 定义 props，避免使用类型别名定义复杂对象
+- Supabase 类型变更后必须同步生成 `types/supabase.ts`
 
-### Component Patterns
-- Page components in `app/`, UI components in `components/ui/`, business components in `components/client-components/`
-- Use named exports instead of default exports for components
-- Pure function components only - no class components
-- Props via TypeScript interfaces
+### 组件模式
+- 页面组件放在 `app/`，通用 UI 组件放在 `components/ui/`，业务组件放在 `components/client-components/`
+- 组件目录命名统一用小写短横线（如 `resume-templates`），文件名与导出组件名保持一致
+- 组件内部如有 hooks、types、utils，如果可以复用，建议放在 `lib/hooks/`、`types/`、`lib/utils.ts` 中
+- 优先使用命名导出，避免默认导出
+- 组件应为纯函数组件，禁止类组件
+- Props 通过 TypeScript interface 定义
 
-### State Management
-- Use Jotai for cross-component shared state (store in `lib/store/`)
-- Use React state for component-local state
-- Replace React Context with Jotai atoms
+### 状态管理
+- 当需要在多个组件间共享状态时，使用 Jotai 库
+- Jotai 创建的 atom state 放在 `lib/store/` 目录下
+- 使用 Jotai 完全替换 React Context
+- 组件本地状态使用 React state
 
-### Forms & Validation
-- All form validation with Zod (no yup/joi)
-- Use react-hook-form + @hookform/resolvers/zod
-- Place validation schemas in `lib/` or `components/client-components/forms/`
-- Required fields show red asterisks: `after:content-['*'] after:text-destructive`
+### 表单与验证
+- 所有表单校验必须用 Zod（禁止使用 yup、joi 等其他库）
+- 使用 react-hook-form + @hookform/resolvers/zod 组合
+- 校验 schema 单独放在 `lib/` 或 `components/client-components/forms/` 下
+- 必填字段显示红色星号：`after:content-['*'] after:text-destructive`
+- 表单组件必须有错误提示和边界处理
 
-### UI & Styling
-- Use Shadcn UI and Radix primitives - don't build custom UI components
-- All styling with Tailwind CSS - no inline styles or CSS/SASS/LESS files
-- Use tailwind-merge for class concatenation to avoid conflicts
-- Use next-themes for dark/light mode
-- Use motion library for animations, avoid direct DOM manipulation
-- Responsive design with Tailwind responsive utility classes
+### UI 与样式
+- UI 组件优先使用 Shadcn UI 和 Radix 相关库，禁止自造轮子
+- 所有样式使用 Tailwind CSS，禁止使用 CSS/SASS/LESS 文件和内联 style
+- 响应式设计必须用 Tailwind 的响应式工具类
+- 复用样式用 tailwind-merge 合并，避免 class 冲突
+- 主题切换统一用 next-themes
+- 禁止直接操作 DOM，动画优先用 motion 库
 
-### Next.js Conventions
-- Add "use client" only when browser APIs are needed, prefer Server Components
-- Data fetching, routing, rendering per Next.js official docs
-- Use nuqs for URL state management
-- Optimize Web Vitals: use next/image, avoid layout shifts
-- API routes in `app/api/`, business logic in `server/`
-- SSR/SSG first, CSR only when necessary
-- Never access `window`/`document` in Server Components
+### Next.js 约定
+- 仅在需要访问浏览器 API 的组件中加 "use client"，其余全部用服务端组件
+- 路由、数据获取、渲染严格遵循 Next.js 官方文档
+- URL 状态管理推荐用 nuqs
+- 优化 Web Vitals（LCP、CLS、FID），图片用 next/image，避免 layout shift
+- API 路由统一放在 `app/api/`，业务逻辑抽离到 `server/`
+- SSR/SSG 优先，CSR 仅限必要场景
+- 禁止在服务端组件中直接访问 window、document
 
-### Backend & Supabase
-- All backend (auth, database) via Supabase SDK
-- Authentication flows must use Supabase SDK
-- Never store sensitive info in plaintext
-- In route.ts, only validate params and call server layer functions
-- Never directly manipulate database in frontend - use API or server layer
+### 后端与 Supabase
+- 所有后端服务（认证、数据库）统一用 Supabase SDK
+- 认证流程（登录、注册、登出）必须用 Supabase SDK
+- 用户 session、数据管理必须安全，禁止明文存储敏感信息
+- API 路由中的业务逻辑必须抽离到 `server/` 目录，`route.ts` 只做参数校验和调用
+- Supabase 类型变更后，必须同步生成 `types/supabase.ts`
+- 禁止在前端直接操作数据库，所有数据操作通过 API 或 server 层
 
-### File Structure & Naming
-- Component directories: lowercase with hyphens (e.g., `resume-templates`)
-- File names match exported component name
-- Reusable hooks, types, utils go in `lib/hooks/`, `types/`, `lib/utils.ts`
+### 文件结构与命名
+- 组件目录：使用小写短横线命名（如 `resume-templates`）
+- 文件名与导出的组件名保持一致
+- 可复用的 hooks、types、utils 放在 `lib/hooks/`、`types/`、`lib/utils.ts`
 
-### Testing
-- Unit tests for all new components
-- Create integration tests for API routes (with real Supabase database)
-- Use testing-library/react for component tests
-- Test descriptions must be in English
-- Consider edge cases and boundary conditions
+### 测试
+- 为所有新组件创建单元测试
+- 始终为 `route.ts` 创建集成测试，测试使用真实的 Supabase 数据库
+- 组件测试使用 testing-library/react
+- 测试描述必须使用英文 (English)
+- 考虑测试的边界场景和边界条件
+- 使用 vitest 作为测试框架（不是 Jest）
 
-### Imports
-- Group imports: React/Next.js → External libraries → Internal components/utils
-- Use path aliases (`@/` or `~//`)
-- Avoid relative imports beyond two levels
+### 导入规则
+- 分组导入：React/Next.js → 外部库 → 内部组件/utils
+- 使用路径别名（`@/` 或 `~//`）
+- 避免超过两层的相对导入
 
-### Error Handling
-- Proper error boundaries and user feedback
-- Validate all inputs with Zod schemas
-- Webhook handlers must verify signatures (Stripe)
-- Log errors appropriately without exposing sensitive data
+### 错误处理
+- 使用适当的错误边界和用户反馈
+- 所有输入用 Zod schemas 验证
+- Webhook 处理器必须验证签名（如 Stripe）
+- 正确记录错误但不暴露敏感数据
+
+### 国际化 (i18n)
+- **重要：在添加任何新组件时，必须优先考虑 i18n 国际化**
+- 在编写组件代码之前，先在 `lib/i18n/translations/en.json` 和 `lib/i18n/translations/zh.json` 中添加所需的翻译 key
+- 所有用户可见的文本必须使用 i18n：客户端组件使用 `next-intl/client` 的 `useTranslations`，服务端组件使用 `next-intl/server` 的 `getTranslations`
+- 禁止在组件中硬编码显示文本，始终使用翻译 key
+- 翻译 key 应具有描述性并遵循现有命名模式（如 `section.subsection.key`）
+- 测试所有文本在两种语言中都能正确显示

@@ -4,10 +4,11 @@
 import { POST } from "./route"
 import { NextRequest } from "next/server"
 import path from "node:path"
-import * as fs from "node:fs"
+import fs from "node:fs"
 import { Locale } from "@/lib/i18n/config"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as resumeParser from "@/server/ai/resume-parser"
+import type { ResumeData } from "@/types/resume"
 import * as resumeModule from "@/server/resume"
 import * as quotaModule from "@/server/quota"
 import * as toolsModule from "@/server/ai/tools"
@@ -93,16 +94,18 @@ describe("POST /api/resume/upload-and-analyze", () => {
   }
 
   const mockResumeData = {
+    sectionOrder: ["education", "employment", "skills"] as const,
     personalInfo: {
+      blockId: "p1",
       firstName: "Test",
       lastName: "User",
       email: "test@example.com",
       phone: "1234567890"
     },
-    education: { title: "Education", order: 0, blocks: [] },
-    employment: { title: "Employments", order: 1, blocks: [] },
-    skills: { title: "Skills", order: 2, blocks: [] }
-  }
+    education: { sectionId: "e1", title: "Education", blocks: [] },
+    employment: { sectionId: "emp1", title: "Employments", blocks: [] },
+    skills: { sectionId: "s1", title: "Skills", blocks: [] }
+  } as unknown as ResumeData
 
   const mockJobInfo = {
     name: "Frontend Developer",
@@ -184,7 +187,11 @@ describe("POST /api/resume/upload-and-analyze", () => {
       expect(sentData[6]).toEqual({ step: "prepare", status: "loading" })
       expect(sentData[7]).toEqual({ step: "prepare", status: "success" })
       expect(sentData[8]).toEqual({ step: "evaluate", status: "loading" })
-      expect(sentData[9]).toEqual({ step: "evaluate", status: "success" })
+      expect(sentData[9]).toEqual({
+        step: "evaluate",
+        status: "success",
+        resumeId: "resume-123"
+      })
 
       expect(resumeModule.uploadResumeFile).toHaveBeenCalledWith(file)
       expect(toolsModule.loadPdfToDoc).toHaveBeenCalledWith(file, {

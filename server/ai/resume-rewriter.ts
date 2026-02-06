@@ -1,8 +1,8 @@
-import { google } from "@ai-sdk/google"
 import { generateText, Output } from "ai"
 import { z } from "zod"
 import { resumeRewritePrompt } from "./prompts/resume-rewrite.prompt"
 import { locales } from "@/lib/i18n/config"
+import { model } from "@/lib/agent/model"
 
 // const rewriteResponseSchema = z.object({
 //   optimizedContent: z.string().describe("改写后的内容"),
@@ -32,7 +32,7 @@ export const rewriteBlock = async (params: {
   })
 
   const { output: result } = await generateText({
-    model: google("gemini-2.0-flash-lite"),
+    model: model,
     output: Output.text(),
     prompt,
     temperature: 0.7,

@@ -7,6 +7,7 @@ import { Plus, Trash } from "lucide-react"
 import { ResumeData } from "@/types/resume"
 import { InputTags } from "@/components/ui/input-tags"
 import React from "react"
+import { nanoid } from "nanoid"
 
 export function SkillsForm() {
   const { control, register, setValue } = useFormContext<ResumeData>()
@@ -17,6 +18,7 @@ export function SkillsForm() {
 
   const handleAddBlock = () => {
     append({
+      blockId: nanoid(),
       group: "",
       content: ""
     })

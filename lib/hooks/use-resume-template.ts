@@ -1,26 +1,32 @@
-import { resumeDataAtom } from "@/lib/store/resume"
-import { DefaultTemplate } from "@/components/resume-templates/default-template"
-import { useEffect, useState } from "react"
-import { BaseTemplate } from "@/components/resume-templates/base-template"
-import { useAtom } from "jotai/index"
-import { ResumeData } from "@/types/resume"
-import { useTranslations } from "next-intl"
+"use client"
 
-function useResumeTemplate(data?: ResumeData) {
-  const [resumeData] = useAtom(resumeDataAtom)
-  const [template, setTemplate] = useState<BaseTemplate | null>(null)
-  const t = useTranslations("monthPicker")
+import { useState, useMemo } from "react"
+import {
+  registry,
+  type ResumeTemplateComponent
+} from "@/lib/templates/registry"
 
-  useEffect(() => {
-    const dataTemp = data ?? resumeData
-
-    if (dataTemp) {
-      const tmp = new DefaultTemplate(dataTemp)
-      setTemplate(tmp)
-    }
-  }, [resumeData, data, t])
-
-  return template
+interface UseResumeTemplateReturn {
+  Template: ResumeTemplateComponent
+  templates: { id: string; name: string }[]
+  switchTemplate: (id: string) => void
 }
 
-export default useResumeTemplate
+export function useResumeTemplate(
+  initialId: string = "default"
+): UseResumeTemplateReturn {
+  const [templateId, setTemplateId] = useState(initialId)
+
+  const templates = useMemo(() => registry.getAll(), [])
+
+  const Template = useMemo(() => {
+    const component = registry.get(templateId)
+    return component || registry.get("default")!
+  }, [templateId])
+
+  return {
+    Template,
+    templates,
+    switchTemplate: setTemplateId
+  }
+}

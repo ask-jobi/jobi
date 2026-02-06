@@ -39,6 +39,10 @@ vi.mock("@/lib/store/resume", async () => {
     openRightPanelAtom: {
       read: () => null,
       write: vi.fn()
+    },
+    rightPanelViewAtom: {
+      read: () => "evaluation",
+      write: vi.fn()
     }
   }
 })
@@ -122,19 +126,37 @@ describe("FloatingButtonGroup", () => {
     vi.spyOn(jotai, "useSetAtom").mockImplementation(() => mockSetAtom)
   })
 
-  it("should render two floating buttons", () => {
+  it("should render three floating buttons", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    expect(buttons).toHaveLength(2)
+    expect(buttons).toHaveLength(3)
   })
 
   it("should have correct titles for each button", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    expect(buttons[0]).toHaveAttribute("title", "button.viewEvaluationReport")
-    expect(buttons[1]).toHaveAttribute("title", "button.exportResume")
+    // Chat button (index 0) - opens chat panel
+    expect(buttons[0]).toHaveAttribute("title", "button.aiChat")
+    // Evaluation button (index 1)
+    expect(buttons[1]).toHaveAttribute("title", "button.viewEvaluationReport")
+    // Export button (index 2)
+    expect(buttons[2]).toHaveAttribute("title", "button.exportResume")
+  })
+
+  it("should open chat when chat button is clicked", () => {
+    // Clear the mock before the test
+    mockSetAtom.mockClear()
+
+    render(<FloatingButtonGroup />)
+
+    const buttons = screen.getAllByTestId("ui-button")
+    expect(buttons[0]).toBeDefined()
+
+    // Click the chat button - should call openRightPanel with "chat"
+    fireEvent.click(buttons[0])
+    expect(mockSetAtom).toHaveBeenCalledWith("chat")
   })
 
   it("should call export API when export button is clicked", async () => {
@@ -146,7 +168,7 @@ describe("FloatingButtonGroup", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[1])
+    fireEvent.click(buttons[2])
 
     expect(userTracking.trackExportResume).toHaveBeenCalled()
     expect(global.fetch).toHaveBeenCalledWith(
@@ -160,10 +182,10 @@ describe("FloatingButtonGroup", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[1])
+    fireEvent.click(buttons[2])
 
     // Check that the button is disabled during loading
-    expect(buttons[1]).toBeDisabled()
+    expect(buttons[2]).toBeDisabled()
   })
 
   it("should disable buttons when global loading is true", () => {
@@ -175,7 +197,7 @@ describe("FloatingButtonGroup", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    expect(buttons[1]).toBeDisabled() // Export button
+    expect(buttons[2]).toBeDisabled() // Export button
   })
 
   it("should handle export error gracefully", async () => {
@@ -187,10 +209,10 @@ describe("FloatingButtonGroup", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[1])
+    fireEvent.click(buttons[2])
 
     await vi.waitFor(() => {
-      expect(buttons[1]).not.toBeDisabled()
+      expect(buttons[2]).not.toBeDisabled()
     })
   })
 
@@ -203,10 +225,10 @@ describe("FloatingButtonGroup", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[1])
+    fireEvent.click(buttons[2])
 
     await vi.waitFor(() => {
-      expect(buttons[1]).not.toBeDisabled()
+      expect(buttons[2]).not.toBeDisabled()
     })
   })
 
@@ -218,11 +240,11 @@ describe("FloatingButtonGroup", () => {
 
     const buttons = screen.getAllByTestId("ui-button")
 
-    // Check if the button exists
-    expect(buttons[0]).toBeDefined()
+    // Check if the button exists (evaluation button is at index 1 now)
+    expect(buttons[1]).toBeDefined()
 
     // Click the evaluation button
-    fireEvent.click(buttons[0])
+    fireEvent.click(buttons[1])
 
     // Verify useSetAtom was called with the atom and then the setter was called with "evaluation"
     expect(jotai.useSetAtom).toHaveBeenCalled()

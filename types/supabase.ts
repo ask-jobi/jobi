@@ -1,6 +1,7 @@
 import { ResumeData } from "./resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { Locale } from "@/lib/i18n/config"
+import { UIDataTypes, UIMessagePart, UITools } from "ai"
 
 export type Json =
   | string
@@ -9,6 +10,8 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+export type ChatSessionStatus = "active" | "completed" | "archived"
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -196,6 +199,94 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      resume_chat_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          resume_id: string
+          status: ChatSessionStatus
+          title: string | null
+          total_tokens: number
+          total_cost: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          resume_id: string
+          status?: ChatSessionStatus
+          title?: string | null
+          total_tokens?: number
+          total_cost?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          resume_id?: string
+          status?: ChatSessionStatus
+          title?: string | null
+          total_tokens?: number
+          total_cost?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_chat_sessions_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      resume_chat_messages: {
+        Row: {
+          id: string
+          session_id: string
+          role: "user" | "assistant" | "system"
+          parts: Array<UIMessagePart<UIDataTypes, UITools>>
+          token_count: number
+          cost: number
+          truncated: boolean
+          has_tools: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          role: "user" | "assistant" | "system"
+          parts: Array<UIMessagePart<UIDataTypes, UITools>>
+          token_count?: number
+          cost?: number
+          truncated?: boolean
+          has_tools?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          role?: "user" | "assistant" | "system"
+          parts?: Array<UIMessagePart<UIDataTypes, UITools>>
+          token_count?: number
+          cost?: number
+          truncated?: boolean
+          has_tools?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "resume_chat_sessions"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

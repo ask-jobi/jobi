@@ -1,17 +1,20 @@
 import { applyResumeEditOps, type ResumeEditOp } from "@/lib/resume/agent-ops"
 import type { ResumeData } from "@/types/resume"
+import { describe, it, expect } from "vitest"
 
 describe("applyResumeEditOps", () => {
   const baseResume: ResumeData = {
+    sectionOrder: ["education", "employment", "skills"],
     personalInfo: {
+      blockId: "p1",
       firstName: "Ada",
       lastName: "Lovelace",
       email: "ada@example.com",
       phone: "123"
     },
-    education: { title: "Education", order: 0, blocks: [] },
-    employment: { title: "Employment", order: 1, blocks: [] },
-    skills: { title: "Skills", order: 2, blocks: [] }
+    education: { sectionId: "e1", title: "Education", blocks: [] },
+    employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+    skills: { sectionId: "s1", title: "Skills", blocks: [] }
   }
 
   it("updates an existing block", () => {
@@ -21,6 +24,7 @@ describe("applyResumeEditOps", () => {
         ...baseResume.education,
         blocks: [
           {
+            blockId: "e-b1",
             school: "MIT",
             degree: "BS",
             start: "2010",
@@ -67,7 +71,7 @@ describe("applyResumeEditOps", () => {
       ...baseResume,
       skills: {
         ...baseResume.skills,
-        blocks: [{ group: "Lang", content: "TS" }]
+        blocks: [{ blockId: "s-b1", group: "Lang", content: "TS" }]
       }
     }
 

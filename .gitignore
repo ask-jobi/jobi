@@ -54,3 +54,4 @@ node_modules/
 
 # Worktrees
 .worktrees/
+.devtools

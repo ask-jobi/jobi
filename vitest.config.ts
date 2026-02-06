@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     setupFiles: ["./vitest.env-setup.tsx", "./vitest.component-setup.tsx"],
-    exclude: ["test/e2e/**", "node_modules/**", "lib/**", ".next/**", "out/**"],
+    exclude: ["test/e2e/**", "node_modules/**", ".next/**", "out/**"],
     coverage: {
       provider: "v8",
       include: [
@@ -32,7 +32,8 @@ export default defineConfig({
           include: [
             "server/**/*.test.{ts,tsx}",
             "app/api/**/*.test.{ts,tsx}",
-            "components/editor/**/*.test.{ts,tsx}"
+            "components/editor/**/*.test.{ts,tsx}",
+            "lib/hooks/**/*.test.{ts,tsx}"
           ],
           exclude: ["server/ai/prompts/**", "components/ui/**"]
         }

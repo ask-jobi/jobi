@@ -3,10 +3,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { rewriteBlock } from "./resume-rewriter"
-import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
-
-vi.mock("@ai-sdk/google")
+import { model } from "@/lib/agent/model"
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
@@ -15,7 +13,11 @@ vi.mock("ai", () => ({
   }
 }))
 
-const mockGoogle = vi.mocked(google)
+vi.mock("@/lib/agent/model", () => ({
+  model: {
+    "MiniMax-M2.1": {}
+  }
+}))
 
 describe("rewriteBlock", () => {
   beforeEach(() => {
@@ -27,9 +29,6 @@ describe("rewriteBlock", () => {
       const mockRewrittenContent =
         "- Improved user experience by redesigning key workflows\n- Reduced load time by 40% through performance optimization"
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockRewrittenContent
       })
@@ -48,9 +47,6 @@ describe("rewriteBlock", () => {
     })
 
     it("should pass correct parameters to generateText", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "Rewritten content"
       })
@@ -65,7 +61,7 @@ describe("rewriteBlock", () => {
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: google("gemini-2.0-flash-lite"),
+          model: model,
           output: expect.any(Object),
           temperature: 0.7,
           maxRetries: 3
@@ -76,9 +72,6 @@ describe("rewriteBlock", () => {
 
   describe("language handling", () => {
     it("should use '英文' for English language", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "English content"
       })
@@ -99,9 +92,6 @@ describe("rewriteBlock", () => {
     })
 
     it("should use '中文' for Chinese language", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "中文内容"
       })
@@ -124,9 +114,6 @@ describe("rewriteBlock", () => {
 
   describe("prompt formatting", () => {
     it("should include all required fields in prompt", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "Result"
       })
@@ -151,9 +138,6 @@ describe("rewriteBlock", () => {
 
   describe("error handling", () => {
     it("should throw error when generateText fails", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockRejectedValue(new Error("AI service error"))
 
       await expect(
@@ -170,9 +154,6 @@ describe("rewriteBlock", () => {
 
   describe("input validation", () => {
     it("should handle empty resume section", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "Rewritten"
       })
@@ -189,9 +170,6 @@ describe("rewriteBlock", () => {
     })
 
     it("should handle long job descriptions", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: "Rewritten"
       })

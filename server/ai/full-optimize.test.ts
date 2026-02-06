@@ -4,20 +4,20 @@
 import { generateAISuggestionQueue } from "./full-optimize"
 import type { ResumeData, ResumeJobDescription } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
-import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
-vi.mock("@ai-sdk/google")
-
 vi.mock("ai", () => ({
   generateText: vi.fn(),
+  wrapLanguageModel: vi.fn((config: any) => config.model),
   Output: {
     object: vi.fn()
   }
 }))
 
-const mockGoogle = vi.mocked(google)
+vi.mock("@/lib/agent/model", () => ({
+  model: vi.fn()
+}))
 
 describe("generateAISuggestionQueue", () => {
   beforeEach(() => {
@@ -25,17 +25,20 @@ describe("generateAISuggestionQueue", () => {
   })
 
   const mockResume: ResumeData = {
+    sectionOrder: ["education", "skills"],
     personalInfo: {
+      blockId: "p1",
       firstName: "John",
       lastName: "Doe",
       email: "john@example.com",
       phone: "123-456-7890"
     },
     education: {
+      sectionId: "e1",
       title: "Education",
-      order: 0,
       blocks: [
         {
+          blockId: "e-b1",
           content: "Computer Science degree",
           school: "MIT",
           degree: "Bachelor",
@@ -45,9 +48,15 @@ describe("generateAISuggestionQueue", () => {
       ]
     },
     skills: {
+      sectionId: "s1",
       title: "Skills",
-      order: 2,
-      blocks: [{ group: "Programming", content: "JavaScript, TypeScript" }]
+      blocks: [
+        {
+          blockId: "s-b1",
+          group: "Programming",
+          content: "JavaScript, TypeScript"
+        }
+      ]
     }
   }
 
@@ -93,9 +102,6 @@ describe("generateAISuggestionQueue", () => {
         }
       ]
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions
@@ -131,9 +137,6 @@ describe("generateAISuggestionQueue", () => {
         }
       ]
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions
@@ -163,9 +166,6 @@ describe("generateAISuggestionQueue", () => {
         }
       ]
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions
@@ -185,9 +185,6 @@ describe("generateAISuggestionQueue", () => {
 
   describe("error handling", () => {
     it("should throw error when AI output format is invalid", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           invalid: "structure"
@@ -205,9 +202,6 @@ describe("generateAISuggestionQueue", () => {
     })
 
     it("should throw meaningful error when generateText fails", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockRejectedValue(
         new Error("AI service unavailable")
       )
@@ -227,9 +221,6 @@ describe("generateAISuggestionQueue", () => {
     it("should be callable with valid parameters", async () => {
       const mockSuggestions: any[] = []
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions
@@ -254,9 +245,6 @@ describe("generateAISuggestionQueue", () => {
 
       const mockSuggestions: any[] = []
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions
@@ -277,12 +265,16 @@ describe("generateAISuggestionQueue", () => {
       const resumeWithMultipleSkills: ResumeData = {
         ...mockResume,
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: [
-            { group: "Frontend", content: "React, Vue" },
-            { group: "Backend", content: "Node.js, Python" },
-            { group: "Database", content: "PostgreSQL, MongoDB" }
+            { blockId: "s-b1", group: "Frontend", content: "React, Vue" },
+            { blockId: "s-b2", group: "Backend", content: "Node.js, Python" },
+            {
+              blockId: "s-b3",
+              group: "Database",
+              content: "PostgreSQL, MongoDB"
+            }
           ]
         }
       }
@@ -298,9 +290,6 @@ describe("generateAISuggestionQueue", () => {
         }
       ]
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           suggestions: mockSuggestions

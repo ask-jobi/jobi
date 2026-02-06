@@ -15,18 +15,21 @@ vi.mock("ai", async () => {
 const mockGenerateText = vi.mocked((await import("ai")).generateText)
 
 const baseResume: ResumeData = {
+  sectionOrder: ["education", "employment", "skills"],
   personalInfo: {
+    blockId: "p1",
     firstName: "Ada",
     lastName: "Lovelace",
     email: "ada@example.com",
     phone: "123"
   },
-  education: { title: "Education", order: 0, blocks: [] },
+  education: { sectionId: "e1", title: "Education", blocks: [] },
   employment: {
+    sectionId: "emp1",
     title: "Employment",
-    order: 1,
     blocks: [
       {
+        blockId: "emp-b1",
         company: "ACME",
         jobTitle: "Engineer",
         start: "2020",
@@ -35,7 +38,7 @@ const baseResume: ResumeData = {
       }
     ]
   },
-  skills: { title: "Skills", order: 2, blocks: [] }
+  skills: { sectionId: "s1", title: "Skills", blocks: [] }
 }
 
 const evaluation: ResumeEvaluationOutput = {

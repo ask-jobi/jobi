@@ -21,12 +21,13 @@ export type JobApplication = {
 }
 
 export interface SectionBlock<T = any> {
+  sectionId: string
   title: string
-  order: number
-  blocks: T[]
+  blocks: Array<T>
 }
 
 export interface PersonalInfo {
+  blockId: string
   firstName: string
   lastName: string
   email: string
@@ -36,6 +37,7 @@ export interface PersonalInfo {
 }
 
 export interface EducationBlock {
+  blockId: string
   content: string
   school: string
   degree: string
@@ -44,6 +46,7 @@ export interface EducationBlock {
 }
 // TODO: 改为用 DateRange 类型
 export interface EmploymentBlock {
+  blockId: string
   content: string
   company: string
   jobTitle: string
@@ -52,6 +55,7 @@ export interface EmploymentBlock {
 }
 
 export interface SkillBlock {
+  blockId: string
   group: string
   content: string
 }
@@ -63,6 +67,7 @@ export interface DateRange {
 }
 
 export interface ProjectBlock {
+  blockId: string
   title: string
   content: string
   role?: string
@@ -70,6 +75,7 @@ export interface ProjectBlock {
 }
 
 export interface ResearchBlock {
+  blockId: string
   title: string
   content: string
   role?: string
@@ -77,12 +83,14 @@ export interface ResearchBlock {
 }
 
 export interface PublicationBlock {
+  blockId: string
   title: string
   date: string
   description?: string
 }
 
 export interface AwardBlock {
+  blockId: string
   title: string
   issuer?: string
   date?: string
@@ -90,6 +98,7 @@ export interface AwardBlock {
 }
 
 export interface CertificationBlock {
+  blockId: string
   name: string
   issuer?: string
   date?: string
@@ -112,6 +121,7 @@ export type Award = SectionBlock<AwardBlock>
 export type Certification = SectionBlock<CertificationBlock>
 
 export interface ResumeData {
+  sectionOrder: SortableSectionId[]
   // required
   personalInfo: PersonalInfo
   education: EducationHistory
@@ -125,7 +135,8 @@ export interface ResumeData {
   certifications?: Certification
 }
 
-export type SortableSectionId = Exclude<keyof ResumeData, "personalInfo">
+export type SectionId = Exclude<keyof ResumeData, "sectionOrder">
+export type SortableSectionId = Exclude<SectionId, "personalInfo">
 
 export interface AISuggestion {
   section: SortableSectionId

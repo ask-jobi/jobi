@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+import { vi, describe, it, expect, beforeEach } from "vitest"
 import { POST } from "./route"
 import { NextRequest } from "next/server"
 import { evaluateAndSaveResume } from "@/server/evaluation"
@@ -8,18 +8,22 @@ vi.mock("@/server/evaluation", () => ({
   evaluateAndSaveResume: vi.fn()
 }))
 
-const mockEvaluateAndSave = evaluateAndSaveResume as unknown as vi.Mock
+const mockEvaluateAndSave = evaluateAndSaveResume as unknown as ReturnType<
+  typeof vi.fn
+>
 
 const mockResumeData: ResumeData = {
+  sectionOrder: ["education", "employment", "skills"],
   personalInfo: {
+    blockId: "p1",
     firstName: "Ada",
     lastName: "Lovelace",
     email: "ada@example.com",
     phone: "123"
   },
-  education: { title: "Education", order: 0, blocks: [] },
-  employment: { title: "Employment", order: 1, blocks: [] },
-  skills: { title: "Skills", order: 2, blocks: [] }
+  education: { sectionId: "e1", title: "Education", blocks: [] },
+  employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+  skills: { sectionId: "s1", title: "Skills", blocks: [] }
 }
 
 describe("POST /api/evaluation", () => {

@@ -20,7 +20,4 @@ INSERT INTO "auth"."identities" ("provider_id", "user_id", "identity_data", "pro
     ('ebbf0df2-92bc-4411-9aa4-85dd9eb62b34', 'ebbf0df2-92bc-4411-9aa4-85dd9eb62b34', '{"sub": "ebbf0df2-92bc-4411-9aa4-85dd9eb62b34", "email": "mock_normal@mail.com", "email_verified": false, "phone_verified": false}', 'email', '2025-07-25 14:03:30.844323+00', '2025-07-25 14:03:30.844357+00', '2025-07-25 14:03:30.844357+00', 'e94fe083-43db-49d6-9f07-d0994f5801cf');
 
 
-INSERT INTO "public"."user_quotas" (user_id, overall_optimize_quota, partial_optimize_quota, overall_optimize_used, partial_optimize_used, credits_quota, credits_used) VALUES
-                                        ('ebbf0df2-92bc-4411-9aa4-85dd9eb62b34', 999999, 999999, 0, 0, 999999, 0);
-
 INSERT INTO "storage"."buckets" (id, name, public) VALUES ('upload-resumes', 'upload-resumes', true);

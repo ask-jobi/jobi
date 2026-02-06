@@ -2,9 +2,20 @@ import { Prompt } from "./index"
 
 export const resumeParsePrompt = Prompt.of(`
 You are a professional resume parsing expert. Please parse the following resume content into the specified JSON format.
+
+Your task is to output ONLY valid JSON.
+DO NOT include any explanation, comments, markdown, code fences, or backticks.
+DO NOT wrap any object or array in quotes.
+DO NOT return strings that look like JSON.
+The output MUST be a single valid JSON object.
+
 Resume content:
 
 {{resumeText}}
+
+Strictly follow this JSON schema:
+
+{{jsonSchema}}
 
 Please analyze the resume content carefully and extract the following information:
 

@@ -1,27 +1,30 @@
 import "server-only"
 import { z } from "zod"
-import { google } from "@ai-sdk/google"
 import { generateText, Output } from "ai"
 import { ResumeData } from "@/types/resume"
 import { resumeParsePrompt } from "./prompts/resume-parse.prompt"
 import { Locale } from "@/lib/i18n/config"
+import { model } from "@/lib/agent/model"
+import { nanoid } from "nanoid"
 
 const resumeSchema = z.object({
   // required
   personalInfo: z.object({
+    blockId: z.string().default(() => nanoid()),
     firstName: z.string().describe("First name of the candidate").prefault(""),
     lastName: z.string().describe("Last name of the candidate").prefault(""),
     email: z.string().describe("Email address of the candidate").prefault(""),
     phone: z.string().describe("Phone number of the candidate").prefault("")
   }),
   education: z.object({
+    sectionId: z.string().default(() => nanoid()),
     title: z
       .string()
       .describe("Title of the education section")
       .prefault("Education"),
-    order: z.number().describe("Order of the education section").prefault(0),
     blocks: z.array(
       z.object({
+        blockId: z.string().default(() => nanoid()),
         content: z
           .string()
           .describe(
@@ -40,13 +43,14 @@ const resumeSchema = z.object({
     )
   }),
   skills: z.object({
+    sectionId: z.string().default(() => nanoid()),
     title: z
       .string()
       .describe("Title of the skills section")
       .prefault("Skills"),
-    order: z.number().describe("Order of the skills section").prefault(2),
     blocks: z.array(
       z.object({
+        blockId: z.string().default(() => nanoid()),
         group: z.string().describe("Category of skills"),
         content: z
           .string()
@@ -57,16 +61,14 @@ const resumeSchema = z.object({
   // optional
   employment: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the work experience section")
         .prefault("Work Experience"),
-      order: z
-        .number()
-        .describe("Order of the work experience section")
-        .prefault(1),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           content: z
             .string()
             .describe(
@@ -91,13 +93,14 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   research: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the research section")
         .prefault("Research Experience"),
-      order: z.number().describe("Order of the research section").prefault(3),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this research experience"),
           content: z
             .string()
@@ -131,13 +134,14 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   projects: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the projects section")
         .prefault("Projects"),
-      order: z.number().describe("Order of the projects section").prefault(4),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this project experience"),
           content: z
             .string()
@@ -173,16 +177,14 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   publications: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the publications section")
         .prefault("Publications"),
-      order: z
-        .number()
-        .describe("Order of the publications section")
-        .prefault(5),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this publication"),
           date: z
             .string()
@@ -198,13 +200,14 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   awards: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the awards section")
         .prefault("Awards"),
-      order: z.number().describe("Order of the awards section").prefault(6),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this award"),
           issuer: z.string().describe("Issuer of this award").optional(),
           date: z.string().describe("Date of this award").optional(),
@@ -219,16 +222,14 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   certifications: z
     .object({
+      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the certifications section")
         .prefault("Certifications"),
-      order: z
-        .number()
-        .describe("Order of the certifications section")
-        .prefault(7),
       blocks: z.array(
         z.object({
+          blockId: z.string().default(() => nanoid()),
           name: z.string().describe("Name of this certification"),
           issuer: z
             .string()
@@ -252,17 +253,17 @@ export const parseResume = async (
   resumeText: string
 ): Promise<[ResumeData, Locale]> => {
   const prompt = resumeParsePrompt.format({
-    resumeText
+    resumeText,
+    jsonSchema: resumeSchema.shape
   })
 
   const { output: result } = await generateText({
-    model: google("gemini-2.0-flash-lite"),
+    model: model,
     output: Output.object({
       schema: resumeSchema
     }),
     prompt,
-    temperature: 0,
-    maxRetries: 0
+    temperature: 0
   })
 
   // 验证并转换结果
@@ -270,6 +271,16 @@ export const parseResume = async (
 
   // 转换为 ResumeData 类型
   const resumeData: ResumeData = {
+    sectionOrder: [
+      "education",
+      "employment",
+      "research",
+      "projects",
+      "publications",
+      "awards",
+      "certifications",
+      "skills"
+    ],
     // required
     personalInfo: validatedData.personalInfo,
     education: validatedData.education,

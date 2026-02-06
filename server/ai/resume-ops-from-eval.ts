@@ -5,6 +5,7 @@ import type { Locale } from "@/lib/i18n/config"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
 import { resumeOpsFromEvalPrompt } from "@/server/ai/prompts/resume-ops-from-eval.prompt"
+import { model } from "@/lib/agent/model"
 
 export type ResumeEditOpFromEval = {
   op: "addBlock" | "updateBlock" | "removeBlock"
@@ -132,7 +133,7 @@ export async function generateResumeEditOpsFromEvaluation(
   const outputSchema = createOutputSchema()
 
   const { output } = await generateText({
-    model: "google/gemini-3-flash",
+    model: model,
     output: Output.object({ schema: outputSchema }),
     prompt,
     temperature: 0.2,

@@ -343,15 +343,17 @@ describe("createResumeRecord", () => {
     }
 
     const resumeData: ResumeData = {
+      sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
+        blockId: "p1",
         firstName: "John",
         lastName: "Doe",
         email: "john@example.com",
         phone: ""
       },
-      education: { title: "Education", order: 0, blocks: [] },
-      employment: { title: "Employment", order: 1, blocks: [] },
-      skills: { title: "Skills", order: 2, blocks: [] }
+      education: { sectionId: "e1", title: "Education", blocks: [] },
+      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+      skills: { sectionId: "s1", title: "Skills", blocks: [] }
     }
 
     const mockRollbackContext = {
@@ -409,15 +411,17 @@ describe("createResumeRecord", () => {
     }
 
     const resumeData: ResumeData = {
+      sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
+        blockId: "p1",
         firstName: "John",
         lastName: "Doe",
         email: "john@example.com",
         phone: ""
       },
-      education: { title: "Education", order: 0, blocks: [] },
-      employment: { title: "Employment", order: 1, blocks: [] },
-      skills: { title: "Skills", order: 2, blocks: [] }
+      education: { sectionId: "e1", title: "Education", blocks: [] },
+      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+      skills: { sectionId: "s1", title: "Skills", blocks: [] }
     }
 
     const mockRollbackContext = {
@@ -525,15 +529,17 @@ describe("saveResumeChange", () => {
 
   it("should save resume change successfully", async () => {
     const resumeData: ResumeData = {
+      sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
+        blockId: "p1",
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
         phone: ""
       },
-      education: { title: "Education", order: 0, blocks: [] },
-      employment: { title: "Employment", order: 1, blocks: [] },
-      skills: { title: "Skills", order: 2, blocks: [] }
+      education: { sectionId: "e1", title: "Education", blocks: [] },
+      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+      skills: { sectionId: "s1", title: "Skills", blocks: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({
@@ -556,15 +562,17 @@ describe("saveResumeChange", () => {
 
   it("should throw error when save fails", async () => {
     const resumeData: ResumeData = {
+      sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
+        blockId: "p1",
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
         phone: ""
       },
-      education: { title: "Education", order: 0, blocks: [] },
-      employment: { title: "Employment", order: 1, blocks: [] },
-      skills: { title: "Skills", order: 2, blocks: [] }
+      education: { sectionId: "e1", title: "Education", blocks: [] },
+      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
+      skills: { sectionId: "s1", title: "Skills", blocks: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({

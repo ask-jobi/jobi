@@ -1,4 +1,5 @@
 import type { ResumeData, SectionBlock } from "@/types/resume"
+import { nanoid } from "nanoid"
 
 export type ResumeEditOp =
   | {
@@ -52,15 +53,11 @@ const ensureSection = (
   const current = data[section]
   if (isSectionBlock(current)) return data
 
-  const maxOrder = Object.values(data)
-    .filter(isSectionBlock)
-    .reduce((acc, block) => Math.max(acc, block.order ?? 0), 0)
-
   return {
     ...data,
     [section]: {
       title: DEFAULT_SECTION_TITLES[section] ?? String(section),
-      order: maxOrder + 1,
+      sectionId: nanoid(),
       blocks: []
     }
   } as ResumeData

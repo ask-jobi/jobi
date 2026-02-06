@@ -95,7 +95,6 @@ async function processFile(
       const docs = await loadPdfToDoc(file, {
         splitPages: false
       })
-      console.log(docs)
       await new Promise((resolve) => setTimeout(resolve, 1000))
       await sendData(processId, {
         step: "load",
@@ -134,14 +133,15 @@ async function processFile(
         step: "evaluate",
         status: "loading"
       })
-      await evaluateAndSaveResume(
+      const evaluationResult = await evaluateAndSaveResume(
         resumeData.id,
         resumeData.resume_json!!,
         jobData.description
       )
       await sendData(processId, {
         step: "evaluate",
-        status: "success"
+        status: "success",
+        resumeId: resumeData.id
       })
     } catch (error: any) {
       console.error(error)

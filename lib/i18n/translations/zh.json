@@ -144,9 +144,7 @@
     "mostPopular": "最受欢迎",
     "loading": "加载中...",
     "loginToPurchase": "登录后购买",
-    "paymentError": {
-      "title": "支付错误"
-    },
+    "paymentError": "支付过程中发生错误，请重试",
     "freePass": {
       "createSuccess": "免费通行证创建成功",
       "alreadyExists": "用户已有有效通行证",
@@ -305,12 +303,57 @@
     "delete": "删除",
     "viewEvaluationReport": "查看评估报告",
     "exportResume": "导出简历",
-    "aiOptimize": "AI 优化"
+    "aiOptimize": "AI 优化",
+    "aiChat": "AI 对话"
   },
 
   "upload": {
     "title": "拖拽文件到这里",
     "desc": "或者点击选择文件，不超过5MB",
     "button": "选择文件"
+  },
+
+  "chat": {
+    "loading": "加载中",
+    "aiChat": "AI 对话",
+    "chatAboutResume": "关于简历的对话",
+    "startConversation": "开始对话",
+    "askToOptimizeResume": "让我帮您优化简历...",
+    "composerPlaceholder": "发送消息...",
+    "cancel": "取消",
+    "update": "更新",
+    "processing": "处理中...",
+    "truncate": "撤回",
+    "stopGenerating": "停止生成",
+    "truncateSuccess": "已回溯到该消息",
+    "truncateFailed": "回溯失败",
+    "toolOutput": {
+      "reason": "原因",
+      "deleted": "已删除",
+      "added": "新增",
+      "reorderBlocks": "重新排序",
+      "reorderSections": "重新排序",
+      "entity": {
+        "personalInfo": "个人信息",
+        "education": "教育经历",
+        "employment": "工作经历",
+        "research": "研究经历",
+        "projects": "项目经历",
+        "publications": "发表物",
+        "awards": "奖项",
+        "certifications": "证书",
+        "skills": "技能"
+      },
+      "section": {
+        "education": "教育",
+        "employment": "工作",
+        "research": "研究",
+        "projects": "项目",
+        "publications": "发表物",
+        "awards": "奖项",
+        "certifications": "证书",
+        "skills": "技能"
+      }
+    }
   }
 }

@@ -305,12 +305,57 @@
     "delete": "Delete",
     "viewEvaluationReport": "View Evaluation Report",
     "exportResume": "Export Resume",
-    "aiOptimize": "AI Optimize"
+    "aiOptimize": "AI Optimize",
+    "aiChat": "AI Chat"
   },
 
   "upload": {
     "title": "Drag & drop files here",
     "desc": "Or click to browse one file, up to 5MB",
     "button": "Browse files"
+  },
+
+  "chat": {
+    "loading": "Loading",
+    "aiChat": "AI Chat",
+    "chatAboutResume": "Chat about your resume",
+    "startConversation": "Start a conversation",
+    "askToOptimizeResume": "Ask me to help optimize your resume...",
+    "composerPlaceholder": "Send a message...",
+    "cancel": "Cancel",
+    "update": "Update",
+    "processing": "Processing...",
+    "truncate": "Truncate",
+    "stopGenerating": "Stop generating",
+    "truncateSuccess": "Truncated to this message",
+    "truncateFailed": "Failed to truncate",
+    "toolOutput": {
+      "reason": "Reason",
+      "deleted": "Deleted",
+      "added": "Added",
+      "reorderBlocks": "Reorder",
+      "reorderSections": "Reorder Sections",
+      "entity": {
+        "personalInfo": "Personal Info",
+        "education": "Education",
+        "employment": "Employment",
+        "research": "Research",
+        "projects": "Projects",
+        "publications": "Publications",
+        "awards": "Awards",
+        "certifications": "Certifications",
+        "skills": "Skills"
+      },
+      "section": {
+        "education": "Education",
+        "employment": "Work",
+        "research": "Research",
+        "projects": "Projects",
+        "publications": "Publications",
+        "awards": "Awards",
+        "certifications": "Certifications",
+        "skills": "Skills"
+      }
+    }
   }
 }

@@ -3,20 +3,21 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { parseResume } from "./resume-parser"
-import type { ResumeData } from "@/types/resume"
-import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
-
-vi.mock("@ai-sdk/google")
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
+  wrapLanguageModel: vi.fn((config: any) => config.model),
   Output: {
     object: vi.fn()
   }
 }))
 
-const mockGoogle = vi.mocked(google)
+vi.mock("@/lib/agent/model", () => ({
+  model: {
+    "MiniMax-M2.1": {}
+  }
+}))
 
 describe("parseResume", () => {
   beforeEach(() => {
@@ -55,9 +56,6 @@ describe("parseResume", () => {
         }
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockResumeData
       })
@@ -117,9 +115,6 @@ Programming: JavaScript, TypeScript
         }
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockResumeData
       })
@@ -212,9 +207,6 @@ zhangsan@example.com
         }
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockResumeData
       })
@@ -255,9 +247,6 @@ zhangsan@example.com
         }
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockResumeData
       })
@@ -293,9 +282,6 @@ zhangsan@example.com
         }
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockResumeData
       })
@@ -309,9 +295,6 @@ zhangsan@example.com
 
   describe("generateText parameters", () => {
     it("should call generateText with correct parameters", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           personalInfo: {
@@ -330,17 +313,13 @@ zhangsan@example.com
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: google("gemini-2.0-flash-lite"),
           temperature: 0,
-          maxRetries: 0
+          model: expect.any(Object)
         })
       )
     })
 
     it("should format resume text in prompt", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           personalInfo: {
@@ -368,9 +347,6 @@ zhangsan@example.com
 
   describe("error handling", () => {
     it("should throw error when AI service fails", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockRejectedValue(
         new Error("AI service unavailable")
       )
@@ -379,9 +355,6 @@ zhangsan@example.com
     })
 
     it("should throw error for invalid output format", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           invalid: "structure"
@@ -394,9 +367,6 @@ zhangsan@example.com
 
   describe("output structure", () => {
     it("should return tuple with ResumeData and Locale", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           personalInfo: {
@@ -441,9 +411,6 @@ zhangsan@example.com
     })
 
     it("should exclude _metadata from resume data", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: {
           personalInfo: {

@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+import { vi, describe, it, expect, beforeAll } from "vitest"
 import { NextRequest } from "next/server"
 import type { ResumeData } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
@@ -22,18 +22,21 @@ vi.mock("@/server/quota", () => ({
 }))
 
 const mockResumeData: ResumeData = {
+  sectionOrder: ["education", "employment", "skills"],
   personalInfo: {
+    blockId: "p1",
     firstName: "John",
     lastName: "Doe",
     email: "john.doe@example.com",
     phone: "123-456-7890"
   },
-  education: { title: "Education", order: 1, blocks: [] },
+  education: { sectionId: "e1", title: "Education", blocks: [] },
   employment: {
+    sectionId: "emp1",
     title: "Employment",
-    order: 2,
     blocks: [
       {
+        blockId: "emp-b1",
         company: "Acme",
         jobTitle: "Engineer",
         start: "2020",
@@ -42,7 +45,7 @@ const mockResumeData: ResumeData = {
       }
     ]
   },
-  skills: { title: "Skills", order: 3, blocks: [] }
+  skills: { sectionId: "s1", title: "Skills", blocks: [] }
 }
 
 const mockJobApplication = {

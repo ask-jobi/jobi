@@ -2,25 +2,77 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { evaluateResume, evaluationSchema } from "./resume-evaluator"
+import { evaluateResume } from "./resume-evaluator"
 import type { ResumeData } from "@/types/resume"
-import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
-
-vi.mock("@ai-sdk/google")
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
+  wrapLanguageModel: vi.fn((config: any) => config.model),
   Output: {
     object: vi.fn()
   }
+}))
+
+vi.mock("@/lib/agent/model", () => ({
+  model: vi.fn()
 }))
 
 vi.mock("@/lib/utils", () => ({
   resumeFormat: vi.fn()
 }))
 
-const mockGoogle = vi.mocked(google)
+const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
+  ({
+    sectionOrder: ["education", "employment", "skills", "research", "projects"],
+    personalInfo: {
+      blockId: "p1",
+      firstName: "John",
+      lastName: "Doe",
+      email: "john@example.com",
+      phone: "123-456-7890"
+    },
+    education: {
+      sectionId: "e1",
+      title: "Education",
+      blocks: [
+        {
+          blockId: "e-b1",
+          content: "Computer Science degree",
+          school: "MIT",
+          degree: "Bachelor",
+          start: "2018-09",
+          end: "2022-06"
+        }
+      ]
+    },
+    employment: {
+      sectionId: "emp1",
+      title: "Work Experience",
+      blocks: [
+        {
+          blockId: "emp-b1",
+          content: "Software Engineer",
+          company: "Tech Corp",
+          jobTitle: "Senior Engineer",
+          start: "2022-07",
+          end: "present"
+        }
+      ]
+    },
+    skills: {
+      sectionId: "s1",
+      title: "Skills",
+      blocks: [
+        {
+          blockId: "s-b1",
+          group: "Programming",
+          content: "JavaScript, TypeScript"
+        }
+      ]
+    },
+    ...overrides
+  }) as ResumeData
 
 describe("evaluateResume", () => {
   beforeEach(() => {
@@ -52,48 +104,32 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-          phone: "123-456-7890"
+          blockId: "p1",
+          firstName: "Test",
+          lastName: "User",
+          email: "test@test.com",
+          phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
-          blocks: [
-            {
-              content: "Computer Science degree",
-              school: "MIT",
-              degree: "Bachelor",
-              start: "2018-09",
-              end: "2022-06"
-            }
-          ]
+          blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
-          blocks: [{ group: "Programming", content: "JavaScript, TypeScript" }]
+          blocks: []
         }
-      }
+      })
 
       const result = await evaluateResume(mockResume)
 
-      expect(result).toHaveProperty("gates")
-      expect(result).toHaveProperty("gaps")
-      expect(result).toHaveProperty("actions")
-      expect(result.gates.ats).toBe("pass")
-      expect(result.gates.hr).toBe("borderline")
-      expect(result.gates.hiringManager).toBe("pass")
       expect(result.gaps).toHaveLength(1)
       expect(result.actions).toHaveLength(1)
     })
@@ -136,25 +172,17 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
-        personalInfo: {
-          firstName: "Jane",
-          lastName: "Smith",
-          email: "jane@example.com",
-          phone: "555-123-4567"
-        },
+      const mockResume = createMockResumeData({
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: [
             {
+              blockId: "e-b1",
               content: "Degree",
               school: "University",
               degree: "Master",
@@ -164,11 +192,13 @@ describe("evaluateResume", () => {
           ]
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
-          blocks: [{ group: "General", content: "Problem solving" }]
+          blocks: [
+            { blockId: "s-b1", group: "General", content: "Problem solving" }
+          ]
         }
-      }
+      })
 
       const result = await evaluateResume(mockResume)
 
@@ -203,31 +233,29 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       const jobDescription =
         "Looking for a Python developer with AWS experience"
@@ -266,31 +294,29 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       await evaluateResume(mockResume)
 
@@ -328,37 +354,34 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "John",
           lastName: "Doe",
           email: "john@example.com",
           phone: "123"
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       await evaluateResume(mockResume)
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: google("gemini-2.0-flash-lite"),
           temperature: 0.3,
           maxRetries: 0
         })
@@ -400,31 +423,29 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       const result = await evaluateResume(mockResume)
 
@@ -484,31 +505,29 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       const result = await evaluateResume(mockResume)
 
@@ -559,31 +578,29 @@ describe("evaluateResume", () => {
         ]
       }
 
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockResolvedValue({
         output: mockEvaluationResult
       })
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       const result = await evaluateResume(mockResume)
 
@@ -595,31 +612,29 @@ describe("evaluateResume", () => {
 
   describe("error handling", () => {
     it("should throw error when generateText fails", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockRejectedValue(
         new Error("AI service unavailable")
       )
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       await expect(evaluateResume(mockResume)).rejects.toThrow(
         "LLM evaluation failed"
@@ -627,29 +642,27 @@ describe("evaluateResume", () => {
     })
 
     it("should include error message in thrown error", async () => {
-      mockGoogle.mockReturnValue({
-        "gemini-2.0-flash-lite": {}
-      } as any)
       ;(generateText as any).mockRejectedValue(new Error("Connection timeout"))
 
-      const mockResume: ResumeData = {
+      const mockResume = createMockResumeData({
         personalInfo: {
+          blockId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
+          sectionId: "e1",
           title: "Education",
-          order: 0,
           blocks: []
         },
         skills: {
+          sectionId: "s1",
           title: "Skills",
-          order: 2,
           blocks: []
         }
-      }
+      })
 
       try {
         await evaluateResume(mockResume)

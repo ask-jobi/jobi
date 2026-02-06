@@ -162,7 +162,12 @@ const NewResumeCard = () => {
             setTimeout(() => {
               resetForm()
               setCardOpen(false)
-              router.refresh()
+              // 重定向到简历详情页面（右侧面板包含聊天功能）
+              if (data.resumeId && data.applicationId) {
+                router.push(`/application/${data.applicationId}`)
+              } else {
+                router.refresh()
+              }
             }, 1200)
           }
         },

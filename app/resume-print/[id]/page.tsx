@@ -24,7 +24,7 @@ export default async function PrintResumePage({
 
   return (
     <div className="w-full h-full p-8">
-      <ResumeViewer resumeData={resumeData} />
+      <ResumeViewer data={resumeData} />
     </div>
   )
 }

@@ -3,20 +3,21 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Trophy, Loader2, Download } from "lucide-react"
-import { openRightPanelAtom, useResume } from "@/lib/store/resume"
+import {
+  openRightPanelAtom,
+  useResume
+} from "@/lib/store/resume"
 import { toast } from "sonner"
 import { useSetAtom } from "jotai"
-import { trackExportResume } from "@/lib/user-tracking/user-tracking"
+import {
+  trackExportResume
+} from "@/lib/user-tracking/user-tracking"
 import { useTranslations } from "next-intl"
+import { MessageCircle } from "lucide-react"
 
 export function FloatingButtonGroup() {
   const t = useTranslations()
-  const {
-    application,
-    isLoading,
-    setLoading: setGlobalLoading,
-    resumeEvaluation
-  } = useResume()
+  const { application, isLoading, setLoading: setGlobalLoading } = useResume()
   const openRightPanel = useSetAtom(openRightPanelAtom)
   const [exportLoading, setExportLoading] = useState<boolean>(false)
 
@@ -49,6 +50,20 @@ export function FloatingButtonGroup() {
 
   return (
     <div className="flex flex-col gap-3 z-50">
+      <Button
+        variant="outline"
+        size="icon"
+        className="rounded-full w-12 h-12 bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all"
+        onClick={() => {
+          if (openRightPanel) {
+            openRightPanel("chat")
+          }
+        }}
+        title={t("button.aiChat")}
+      >
+        <MessageCircle className="w-5 h-5" />
+      </Button>
+
       <Button
         variant="outline"
         size="icon"

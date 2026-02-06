@@ -8,6 +8,7 @@ import { ResumeData } from "@/types/resume"
 import { MarkdownModal } from "@/components/ui/markdown-modal"
 import { useState } from "react"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
+import { nanoid } from "nanoid"
 
 export function EducationForm() {
   const { control, register, setValue, getValues } =
@@ -22,6 +23,7 @@ export function EducationForm() {
 
   const handleAddBlock = () => {
     append({
+      blockId: nanoid(),
       school: "",
       degree: "",
       start: "",

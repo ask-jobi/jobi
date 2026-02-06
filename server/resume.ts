@@ -1,5 +1,6 @@
 "use server"
 
+import { nanoid } from "nanoid"
 import { createClient } from "@/lib/supabase/server"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
@@ -34,6 +35,49 @@ export async function fetchJobApplication() {
         `)
 
   return jobApplications
+}
+
+export async function getJobApplicationByResumeId(resumeId: string) {
+  const supabase = await createClient()
+
+  const { data: jobApplications, error } = await supabase
+    .from("job_applications")
+    .select(
+      `
+          id,
+          optimized_resume_url,
+          created_at,
+          resumes:resume_id (
+              id,
+              upload_url,
+              evaluation_report,
+              language,
+              resume_json
+          ),
+          jobs:job_id (
+              id,
+              name,
+              company,
+              description
+          )
+      `
+    )
+    .eq("resume_id", resumeId)
+
+  if (error) {
+    throw new Error(`Failed to fetch job application: ${error.message}`)
+  }
+
+  if (!jobApplications || jobApplications.length === 0) {
+    throw new Error(`No job application found with resume id: ${resumeId}`)
+  }
+
+  if (jobApplications.length > 1) {
+    throw new Error(
+      `Multiple job applications found with resume id: ${resumeId}`
+    )
+  }
+  return jobApplications[0]
 }
 
 export async function getJobApplication(jobApplicationId: string) {
@@ -79,7 +123,7 @@ export async function getJobApplication(jobApplicationId: string) {
   return jobApplications[0]
 }
 
-export async function getResumeData(id: string) {
+export async function getResumeData(id: string): Promise<ResumeData> {
   const supabase = await createClient()
 
   const { data: resume, error } = await supabase
@@ -104,7 +148,7 @@ export async function getResumeData(id: string) {
     throw new Error(`Multiple resume found with id: ${id}`)
   }
 
-  return resume[0].resume_json
+  return resume[0].resume_json as ResumeData
 }
 
 export async function uploadResumeFile(resumeFile: File) {
@@ -277,25 +321,61 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
 
     // 创建空的简历数据
     const emptyResumeData: ResumeData = {
+      sectionOrder: [
+        "education",
+        "employment",
+        "research",
+        "projects",
+        "publications",
+        "awards",
+        "certifications",
+        "skills"
+      ],
       personalInfo: {
+        blockId: nanoid(),
         firstName: "",
         lastName: "",
         email: "",
         phone: ""
       },
       education: {
+        sectionId: nanoid(),
         title: "Education History",
-        order: 0,
         blocks: []
       },
       employment: {
+        sectionId: nanoid(),
         title: "Employment History",
-        order: 1,
         blocks: []
       },
       skills: {
+        sectionId: nanoid(),
         title: "Skills",
-        order: 2,
+        blocks: []
+      },
+      research: {
+        sectionId: nanoid(),
+        title: "Research Experience",
+        blocks: []
+      },
+      projects: {
+        sectionId: nanoid(),
+        title: "Projects",
+        blocks: []
+      },
+      publications: {
+        sectionId: nanoid(),
+        title: "Publications",
+        blocks: []
+      },
+      awards: {
+        sectionId: nanoid(),
+        title: "Awards",
+        blocks: []
+      },
+      certifications: {
+        sectionId: nanoid(),
+        title: "Certifications",
         blocks: []
       }
     }
