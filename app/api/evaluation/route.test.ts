@@ -1,15 +1,14 @@
+import { vi } from "vitest"
 import { POST } from "./route"
 import { NextRequest } from "next/server"
 import { evaluateAndSaveResume } from "@/server/evaluation"
 import type { ResumeData } from "@/types/resume"
 
-jest.mock("@/server/evaluation", () => ({
-  evaluateAndSaveResume: jest.fn()
+vi.mock("@/server/evaluation", () => ({
+  evaluateAndSaveResume: vi.fn()
 }))
 
-const mockEvaluateAndSave = evaluateAndSaveResume as jest.MockedFunction<
-  typeof evaluateAndSaveResume
->
+const mockEvaluateAndSave = evaluateAndSaveResume as unknown as vi.Mock
 
 const mockResumeData: ResumeData = {
   personalInfo: {
@@ -24,7 +23,7 @@ const mockResumeData: ResumeData = {
 }
 
 describe("POST /api/evaluation", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("evaluates and saves report", async () => {
     const report = {

@@ -1,23 +1,23 @@
+import { vi } from "vitest"
 import { NextRequest } from "next/server"
 import type { ResumeData } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
-import { jest } from "@jest/globals"
 
 let GET: typeof import("./route").GET
-const mockGetJobApplication = jest.fn()
-const mockGenerateOps = jest.fn()
-const mockConsumeQuota = jest.fn()
+const mockGetJobApplication = vi.fn()
+const mockGenerateOps = vi.fn()
+const mockConsumeQuota = vi.fn()
 
-jest.unstable_mockModule("@/server/resume", () => ({
+vi.mock("@/server/resume", () => ({
   getJobApplication: (...args: any[]) => mockGetJobApplication(...args)
 }))
 
-jest.unstable_mockModule("@/server/ai/resume-ops-from-eval", () => ({
+vi.mock("@/server/ai/resume-ops-from-eval", () => ({
   generateResumeEditOpsFromEvaluation: (...args: any[]) =>
     mockGenerateOps(...args)
 }))
 
-jest.unstable_mockModule("@/server/quota", () => ({
+vi.mock("@/server/quota", () => ({
   consumeQuota: (...args: any[]) => mockConsumeQuota(...args)
 }))
 
@@ -79,7 +79,7 @@ describe("GET /api/resume/ops-from-evaluation", () => {
     GET = module.GET
   })
 
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("returns op previews", async () => {
     mockGetJobApplication.mockResolvedValue(mockJobApplication as any)

@@ -6,7 +6,6 @@ import { vi, describe, it, expect, beforeEach } from "vitest"
 import { FloatingButtonGroup } from "../floating-button-group"
 import * as useResume from "@/lib/store/resume"
 import * as reactHookForm from "react-hook-form"
-import * as tour from "../tour"
 import * as userTracking from "@/lib/user-tracking/user-tracking"
 import * as jotai from "jotai"
 
@@ -43,11 +42,6 @@ vi.mock("@/lib/store/resume", async () => {
     }
   }
 })
-
-// Mock tour
-vi.mock("../tour", () => ({
-  useTour: vi.fn()
-}))
 
 // Mock toast
 vi.mock("sonner", () => ({
@@ -110,23 +104,6 @@ describe("FloatingButtonGroup", () => {
     subscribe: vi.fn()
   }
 
-  const mockUseTour = {
-    setSteps: vi.fn(),
-    startTour: vi.fn(),
-    currentStep: 0,
-    totalSteps: 0,
-    nextStep: vi.fn(),
-    previousStep: vi.fn(),
-    endTour: vi.fn(),
-    isActive: false,
-    gotoStep: vi.fn(),
-    removeStep: vi.fn(),
-    insertStep: vi.fn(),
-    steps: [],
-    isTourCompleted: false,
-    setIsTourCompleted: vi.fn()
-  }
-
   // Mock function for useSetAtom
   const mockSetAtom = vi.fn()
 
@@ -137,7 +114,6 @@ describe("FloatingButtonGroup", () => {
     vi.spyOn(reactHookForm, "useFormContext").mockReturnValue(
       mockUseFormContext
     )
-    vi.spyOn(tour, "useTour").mockReturnValue(mockUseTour)
     vi.spyOn(userTracking, "trackClickAiFullSuggestion").mockImplementation(
       () => {}
     )
@@ -146,11 +122,11 @@ describe("FloatingButtonGroup", () => {
     vi.spyOn(jotai, "useSetAtom").mockImplementation(() => mockSetAtom)
   })
 
-  it("should render three floating buttons", () => {
+  it("should render two floating buttons", () => {
     render(<FloatingButtonGroup />)
 
     const buttons = screen.getAllByTestId("ui-button")
-    expect(buttons).toHaveLength(3)
+    expect(buttons).toHaveLength(2)
   })
 
   it("should have correct titles for each button", () => {
@@ -159,7 +135,6 @@ describe("FloatingButtonGroup", () => {
     const buttons = screen.getAllByTestId("ui-button")
     expect(buttons[0]).toHaveAttribute("title", "button.viewEvaluationReport")
     expect(buttons[1]).toHaveAttribute("title", "button.exportResume")
-    expect(buttons[2]).toHaveAttribute("title", "button.aiOptimize")
   })
 
   it("should call export API when export button is clicked", async () => {
@@ -191,36 +166,6 @@ describe("FloatingButtonGroup", () => {
     expect(buttons[1]).toBeDisabled()
   })
 
-  it("should call AI optimization API when optimize button is clicked", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([])
-    })
-
-    render(<FloatingButtonGroup />)
-
-    const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[2])
-
-    expect(userTracking.trackClickAiFullSuggestion).toHaveBeenCalled()
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/resume/full-suggestion?jobApplicationId=test-app-id"
-    )
-  })
-
-  it("should show loader when AI optimization is in progress", async () => {
-    global.fetch = vi.fn().mockImplementation(() => new Promise(() => {})) // Never resolves
-
-    render(<FloatingButtonGroup />)
-
-    const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[2])
-
-    // Check that at least one loader exists (from loading states)
-    const allButtons = screen.getAllByRole("button")
-    expect(allButtons.length).toBe(3)
-  })
-
   it("should disable buttons when global loading is true", () => {
     vi.mocked(useResume.useResume).mockReturnValue({
       ...mockUseResume,
@@ -231,7 +176,6 @@ describe("FloatingButtonGroup", () => {
 
     const buttons = screen.getAllByTestId("ui-button")
     expect(buttons[1]).toBeDisabled() // Export button
-    expect(buttons[2]).toBeDisabled() // Optimize button
   })
 
   it("should handle export error gracefully", async () => {
@@ -247,38 +191,6 @@ describe("FloatingButtonGroup", () => {
 
     await vi.waitFor(() => {
       expect(buttons[1]).not.toBeDisabled()
-    })
-  })
-
-  it("should handle AI optimization error gracefully", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      text: () => Promise.resolve("AI service unavailable")
-    })
-
-    render(<FloatingButtonGroup />)
-
-    const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[2])
-
-    await vi.waitFor(() => {
-      expect(buttons[2]).not.toBeDisabled()
-    })
-  })
-
-  it("should handle empty AI suggestions response", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([])
-    })
-
-    render(<FloatingButtonGroup />)
-
-    const buttons = screen.getAllByTestId("ui-button")
-    fireEvent.click(buttons[2])
-
-    await vi.waitFor(() => {
-      expect(buttons[2]).not.toBeDisabled()
     })
   })
 

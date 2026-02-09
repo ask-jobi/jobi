@@ -1,13 +1,18 @@
+import { vi, describe, it, expect, beforeEach } from "vitest"
 import { generateResumeEditOpsFromEvaluation } from "@/server/ai/resume-ops-from-eval"
 import type { ResumeData } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 
-jest.mock("ai", () => ({
-  generateText: jest.fn(),
-  Output: { object: () => ({}) }
-}))
+vi.mock("ai", async () => {
+  const actual = await vi.importActual<typeof import("ai")>("ai")
+  return {
+    ...actual,
+    generateText: vi.fn(),
+    Output: { object: () => ({}) }
+  }
+})
 
-const mockGenerateText = jest.requireMock("ai").generateText as jest.Mock
+const mockGenerateText = vi.mocked((await import("ai")).generateText)
 
 const baseResume: ResumeData = {
   personalInfo: {
@@ -51,6 +56,7 @@ describe("generateResumeEditOpsFromEvaluation", () => {
   })
 
   it("returns ops from model output", async () => {
+    // @ts-expect-error field missing
     mockGenerateText.mockResolvedValue({
       output: {
         ops: [
@@ -75,6 +81,7 @@ describe("generateResumeEditOpsFromEvaluation", () => {
   })
 
   it("normalizes out-of-range blockIndex", async () => {
+    // @ts-expect-error field missing
     mockGenerateText.mockResolvedValue({
       output: {
         ops: [
