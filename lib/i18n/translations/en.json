@@ -276,7 +276,21 @@
     "instruction": "Instruction",
     "high": "High",
     "medium": "Medium",
-    "low": "Low"
+    "low": "Low",
+    "aiSuggestionsTitle": "AI Optimization Suggestions",
+    "aiSuggestionsGuide": "Review each suggestion below. The highlighted item is the one you are currently deciding on.",
+    "aiSuggestionsPrev": "Previous",
+    "aiSuggestionsNext": "Next",
+    "aiSuggestionsApply": "Apply",
+    "aiSuggestionsSkip": "Skip",
+    "aiSuggestionsUndo": "Undo",
+    "aiSuggestionsNoChange": "No changes detected for this suggestion.",
+    "aiSuggestionsEmpty": "No suggestions available.",
+    "aiSuggestionsStatus": {
+      "pending": "Pending",
+      "applied": "Applied",
+      "skipped": "Skipped"
+    }
   },
   "modal": {
     "or": "Or",

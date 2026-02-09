@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@ai-sdk/google':
         specifier: ^3.0.1
-        version: 3.0.1(zod@4.1.13)
+        version: 3.0.1(zod@4.3.6)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -133,7 +133,7 @@ importers:
         version: 3.14.0
       ai:
         specifier: ^6.0.3
-        version: 6.0.3(zod@4.1.13)
+        version: 6.0.3(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -207,8 +207,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -270,6 +270,9 @@ importers:
       next-test-api-route-handler:
         specifier: ^5.0.0
         version: 5.0.3(next@15.3.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
       puppeteer:
         specifier: ^24.34.0
         version: 24.34.0(typescript@5.9.3)
@@ -4298,6 +4301,11 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -5211,8 +5219,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.13:
-    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -5221,25 +5229,25 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/gateway@3.0.2(zod@4.1.13)':
+  '@ai-sdk/gateway@3.0.2(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@4.1.13)
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.3.6)
       '@vercel/oidc': 3.0.5
-      zod: 4.1.13
+      zod: 4.3.6
 
-  '@ai-sdk/google@3.0.1(zod@4.1.13)':
+  '@ai-sdk/google@3.0.1(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.3.6)
+      zod: 4.3.6
 
-  '@ai-sdk/provider-utils@4.0.1(zod@4.1.13)':
+  '@ai-sdk/provider-utils@4.0.1(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.0
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
-      zod: 4.1.13
+      zod: 4.3.6
 
   '@ai-sdk/provider@3.0.0':
     dependencies:
@@ -7228,13 +7236,13 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@6.0.3(zod@4.1.13):
+  ai@6.0.3(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 3.0.2(zod@4.1.13)
+      '@ai-sdk/gateway': 3.0.2(zod@4.3.6)
       '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@4.1.13)
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
-      zod: 4.1.13
+      zod: 4.3.6
 
   ajv@6.12.6:
     dependencies:
@@ -9355,6 +9363,8 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
+  prettier@3.8.1: {}
+
   pretty-format@27.5.1:
     dependencies:
       ansi-regex: 5.0.1
@@ -10517,6 +10527,6 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.1.13: {}
+  zod@4.3.6: {}
 
   zwitch@2.0.4: {}

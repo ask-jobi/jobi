@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -19,23 +19,41 @@ import { Button } from "@/components/ui/button"
 import { useResume } from "@/lib/store/resume"
 import SkeletonCard from "../skeletons/skeleton-card"
 import { useFormContext } from "react-hook-form"
-import SuggestionPatch from "@/components/client-components/suggestion-patch"
-import type { AISuggestion, ResumeData } from "@/types/resume"
+import type { ResumeData } from "@/types/resume"
 import { toast } from "sonner"
 import { trackClickAiFullSuggestion } from "@/lib/user-tracking/user-tracking"
-import { TourStep, useTour } from "./tour"
+import { applyResumeEditOps } from "@/lib/resume/agent-ops"
+import type { ResumeEditOp } from "@/lib/resume/agent-ops"
+import { diffWords } from "diff"
 
 interface EvaluationReportProps {
   evaluation: ResumeEvaluationOutput
+}
+
+type ResumeOpPreview = {
+  opId: string
+  op: ResumeEditOp
+  title: string
+  description?: string
+  before?: string
+  after?: string
 }
 
 export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const t = useTranslations("evaluation")
   const [loading, setLoading] = useState<boolean>(false)
   const [optimizeLoading, setOptimizeLoading] = useState<boolean>(false)
+  const [opPreviews, setOpPreviews] = useState<ResumeOpPreview[]>([])
+  const [hasOptimized, setHasOptimized] = useState<boolean>(false)
+  const [currentOpIndex, setCurrentOpIndex] = useState(0)
+  const [opStatus, setOpStatus] = useState<
+    Record<string, "pending" | "applied" | "skipped">
+  >({})
+  const [appliedSnapshots, setAppliedSnapshots] = useState<
+    Record<string, ResumeData>
+  >({})
   const { refreshEvaluationReport, application } = useResume()
   const { getValues, setValue } = useFormContext<ResumeData>()
-  const { setSteps, startTour } = useTour()
 
   const getGateStatus = (status: "pass" | "borderline" | "fail") => {
     switch (status) {
@@ -114,32 +132,125 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const handleFullResumeOptimizing = async () => {
     try {
       trackClickAiFullSuggestion()
+      setOpPreviews([])
+      setCurrentOpIndex(0)
+      setOpStatus({})
+      setAppliedSnapshots({})
+      setHasOptimized(false)
       setOptimizeLoading(true)
       const result = await fetch(
-        `/api/resume/full-suggestion?jobApplicationId=${application.id}`
+        `/api/resume/ops-from-evaluation?jobApplicationId=${application.id}`
       )
       if (!result.ok) {
         throw new Error(await result.text())
       }
-      const suggestions = await result.json()
-
-      const steps: TourStep[] = suggestions.map((item: AISuggestion) => ({
-        content: () => (
-          <SuggestionPatch
-            section={item}
-            getValues={getValues}
-            setValue={setValue}
-          />
-        ),
-        selectorId: `${item.section}-${item.blockIndex}-head`
-      }))
-      setSteps(steps)
-      startTour()
+      const { opPreviews: previews, errors } = await result.json()
+      setOpPreviews(previews ?? [])
+      setHasOptimized(true)
+      setCurrentOpIndex(0)
+      setOpStatus({})
+      if (errors?.length) {
+        toast.error(`部分操作未应用: ${errors.length}`)
+      }
     } catch (e: any) {
       toast.error(e.toString())
     } finally {
       setOptimizeLoading(false)
     }
+  }
+
+  const currentPreview = useMemo(
+    () => opPreviews[currentOpIndex],
+    [opPreviews, currentOpIndex]
+  )
+
+  const applyCurrentOp = () => {
+    if (!currentPreview) return
+    if (opStatus[currentPreview.opId] === "applied") return
+    const current = getValues()
+    const snapshot =
+      typeof structuredClone === "function"
+        ? structuredClone(current)
+        : (JSON.parse(JSON.stringify(current)) as ResumeData)
+    const { updatedResumeData } = applyResumeEditOps(current, [
+      currentPreview.op
+    ])
+    Object.entries(updatedResumeData).forEach(([key, value]) => {
+      setValue(key as keyof ResumeData, value as any, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      })
+    })
+    setOpStatus((prev) => ({ ...prev, [currentPreview.opId]: "applied" }))
+    setAppliedSnapshots((prev) => ({
+      ...prev,
+      [currentPreview.opId]: snapshot
+    }))
+    if (currentOpIndex < opPreviews.length - 1) {
+      setCurrentOpIndex((idx) => idx + 1)
+    }
+  }
+
+  const undoCurrentOp = () => {
+    if (!currentPreview) return
+    if (opStatus[currentPreview.opId] !== "applied") return
+    const snapshot = appliedSnapshots[currentPreview.opId]
+    if (!snapshot) return
+    Object.entries(snapshot).forEach(([key, value]) => {
+      setValue(key as keyof ResumeData, value as any, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      })
+    })
+    setOpStatus((prev) => ({ ...prev, [currentPreview.opId]: "pending" }))
+    setAppliedSnapshots((prev) => {
+      const next = { ...prev }
+      delete next[currentPreview.opId]
+      return next
+    })
+  }
+
+  const skipCurrentOp = () => {
+    if (!currentPreview) return
+    setOpStatus((prev) => ({ ...prev, [currentPreview.opId]: "skipped" }))
+    if (currentOpIndex < opPreviews.length - 1) {
+      setCurrentOpIndex((idx) => idx + 1)
+    }
+  }
+
+  const renderDiff = (before = "", after = "") => {
+    const words = diffWords(before, after)
+    const hasChange = words.some((word) => word.added || word.removed)
+    if (!hasChange) {
+      return (
+        <div className="text-sm text-muted-foreground">
+          {t("aiSuggestionsNoChange")}
+        </div>
+      )
+    }
+    return (
+      <div className="text-sm leading-6">
+        {words.map((it, index) => {
+          if (it.added) {
+            return (
+              <span key={index} className="bg-green-200">
+                {it.value}
+              </span>
+            )
+          }
+          if (it.removed) {
+            return (
+              <span key={index} className="bg-red-200">
+                {it.value}
+              </span>
+            )
+          }
+          return <span key={index}>{it.value}</span>
+        })}
+      </div>
+    )
   }
 
   return (
@@ -170,6 +281,119 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
           </>
         )}
       </div>
+
+      {(opPreviews.length > 0 || hasOptimized) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("aiSuggestionsTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 animate-pulse">
+              {t("aiSuggestionsGuide")}
+            </div>
+            {opPreviews.length > 0 ? (
+              <div className="max-h-40 overflow-auto border rounded p-2 space-y-2">
+                {opPreviews.map((preview, index) => {
+                  const status = opStatus[preview.opId] ?? "pending"
+                  const statusText =
+                    status === "applied"
+                      ? t("aiSuggestionsStatus.applied")
+                      : status === "skipped"
+                        ? t("aiSuggestionsStatus.skipped")
+                        : t("aiSuggestionsStatus.pending")
+                  return (
+                    <button
+                      key={preview.opId}
+                      onClick={() => setCurrentOpIndex(index)}
+                      className={`w-full text-left p-2 rounded border ${index === currentOpIndex ? "bg-gray-100 border-blue-400 ring-2 ring-blue-200" : "hover:bg-gray-50 border-transparent"}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          {preview.title}
+                        </span>
+                        <Badge
+                          variant={
+                            index === currentOpIndex ? "default" : "secondary"
+                          }
+                        >
+                          {statusText}
+                        </Badge>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            {currentPreview ? (
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm font-medium">
+                    {currentPreview.title}
+                  </div>
+                  {currentPreview.description ? (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {currentPreview.description}
+                    </div>
+                  ) : null}
+                </div>
+                {renderDiff(
+                  currentPreview.before ?? "",
+                  currentPreview.after ?? ""
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentOpIndex === 0}
+                    onClick={() =>
+                      setCurrentOpIndex((idx) => Math.max(0, idx - 1))
+                    }
+                  >
+                    {t("aiSuggestionsPrev")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentOpIndex >= opPreviews.length - 1}
+                    onClick={() =>
+                      setCurrentOpIndex((idx) =>
+                        Math.min(opPreviews.length - 1, idx + 1)
+                      )
+                    }
+                  >
+                    {t("aiSuggestionsNext")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={applyCurrentOp}
+                    disabled={opStatus[currentPreview.opId] === "applied"}
+                  >
+                    {t("aiSuggestionsApply")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={
+                      opStatus[currentPreview.opId] === "applied"
+                        ? undoCurrentOp
+                        : skipCurrentOp
+                    }
+                  >
+                    {opStatus[currentPreview.opId] === "applied"
+                      ? t("aiSuggestionsUndo")
+                      : t("aiSuggestionsSkip")}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {t("aiSuggestionsEmpty")}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {loading && (
         <>

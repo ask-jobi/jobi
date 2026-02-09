@@ -1,117 +1,57 @@
-/**
- * @vitest-environment node
- */
 import { POST } from "./route"
-import { evaluateResume } from "@/server/ai/resume-evaluator"
 import { NextRequest } from "next/server"
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+import { evaluateAndSaveResume } from "@/server/evaluation"
+import type { ResumeData } from "@/types/resume"
 
-vi.mock("@/server/ai/resume-evaluator", () => ({
-  evaluateResume: vi.fn()
+jest.mock("@/server/evaluation", () => ({
+  evaluateAndSaveResume: jest.fn()
 }))
 
+const mockEvaluateAndSave = evaluateAndSaveResume as jest.MockedFunction<
+  typeof evaluateAndSaveResume
+>
+
+const mockResumeData: ResumeData = {
+  personalInfo: {
+    firstName: "Ada",
+    lastName: "Lovelace",
+    email: "ada@example.com",
+    phone: "123"
+  },
+  education: { title: "Education", order: 0, blocks: [] },
+  employment: { title: "Employment", order: 1, blocks: [] },
+  skills: { title: "Skills", order: 2, blocks: [] }
+}
+
 describe("POST /api/evaluation", () => {
-  let mockEvaluateResume: any
+  beforeEach(() => jest.clearAllMocks())
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockEvaluateResume = vi.mocked(evaluateResume)
-  })
+  it("evaluates and saves report", async () => {
+    const report = {
+      gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+      gaps: [],
+      actions: []
+    }
+    mockEvaluateAndSave.mockResolvedValue(report as any)
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  const createMockRequest = (body: object): NextRequest => {
-    return new NextRequest("http://localhost:3000/api/evaluation", {
+    const request = new NextRequest("http://localhost:3000/api/evaluation", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    })
-  }
-
-  describe("Validation scenarios", () => {
-    it("should return 400 when resumeData is missing", async () => {
-      const request = createMockRequest({
-        jobDescription: "Looking for a developer"
+      body: JSON.stringify({
+        resumeId: "resume-123",
+        resumeData: mockResumeData,
+        jobDescription: "JD"
       })
-      const response = await POST(request)
-
-      expect(response.status).toBe(400)
-      const data = await response.json()
-      expect(data.error).toBe("Resume data is required")
-    })
-  })
-
-  describe("Success scenarios", () => {
-    it("should successfully evaluate resume", async () => {
-      const mockResult = {
-        score: 85,
-        strengths: ["Good experience", "Clear structure"],
-        improvements: ["Add more metrics"]
-      }
-      mockEvaluateResume.mockResolvedValue(mockResult)
-
-      const request = createMockRequest({
-        resumeData: { name: "John", experience: [] },
-        jobDescription: "Looking for a senior developer"
-      })
-      const response = await POST(request)
-
-      expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data).toEqual(mockResult)
-      expect(mockEvaluateResume).toHaveBeenCalledWith(
-        { name: "John", experience: [] },
-        "Looking for a senior developer"
-      )
     })
 
-    it("should handle empty job description", async () => {
-      const mockResult = { score: 50, strengths: [], improvements: [] }
-      mockEvaluateResume.mockResolvedValue(mockResult)
+    const response = await POST(request)
+    const data = await response.json()
 
-      const request = createMockRequest({
-        resumeData: { name: "John" }
-      })
-      const response = await POST(request)
-
-      expect(response.status).toBe(200)
-      expect(mockEvaluateResume).toHaveBeenCalledWith(
-        { name: "John" },
-        undefined
-      )
-    })
-  })
-
-  describe("Error scenarios", () => {
-    it("should return 500 when evaluation throws an error", async () => {
-      mockEvaluateResume.mockRejectedValue(new Error("AI service unavailable"))
-
-      const request = createMockRequest({
-        resumeData: { name: "John" },
-        jobDescription: "Looking for a developer"
-      })
-      const response = await POST(request)
-
-      expect(response.status).toBe(500)
-      const data = await response.json()
-      expect(data.error).toBe("Evaluation failed")
-      expect(data.details).toBe("AI service unavailable")
-    })
-
-    it("should return 500 when evaluation throws a non-Error", async () => {
-      mockEvaluateResume.mockRejectedValue("Unknown error")
-
-      const request = createMockRequest({
-        resumeData: { name: "John" }
-      })
-      const response = await POST(request)
-
-      expect(response.status).toBe(500)
-      const data = await response.json()
-      expect(data.error).toBe("Evaluation failed")
-      expect(data.details).toBe("Unknown error")
-    })
+    expect(response.status).toBe(200)
+    expect(data).toEqual(report)
+    expect(mockEvaluateAndSave).toHaveBeenCalledWith(
+      "resume-123",
+      mockResumeData,
+      "JD"
+    )
   })
 })

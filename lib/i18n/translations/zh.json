@@ -276,7 +276,21 @@
     "instruction": "改进指令",
     "high": "高",
     "medium": "中",
-    "low": "低"
+    "low": "低",
+    "aiSuggestionsTitle": "AI 优化建议",
+    "aiSuggestionsGuide": "请逐条查看建议。当前高亮项为你正在决策的条目。",
+    "aiSuggestionsPrev": "上一条",
+    "aiSuggestionsNext": "下一条",
+    "aiSuggestionsApply": "应用",
+    "aiSuggestionsSkip": "跳过",
+    "aiSuggestionsUndo": "撤销",
+    "aiSuggestionsNoChange": "该建议未检测到任何改动。",
+    "aiSuggestionsEmpty": "暂无建议",
+    "aiSuggestionsStatus": {
+      "pending": "未处理",
+      "applied": "已应用",
+      "skipped": "已跳过"
+    }
   },
   "modal": {
     "or": "或者",
