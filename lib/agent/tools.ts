@@ -1,5 +1,5 @@
 import "server-only"
-import { tool } from "ai"
+import { tool, ToolCallRepairFunction } from "ai"
 import {
   resumeEditorModifyInputSchema,
   resumeEditorReorderInputSchema
@@ -25,4 +25,14 @@ export const tools = {
       "The output language MUST remain consistent with the original resume language.",
     inputSchema: resumeEditorReorderInputSchema
   })
+}
+
+export const repairToolCall: ToolCallRepairFunction<typeof tools> = async ({
+  toolCall,
+  tools,
+  error
+}) => {
+  console.log("toolCall: ", toolCall)
+
+  return toolCall
 }

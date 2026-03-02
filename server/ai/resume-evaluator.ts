@@ -74,8 +74,7 @@ export const evaluateResume = async (
         schema: evaluationSchema
       }),
       prompt,
-      temperature: 0.3,
-      maxRetries: 0
+      maxRetries: 3
     })
 
     return result as EvaluationSchemaType
