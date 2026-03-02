@@ -7,13 +7,12 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  ToolCallRepairFunction,
   UIDataTypes,
   UIMessage,
   validateUIMessages
 } from "ai"
 import { createClient } from "@/lib/supabase/server"
-import { tools } from "@/lib/agent/tools"
+import { repairToolCall, tools } from "@/lib/agent/tools"
 import {
   getSessionSummary,
   loadHistory,
@@ -37,16 +36,6 @@ export type UseChatToolsMessage = UIMessage<
 >
 
 const MAX_HISTORY_MESSAGES = 20
-
-const repairToolCall: ToolCallRepairFunction<typeof tools> = async ({
-  toolCall,
-  tools,
-  error
-}) => {
-  console.log("toolCall: ", toolCall)
-
-  return toolCall
-}
 
 export async function POST(request: NextRequest) {
   try {
