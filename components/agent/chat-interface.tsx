@@ -1,6 +1,5 @@
 "use client"
 
-import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useResume } from "@/lib/store/resume"
 import { useChatId } from "@/lib/hooks/use-chat-id"
@@ -23,27 +22,17 @@ import type {
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
-import { useTranslations } from "next-intl"
+import { useState } from "react"
 
 interface ChatInterfaceProps {
   className?: string
 }
 
-function LoadingState() {
-  const t = useTranslations("chat")
-  return (
-    <div className="flex flex-col h-full items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      <p className="mt-2 text-sm text-muted-foreground">{t("loading")}</p>
-    </div>
-  )
-}
-
 export function ChatInterface({ className }: ChatInterfaceProps) {
   const { application, resumeData, updateResumeByToolOutput } = useResume()
   const resumeId = application?.resume.id
-
-  const { sessionId, loading: sessionLoading } = useChatId({ resumeId })
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const { sessionId } = useChatId({ resumeId })
 
   const chat = useAIChat({
     id: sessionId,
@@ -87,18 +76,11 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
     onLoad: (entries) => {
       const loadedMessages = entries.map(toUIMessage)
       chat.setMessages(loadedMessages)
+      setIsInitialLoading(false)
     }
   })
 
   const runtime = useAISDKRuntime(chat)
-
-  if (sessionLoading || !sessionId) {
-    return (
-      <div className={cn("flex flex-col h-full bg-background", className)}>
-        <LoadingState />
-      </div>
-    )
-  }
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
@@ -108,7 +90,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
           className
         )}
       >
-        <ThreadViewport />
+        <ThreadViewport isInitialLoading={isInitialLoading} />
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>
   )

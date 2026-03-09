@@ -1,15 +1,26 @@
 import { useCallback, useRef, useEffect } from "react"
 import { useMutationObserver } from "@mantine/hooks"
-import { ThreadPrimitive, useAuiState, AuiIf } from "@assistant-ui/react"
+import {
+  ThreadPrimitive,
+  useAuiState,
+  AuiIf,
+  useAui
+} from "@assistant-ui/react"
 import { Composer } from "./composer"
 import { ThreadWelcome } from "./thread-welcome"
 import { UserMessage } from "@/components/agent/chat/user-message"
 import { AssistantMessage } from "@/components/agent/chat/assistant-message"
+import { ChatLoadingSkeleton } from "./chat-loading-skeleton"
 
-export function ThreadViewport() {
+export function ThreadViewport({
+  isInitialLoading
+}: {
+  isInitialLoading: boolean
+}) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const isRunning = useAuiState((s) => s.thread.isRunning)
   const messagesLength = useAuiState((s) => s.thread.messages?.length ?? 0)
+  const aui = useAui()
 
   const scrollToBottom = useCallback(() => {
     if (viewportRef.current) {
@@ -37,9 +48,10 @@ export function ThreadViewport() {
     <ThreadPrimitive.Viewport
       ref={viewportRef}
       turnAnchor="top"
-      className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto px-4 pt-4"
+      className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto px-4"
     >
-      <AuiIf condition={(s) => s.thread.isEmpty}>
+      {isInitialLoading && <ChatLoadingSkeleton />}
+      <AuiIf condition={(s) => s.thread.isEmpty && !isInitialLoading}>
         <ThreadWelcome />
       </AuiIf>
       <ThreadPrimitive.Messages
