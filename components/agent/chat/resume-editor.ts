@@ -1,11 +1,11 @@
 import {
-  getBlockSchema,
   ResumeEditorModifyInput,
   ResumeEditorModifyOutput,
   ResumeEditorReorderInput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
 import { ResumeData, SectionId } from "@/types/resume"
+import { getBlockSchema } from "@/lib/agent/tools"
 
 export const extractValueFromResume = (
   resume: ResumeData,

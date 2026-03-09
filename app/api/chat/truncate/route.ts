@@ -12,6 +12,7 @@ import {
   getResumeData,
   saveResumeChange
 } from "@/server/resume"
+import { logRollback } from "@/server/chat-events"
 import { z } from "zod"
 import {
   ResumeEditorModifyOutput,
@@ -174,6 +175,8 @@ export async function POST(request: NextRequest) {
     if (toolsToRevert.length > 0) {
       await revertTools(toolsToRevert, session.resume_id)
     }
+
+    await logRollback(targetMessage.session_id, messageId)
 
     const resume = await getResumeData(session.resume_id)
 

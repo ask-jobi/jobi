@@ -3,39 +3,58 @@ import {
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
-  InferUITools,
   smoothStream,
   stepCountIs,
   streamText,
-  UIDataTypes,
-  UIMessage,
   validateUIMessages
 } from "ai"
 import { createClient } from "@/lib/supabase/server"
 import { repairToolCall, tools } from "@/lib/agent/tools"
 import {
-  getSessionSummary,
+  getLatestSummaryCheckpoint,
   loadHistory,
+  loadMessagesAfter,
   saveMessage,
-  updateMessage
+  updateMessage,
+  updateConversationSummary,
+  type ChatHistoryEntry,
+  getSessionSummary
 } from "@/lib/agent/chat-history"
+import { generateConversationSummary } from "@/lib/agent/conversation-summary"
 import { getJobApplicationByResumeId } from "@/server/resume"
 import { model } from "@/lib/agent/model"
 import { generateUUID } from "@/lib/utils"
 import chatPrompt from "@/server/ai/prompts/resume-chat.prompt"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { ResumeEvaluationOutput } from "@/types/evaluation"
+import {
+  logSummaryCheckpoint,
+  logResumeModification
+} from "@/server/chat-events"
+import { ChatUIMessage } from "@/types/chat"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export type UseChatToolsMessage = UIMessage<
-  never,
-  UIDataTypes,
-  InferUITools<typeof tools>
->
+const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
+  return {
+    id: msg.id,
+    role: msg.role,
+    parts: msg.parts
+  }
+}
 
-const MAX_HISTORY_MESSAGES = 20
+async function loadContextMessages(sessionId: string) {
+  const latestCheckpoint = await getLatestSummaryCheckpoint(sessionId)
+  const checkpointMessageId = latestCheckpoint?.message_id
+  if (checkpointMessageId) {
+    return (await loadMessagesAfter(sessionId, checkpointMessageId, 10)).map(
+      convertUIMessage
+    )
+  } else {
+    return (await loadHistory(sessionId, { limit: 10 })).map(convertUIMessage)
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { message, id: sessionId }: { message: UIMessage; id: string } =
+    const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
 
     const currentSession = await getSessionSummary(sessionId)
@@ -64,13 +83,15 @@ export async function POST(request: NextRequest) {
     const evaluationReport = jobApplication.resumes
       .evaluation_report as ResumeEvaluationOutput
 
-    const previousMessages = await loadHistory(sessionId, {
-      limit: MAX_HISTORY_MESSAGES
-    })
+    const conversationSummary = currentSession?.conversationSummary
 
-    const validatedHistoryMessages = previousMessages.filter(
-      (msg) => msg.id !== message.id
-    )
+    const contextMessages = await loadContextMessages(sessionId)
+    const existingIdx = contextMessages.findIndex((m) => m.id === message.id)
+    if (existingIdx >= 0) {
+      contextMessages[existingIdx] = message
+    } else {
+      contextMessages.push(message)
+    }
 
     const systemMessage = {
       id: "system",
@@ -82,23 +103,14 @@ export async function POST(request: NextRequest) {
             resume: JSON.stringify(resumeData),
             jobDescription: jobDescription,
             evaluationReport: evaluationReport,
-            language: resumeLang
+            language: resumeLang,
+            conversationSummary: conversationSummary || ""
           })
         }
-      ],
-      createdAt: new Date().toISOString()
-    } as UIMessage
+      ]
+    } as ChatUIMessage
 
-    const allMessages: UIMessage[] = [
-      systemMessage,
-      ...validatedHistoryMessages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        parts: msg.parts,
-        createdAt: msg.createdAt
-      })),
-      message
-    ]
+    const allMessages: ChatUIMessage[] = [systemMessage, ...contextMessages]
 
     if (message.role === "user") {
       await saveMessage({
@@ -109,7 +121,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const uiMessages = await validateUIMessages<UseChatToolsMessage>({
+    // 空的message会导致验证失败
+    const uiMessages = await validateUIMessages<ChatUIMessage>({
       messages: allMessages,
       tools
     })
@@ -129,7 +142,7 @@ export async function POST(request: NextRequest) {
 
         dataStream.merge(result.toUIMessageStream({ sendReasoning: true }))
       },
-      onFinish: async ({ messages: finishedMessages }) => {
+      onFinish: async ({ messages: finishedMessages, responseMessage }) => {
         for (const finishedMsg of finishedMessages.filter(
           (msg) => msg.id !== "system"
         )) {
@@ -140,6 +153,7 @@ export async function POST(request: NextRequest) {
               parts: finishedMsg.parts
             })
           } else {
+            contextMessages.push(finishedMsg)
             await saveMessage({
               id: finishedMsg.id,
               sessionId,
@@ -147,6 +161,39 @@ export async function POST(request: NextRequest) {
               parts: finishedMsg.parts
             })
           }
+        }
+        console.log("responseMessage", responseMessage)
+        if (responseMessage) {
+          for (const part of responseMessage.parts) {
+            if (
+              (part.type === "tool-resumeEditorModify" ||
+                part.type === "tool-resumeEditorReorder") &&
+              part.state === "output-available"
+            ) {
+              await logResumeModification(
+                sessionId,
+                responseMessage.id,
+                part.output as Record<string, unknown>
+              )
+            }
+          }
+        }
+
+        if (contextMessages.length >= 10) {
+          generateConversationSummary(
+            contextMessages,
+            conversationSummary || ""
+          )
+            .then(async (newSummary) => {
+              await updateConversationSummary(sessionId, newSummary)
+              const lastMsg = contextMessages[contextMessages.length - 1]
+              if (lastMsg) {
+                await logSummaryCheckpoint(sessionId, lastMsg.id, newSummary)
+              }
+            })
+            .catch((error) => {
+              console.error("[Resume Chat] Failed to generate summary:", error)
+            })
         }
       }
     })
