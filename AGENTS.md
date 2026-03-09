@@ -47,6 +47,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 禁止使用 `any` - 使用适当的类型定义或 `unknown` + 类型守卫
 - 使用 interface 定义 props，避免使用类型别名定义复杂对象
 - Supabase 类型变更后必须同步生成 `types/supabase.ts`
+- **消息类型：所有与聊天相关的类型（Message、MessagePart 等）必须使用 `@/types/chat` 中的ChatUIMessage, MessagePart类型**
 
 ### 组件模式
 - 页面组件放在 `app/`，通用 UI 组件放在 `components/ui/`，业务组件放在 `components/client-components/`

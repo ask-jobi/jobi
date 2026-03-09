@@ -1,7 +1,7 @@
 import { ResumeData } from "./resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { Locale } from "@/lib/i18n/config"
-import { UIDataTypes, UIMessagePart, UITools } from "ai"
+import { MessagePart } from "@/types/chat"
 
 export type Json =
   | string
@@ -211,6 +211,7 @@ export type Database = {
           total_cost: number
           created_at: string
           updated_at: string
+          conversation_summary: string | null
         }
         Insert: {
           id?: string
@@ -222,6 +223,7 @@ export type Database = {
           total_cost?: number
           created_at?: string
           updated_at?: string
+          conversation_summary?: string | null
         }
         Update: {
           id?: string
@@ -233,6 +235,7 @@ export type Database = {
           total_cost?: number
           created_at?: string
           updated_at?: string
+          conversation_summary?: string | null
         }
         Relationships: [
           {
@@ -249,7 +252,7 @@ export type Database = {
           id: string
           session_id: string
           role: "user" | "assistant" | "system"
-          parts: Array<UIMessagePart<UIDataTypes, UITools>>
+          parts: MessagePart
           token_count: number
           cost: number
           truncated: boolean
@@ -260,7 +263,7 @@ export type Database = {
           id?: string
           session_id: string
           role: "user" | "assistant" | "system"
-          parts: Array<UIMessagePart<UIDataTypes, UITools>>
+          parts: MessagePart
           token_count?: number
           cost?: number
           truncated?: boolean
@@ -271,7 +274,7 @@ export type Database = {
           id?: string
           session_id?: string
           role?: "user" | "assistant" | "system"
-          parts?: Array<UIMessagePart<UIDataTypes, UITools>>
+          parts?: MessagePart
           token_count?: number
           cost?: number
           truncated?: boolean
@@ -281,6 +284,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "resume_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "resume_chat_sessions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      chat_events: {
+        Row: {
+          id: string
+          session_id: string
+          message_id: string | null
+          event_type: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_data: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          message_id?: string | null
+          event_type: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_data?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          message_id?: string | null
+          event_type?: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_data?: Record<string, unknown>
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_events_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "resume_chat_sessions"

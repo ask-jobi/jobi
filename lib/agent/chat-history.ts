@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Database } from "@/types/supabase"
 import type { UIMessagePart, UIDataTypes, UITools } from "ai"
 import {
+  MessagePart,
   ResumeEditorModifyOutput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
@@ -23,13 +24,13 @@ export interface SaveMessageParams {
   id: string
   sessionId: string
   role: ChatMessageRole
-  parts: Array<UIMessagePart<UIDataTypes, UITools>>
+  parts: MessagePart
   cost?: number
 }
 
 export interface UpdateMessageParams {
   messageId: string
-  parts?: Array<UIMessagePart<UIDataTypes, UITools>>
+  parts?: MessagePart
   cost?: number
   tokenCount?: number
 }
@@ -37,7 +38,7 @@ export interface UpdateMessageParams {
 export interface ChatHistoryEntry {
   id: string
   role: ChatMessageRole
-  parts: Array<UIMessagePart<UIDataTypes, UITools>>
+  parts: MessagePart
   createdAt: string
 }
 
@@ -49,6 +50,7 @@ export interface SessionSummary {
   createdAt: string
   updatedAt: string
   messageCount: number
+  conversationSummary?: string
 }
 
 /**
@@ -173,6 +175,49 @@ export async function loadHistory(
 }
 
 /**
+ * Load messages after a specific message (for context after checkpoint)
+ */
+export async function loadMessagesAfter(
+  sessionId: string,
+  afterMessageId: string,
+  limit: number = 100
+): Promise<ChatHistoryEntry[]> {
+  const supabase = await createClient()
+
+  const { data: afterMsg, error: afterError } = await supabase
+    .from("resume_chat_messages")
+    .select("created_at")
+    .eq("id", afterMessageId)
+    .single()
+
+  if (afterError || !afterMsg) {
+    console.error("Failed to find after message:", afterError)
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("resume_chat_messages")
+    .select("*")
+    .eq("session_id", sessionId)
+    .eq("truncated", false)
+    .gt("created_at", afterMsg.created_at)
+    .order("created_at", { ascending: true })
+    .limit(limit)
+
+  if (error) {
+    console.error("Failed to load messages after:", error)
+    return []
+  }
+
+  return data.map((msg) => ({
+    id: msg.id,
+    role: msg.role,
+    parts: msg.parts,
+    createdAt: msg.created_at
+  }))
+}
+
+/**
  * Get session summary (for listing sessions)
  */
 export async function getSessionSummary(
@@ -203,7 +248,25 @@ export async function getSessionSummary(
     status: session.status,
     createdAt: session.created_at,
     updatedAt: session.updated_at,
-    messageCount: count ?? 0
+    messageCount: count ?? 0,
+    conversationSummary: session.conversation_summary || undefined
+  }
+}
+
+export async function updateConversationSummary(
+  sessionId: string,
+  summary: string
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("resume_chat_sessions")
+    .update({ conversation_summary: summary })
+    .eq("id", sessionId)
+
+  if (error) {
+    console.error("Failed to update conversation summary:", error)
+    throw new Error(`Failed to update summary: ${error.message}`)
   }
 }
 
@@ -459,4 +522,55 @@ export async function getMessage(messageId: string) {
     throw new Error(`Failed to get target message: ${targetError?.message}`)
   }
   return targetMessage
+}
+
+export async function getLatestSummaryCheckpoint(
+  sessionId: string
+): Promise<ChatEvent | null> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("chat_events")
+    .select("*")
+    .eq("session_id", sessionId)
+    .eq("event_type", "summary_checkpoint")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null
+    }
+    console.error("Failed to get latest summary checkpoint:", error)
+    return null
+  }
+
+  return data
+}
+
+export async function getMessageCount(sessionId: string): Promise<number> {
+  const supabase = await createClient()
+
+  const { count, error } = await supabase
+    .from("resume_chat_messages")
+    .select("*", { count: "exact", head: true })
+    .eq("session_id", sessionId)
+    .eq("truncated", false)
+
+  if (error) {
+    console.error("Failed to get message count:", error)
+    return 0
+  }
+
+  return count ?? 0
+}
+
+export type ChatEvent = {
+  id: string
+  session_id: string
+  message_id: string | null
+  event_type: "resume_modification" | "summary_checkpoint" | "rollback"
+  event_data: Record<string, unknown>
+  created_at: string
 }
