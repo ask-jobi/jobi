@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   getSessionSummary,
   updateSessionStatus,
-  permanentlyDeleteSession,
-  verifySessionOwnership
+  permanentlyDeleteSession
 } from "@/lib/agent/chat-history"
 import { z } from "zod"
+import {
+  getAuthenticatedUser,
+  verifyOwnership,
+  handleApiError
+} from "@/server/auth-helpers"
 
 const updateSessionSchema = z.object({
   status: z.enum(["active", "completed", "archived"]).optional(),
@@ -16,34 +20,6 @@ const updateSessionSchema = z.object({
 })
 
 export const dynamic = "force-dynamic"
-
-/**
- * Helper: 获取并验证当前用户
- */
-async function getAuthenticatedUser() {
-  const { createClient } = await import("@/lib/supabase/server")
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    throw new Error("Unauthorized")
-  }
-
-  return user
-}
-
-/**
- * Helper: 验证用户拥有该 session
- */
-async function verifyOwnership(sessionId: string, userId: string) {
-  const isOwner = await verifySessionOwnership(sessionId, userId)
-  if (!isOwner) {
-    throw new Error("Forbidden: You do not own this session")
-  }
-}
 
 /**
  * GET /api/chat-sessions/[id]
@@ -64,25 +40,8 @@ export async function GET(
       success: true,
       data: session
     })
-  } catch (error: any) {
-    console.error("Get chat session failed:", error)
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: error.message }, { status: 401 })
-    }
-
-    if (error.message.includes("Forbidden")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
-    }
-
-    if (error.message.includes("not found")) {
-      return NextResponse.json({ error: error.message }, { status: 404 })
-    }
-
-    return NextResponse.json(
-      { error: error.message || "Failed to get chat session" },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error)
   }
 }
 
@@ -124,21 +83,8 @@ export async function PATCH(
       success: true,
       data: session
     })
-  } catch (error: any) {
-    console.error("Update chat session failed:", error)
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: error.message }, { status: 401 })
-    }
-
-    if (error.message.includes("Forbidden")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
-    }
-
-    return NextResponse.json(
-      { error: error.message || "Failed to update chat session" },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error)
   }
 }
 
@@ -161,20 +107,7 @@ export async function DELETE(
       success: true,
       message: "Chat session deleted successfully"
     })
-  } catch (error: any) {
-    console.error("Delete chat session failed:", error)
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: error.message }, { status: 401 })
-    }
-
-    if (error.message.includes("Forbidden")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
-    }
-
-    return NextResponse.json(
-      { error: error.message || "Failed to delete chat session" },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error)
   }
 }

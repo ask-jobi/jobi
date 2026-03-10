@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createSession, listSessions } from "@/lib/agent/chat-history"
 import { z } from "zod"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 
 const createSessionSchema = z.object({
   resumeId: z.uuid("Invalid resume ID format"),
@@ -23,11 +23,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(await listSessions(resumeId))
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to list chat session" },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error)
   }
 }
 
@@ -46,15 +43,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const user = await getAuthenticatedUser()
 
     const session = await createSession({
       userId: user.id,
@@ -63,11 +52,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(session)
-  } catch (error: any) {
+  } catch (error) {
     console.error("Create chat session failed:", error)
-    return NextResponse.json(
-      { error: error.message || "Failed to create chat session" },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }

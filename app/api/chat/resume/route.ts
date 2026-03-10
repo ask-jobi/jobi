@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -8,7 +8,6 @@ import {
   streamText,
   validateUIMessages
 } from "ai"
-import { createClient } from "@/lib/supabase/server"
 import { repairToolCall, tools } from "@/lib/agent/tools"
 import {
   getLatestValidSummaryCheckpoint,
@@ -32,6 +31,7 @@ import {
   logResumeModification
 } from "@/server/chat-events"
 import { ChatUIMessage } from "@/types/chat"
+import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -58,16 +58,7 @@ async function loadContextMessages(sessionId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await getAuthenticatedUser()
 
     const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
@@ -201,9 +192,6 @@ export async function POST(request: NextRequest) {
     return createUIMessageStreamResponse({ stream })
   } catch (error) {
     console.error("Chat API error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
