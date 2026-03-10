@@ -11,6 +11,9 @@ import * as resumeModule from "@/server/resume"
 vi.mock("@/lib/supabase/server")
 vi.mock("@/lib/agent/chat-history")
 vi.mock("@/server/resume")
+vi.mock("@/server/chat-events", () => ({
+  logRollback: vi.fn().mockResolvedValue(undefined)
+}))
 
 describe("POST /api/chat/truncate", () => {
   beforeEach(() => {
@@ -55,6 +58,9 @@ describe("POST /api/chat/truncate", () => {
     })
     vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([])
     vi.mocked(chatHistoryModule.truncateMessages).mockResolvedValue()
+    vi.mocked(
+      chatHistoryModule.restoreConversationSummaryAfterTruncate
+    ).mockResolvedValue()
     vi.mocked(chatHistoryModule.extractToolOriginalValues).mockReturnValue([])
 
     vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({

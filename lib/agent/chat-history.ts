@@ -574,3 +574,63 @@ export type ChatEvent = {
   event_data: Record<string, unknown>
   created_at: string
 }
+
+export async function getLatestValidSummaryCheckpoint(
+  sessionId: string
+): Promise<ChatEvent | null> {
+  const supabase = await createClient()
+
+  const { data: checkpoints, error } = await supabase
+    .from("chat_events")
+    .select("id, message_id, event_data, created_at")
+    .eq("session_id", sessionId)
+    .eq("event_type", "summary_checkpoint")
+    .order("created_at", { ascending: false })
+
+  if (error || !checkpoints) {
+    return null
+  }
+
+  for (const checkpoint of checkpoints) {
+    if (!checkpoint.message_id) continue
+
+    const { data: message } = await supabase
+      .from("resume_chat_messages")
+      .select("truncated")
+      .eq("id", checkpoint.message_id)
+      .single()
+
+    if (message && !message.truncated) {
+      return checkpoint as ChatEvent
+    }
+  }
+
+  return null
+}
+
+export async function restoreConversationSummaryAfterTruncate(
+  sessionId: string,
+  beforeTimestamp: string
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { data: checkpoint } = await supabase
+    .from("chat_events")
+    .select("event_data")
+    .eq("session_id", sessionId)
+    .eq("event_type", "summary_checkpoint")
+    .lt("created_at", beforeTimestamp)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const summaryText =
+    typeof checkpoint?.event_data?.summary_text === "string"
+      ? checkpoint.event_data.summary_text
+      : null
+
+  await supabase
+    .from("resume_chat_sessions")
+    .update({ conversation_summary: summaryText })
+    .eq("id", sessionId)
+}
