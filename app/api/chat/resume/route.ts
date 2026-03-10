@@ -11,7 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server"
 import { repairToolCall, tools } from "@/lib/agent/tools"
 import {
-  getLatestSummaryCheckpoint,
+  getLatestValidSummaryCheckpoint,
   loadHistory,
   loadMessagesAfter,
   saveMessage,
@@ -45,8 +45,8 @@ const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
 }
 
 async function loadContextMessages(sessionId: string) {
-  const latestCheckpoint = await getLatestSummaryCheckpoint(sessionId)
-  const checkpointMessageId = latestCheckpoint?.message_id
+  const latestValidCheckpoint = await getLatestValidSummaryCheckpoint(sessionId)
+  const checkpointMessageId = latestValidCheckpoint?.message_id
   if (checkpointMessageId) {
     return (await loadMessagesAfter(sessionId, checkpointMessageId, 10)).map(
       convertUIMessage

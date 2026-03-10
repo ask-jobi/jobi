@@ -4,14 +4,15 @@ import { useCallback } from "react"
 import {
   ActionBarPrimitive,
   MessagePrimitive,
-  useAuiState,
-  useThreadRuntime
+  useAui,
+  useAuiState
 } from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
 import { useResume } from "@/lib/store/resume"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 import { Undo2 } from "lucide-react"
+import { extractTextFromParts } from "./utils"
 
 export function UserMessage() {
   return (
@@ -34,10 +35,15 @@ export function UserMessage() {
 export function UserActionBar() {
   const t = useTranslations("chat")
   const messageId = useAuiState((s) => s.message?.id)
+  const messageParts = useAuiState((s) => s.message?.parts)
   const { updateResumeData } = useResume()
-  const runtime = useThreadRuntime()
+  const aui = useAui()
 
   const handleTruncate = useCallback(async () => {
+    if (!messageId || !messageParts) return
+
+    const inputText = extractTextFromParts(messageParts as any)
+
     try {
       const response = await fetch("/api/chat/truncate", {
         method: "POST",
@@ -51,23 +57,26 @@ export function UserActionBar() {
       }
 
       const result = await response.json()
-      console.log(result)
 
       if (result.resume) {
         updateResumeData(result.resume)
       }
 
-      const currentMessages = runtime.exportExternalState()
-      const messages = currentMessages.messages
+      const currentState = aui.thread().export()
+      const messages = currentState.messages
       const messageIndex = messages.findIndex(
-        (m: any) => m.message.id === messageId
+        (m: any) => m.message?.id === messageId
       )
+
       if (messageIndex !== -1) {
-        currentMessages.messages = messages.slice(0, messageIndex)
-        if (messageIndex === 0) {
-          currentMessages.headId = null
-        }
-        runtime.importExternalState(currentMessages)
+        currentState.messages = messages.slice(0, messageIndex)
+        currentState.headId =
+          messageIndex === 0
+            ? null
+            : (messages[messageIndex]?.message?.id ?? null)
+        aui.thread().import(currentState)
+
+        aui.thread().composer().setText(inputText)
       }
 
       toast.success(t("truncateSuccess"))
@@ -75,7 +84,7 @@ export function UserActionBar() {
       console.error("Truncate error:", error)
       toast.error(error instanceof Error ? error.message : t("truncateFailed"))
     }
-  }, [runtime, updateResumeData, t, messageId])
+  }, [aui, updateResumeData, t, messageId, messageParts])
 
   return (
     <ActionBarPrimitive.Root

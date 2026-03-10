@@ -4,6 +4,7 @@ import {
   extractToolOriginalValues,
   getMessage,
   getMessagesAfter,
+  restoreConversationSummaryAfterTruncate,
   truncateMessages,
   verifySessionOwnership
 } from "@/lib/agent/chat-history"
@@ -159,6 +160,11 @@ export async function POST(request: NextRequest) {
     )
 
     await truncateMessages(messagesToTruncate)
+
+    await restoreConversationSummaryAfterTruncate(
+      targetMessage.session_id,
+      targetMessage.created_at
+    )
 
     const toolsToRevert: (
       | ResumeEditorModifyOutput
