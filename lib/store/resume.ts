@@ -134,8 +134,14 @@ export const isRightPanelCollapsedAtom = atom(false)
 export const openRightPanelAtom = atom(
   null,
   (get, set, view: "form" | "evaluation" | "chat" = "form") => {
-    set(rightPanelViewAtom, view)
-    set(isRightPanelCollapsedAtom, false)
+    const isRightPanelCollapsed = get(isRightPanelCollapsedAtom)
+    const rightPanelView = get(rightPanelViewAtom)
+    if (rightPanelView !== view) {
+      set(rightPanelViewAtom, view)
+      set(isRightPanelCollapsedAtom, false)
+    } else {
+      set(isRightPanelCollapsedAtom, !isRightPanelCollapsed)
+    }
   }
 )
 

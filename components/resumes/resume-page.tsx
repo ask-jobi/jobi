@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useCallback } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { PanelRightClose } from "lucide-react"
 import { ResumeData } from "@/types/resume"
 import { isRightPanelCollapsedAtom, useResume } from "@/lib/store/resume"
 import { useAtom } from "jotai"
 import ResumeEditor from "./resume-editor"
 import { useDebouncedCallback } from "@mantine/hooks"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Panel, Group, usePanelRef, PanelSize } from "react-resizable-panels"
 import { ResumeRightPanel } from "@/components/resumes/resume-right-panel"
-import { Button } from "@/components/ui/button"
+import { Button } from "../ui/button"
 
 export default function ResumePage() {
   const { updateResumeDataWithSave, resumeData, application } = useResume()
@@ -27,6 +27,26 @@ export default function ResumePage() {
   const previousResumeIdRef = useRef<string | null>(
     application?.resume.id ?? null
   )
+
+  const panelRef = usePanelRef()
+
+  const handlePanelResize = useCallback(
+    (panelSize: PanelSize) => {
+      const collapsed = panelSize.asPercentage === 0
+      if (collapsed !== isRightPanelCollapsed) {
+        setIsRightPanelCollapsed(collapsed)
+      }
+    },
+    [isRightPanelCollapsed, setIsRightPanelCollapsed]
+  )
+
+  useEffect(() => {
+    if (isRightPanelCollapsed) {
+      panelRef.current?.collapse()
+    } else {
+      panelRef.current?.expand()
+    }
+  }, [isRightPanelCollapsed, panelRef])
 
   const handleFormChange = useCallback(
     async (formData: ResumeData) => {
@@ -77,48 +97,42 @@ export default function ResumePage() {
   return (
     <FormProvider {...methods}>
       <div className="flex h-[calc(100vh-3rem)] overflow-hidden relative">
-        <PanelGroup direction="horizontal" className="flex-1 h-full">
-          <Panel
-            minSize={25}
-            defaultSize={isRightPanelCollapsed ? 100 : 67}
-            className="h-full overflow-y-auto"
-          >
+        <Group orientation="horizontal" className="flex-1 h-full relative">
+          <Panel minSize="60%" className="h-full overflow-y-auto">
             <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
               <ResumeEditor />
             </div>
           </Panel>
-          {!isRightPanelCollapsed && (
-            <>
-              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize relative group">
-                <button
-                  onClick={toggleRightPanel}
-                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-l flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </PanelResizeHandle>
-              <Panel
-                minSize={30}
-                defaultSize={50}
-                className="h-full overflow-hidden border-l"
-              >
-                <div className="right h-full overflow-y-auto">
-                  <ResumeRightPanel />
-                </div>
-              </Panel>
-            </>
-          )}
           {isRightPanelCollapsed && (
-            <div className="w-1 bg-gray-200 hover:bg-gray-300 relative group">
+            <button
+              className="h-full w-3 hover:bg-gray-100 hover:bl-1 cursor-pointer"
+              onClick={toggleRightPanel}
+            />
+          )}
+          {!isRightPanelCollapsed && (
+            <div className="relative pointer-events-auto">
               <Button
+                size="icon"
+                variant="outline"
+                className="absolute z-100 h-6 w-6 -left-3 top-[45%] hover:bg-gray-100 hover:bl-1 rounded-full cursor-pointer"
                 onClick={toggleRightPanel}
-                className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-r flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <ChevronLeft className="w-3 h-3" />
+                <PanelRightClose height="4px" width="4px" />
               </Button>
             </div>
           )}
-        </PanelGroup>
+          <Panel
+            minSize="30%"
+            panelRef={panelRef}
+            collapsible
+            onResize={handlePanelResize}
+            className="h-full overflow-hidden border-l"
+          >
+            <div className="right h-full overflow-y-auto">
+              <ResumeRightPanel />
+            </div>
+          </Panel>
+        </Group>
       </div>
     </FormProvider>
   )
