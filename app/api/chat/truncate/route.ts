@@ -5,8 +5,7 @@ import {
   getMessage,
   getMessagesAfter,
   restoreConversationSummaryAfterTruncate,
-  truncateMessages,
-  verifySessionOwnership
+  truncateMessages
 } from "@/lib/agent/chat-history"
 import {
   getJobApplicationByResumeId,
@@ -19,26 +18,22 @@ import {
   ResumeEditorModifyOutput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
+import {
+  getAuthenticatedUser,
+  verifyOwnership,
+  handleApiError
+} from "@/server/auth-helpers"
+import { ResumeData } from "@/types/resume"
 
 const truncateSchema = z.object({
   messageId: z.uuid()
 })
 
-async function revertTools(
+async function revertToolOutput(
   toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
-  resumeId: string
-) {
-  const jobApp = await getJobApplicationByResumeId(resumeId)
-
-  if (!jobApp) {
-    throw new Error("Resume not found")
-  }
-
-  const updatedResume = structuredClone(jobApp.resumes.resume_json)
-
-  if (!updatedResume) {
-    return
-  }
+  resumeData: ResumeData
+): Promise<ResumeData> {
+  const updatedResume = structuredClone(resumeData)
 
   for (const output of toolOutputs) {
     if (output.operation === "rewrite") {
@@ -99,21 +94,31 @@ async function revertTools(
     }
   }
 
+  return updatedResume
+}
+
+async function applyToolReversions(
+  toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
+  resumeId: string
+) {
+  const jobApp = await getJobApplicationByResumeId(resumeId)
+
+  if (!jobApp || !jobApp.resumes.resume_json) {
+    throw new Error("Resume not found")
+  }
+
+  const updatedResume = await revertToolOutput(
+    toolOutputs,
+    jobApp.resumes.resume_json
+  )
+
   await saveResumeChange(resumeId, updatedResume)
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser()
     const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const body = await request.json()
     const parseResult = truncateSchema.safeParse(body)
@@ -137,10 +142,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 })
     }
 
-    const isOwner = await verifySessionOwnership(message.session_id, user.id)
-    if (!isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    await verifyOwnership(message.session_id, user.id)
 
     const { data: session, error: sessionError } = await supabase
       .from("resume_chat_sessions")
@@ -179,7 +181,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (toolsToRevert.length > 0) {
-      await revertTools(toolsToRevert, session.resume_id)
+      await applyToolReversions(toolsToRevert, session.resume_id)
     }
 
     await logRollback(targetMessage.session_id, messageId)
@@ -191,9 +193,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Truncate error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }

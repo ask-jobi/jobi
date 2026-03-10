@@ -94,6 +94,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - API 路由中的业务逻辑必须抽离到 `server/` 目录，`route.ts` 只做参数校验和调用
 - Supabase 类型变更后，必须同步生成 `types/supabase.ts`
 - 禁止在前端直接操作数据库，所有数据操作通过 API 或 server 层
+- **API 路由应使用 `@/server/auth-helpers` 中的统一认证和错误处理函数，避免重复代码**
 
 ### 文件结构与命名
 - 组件目录：使用小写短横线命名（如 `resume-templates`）
@@ -118,6 +119,11 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 所有输入用 Zod schemas 验证
 - Webhook 处理器必须验证签名（如 Stripe）
 - 正确记录错误但不暴露敏感数据
+- **API 认证：所有需要用户认证的 API 必须使用 `@/server/auth-helpers` 中的工具函数**
+  - 使用 `getAuthenticatedUser()` 获取当前用户
+  - 使用 `verifyOwnership(resourceId, userId)` 验证资源所有权
+  - 使用 `handleApiError(error)` 统一处理错误响应
+- **禁止在 API 路由中重复定义认证逻辑**，如需自定义认证逻辑，请抽离到 `@/server/auth-helpers.ts`
 
 ### 国际化 (i18n)
 - **重要：在添加任何新组件时，必须优先考虑 i18n 国际化**

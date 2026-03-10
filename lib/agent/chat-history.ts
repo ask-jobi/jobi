@@ -340,13 +340,6 @@ export async function updateSessionStatus(
 }
 
 /**
- * Soft delete a session (mark as archived)
- */
-export async function deleteSession(sessionId: string): Promise<void> {
-  await updateSessionStatus(sessionId, "archived")
-}
-
-/**
  * Permanently delete a session and all its messages
  */
 export async function permanentlyDeleteSession(
@@ -367,41 +360,6 @@ export async function permanentlyDeleteSession(
   if (error) {
     console.error("Failed to delete session:", error)
     throw new Error(`Failed to delete session: ${error.message}`)
-  }
-}
-
-/**
- * Update session cost tracking
- */
-export async function updateSessionCost(
-  sessionId: string,
-  additionalTokens: number,
-  additionalCost: number
-): Promise<void> {
-  const supabase = await createClient()
-
-  const { data: session, error: fetchError } = await supabase
-    .from("resume_chat_sessions")
-    .select("total_tokens, total_cost")
-    .eq("id", sessionId)
-    .single()
-
-  if (fetchError) {
-    console.error("Failed to fetch session:", fetchError)
-    throw new Error(`Failed to fetch session: ${fetchError.message}`)
-  }
-
-  const { error } = await supabase
-    .from("resume_chat_sessions")
-    .update({
-      total_tokens: (session.total_tokens ?? 0) + additionalTokens,
-      total_cost: (session.total_cost ?? 0) + additionalCost
-    })
-    .eq("id", sessionId)
-
-  if (error) {
-    console.error("Failed to update session cost:", error)
-    throw new Error(`Failed to update session cost: ${error.message}`)
   }
 }
 
@@ -522,48 +480,6 @@ export async function getMessage(messageId: string) {
     throw new Error(`Failed to get target message: ${targetError?.message}`)
   }
   return targetMessage
-}
-
-export async function getLatestSummaryCheckpoint(
-  sessionId: string
-): Promise<ChatEvent | null> {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from("chat_events")
-    .select("*")
-    .eq("session_id", sessionId)
-    .eq("event_type", "summary_checkpoint")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single()
-
-  if (error) {
-    if (error.code === "PGRST116") {
-      return null
-    }
-    console.error("Failed to get latest summary checkpoint:", error)
-    return null
-  }
-
-  return data
-}
-
-export async function getMessageCount(sessionId: string): Promise<number> {
-  const supabase = await createClient()
-
-  const { count, error } = await supabase
-    .from("resume_chat_messages")
-    .select("*", { count: "exact", head: true })
-    .eq("session_id", sessionId)
-    .eq("truncated", false)
-
-  if (error) {
-    console.error("Failed to get message count:", error)
-    return 0
-  }
-
-  return count ?? 0
 }
 
 export type ChatEvent = {
