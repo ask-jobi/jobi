@@ -25,14 +25,20 @@ export interface SaveMessageParams {
   sessionId: string
   role: ChatMessageRole
   parts: MessagePart
-  cost?: number
+  inputTokens?: number
+  outputTokens?: number
+  cachedTokens?: number
+  reasoningTokens?: number
 }
 
 export interface UpdateMessageParams {
   messageId: string
   parts?: MessagePart
-  cost?: number
   tokenCount?: number
+  inputTokens?: number
+  outputTokens?: number
+  cachedTokens?: number
+  reasoningTokens?: number
 }
 
 export interface ChatHistoryEntry {
@@ -40,6 +46,11 @@ export interface ChatHistoryEntry {
   role: ChatMessageRole
   parts: MessagePart
   createdAt: string
+  tokenCount?: number
+  inputTokens?: number
+  outputTokens?: number
+  cachedTokens?: number
+  reasoningTokens?: number
 }
 
 export interface SessionSummary {
@@ -51,6 +62,32 @@ export interface SessionSummary {
   updatedAt: string
   messageCount: number
   conversationSummary?: string
+  totalTokens?: number
+  totalInputTokens?: number
+  totalOutputTokens?: number
+  totalCachedTokens?: number
+  totalReasoningTokens?: number
+}
+
+export interface SessionTokenUsageMessage {
+  id: string
+  role: ChatMessageRole
+  createdAt: string
+  tokenCount: number
+  inputTokens: number
+  outputTokens: number
+  cachedTokens: number
+  reasoningTokens: number
+}
+
+export interface SessionTokenUsage {
+  sessionId: string
+  totalTokens: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalCachedTokens: number
+  totalReasoningTokens: number
+  messages: SessionTokenUsageMessage[]
 }
 
 /**
@@ -84,8 +121,11 @@ export async function createSession({
 export async function updateMessage({
   messageId,
   parts,
-  cost,
-  tokenCount
+  tokenCount,
+  inputTokens,
+  outputTokens,
+  cachedTokens,
+  reasoningTokens
 }: UpdateMessageParams): Promise<void> {
   const supabase = await createClient()
 
@@ -94,8 +134,12 @@ export async function updateMessage({
     updateData.parts = parts
     updateData.has_tools = hasToolParts(parts)
   }
-  if (cost !== undefined) updateData.cost = cost
   if (tokenCount !== undefined) updateData.token_count = tokenCount
+  if (inputTokens !== undefined) updateData.input_tokens = inputTokens
+  if (outputTokens !== undefined) updateData.output_tokens = outputTokens
+  if (cachedTokens !== undefined) updateData.cached_tokens = cachedTokens
+  if (reasoningTokens !== undefined)
+    updateData.reasoning_tokens = reasoningTokens
 
   const { error } = await supabase
     .from("resume_chat_messages")
@@ -116,7 +160,10 @@ export async function saveMessage({
   sessionId,
   role,
   parts,
-  cost = 0
+  inputTokens,
+  outputTokens,
+  cachedTokens,
+  reasoningTokens
 }: SaveMessageParams): Promise<ChatMessage> {
   const supabase = await createClient()
   const hasTools = hasToolParts(parts)
@@ -128,8 +175,11 @@ export async function saveMessage({
       session_id: sessionId,
       role,
       parts,
-      cost,
-      has_tools: hasTools
+      has_tools: hasTools,
+      input_tokens: inputTokens ?? 0,
+      output_tokens: outputTokens ?? 0,
+      cached_tokens: cachedTokens ?? 0,
+      reasoning_tokens: reasoningTokens ?? 0
     })
     .select()
     .single()
@@ -170,7 +220,12 @@ export async function loadHistory(
     id: msg.id,
     role: msg.role,
     parts: msg.parts,
-    createdAt: msg.created_at
+    createdAt: msg.created_at,
+    tokenCount: msg.token_count ?? 0,
+    inputTokens: msg.input_tokens ?? 0,
+    outputTokens: msg.output_tokens ?? 0,
+    cachedTokens: msg.cached_tokens ?? 0,
+    reasoningTokens: msg.reasoning_tokens ?? 0
   }))
 }
 
@@ -213,7 +268,12 @@ export async function loadMessagesAfter(
     id: msg.id,
     role: msg.role,
     parts: msg.parts,
-    createdAt: msg.created_at
+    createdAt: msg.created_at,
+    tokenCount: msg.token_count ?? 0,
+    inputTokens: msg.input_tokens ?? 0,
+    outputTokens: msg.output_tokens ?? 0,
+    cachedTokens: msg.cached_tokens ?? 0,
+    reasoningTokens: msg.reasoning_tokens ?? 0
   }))
 }
 
@@ -249,7 +309,12 @@ export async function getSessionSummary(
     createdAt: session.created_at,
     updatedAt: session.updated_at,
     messageCount: count ?? 0,
-    conversationSummary: session.conversation_summary || undefined
+    conversationSummary: session.conversation_summary || undefined,
+    totalTokens: session.total_tokens ?? 0,
+    totalInputTokens: session.total_input_tokens ?? 0,
+    totalOutputTokens: session.total_output_tokens ?? 0,
+    totalCachedTokens: session.total_cached_tokens ?? 0,
+    totalReasoningTokens: session.total_reasoning_tokens ?? 0
   }
 }
 
@@ -336,6 +401,119 @@ export async function updateSessionStatus(
   if (error) {
     console.error("Failed to update session status:", error)
     throw new Error(`Failed to update session status: ${error.message}`)
+  }
+}
+
+export async function updateSessionTokenUsage(
+  sessionId: string
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { data: messages, error } = await supabase
+    .from("resume_chat_messages")
+    .select(
+      "input_tokens, output_tokens, cached_tokens, reasoning_tokens, token_count"
+    )
+    .eq("session_id", sessionId)
+    .eq("truncated", false)
+
+  if (error) {
+    console.error("Failed to calculate session token usage:", error)
+    throw new Error(`Failed to calculate token usage: ${error.message}`)
+  }
+
+  const totalTokens = messages?.reduce(
+    (sum, msg) => sum + (msg.token_count ?? 0),
+    0
+  )
+  const totalInputTokens = messages?.reduce(
+    (sum, msg) => sum + (msg.input_tokens ?? 0),
+    0
+  )
+  const totalOutputTokens = messages?.reduce(
+    (sum, msg) => sum + (msg.output_tokens ?? 0),
+    0
+  )
+  const totalCachedTokens = messages?.reduce(
+    (sum, msg) => sum + (msg.cached_tokens ?? 0),
+    0
+  )
+  const totalReasoningTokens = messages?.reduce(
+    (sum, msg) => sum + (msg.reasoning_tokens ?? 0),
+    0
+  )
+
+  const { error: updateError } = await supabase
+    .from("resume_chat_sessions")
+    .update({
+      total_tokens: totalTokens ?? 0,
+      total_input_tokens: totalInputTokens ?? 0,
+      total_output_tokens: totalOutputTokens ?? 0,
+      total_cached_tokens: totalCachedTokens ?? 0,
+      total_reasoning_tokens: totalReasoningTokens ?? 0
+    })
+    .eq("id", sessionId)
+
+  if (updateError) {
+    console.error("Failed to update session token usage:", updateError)
+    throw new Error(
+      `Failed to update session token usage: ${updateError.message}`
+    )
+  }
+}
+
+export async function getSessionTokenUsage(
+  sessionId: string
+): Promise<SessionTokenUsage> {
+  const supabase = await createClient()
+
+  const { data: session, error: sessionError } = await supabase
+    .from("resume_chat_sessions")
+    .select(
+      "id, total_tokens, total_input_tokens, total_output_tokens, total_cached_tokens, total_reasoning_tokens"
+    )
+    .eq("id", sessionId)
+    .single()
+
+  if (sessionError || !session) {
+    console.error("Failed to get session token usage:", sessionError)
+    throw new Error("Session not found")
+  }
+
+  const { data: messages, error: messagesError } = await supabase
+    .from("resume_chat_messages")
+    .select(
+      "id, role, created_at, token_count, input_tokens, output_tokens, cached_tokens, reasoning_tokens"
+    )
+    .eq("session_id", sessionId)
+    .eq("truncated", false)
+    .order("created_at", { ascending: true })
+
+  if (messagesError) {
+    console.error("Failed to get message token usage:", messagesError)
+    throw new Error(
+      `Failed to get message token usage: ${messagesError.message}`
+    )
+  }
+
+  return {
+    sessionId: session.id,
+    totalTokens: session.total_tokens ?? 0,
+    totalInputTokens: session.total_input_tokens ?? 0,
+    totalOutputTokens: session.total_output_tokens ?? 0,
+    totalCachedTokens: session.total_cached_tokens ?? 0,
+    totalReasoningTokens: session.total_reasoning_tokens ?? 0,
+    messages:
+      messages?.map((message) => ({
+        id: message.id,
+        role: message.role,
+        createdAt: message.created_at,
+        tokenCount: message.token_count ?? 0,
+        inputTokens: message.input_tokens ?? 0,
+        outputTokens: message.output_tokens ?? 0,
+        cachedTokens: message.cached_tokens ?? 0,
+        reasoningTokens: message.reasoning_tokens ?? 0
+      })) ?? []
   }
 }
 

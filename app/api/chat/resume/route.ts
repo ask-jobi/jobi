@@ -17,7 +17,8 @@ import {
   updateMessage,
   updateConversationSummary,
   type ChatHistoryEntry,
-  getSessionSummary
+  getSessionSummary,
+  updateSessionTokenUsage
 } from "@/lib/agent/chat-history"
 import { generateConversationSummary } from "@/lib/agent/conversation-summary"
 import { getJobApplicationByResumeId } from "@/server/resume"
@@ -134,6 +135,42 @@ export async function POST(request: NextRequest) {
         dataStream.merge(result.toUIMessageStream({ sendReasoning: true }))
       },
       onFinish: async ({ messages: finishedMessages, responseMessage }) => {
+        let parsedUsage: {
+          inputTokens: number
+          outputTokens: number
+          cachedTokens: number
+          reasoningTokens: number
+          totalTokens: number
+        } | null = null
+
+        try {
+          const result = streamText({
+            model: model,
+            stopWhen: stepCountIs(5),
+            messages: await convertToModelMessages(uiMessages),
+            tools
+          })
+          const usage = await result.usage
+          console.log("usage ", usage)
+          if (usage) {
+            parsedUsage = {
+              inputTokens:
+                (usage as { promptTokens?: number }).promptTokens ?? 0,
+              outputTokens:
+                (usage as { completionTokens?: number }).completionTokens ?? 0,
+              cachedTokens:
+                ((usage as { cacheReadTokens?: number }).cacheReadTokens ?? 0) +
+                ((usage as { cacheCreationTokens?: number })
+                  .cacheCreationTokens ?? 0),
+              reasoningTokens:
+                (usage as { reasoningTokens?: number }).reasoningTokens ?? 0,
+              totalTokens: (usage as { totalTokens?: number }).totalTokens ?? 0
+            }
+          }
+        } catch {
+          // Ignore errors when getting usage
+        }
+
         for (const finishedMsg of finishedMessages.filter(
           (msg) => msg.id !== "system"
         )) {
@@ -141,7 +178,12 @@ export async function POST(request: NextRequest) {
           if (existingMsg) {
             await updateMessage({
               messageId: existingMsg.id,
-              parts: finishedMsg.parts
+              parts: finishedMsg.parts,
+              tokenCount: parsedUsage?.totalTokens,
+              inputTokens: parsedUsage?.inputTokens,
+              outputTokens: parsedUsage?.outputTokens,
+              cachedTokens: parsedUsage?.cachedTokens,
+              reasoningTokens: parsedUsage?.reasoningTokens
             })
           } else {
             contextMessages.push(finishedMsg)
@@ -149,10 +191,21 @@ export async function POST(request: NextRequest) {
               id: finishedMsg.id,
               sessionId,
               role: finishedMsg.role,
-              parts: finishedMsg.parts
+              parts: finishedMsg.parts,
+              inputTokens: parsedUsage?.inputTokens,
+              outputTokens: parsedUsage?.outputTokens,
+              cachedTokens: parsedUsage?.cachedTokens,
+              reasoningTokens: parsedUsage?.reasoningTokens
             })
           }
         }
+
+        if (parsedUsage && parsedUsage.totalTokens > 0) {
+          await updateSessionTokenUsage(sessionId).catch((err) => {
+            console.error("Failed to update session token usage:", err)
+          })
+        }
+
         console.log("responseMessage", responseMessage)
         if (responseMessage) {
           for (const part of responseMessage.parts) {

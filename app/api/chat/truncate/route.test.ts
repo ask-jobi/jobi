@@ -48,13 +48,16 @@ describe("POST /api/chat/truncate", () => {
     vi.mocked(chatHistoryModule.getMessage).mockResolvedValue({
       id: "msg-1",
       session_id: "session-1",
-      role: "user",
+      role: "user" as const,
       parts: [],
       token_count: 0,
-      cost: 0,
       truncated: false,
       has_tools: false,
-      created_at: "2024-01-01T00:00:00Z"
+      created_at: "2024-01-01T00:00:00Z",
+      input_tokens: 0,
+      output_tokens: 0,
+      cached_tokens: 0,
+      reasoning_tokens: 0
     })
     vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([])
     vi.mocked(chatHistoryModule.truncateMessages).mockResolvedValue()
@@ -205,10 +208,13 @@ describe("POST /api/chat/truncate", () => {
         role: "assistant",
         parts: [],
         token_count: 0,
-        cost: 0,
         truncated: false,
         has_tools: false,
-        created_at: "2024-01-01T00:01:00Z"
+        created_at: "2024-01-01T00:01:00Z",
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0
       }
     ])
 

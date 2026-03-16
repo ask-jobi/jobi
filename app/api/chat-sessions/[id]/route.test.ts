@@ -34,7 +34,12 @@ describe("GET /api/chat-sessions/[id]", () => {
       status: "active",
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
-      messageCount: 5
+      messageCount: 5,
+      totalTokens: 150,
+      totalInputTokens: 100,
+      totalOutputTokens: 30,
+      totalCachedTokens: 15,
+      totalReasoningTokens: 5
     })
 
     vi.spyOn(console, "error").mockImplementation(() => {})
@@ -81,6 +86,8 @@ describe("GET /api/chat-sessions/[id]", () => {
     const data = await response.json()
     expect(data.success).toBe(true)
     expect(data.data.id).toBe("session-1")
+    expect(data.data.totalTokens).toBe(150)
+    expect(data.data.totalCachedTokens).toBe(15)
   })
 
   it("should return 500 on internal error", async () => {
@@ -120,7 +127,12 @@ describe("PATCH /api/chat-sessions/[id]", () => {
       status: "completed",
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-02T00:00:00Z",
-      messageCount: 5
+      messageCount: 5,
+      totalTokens: 150,
+      totalInputTokens: 100,
+      totalOutputTokens: 30,
+      totalCachedTokens: 15,
+      totalReasoningTokens: 5
     })
 
     vi.spyOn(console, "error").mockImplementation(() => {})
