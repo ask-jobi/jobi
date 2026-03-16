@@ -208,7 +208,10 @@ export type Database = {
           status: ChatSessionStatus
           title: string | null
           total_tokens: number
-          total_cost: number
+          total_input_tokens: number
+          total_output_tokens: number
+          total_cached_tokens: number
+          total_reasoning_tokens: number
           created_at: string
           updated_at: string
           conversation_summary: string | null
@@ -220,7 +223,10 @@ export type Database = {
           status?: ChatSessionStatus
           title?: string | null
           total_tokens?: number
-          total_cost?: number
+          total_input_tokens?: number
+          total_output_tokens?: number
+          total_cached_tokens?: number
+          total_reasoning_tokens?: number
           created_at?: string
           updated_at?: string
           conversation_summary?: string | null
@@ -232,7 +238,10 @@ export type Database = {
           status?: ChatSessionStatus
           title?: string | null
           total_tokens?: number
-          total_cost?: number
+          total_input_tokens?: number
+          total_output_tokens?: number
+          total_cached_tokens?: number
+          total_reasoning_tokens?: number
           created_at?: string
           updated_at?: string
           conversation_summary?: string | null
@@ -254,10 +263,13 @@ export type Database = {
           role: "user" | "assistant" | "system"
           parts: MessagePart
           token_count: number
-          cost: number
           truncated: boolean
           has_tools: boolean
           created_at: string
+          input_tokens: number
+          output_tokens: number
+          cached_tokens: number
+          reasoning_tokens: number
         }
         Insert: {
           id?: string
@@ -265,10 +277,13 @@ export type Database = {
           role: "user" | "assistant" | "system"
           parts: MessagePart
           token_count?: number
-          cost?: number
           truncated?: boolean
           has_tools?: boolean
           created_at?: string
+          input_tokens?: number
+          output_tokens?: number
+          cached_tokens?: number
+          reasoning_tokens?: number
         }
         Update: {
           id?: string
@@ -276,10 +291,13 @@ export type Database = {
           role?: "user" | "assistant" | "system"
           parts?: MessagePart
           token_count?: number
-          cost?: number
           truncated?: boolean
           has_tools?: boolean
           created_at?: string
+          input_tokens?: number
+          output_tokens?: number
+          cached_tokens?: number
+          reasoning_tokens?: number
         }
         Relationships: [
           {
