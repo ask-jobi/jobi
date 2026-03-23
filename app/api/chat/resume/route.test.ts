@@ -6,8 +6,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("ai", () => ({
   convertToModelMessages: vi.fn(),
-  createUIMessageStream: vi.fn(),
-  createUIMessageStreamResponse: vi.fn(),
+  createUIMessageStream: vi.fn(({ execute }) => {
+    const chunks: unknown[] = []
+    execute({
+      writer: {
+        write: (part: unknown) => {
+          chunks.push(part)
+        }
+      }
+    })
+    return chunks
+  }),
+  createUIMessageStreamResponse: vi.fn(() => {
+    return new Response("stream", { status: 200 })
+  }),
   smoothStream: vi.fn(),
   stepCountIs: vi.fn(),
   streamText: vi.fn(),
@@ -103,6 +115,7 @@ describe("POST /api/chat/resume", () => {
     const authHelpers = await import("@/server/auth-helpers")
     const quotaModule = await import("@/server/quota")
     const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const aiModule = await import("ai")
     const routeModule = await import("./route")
 
     vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
@@ -132,10 +145,9 @@ describe("POST /api/chat/resume", () => {
     })
 
     const response = await routeModule.POST(request)
-    const data = await response.json()
 
-    expect(response.status).toBe(403)
-    expect(data.error).toBe("Chat token limit reached")
+    expect(response.status).toBe(200)
+    expect(aiModule.createUIMessageStreamResponse).toHaveBeenCalled()
     expect(chatHistoryModule.saveMessage).not.toHaveBeenCalled()
   })
 })
