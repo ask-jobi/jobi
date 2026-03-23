@@ -202,7 +202,6 @@ export type Database = {
           resume_id: string
           status: ChatSessionStatus
           title: string | null
-          total_tokens: number
           total_input_tokens: number
           total_output_tokens: number
           total_cached_tokens: number
@@ -217,7 +216,6 @@ export type Database = {
           resume_id: string
           status?: ChatSessionStatus
           title?: string | null
-          total_tokens?: number
           total_input_tokens?: number
           total_output_tokens?: number
           total_cached_tokens?: number
@@ -232,7 +230,6 @@ export type Database = {
           resume_id?: string
           status?: ChatSessionStatus
           title?: string | null
-          total_tokens?: number
           total_input_tokens?: number
           total_output_tokens?: number
           total_cached_tokens?: number
@@ -257,7 +254,6 @@ export type Database = {
           session_id: string
           role: "user" | "assistant" | "system"
           parts: MessagePart
-          token_count: number
           truncated: boolean
           has_tools: boolean
           created_at: string
@@ -271,7 +267,6 @@ export type Database = {
           session_id: string
           role: "user" | "assistant" | "system"
           parts: MessagePart
-          token_count?: number
           truncated?: boolean
           has_tools?: boolean
           created_at?: string
@@ -285,7 +280,6 @@ export type Database = {
           session_id?: string
           role?: "user" | "assistant" | "system"
           parts?: MessagePart
-          token_count?: number
           truncated?: boolean
           has_tools?: boolean
           created_at?: string
