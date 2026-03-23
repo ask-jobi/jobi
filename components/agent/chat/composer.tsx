@@ -4,11 +4,12 @@ import { ComposerPrimitive, AuiIf } from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
 import { ArrowUpIcon, SquareIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { ChatTokenUsage } from "./chat-token-usage"
 
 export function Composer() {
   const t = useTranslations("chat")
   return (
-    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col gap-2">
       <div className="relative">
         <ComposerPrimitive.Input
           placeholder={t("composerPlaceholder")}
@@ -45,6 +46,7 @@ export function Composer() {
           </AuiIf>
         </div>
       </div>
+      <ChatTokenUsage />
     </ComposerPrimitive.Root>
   )
 }

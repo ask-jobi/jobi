@@ -116,6 +116,7 @@
     "eslint-config-next": "15.3.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.0.1",
     "lint-staged": "^16.2.7",
     "next-test-api-route-handler": "^5.0.0",
     "prettier": "^3.8.1",
