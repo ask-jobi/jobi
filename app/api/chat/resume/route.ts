@@ -32,11 +32,7 @@ import {
   logResumeModification
 } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
-import {
-  ApiError,
-  getAuthenticatedUser,
-  handleApiError
-} from "@/server/auth-helpers"
+import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
 import {
   buildChatTokenQuota,
@@ -47,6 +43,8 @@ import {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+const CHAT_TOKEN_LIMIT_MESSAGE =
+  "You have reached your chat token limit for the current plan. Please upgrade your plan to continue chatting."
 
 const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
   return {
@@ -68,6 +66,38 @@ async function loadContextMessages(sessionId: string) {
   }
 }
 
+async function createTokenLimitReachedResponse() {
+  const assistantMessageId = generateUUID()
+  const textPartId = generateUUID()
+
+  const stream = createUIMessageStream<ChatUIMessage>({
+    execute: ({ writer }) => {
+      writer.write({
+        type: "start",
+        messageId: assistantMessageId
+      })
+      writer.write({
+        type: "text-start",
+        id: textPartId
+      })
+      writer.write({
+        type: "text-delta",
+        id: textPartId,
+        delta: CHAT_TOKEN_LIMIT_MESSAGE
+      })
+      writer.write({
+        type: "text-end",
+        id: textPartId
+      })
+      writer.write({
+        type: "finish"
+      })
+    }
+  })
+
+  return createUIMessageStreamResponse({ stream })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser()
@@ -85,7 +115,7 @@ export async function POST(request: NextRequest) {
           error instanceof Error &&
           error.message === "Chat token limit reached"
         ) {
-          throw new ApiError(error.message, 403)
+          return createTokenLimitReachedResponse()
         }
         throw error
       }
