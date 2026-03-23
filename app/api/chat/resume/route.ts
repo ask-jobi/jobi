@@ -150,9 +150,7 @@ export async function POST(request: NextRequest) {
               const tokenUsage: ChatTokenUsage = {
                 inputTokens: normalizedUsage.inputTokens,
                 outputTokens: normalizedUsage.outputTokens,
-                cachedTokens:
-                  normalizedUsage.cacheReadTokens +
-                  normalizedUsage.cacheCreationTokens,
+                cachedTokens: normalizedUsage.cachedTokens,
                 reasoningTokens: normalizedUsage.reasoningTokens,
                 totalTokens: normalizedUsage.totalTokens
               }
