@@ -6,15 +6,19 @@ import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as chatHistoryModule from "@/lib/agent/chat-history"
 import * as supabaseModule from "@/lib/supabase/server"
+import * as aiModule from "ai"
 
 vi.mock("@/lib/supabase/server")
 vi.mock("@/lib/agent/chat-history", () => ({
+  getLatestValidSummaryCheckpoint: vi.fn().mockResolvedValue(null),
   loadHistory: vi.fn().mockResolvedValue([]),
+  loadMessagesAfter: vi.fn().mockResolvedValue([]),
   saveMessage: vi.fn().mockResolvedValue({
     id: "test-message-id",
     session_id: "test-session-id"
   }),
   updateMessage: vi.fn().mockResolvedValue({ id: "test-message-id" }),
+  updateConversationSummary: vi.fn().mockResolvedValue(undefined),
   getSessionSummary: vi.fn().mockResolvedValue({
     id: "test-session-id",
     title: "Resume Chat",
@@ -23,7 +27,8 @@ vi.mock("@/lib/agent/chat-history", () => ({
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     messageCount: 0
-  })
+  }),
+  updateSessionTokenUsage: vi.fn().mockResolvedValue(undefined)
 }))
 vi.mock("@/lib/agent/system-prompt")
 vi.mock("@/lib/agent/tools")
@@ -34,11 +39,24 @@ vi.mock("@/lib/utils", () => ({
   generateUUID: vi.fn(() => "mock-uuid")
 }))
 vi.mock("@/server/quota")
-vi.mock("@/server/resume")
+vi.mock("@/server/resume", () => ({
+  getJobApplicationByResumeId: vi.fn().mockResolvedValue({
+    resumes: {
+      resume_json: {},
+      language: "en",
+      evaluation_report: {}
+    },
+    jobs: "mock job description"
+  })
+}))
 vi.mock("@/server/ai/prompts/resume-chat.prompt", () => ({
   default: {
     format: vi.fn(() => "mocked prompt")
   }
+}))
+vi.mock("@/server/chat-events", () => ({
+  logSummaryCheckpoint: vi.fn().mockResolvedValue(undefined),
+  logResumeModification: vi.fn().mockResolvedValue(undefined)
 }))
 
 vi.mock("ai", () => ({
@@ -50,7 +68,9 @@ vi.mock("ai", () => ({
   createUIMessageStream: vi.fn().mockReturnValue({
     pipe: vi.fn()
   }),
-  createUIMessageStreamResponse: vi.fn(),
+  createUIMessageStreamResponse: vi
+    .fn()
+    .mockImplementation(() => new Response(null, { status: 200 })),
   generateText: vi.fn(),
   tool: vi.fn()
 }))
@@ -161,7 +181,98 @@ describe("POST /api/chat/resume", () => {
         id: "test-session-id"
       })
 
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+    })
+
+    it("should persist usage from streamText onFinish", async () => {
+      const streamCallbacks: Promise<unknown>[] = []
+
+      vi.mocked(aiModule.streamText).mockImplementation(() => {
+        return {
+          toUIMessageStream: vi.fn()
+        } as any
+      })
+
+      vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+        ({ execute, onFinish }: any) => {
+          streamCallbacks.push(
+            Promise.resolve(
+              execute({
+                writer: {
+                  merge: vi.fn()
+                }
+              })
+            ).then(() =>
+              onFinish({
+                messages: [
+                  {
+                    id: "test-msg-id",
+                    role: "user",
+                    parts: [{ type: "text", text: "Hello" }]
+                  },
+                  {
+                    id: "assistant-msg-id",
+                    role: "assistant",
+                    parts: [{ type: "text", text: "Hi there" }]
+                  }
+                ],
+                responseMessage: {
+                  id: "assistant-msg-id",
+                  role: "assistant",
+                  parts: [{ type: "text", text: "Hi there" }],
+                  metadata: {
+                    tokenUsage: {
+                      inputTokens: 1,
+                      outputTokens: 270,
+                      cachedTokens: 4242,
+                      reasoningTokens: 0,
+                      totalTokens: 4513
+                    }
+                  }
+                }
+              })
+            )
+          )
+
+          return {
+            pipe: vi.fn()
+          } as any
+        }
+      )
+
+      const request = createMockRequest({
+        message: {
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          id: "test-msg-id"
+        },
+        id: "test-session-id"
+      })
+
       await POST(request)
+      await Promise.all(streamCallbacks)
+
+      expect(chatHistoryModule.updateMessage).toHaveBeenCalledWith({
+        messageId: "test-msg-id",
+        parts: [{ type: "text", text: "Hello" }]
+      })
+      expect(chatHistoryModule.saveMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "assistant-msg-id",
+          sessionId: "test-session-id",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hi there" }],
+          inputTokens: 1,
+          outputTokens: 270,
+          cachedTokens: 4242,
+          reasoningTokens: 0
+        })
+      )
+      expect(chatHistoryModule.updateSessionTokenUsage).toHaveBeenCalledWith(
+        "test-session-id"
+      )
     })
   })
 
