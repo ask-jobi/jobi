@@ -8,6 +8,18 @@ import {
   tools
 } from "@/lib/agent/tools"
 
+export interface ChatTokenUsage {
+  inputTokens: number
+  outputTokens: number
+  cachedTokens: number
+  reasoningTokens: number
+  totalTokens: number
+}
+
+export interface ChatMessageMetadata {
+  tokenUsage?: ChatTokenUsage
+}
+
 export type ResumeEditorModifyOutput = z.infer<
   typeof resumeEditorModifyOutputSchema
 >
@@ -22,7 +34,7 @@ export type ResumeEditorReorderInput = z.infer<
 >
 
 export type ChatUIMessage = UIMessage<
-  unknown,
+  ChatMessageMetadata,
   UIDataTypes,
   InferUITools<typeof tools>
 >
