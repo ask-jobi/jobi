@@ -17,7 +17,23 @@ describe("GET /api/chat-sessions/[id]/token-usage", () => {
     const mockSupabaseClient = {
       auth: {
         getUser: vi.fn()
-      }
+      },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gt: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: { code: "PGRST116" }
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
     } as any
     vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
 
@@ -78,7 +94,8 @@ describe("GET /api/chat-sessions/[id]/token-usage", () => {
           data: { user: null },
           error: new Error("Not authenticated")
         })
-      }
+      },
+      from: vi.fn()
     } as any)
 
     const params = Promise.resolve({ id: "session-1" })
@@ -105,6 +122,7 @@ describe("GET /api/chat-sessions/[id]/token-usage", () => {
     expect(data.success).toBe(true)
     expect(data.data.totalTokens).toBe(150)
     expect(data.data.totalCachedTokens).toBe(15)
+    expect(data.data.chatTokenLimit).toBe(0)
     expect(data.data.messages).toHaveLength(2)
     expect(data.data.messages[1].reasoningTokens).toBe(5)
   })

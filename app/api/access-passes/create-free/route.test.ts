@@ -14,7 +14,8 @@ vi.mock("@/lib/payment/quota", () => ({
     FREE: {
       quota_full_optimize: 2,
       quota_block_optimize: 10,
-      quota_motivation_letter: 1
+      quota_motivation_letter: 1,
+      quota_chat_tokens: 100000
     }
   }
 }))

@@ -26,6 +26,7 @@ interface SubscriptionData {
   plan: "FREE" | "LITE" | "PRO" | null
   expiryDate: string | null
   isActive: boolean
+  chatTokenLimit: number
   quotas: {
     fullOptimize: { used: number; total: number }
     blockOptimize: { used: number; total: number }
@@ -219,6 +220,14 @@ export function CompactPlanDisplay() {
               <span className="font-medium">
                 {subscription.quotas.motivationLetter.used} /{" "}
                 {subscription.quotas.motivationLetter.total}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t("chatTokens")}</span>
+              <span className="font-medium">
+                {new Intl.NumberFormat("en-US").format(
+                  subscription.chatTokenLimit
+                )}
               </span>
             </div>
           </div>

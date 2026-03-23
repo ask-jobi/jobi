@@ -32,8 +32,18 @@ import {
   logResumeModification
 } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
+import {
+  ApiError,
+  getAuthenticatedUser,
+  handleApiError
+} from "@/server/auth-helpers"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
+import {
+  buildChatTokenQuota,
+  consumeChatTokens,
+  getActiveAccessPass,
+  verifyChatTokenQuota
+} from "@/server/quota"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -60,10 +70,26 @@ async function loadContextMessages(sessionId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    await getAuthenticatedUser()
+    const user = await getAuthenticatedUser()
 
     const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
+    const activeAccessPass = await getActiveAccessPass(user.id)
+
+    if (activeAccessPass) {
+      try {
+        const chatTokenQuota = buildChatTokenQuota(activeAccessPass)
+        verifyChatTokenQuota(chatTokenQuota.used, chatTokenQuota.limit)
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "Chat token limit reached"
+        ) {
+          throw new ApiError(error.message, 403)
+        }
+        throw error
+      }
+    }
 
     const currentSession = await getSessionSummary(sessionId)
     const jobApplication = await getJobApplicationByResumeId(
@@ -198,6 +224,15 @@ export async function POST(request: NextRequest) {
           await updateSessionTokenUsage(sessionId).catch((err) => {
             console.error("Failed to update session token usage:", err)
           })
+
+          if (activeAccessPass) {
+            await consumeChatTokens(
+              activeAccessPass.id,
+              responseUsage.totalTokens
+            ).catch((err) => {
+              console.error("Failed to update access pass token usage:", err)
+            })
+          }
         }
         if (responseMessage) {
           for (const part of responseMessage.parts) {

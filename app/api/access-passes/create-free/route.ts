@@ -75,7 +75,8 @@ export async function POST() {
         end_at: endAt.toISOString(),
         quota_full_optimize: QUOTA.FREE.quota_full_optimize,
         quota_block_optimize: QUOTA.FREE.quota_block_optimize,
-        quota_motivation_letter: QUOTA.FREE.quota_motivation_letter
+        quota_motivation_letter: QUOTA.FREE.quota_motivation_letter,
+        quota_chat_tokens: QUOTA.FREE.quota_chat_tokens
       })
       .select()
       .single()

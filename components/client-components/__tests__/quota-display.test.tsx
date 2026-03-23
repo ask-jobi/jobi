@@ -18,6 +18,7 @@ describe("QuotaDisplay", () => {
     planName: "Pro Plan",
     expiryDate: "2025-12-31",
     isActive: true,
+    chatTokenLimit: 100000000,
     quotas: {
       fullOptimize: { used: 5, total: 10 },
       blockOptimize: { used: 3, total: 20 },
@@ -56,6 +57,7 @@ describe("QuotaDisplay", () => {
     expect(screen.getByText("fullOptimization")).toBeInTheDocument()
     expect(screen.getByText("blockOptimization")).toBeInTheDocument()
     expect(screen.getByText("motivationLetter")).toBeInTheDocument()
+    expect(screen.getByText("chatTokens")).toBeInTheDocument()
     expect(screen.getAllByTestId("ui-progress")).toHaveLength(3)
   })
 
@@ -65,6 +67,7 @@ describe("QuotaDisplay", () => {
     expect(screen.getByText("5 / 10")).toBeInTheDocument()
     expect(screen.getByText("3 / 20")).toBeInTheDocument()
     expect(screen.getByText("2 / 5")).toBeInTheDocument()
+    expect(screen.getByText("100,000,000")).toBeInTheDocument()
   })
 
   it("should show renew button when subscription is active", () => {
@@ -117,12 +120,14 @@ describe("QuotaDisplay", () => {
         fullOptimize: { used: 0, total: 0 },
         blockOptimize: { used: 0, total: 0 },
         motivationLetter: { used: 0, total: 0 }
-      }
+      },
+      chatTokenLimit: 0
     }
     render(<QuotaDisplay subscription={zeroQuotaSubscription} />)
 
     const usages = screen.getAllByText(/0 \/ 0/)
     expect(usages).toHaveLength(3)
+    expect(screen.getByText("0")).toBeInTheDocument()
   })
 
   it("should display correct badge for LITE plan", () => {

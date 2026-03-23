@@ -23,12 +23,14 @@ export type Database = {
           id: string
           plan: "FREE" | "LITE" | "PRO"
           quota_block_optimize: number
+          quota_chat_tokens: number
           quota_full_optimize: number
           quota_motivation_letter: number
           source: string
           start_at: string
           stripe_checkout_session_id: string | null
           used_block_optimize: number
+          used_chat_tokens: number
           used_full_optimize: number
           used_motivation_letter: number
           user_id: string
@@ -39,12 +41,14 @@ export type Database = {
           id?: string
           plan: "FREE" | "LITE" | "PRO"
           quota_block_optimize?: number
+          quota_chat_tokens?: number
           quota_full_optimize?: number
           quota_motivation_letter?: number
           source?: string
           start_at: string
           stripe_checkout_session_id?: string | null
           used_block_optimize?: number
+          used_chat_tokens?: number
           used_full_optimize?: number
           used_motivation_letter?: number
           user_id: string
@@ -55,12 +59,14 @@ export type Database = {
           id?: string
           plan?: "FREE" | "LITE" | "PRO"
           quota_block_optimize?: number
+          quota_chat_tokens?: number
           quota_full_optimize?: number
           quota_motivation_letter?: number
           source?: string
           start_at?: string
           stripe_checkout_session_id?: string | null
           used_block_optimize?: number
+          used_chat_tokens?: number
           used_full_optimize?: number
           used_motivation_letter?: number
           user_id?: string

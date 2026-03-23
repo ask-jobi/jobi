@@ -2,8 +2,11 @@
  * @vitest-environment node
  */
 import {
+  buildChatTokenQuota,
   buildQuotas,
+  consumeChatTokens,
   verifyAndUpdateQuota,
+  verifyChatTokenQuota,
   verifyQuota,
   getActiveAccessPass,
   getUserSubscription,
@@ -283,7 +286,9 @@ describe("getUserSubscription", () => {
                     quota_block_optimize: 20,
                     used_block_optimize: 5,
                     quota_motivation_letter: 5,
-                    used_motivation_letter: 1
+                    used_motivation_letter: 1,
+                    quota_chat_tokens: 100000000,
+                    used_chat_tokens: 12345
                   }
                 })
               })
@@ -326,6 +331,7 @@ describe("getUserSubscription", () => {
       total: 5,
       colName: "motivation_letter"
     })
+    expect(result.chatTokenLimit).toBe(100000000)
   })
 
   it("should return default values when user has no active pass", async () => {
@@ -379,6 +385,7 @@ describe("getUserSubscription", () => {
       total: 0,
       colName: "motivation_letter"
     })
+    expect(result.chatTokenLimit).toBe(0)
   })
 
   it("should throw error when user is not logged in", async () => {
@@ -434,7 +441,9 @@ describe("consumeQuota", () => {
               quota_block_optimize: 20,
               used_block_optimize: 10,
               quota_motivation_letter: 5,
-              used_motivation_letter: 2
+              used_motivation_letter: 2,
+              quota_chat_tokens: 100000000,
+              used_chat_tokens: 50
             }
           })
         }),
@@ -467,7 +476,9 @@ describe("consumeQuota", () => {
               quota_block_optimize: 20,
               used_block_optimize: 10,
               quota_motivation_letter: 5,
-              used_motivation_letter: 2
+              used_motivation_letter: 2,
+              quota_chat_tokens: 100000000,
+              used_chat_tokens: 50
             }
           })
         })
@@ -510,7 +521,9 @@ describe("consumeQuota", () => {
               quota_block_optimize: 20,
               used_block_optimize: 10,
               quota_motivation_letter: 5,
-              used_motivation_letter: 2
+              used_motivation_letter: 2,
+              quota_chat_tokens: 100000000,
+              used_chat_tokens: 50
             }
           })
         }),
@@ -686,6 +699,79 @@ describe("verifyJobApplicationLimit", () => {
   })
 })
 
+describe("chat token quota helpers", () => {
+  it("should build chat token quota from access pass", () => {
+    const result = buildChatTokenQuota({
+      id: "pass-id",
+      user_id: "user-id",
+      plan: "PRO",
+      source: "purchase",
+      stripe_checkout_session_id: "cs_test_123",
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 10,
+      used_full_optimize: 3,
+      quota_block_optimize: 20,
+      used_block_optimize: 5,
+      quota_motivation_letter: 5,
+      used_motivation_letter: 1,
+      quota_chat_tokens: 1000,
+      used_chat_tokens: 250
+    })
+
+    expect(result).toEqual({
+      used: 250,
+      limit: 1000
+    })
+  })
+
+  it("should throw when chat token quota is exhausted", () => {
+    expect(() => verifyChatTokenQuota(100, 100)).toThrow(
+      "Chat token limit reached"
+    )
+  })
+
+  it("should increment used chat tokens with optimistic update", async () => {
+    const mockSupabase = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                used_chat_tokens: 500
+              },
+              error: null
+            })
+          })
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    used_chat_tokens: 600
+                  },
+                  error: null
+                })
+              })
+            })
+          })
+        })
+      })
+    }
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    const result = await consumeChatTokens("pass-id", 100)
+
+    expect(result).toBe(600)
+    expect(mockSupabase.from).toHaveBeenCalledWith("access_passes")
+  })
+})
+
 describe("buildQuotas", () => {
   it("should build quotas for PRO plan", () => {
     const accessPass = {
@@ -702,7 +788,9 @@ describe("buildQuotas", () => {
       quota_block_optimize: 20,
       used_block_optimize: 5,
       quota_motivation_letter: 5,
-      used_motivation_letter: 1
+      used_motivation_letter: 1,
+      quota_chat_tokens: 100000000,
+      used_chat_tokens: 1000
     }
 
     const result = buildQuotas(accessPass)
@@ -739,7 +827,9 @@ describe("buildQuotas", () => {
       quota_block_optimize: 15,
       used_block_optimize: 2,
       quota_motivation_letter: 3,
-      used_motivation_letter: 0
+      used_motivation_letter: 0,
+      quota_chat_tokens: 1000000,
+      used_chat_tokens: 100
     }
 
     const result = buildQuotas(accessPass)
@@ -764,7 +854,9 @@ describe("buildQuotas", () => {
       quota_block_optimize: 10,
       used_block_optimize: 0,
       quota_motivation_letter: 1,
-      used_motivation_letter: 0
+      used_motivation_letter: 0,
+      quota_chat_tokens: 100000,
+      used_chat_tokens: 0
     }
 
     const result = buildQuotas(accessPass)

@@ -4,7 +4,7 @@
 import { render, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { ChatTokenUsage, CHAT_TOKEN_SOFT_LIMIT } from "../chat-token-usage"
+import { ChatTokenUsage } from "../chat-token-usage"
 import * as auiModule from "@assistant-ui/react"
 import * as tokenUsageHookModule from "@/lib/hooks/use-chat-session-token-usage"
 import * as chatStoreModule from "@/lib/store/chat"
@@ -63,7 +63,8 @@ describe("ChatTokenUsage", () => {
         totalInputTokens: 8000,
         totalOutputTokens: 3000,
         totalCachedTokens: 1000,
-        totalReasoningTokens: 345
+        totalReasoningTokens: 345,
+        chatTokenLimit: 1000000
       },
       isLoading: false,
       error: null
@@ -82,7 +83,8 @@ describe("ChatTokenUsage", () => {
         totalInputTokens: 8000,
         totalOutputTokens: 3000,
         totalCachedTokens: 1000,
-        totalReasoningTokens: 345
+        totalReasoningTokens: 345,
+        chatTokenLimit: 1000000
       },
       isLoading: false,
       error: null
@@ -91,6 +93,8 @@ describe("ChatTokenUsage", () => {
     render(<ChatTokenUsage />)
 
     expect(screen.getByText("tokenUsageDetails")).toBeInTheDocument()
+    expect(screen.getByText("tokenLimit")).toBeInTheDocument()
+    expect(screen.getByText("tokenUsagePercentage")).toBeInTheDocument()
     expect(screen.getByText("tokenInput")).toBeInTheDocument()
     expect(screen.getByText("8,000")).toBeInTheDocument()
     expect(screen.getByText("12,345")).toBeInTheDocument()
@@ -112,11 +116,12 @@ describe("ChatTokenUsage", () => {
     vi.mocked(tokenUsageHookModule.useChatSessionTokenUsage).mockReturnValue({
       tokenUsage: {
         sessionId: "session-1",
-        totalTokens: CHAT_TOKEN_SOFT_LIMIT * 0.75,
+        totalTokens: 75000,
         totalInputTokens: 0,
         totalOutputTokens: 0,
         totalCachedTokens: 0,
-        totalReasoningTokens: 0
+        totalReasoningTokens: 0,
+        chatTokenLimit: 100000
       },
       isLoading: false,
       error: null
