@@ -121,7 +121,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const currentSession = await getSessionSummary(sessionId)
+    const [currentSession, contextMessages] = await Promise.all([
+      getSessionSummary(sessionId),
+      loadContextMessages(sessionId)
+    ])
+
     const jobApplication = await getJobApplicationByResumeId(
       currentSession!!.resumeId
     )
@@ -134,7 +138,6 @@ export async function POST(request: NextRequest) {
 
     const conversationSummary = currentSession?.conversationSummary
 
-    const contextMessages = await loadContextMessages(sessionId)
     const existingIdx = contextMessages.findIndex((m) => m.id === message.id)
     if (existingIdx >= 0) {
       contextMessages[existingIdx] = message
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
     const allMessages: ChatUIMessage[] = [systemMessage, ...contextMessages]
 
     if (message.role === "user") {
-      await saveMessage({
+      void saveMessage({
         id: message.id,
         sessionId,
         role: "user",
@@ -233,14 +236,14 @@ export async function POST(request: NextRequest) {
               : {}
           const existingMsg = allMessages.find((m) => m.id === finishedMsg.id)
           if (existingMsg) {
-            await updateMessage({
+            void updateMessage({
               messageId: existingMsg.id,
               parts: finishedMsg.parts,
               ...usageForMessage
             })
           } else {
             contextMessages.push(finishedMsg)
-            await saveMessage({
+            void saveMessage({
               id: finishedMsg.id,
               sessionId,
               role: finishedMsg.role,
@@ -251,12 +254,12 @@ export async function POST(request: NextRequest) {
         }
 
         if (responseUsage && responseUsage.totalTokens > 0) {
-          await updateSessionTokenUsage(sessionId).catch((err) => {
+          void updateSessionTokenUsage(sessionId).catch((err) => {
             console.error("Failed to update session token usage:", err)
           })
 
           if (activeAccessPass) {
-            await consumeChatTokens(
+            void consumeChatTokens(
               activeAccessPass.id,
               responseUsage.totalTokens
             ).catch((err) => {
@@ -271,7 +274,7 @@ export async function POST(request: NextRequest) {
                 part.type === "tool-resumeEditorReorder") &&
               part.state === "output-available"
             ) {
-              await logResumeModification(
+              void logResumeModification(
                 sessionId,
                 responseMessage.id,
                 part.output as Record<string, unknown>
@@ -281,7 +284,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (contextMessages.length >= 10) {
-          generateConversationSummary(
+          void generateConversationSummary(
             contextMessages,
             conversationSummary || ""
           )
