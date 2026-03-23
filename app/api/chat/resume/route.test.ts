@@ -264,7 +264,6 @@ describe("POST /api/chat/resume", () => {
           sessionId: "test-session-id",
           role: "assistant",
           parts: [{ type: "text", text: "Hi there" }],
-          tokenCount: 4513,
           inputTokens: 1,
           outputTokens: 270,
           cachedTokens: 4242,

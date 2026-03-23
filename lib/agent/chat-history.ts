@@ -34,7 +34,6 @@ export interface SaveMessageParams {
 export interface UpdateMessageParams {
   messageId: string
   parts?: MessagePart
-  tokenCount?: number
   inputTokens?: number
   outputTokens?: number
   cachedTokens?: number
@@ -121,7 +120,6 @@ export async function createSession({
 export async function updateMessage({
   messageId,
   parts,
-  tokenCount,
   inputTokens,
   outputTokens,
   cachedTokens,
@@ -134,7 +132,6 @@ export async function updateMessage({
     updateData.parts = parts
     updateData.has_tools = hasToolParts(parts)
   }
-  if (tokenCount !== undefined) updateData.token_count = tokenCount
   if (inputTokens !== undefined) updateData.input_tokens = inputTokens
   if (outputTokens !== undefined) updateData.output_tokens = outputTokens
   if (cachedTokens !== undefined) updateData.cached_tokens = cachedTokens
@@ -221,7 +218,7 @@ export async function loadHistory(
     role: msg.role,
     parts: msg.parts,
     createdAt: msg.created_at,
-    tokenCount: msg.token_count ?? 0,
+    tokenCount: getTotalTokens(msg),
     inputTokens: msg.input_tokens ?? 0,
     outputTokens: msg.output_tokens ?? 0,
     cachedTokens: msg.cached_tokens ?? 0,
@@ -269,7 +266,7 @@ export async function loadMessagesAfter(
     role: msg.role,
     parts: msg.parts,
     createdAt: msg.created_at,
-    tokenCount: msg.token_count ?? 0,
+    tokenCount: getTotalTokens(msg),
     inputTokens: msg.input_tokens ?? 0,
     outputTokens: msg.output_tokens ?? 0,
     cachedTokens: msg.cached_tokens ?? 0,
@@ -310,7 +307,7 @@ export async function getSessionSummary(
     updatedAt: session.updated_at,
     messageCount: count ?? 0,
     conversationSummary: session.conversation_summary || undefined,
-    totalTokens: session.total_tokens ?? 0,
+    totalTokens: getTotalTokens(session),
     totalInputTokens: session.total_input_tokens ?? 0,
     totalOutputTokens: session.total_output_tokens ?? 0,
     totalCachedTokens: session.total_cached_tokens ?? 0,
@@ -411,9 +408,7 @@ export async function updateSessionTokenUsage(
 
   const { data: messages, error } = await supabase
     .from("resume_chat_messages")
-    .select(
-      "input_tokens, output_tokens, cached_tokens, reasoning_tokens, token_count"
-    )
+    .select("input_tokens, output_tokens, cached_tokens, reasoning_tokens")
     .eq("session_id", sessionId)
     .eq("truncated", false)
 
@@ -422,10 +417,6 @@ export async function updateSessionTokenUsage(
     throw new Error(`Failed to calculate token usage: ${error.message}`)
   }
 
-  const totalTokens = messages?.reduce(
-    (sum, msg) => sum + (msg.token_count ?? 0),
-    0
-  )
   const totalInputTokens = messages?.reduce(
     (sum, msg) => sum + (msg.input_tokens ?? 0),
     0
@@ -446,7 +437,6 @@ export async function updateSessionTokenUsage(
   const { error: updateError } = await supabase
     .from("resume_chat_sessions")
     .update({
-      total_tokens: totalTokens ?? 0,
       total_input_tokens: totalInputTokens ?? 0,
       total_output_tokens: totalOutputTokens ?? 0,
       total_cached_tokens: totalCachedTokens ?? 0,
@@ -470,7 +460,7 @@ export async function getSessionTokenUsage(
   const { data: session, error: sessionError } = await supabase
     .from("resume_chat_sessions")
     .select(
-      "id, total_tokens, total_input_tokens, total_output_tokens, total_cached_tokens, total_reasoning_tokens"
+      "id, total_input_tokens, total_output_tokens, total_cached_tokens, total_reasoning_tokens"
     )
     .eq("id", sessionId)
     .single()
@@ -483,7 +473,7 @@ export async function getSessionTokenUsage(
   const { data: messages, error: messagesError } = await supabase
     .from("resume_chat_messages")
     .select(
-      "id, role, created_at, token_count, input_tokens, output_tokens, cached_tokens, reasoning_tokens"
+      "id, role, created_at, input_tokens, output_tokens, cached_tokens, reasoning_tokens"
     )
     .eq("session_id", sessionId)
     .eq("truncated", false)
@@ -498,7 +488,7 @@ export async function getSessionTokenUsage(
 
   return {
     sessionId: session.id,
-    totalTokens: session.total_tokens ?? 0,
+    totalTokens: getTotalTokens(session),
     totalInputTokens: session.total_input_tokens ?? 0,
     totalOutputTokens: session.total_output_tokens ?? 0,
     totalCachedTokens: session.total_cached_tokens ?? 0,
@@ -508,7 +498,7 @@ export async function getSessionTokenUsage(
         id: message.id,
         role: message.role,
         createdAt: message.created_at,
-        tokenCount: message.token_count ?? 0,
+        tokenCount: getTotalTokens(message),
         inputTokens: message.input_tokens ?? 0,
         outputTokens: message.output_tokens ?? 0,
         cachedTokens: message.cached_tokens ?? 0,
@@ -573,6 +563,37 @@ function hasToolParts(
       part.type &&
       typeof part.type === "string" &&
       part.type.startsWith("tool-")
+  )
+}
+
+function getTotalTokens(
+  source:
+    | Pick<
+        ChatMessage,
+        "input_tokens" | "output_tokens" | "cached_tokens" | "reasoning_tokens"
+      >
+    | Pick<
+        ChatSession,
+        | "total_input_tokens"
+        | "total_output_tokens"
+        | "total_cached_tokens"
+        | "total_reasoning_tokens"
+      >
+): number {
+  if ("input_tokens" in source) {
+    return (
+      (source.input_tokens ?? 0) +
+      (source.output_tokens ?? 0) +
+      (source.cached_tokens ?? 0) +
+      (source.reasoning_tokens ?? 0)
+    )
+  }
+
+  return (
+    (source.total_input_tokens ?? 0) +
+    (source.total_output_tokens ?? 0) +
+    (source.total_cached_tokens ?? 0) +
+    (source.total_reasoning_tokens ?? 0)
   )
 }
 

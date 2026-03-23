@@ -171,7 +171,6 @@ export async function POST(request: NextRequest) {
           const usageForMessage =
             responseUsage && responseMessage.id === finishedMsg.id
               ? {
-                  tokenCount: responseUsage.totalTokens,
                   inputTokens: responseUsage.inputTokens,
                   outputTokens: responseUsage.outputTokens,
                   cachedTokens: responseUsage.cachedTokens,

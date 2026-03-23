@@ -30,14 +30,12 @@ describe("chat-history token usage", () => {
       .mockReturnValueOnce({
         data: [
           {
-            token_count: 10,
             input_tokens: 6,
             output_tokens: 3,
             cached_tokens: 1,
             reasoning_tokens: 0
           },
           {
-            token_count: 15,
             input_tokens: 8,
             output_tokens: 4,
             cached_tokens: 2,
@@ -73,7 +71,6 @@ describe("chat-history token usage", () => {
     await updateSessionTokenUsage("session-1")
 
     expect(update).toHaveBeenCalledWith({
-      total_tokens: 25,
       total_input_tokens: 14,
       total_output_tokens: 7,
       total_cached_tokens: 3,
@@ -88,7 +85,6 @@ describe("chat-history token usage", () => {
         single: vi.fn().mockResolvedValue({
           data: {
             id: "session-1",
-            total_tokens: 25,
             total_input_tokens: 14,
             total_output_tokens: 7,
             total_cached_tokens: 3,
@@ -106,7 +102,6 @@ describe("chat-history token usage", () => {
             id: "msg-1",
             role: "user",
             created_at: "2024-01-01T00:00:00Z",
-            token_count: 10,
             input_tokens: 6,
             output_tokens: 3,
             cached_tokens: 1,
