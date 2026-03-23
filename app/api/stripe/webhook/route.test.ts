@@ -22,17 +22,20 @@ vi.mock("@/lib/payment/quota", () => ({
     FREE: {
       quota_full_optimize: 2,
       quota_block_optimize: 10,
-      quota_motivation_letter: 1
+      quota_motivation_letter: 1,
+      quota_chat_tokens: 100000
     },
     LITE: {
       quota_full_optimize: 5,
       quota_block_optimize: 30,
-      quota_motivation_letter: 3
+      quota_motivation_letter: 3,
+      quota_chat_tokens: 1000000
     },
     PRO: {
       quota_full_optimize: 10,
       quota_block_optimize: 50,
-      quota_motivation_letter: 5
+      quota_motivation_letter: 5,
+      quota_chat_tokens: 100000000
     }
   }
 }))
@@ -536,6 +539,9 @@ describe("POST /api/stripe/webhook", () => {
                 expect(data.quota_motivation_letter).toBe(
                   QUOTA.LITE.quota_motivation_letter
                 )
+                expect(data.quota_chat_tokens).toBe(
+                  QUOTA.LITE.quota_chat_tokens
+                )
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })
             })
@@ -606,6 +612,7 @@ describe("POST /api/stripe/webhook", () => {
                 expect(data.quota_motivation_letter).toBe(
                   QUOTA.PRO.quota_motivation_letter
                 )
+                expect(data.quota_chat_tokens).toBe(QUOTA.PRO.quota_chat_tokens)
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })
             })
@@ -675,6 +682,9 @@ describe("POST /api/stripe/webhook", () => {
                 )
                 expect(data.quota_motivation_letter).toBe(
                   QUOTA.FREE.quota_motivation_letter
+                )
+                expect(data.quota_chat_tokens).toBe(
+                  QUOTA.FREE.quota_chat_tokens
                 )
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })

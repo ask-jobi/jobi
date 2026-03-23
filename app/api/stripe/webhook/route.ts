@@ -134,7 +134,8 @@ export async function POST(req: Request) {
           stripe_checkout_session_id: session.id,
           quota_full_optimize: QUOTA[plan].quota_full_optimize,
           quota_block_optimize: QUOTA[plan].quota_block_optimize,
-          quota_motivation_letter: QUOTA[plan].quota_motivation_letter
+          quota_motivation_letter: QUOTA[plan].quota_motivation_letter,
+          quota_chat_tokens: QUOTA[plan].quota_chat_tokens
         })
 
       if (insertAccessPassError) {

@@ -12,18 +12,16 @@ import { useChatSessionTokenUsage } from "@/lib/hooks/use-chat-session-token-usa
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
-export const CHAT_TOKEN_SOFT_LIMIT = 100_000
-
 function formatTokenCount(value: number) {
   return new Intl.NumberFormat("en-US").format(value)
 }
 
-function getUsagePercentage(totalTokens: number) {
-  if (CHAT_TOKEN_SOFT_LIMIT <= 0) {
+function getUsagePercentage(totalTokens: number, tokenLimit: number) {
+  if (tokenLimit <= 0) {
     return 0
   }
 
-  return Math.min(Math.round((totalTokens / CHAT_TOKEN_SOFT_LIMIT) * 100), 100)
+  return Math.min(Math.round((totalTokens / tokenLimit) * 100), 100)
 }
 
 function getIndicatorClassName(percentage: number) {
@@ -51,15 +49,20 @@ export function ChatTokenUsage() {
     enabled: !isRunning
   })
   const hasError = !!error
-  const totalTokens = tokenUsage?.totalTokens ?? 0
-  const usagePercentage = getUsagePercentage(totalTokens)
+  const tokenLimit = tokenUsage?.chatTokenLimit ?? 0
+  const usagePercentage = getUsagePercentage(
+    tokenUsage?.totalTokens ?? 0,
+    tokenLimit
+  )
   const usageItems = tokenUsage
     ? [
         { label: t("tokenInput"), value: tokenUsage.totalInputTokens },
         { label: t("tokenOutput"), value: tokenUsage.totalOutputTokens },
         { label: t("tokenCached"), value: tokenUsage.totalCachedTokens },
         { label: t("tokenReasoning"), value: tokenUsage.totalReasoningTokens },
-        { label: t("tokenTotal"), value: tokenUsage.totalTokens }
+        { label: t("tokenTotal"), value: tokenUsage.totalTokens },
+        { label: t("tokenLimit"), value: tokenLimit },
+        { label: t("tokenUsagePercentage"), value: usagePercentage }
       ]
     : []
 
@@ -76,7 +79,7 @@ export function ChatTokenUsage() {
               hasError && "bg-muted-foreground/40"
             )}
             className="h-1.5 cursor-default bg-muted/70"
-            aria-label={t("tokenSoftLimit")}
+            aria-label={t("tokenUsagePercentage")}
           />
         </div>
       </TooltipTrigger>

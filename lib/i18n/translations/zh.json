@@ -86,6 +86,7 @@
   "loadingSubscriptionError": "加载套餐信息时出现错误",
   "failedToLoadSubscription": "无法加载套餐信息",
   "subscriptionAndUsageSettings": "套餐与用量设置",
+  "chatTokens": "Chat Token",
 
   "createNewResume": "创建新简历",
 
@@ -332,8 +333,10 @@
     "tokenCached": "缓存",
     "tokenReasoning": "推理",
     "tokenTotal": "总计",
+    "tokenLimit": "Token 上限",
     "tokenSoftLimit": "软上限",
     "tokenUsageUnavailable": "暂时无法获取 Token 用量",
+    "tokenUsagePercentage": "使用百分比",
     "truncateSuccess": "已回溯到该消息",
     "truncateFailed": "回溯失败",
     "toolOutput": {

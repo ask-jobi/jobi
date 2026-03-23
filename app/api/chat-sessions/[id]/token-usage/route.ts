@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSessionTokenUsage } from "@/lib/agent/chat-history"
+import { buildChatTokenQuota, getActiveAccessPass } from "@/server/quota"
 import {
   getAuthenticatedUser,
   verifyOwnership,
@@ -22,10 +23,14 @@ export async function GET(
     await verifyOwnership(sessionId, user.id)
 
     const tokenUsage = await getSessionTokenUsage(sessionId)
+    const activeAccessPass = await getActiveAccessPass(user.id)
 
     return NextResponse.json({
       success: true,
-      data: tokenUsage
+      data: {
+        ...tokenUsage,
+        chatTokenLimit: buildChatTokenQuota(activeAccessPass).limit
+      }
     })
   } catch (error) {
     return handleApiError(error)

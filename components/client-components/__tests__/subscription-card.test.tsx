@@ -20,6 +20,7 @@ describe("SubscriptionCard", () => {
     planName: "Pro Plan",
     expiryDate: "2025-12-31",
     isActive: true,
+    chatTokenLimit: 100000000,
     quotas: {
       fullOptimize: { used: 5, total: 10 },
       blockOptimize: { used: 3, total: 20 },

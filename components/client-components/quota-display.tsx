@@ -14,6 +14,7 @@ interface QuotaDisplayProps {
     planName: string
     expiryDate: string | null
     isActive: boolean
+    chatTokenLimit: number
     quotas: {
       fullOptimize: { used: number; total: number }
       blockOptimize: { used: number; total: number }
@@ -25,6 +26,7 @@ interface QuotaDisplayProps {
 export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
   const router = useRouter()
   const t = useTranslations()
+  const numberFormatter = new Intl.NumberFormat("en-US")
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return t("noActivePlan")
@@ -167,6 +169,15 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
               )}
               className="h-2"
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("chatTokens")}</span>
+              <span className="font-medium">
+                {numberFormatter.format(subscription.chatTokenLimit)}
+              </span>
+            </div>
           </div>
         </div>
 

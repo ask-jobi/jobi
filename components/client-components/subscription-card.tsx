@@ -9,6 +9,7 @@ interface SubscriptionData {
   planName: string
   expiryDate: string | null
   isActive: boolean
+  chatTokenLimit: number
   quotas: {
     fullOptimize: { used: number; total: number }
     blockOptimize: { used: number; total: number }

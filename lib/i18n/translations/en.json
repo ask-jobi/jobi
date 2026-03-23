@@ -86,6 +86,7 @@
   "loadingSubscriptionError": "Error loading subscription information",
   "failedToLoadSubscription": "Failed to load subscription information",
   "subscriptionAndUsageSettings": "Subscription & Usage Settings",
+  "chatTokens": "Chat tokens",
 
   "createNewResume": "Create New Resume",
 
@@ -334,8 +335,10 @@
     "tokenCached": "Cached",
     "tokenReasoning": "Reasoning",
     "tokenTotal": "Total",
+    "tokenLimit": "Token limit",
     "tokenSoftLimit": "Soft limit",
     "tokenUsageUnavailable": "Token usage unavailable",
+    "tokenUsagePercentage": "Usage percentage",
     "truncateSuccess": "Truncated to this message",
     "truncateFailed": "Failed to truncate",
     "toolOutput": {
