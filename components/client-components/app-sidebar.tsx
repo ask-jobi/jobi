@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Briefcase } from "lucide-react"
+import { LayoutDashboard, Settings } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -20,11 +20,6 @@ const items = [
     title: "dashboard",
     url: "/dashboard",
     icon: LayoutDashboard
-  },
-  {
-    title: "jobs",
-    url: "/jobs",
-    icon: Briefcase
   }
 ]
 

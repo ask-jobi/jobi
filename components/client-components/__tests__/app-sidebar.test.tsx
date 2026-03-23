@@ -27,11 +27,11 @@ describe("AppSidebar", () => {
     expect(screen.getByTestId("ui-sidebar-footer")).toBeInTheDocument()
   })
 
-  it("should render dashboard and jobs menu items", () => {
+  it("should render dashboard and settings menu items only", () => {
     render(TestAppSidebar)
 
     expect(screen.getByRole("link", { name: "dashboard" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "jobs" })).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "jobs" })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "settings" })).toBeInTheDocument()
   })
 
@@ -53,10 +53,6 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("link", { name: "dashboard" })).toHaveAttribute(
       "href",
       "/dashboard"
-    )
-    expect(screen.getByRole("link", { name: "jobs" })).toHaveAttribute(
-      "href",
-      "/jobs"
     )
     expect(screen.getByRole("link", { name: "settings" })).toHaveAttribute(
       "href",
