@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { useSetChatSessionId } from "@/lib/store/chat"
 import { useResume } from "@/lib/store/resume"
 import { useChatId } from "@/lib/hooks/use-chat-id"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
@@ -19,10 +20,11 @@ import {
   toUIMessage
 } from "./chat"
 import type {
+  ChatUIMessage,
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface ChatInterfaceProps {
   className?: string
@@ -33,8 +35,13 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const resumeId = application?.resume.id
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const { sessionId } = useChatId({ resumeId })
+  const setChatSessionId = useSetChatSessionId()
 
-  const chat = useAIChat({
+  useEffect(() => {
+    setChatSessionId(sessionId)
+  }, [sessionId, setChatSessionId])
+
+  const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
     generateId: generateUUID,
     onToolCall: async ({ toolCall }) => {

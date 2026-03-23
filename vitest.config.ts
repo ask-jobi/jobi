@@ -43,7 +43,7 @@ export default defineConfig({
         test: {
           name: "components",
           environment: "jsdom",
-          include: ["components/client-components/**/*.test.{ts,tsx}"],
+          include: ["components/**/*.test.{ts,tsx}"],
           exclude: ["components/ui/**"]
         }
       }
