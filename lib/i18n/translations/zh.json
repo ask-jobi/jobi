@@ -334,6 +334,8 @@
     "tokenCached": "缓存",
     "tokenReasoning": "推理",
     "tokenTotal": "总计",
+    "tokenSessionTotal": "当前会话总计",
+    "tokenSharedUsed": "全部会话已用",
     "tokenLimit": "Token 上限",
     "tokenSoftLimit": "软上限",
     "tokenUsageUnavailable": "暂时无法获取 Token 用量",

@@ -336,6 +336,8 @@
     "tokenCached": "Cached",
     "tokenReasoning": "Reasoning",
     "tokenTotal": "Total",
+    "tokenSessionTotal": "Session total",
+    "tokenSharedUsed": "All sessions used",
     "tokenLimit": "Token limit",
     "tokenSoftLimit": "Soft limit",
     "tokenUsageUnavailable": "Token usage unavailable",

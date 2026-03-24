@@ -29,7 +29,8 @@ export async function GET(
       success: true,
       data: {
         ...tokenUsage,
-        chatTokenLimit: buildChatTokenQuota(activeAccessPass).limit
+        chatTokenLimit: buildChatTokenQuota(activeAccessPass).limit,
+        usedChatTokens: buildChatTokenQuota(activeAccessPass).used
       }
     })
   } catch (error) {

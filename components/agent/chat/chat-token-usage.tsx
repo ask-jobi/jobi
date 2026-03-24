@@ -51,7 +51,7 @@ export function ChatTokenUsage() {
   const hasError = !!error
   const tokenLimit = tokenUsage?.chatTokenLimit ?? 0
   const usagePercentage = getUsagePercentage(
-    tokenUsage?.totalTokens ?? 0,
+    tokenUsage?.usedChatTokens ?? 0,
     tokenLimit
   )
   const usageItems = tokenUsage
@@ -60,7 +60,8 @@ export function ChatTokenUsage() {
         { label: t("tokenOutput"), value: tokenUsage.totalOutputTokens },
         { label: t("tokenCached"), value: tokenUsage.totalCachedTokens },
         { label: t("tokenReasoning"), value: tokenUsage.totalReasoningTokens },
-        { label: t("tokenTotal"), value: tokenUsage.totalTokens },
+        { label: t("tokenSessionTotal"), value: tokenUsage.totalTokens },
+        { label: t("tokenSharedUsed"), value: tokenUsage.usedChatTokens },
         { label: t("tokenLimit"), value: tokenLimit },
         { label: t("tokenUsagePercentage"), value: usagePercentage }
       ]

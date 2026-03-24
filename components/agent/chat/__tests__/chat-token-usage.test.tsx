@@ -64,7 +64,8 @@ describe("ChatTokenUsage", () => {
         totalOutputTokens: 3000,
         totalCachedTokens: 1000,
         totalReasoningTokens: 345,
-        chatTokenLimit: 1000000
+        chatTokenLimit: 1000000,
+        usedChatTokens: 54321
       },
       isLoading: false,
       error: null
@@ -84,7 +85,8 @@ describe("ChatTokenUsage", () => {
         totalOutputTokens: 3000,
         totalCachedTokens: 1000,
         totalReasoningTokens: 345,
-        chatTokenLimit: 1000000
+        chatTokenLimit: 1000000,
+        usedChatTokens: 54321
       },
       isLoading: false,
       error: null
@@ -93,11 +95,13 @@ describe("ChatTokenUsage", () => {
     render(<ChatTokenUsage />)
 
     expect(screen.getByText("tokenUsageDetails")).toBeInTheDocument()
+    expect(screen.getByText("tokenSharedUsed")).toBeInTheDocument()
     expect(screen.getByText("tokenLimit")).toBeInTheDocument()
     expect(screen.getByText("tokenUsagePercentage")).toBeInTheDocument()
     expect(screen.getByText("tokenInput")).toBeInTheDocument()
     expect(screen.getByText("8,000")).toBeInTheDocument()
     expect(screen.getByText("12,345")).toBeInTheDocument()
+    expect(screen.getByText("54,321")).toBeInTheDocument()
   })
 
   it("should show unavailable message when request fails", () => {
@@ -116,12 +120,13 @@ describe("ChatTokenUsage", () => {
     vi.mocked(tokenUsageHookModule.useChatSessionTokenUsage).mockReturnValue({
       tokenUsage: {
         sessionId: "session-1",
-        totalTokens: 75000,
+        totalTokens: 1000,
         totalInputTokens: 0,
         totalOutputTokens: 0,
         totalCachedTokens: 0,
         totalReasoningTokens: 0,
-        chatTokenLimit: 100000
+        chatTokenLimit: 100000,
+        usedChatTokens: 75000
       },
       isLoading: false,
       error: null
