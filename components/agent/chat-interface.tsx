@@ -19,15 +19,11 @@ import {
 } from "./chat"
 import type {
   ChatUIMessage,
-  MessagePart,
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
 import { useEffect, useState } from "react"
-import {
-  deriveChatSessionTitleFromParts,
-  isDefaultChatSessionTitle
-} from "@/lib/chat-session-title"
+import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import { useChatSessionsState } from "@/lib/hooks/use-chat-sessions"
 import { useActiveChatSession } from "@/lib/hooks/use-active-chat-session"
 
@@ -48,7 +44,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { resumeData, updateResumeByToolOutput } = useResume()
   const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const { sessions, updateSessionTitleLocally } = useChatSessionsState()
+  const { sessions, refreshSessions } = useChatSessionsState()
   const { activeSessionId: sessionId } = useActiveChatSession()
   const activeSession = sessions.find((session) => session.id === sessionId)
 
@@ -85,20 +81,15 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    onFinish: () => {
+      if (activeSession && isDefaultChatSessionTitle(activeSession.title)) {
+        void refreshSessions()
+      }
+    },
     transport: new DefaultChatTransport({
       api: "/api/chat/resume",
       prepareSendMessagesRequest({ messages, id }) {
         const latestMessage = messages[messages.length - 1]
-
-        if (latestMessage?.role === "user") {
-          syncSessionTitleFromMessage(
-            sessionId,
-            activeSession,
-            latestMessage.parts,
-            updateSessionTitleLocally
-          )
-        }
-
         return { body: { message: latestMessage, id } }
       }
     })
@@ -127,23 +118,4 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>
   )
-}
-
-function syncSessionTitleFromMessage(
-  sessionId: string,
-  session: SessionSummary | undefined,
-  parts: MessagePart,
-  onSessionTitleGenerated?: (sessionId: string, title: string) => void
-) {
-  if (!session || !isDefaultChatSessionTitle(session.title)) {
-    return
-  }
-
-  const title = deriveChatSessionTitleFromParts(parts)
-
-  if (!title) {
-    return
-  }
-
-  onSessionTitleGenerated?.(sessionId, title)
 }

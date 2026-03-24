@@ -5,38 +5,31 @@ import { describe, expect, it } from "vitest"
 import {
   CHAT_SESSION_TITLE_MAX_LENGTH,
   DEFAULT_CHAT_SESSION_TITLE,
-  deriveChatSessionTitleFromParts,
+  normalizeChatSessionTitle,
   isDefaultChatSessionTitle
 } from "@/lib/chat-session-title"
 
 describe("chat-session-title", () => {
-  it("should derive title from the first text parts", () => {
-    expect(
-      deriveChatSessionTitleFromParts([
-        { type: "text", text: "  Improve\nmy   resume  " }
-      ] as never)
-    ).toBe("Improve my resume")
+  it("should normalize whitespace", () => {
+    expect(normalizeChatSessionTitle("  Improve\nmy   resume  ")).toBe(
+      "Improve my resume"
+    )
   })
 
-  it("should ignore non-text parts", () => {
-    expect(
-      deriveChatSessionTitleFromParts([
-        { type: "tool-resumeEditorModify", state: "output-available" },
-        { type: "text", text: "First useful title" }
-      ] as never)
-    ).toBe("First useful title")
+  it("should strip wrapping quotes", () => {
+    expect(normalizeChatSessionTitle('  "First useful title"  ')).toBe(
+      "First useful title"
+    )
   })
 
   it("should return null when no usable text exists", () => {
-    expect(
-      deriveChatSessionTitleFromParts([{ type: "text", text: "   " }] as never)
-    ).toBeNull()
+    expect(normalizeChatSessionTitle("   ")).toBeNull()
   })
 
   it("should truncate long titles to the supported max length", () => {
-    const title = deriveChatSessionTitleFromParts([
-      { type: "text", text: "a".repeat(CHAT_SESSION_TITLE_MAX_LENGTH + 10) }
-    ] as never)
+    const title = normalizeChatSessionTitle(
+      "a".repeat(CHAT_SESSION_TITLE_MAX_LENGTH + 10)
+    )
 
     expect(title).toHaveLength(CHAT_SESSION_TITLE_MAX_LENGTH)
   })
