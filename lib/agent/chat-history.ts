@@ -9,9 +9,9 @@ import {
 } from "@/types/chat"
 import {
   DEFAULT_CHAT_SESSION_TITLE,
-  deriveChatSessionTitleFromParts,
   isDefaultChatSessionTitle
 } from "@/lib/chat-session-title"
+import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
 
 type ChatMessage = Database["public"]["Tables"]["resume_chat_messages"]["Row"]
 type ChatSession = Database["public"]["Tables"]["resume_chat_sessions"]["Row"]
@@ -809,13 +809,14 @@ async function autoTitleSessionFromUserMessages(
     throw new Error(`Failed to load user messages: ${messagesError.message}`)
   }
 
-  const title = (userMessages || [])
-    .map((message) => deriveChatSessionTitleFromParts(message.parts))
-    .find((value): value is string => Boolean(value))
+  for (const message of userMessages || []) {
+    const title = await generateChatSessionTitle(message.parts)
 
-  if (!title) {
+    if (!title) {
+      continue
+    }
+
+    await updateSessionTitle(sessionId, title)
     return
   }
-
-  await updateSessionTitle(sessionId, title)
 }
