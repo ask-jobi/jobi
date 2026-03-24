@@ -18,7 +18,8 @@ import {
   updateConversationSummary,
   type ChatHistoryEntry,
   getSessionSummary,
-  updateSessionTokenUsage
+  updateSessionTokenUsage,
+  updateSessionTitle
 } from "@/lib/agent/chat-history"
 import { generateConversationSummary } from "@/lib/agent/conversation-summary"
 import { getJobApplicationByResumeId } from "@/server/resume"
@@ -34,12 +35,14 @@ import {
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
 import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
+import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import {
   buildChatTokenQuota,
   consumeChatTokens,
   getActiveAccessPass,
   verifyChatTokenQuota
 } from "@/server/quota"
+import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -163,6 +166,9 @@ export async function POST(request: NextRequest) {
     } as ChatUIMessage
 
     const allMessages: ChatUIMessage[] = [systemMessage, ...contextMessages]
+    const shouldGenerateSessionTitle = isDefaultChatSessionTitle(
+      currentSession?.title
+    )
 
     if (message.role === "user") {
       void saveMessage({
@@ -218,9 +224,28 @@ export async function POST(request: NextRequest) {
             }
           })
         )
+
+        if (shouldGenerateSessionTitle) {
+          generateChatSessionTitle(message.parts).then(async (title) => {
+            if (!title) {
+              return
+            }
+
+            dataStream.write({
+              type: "data-sessionTitle",
+              data: {
+                sessionId,
+                title
+              },
+              transient: true
+            })
+            await updateSessionTitle(sessionId, title)
+          })
+        }
       },
       onFinish: async ({ messages: finishedMessages, responseMessage }) => {
         const responseUsage = responseMessage.metadata?.tokenUsage
+        const persistenceTasks: Promise<void | unknown>[] = []
 
         for (const finishedMsg of finishedMessages.filter(
           (msg) => msg.id !== "system"
@@ -236,22 +261,28 @@ export async function POST(request: NextRequest) {
               : {}
           const existingMsg = allMessages.find((m) => m.id === finishedMsg.id)
           if (existingMsg) {
-            void updateMessage({
-              messageId: existingMsg.id,
-              parts: finishedMsg.parts,
-              ...usageForMessage
-            })
+            persistenceTasks.push(
+              updateMessage({
+                messageId: existingMsg.id,
+                parts: finishedMsg.parts,
+                ...usageForMessage
+              })
+            )
           } else {
             contextMessages.push(finishedMsg)
-            void saveMessage({
-              id: finishedMsg.id,
-              sessionId,
-              role: finishedMsg.role,
-              parts: finishedMsg.parts,
-              ...usageForMessage
-            })
+            persistenceTasks.push(
+              saveMessage({
+                id: finishedMsg.id,
+                sessionId,
+                role: finishedMsg.role,
+                parts: finishedMsg.parts,
+                ...usageForMessage
+              })
+            )
           }
         }
+
+        await Promise.all(persistenceTasks)
 
         if (responseUsage && responseUsage.totalTokens > 0) {
           void updateSessionTokenUsage(sessionId).catch((err) => {

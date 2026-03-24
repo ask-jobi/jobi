@@ -16,8 +16,22 @@ export interface ChatTokenUsage {
   totalTokens: number
 }
 
+export interface ChatDataParts {
+  sessionTitle: {
+    sessionId: string
+    title: string
+  }
+}
+
 export interface ChatMessageMetadata {
   tokenUsage?: ChatTokenUsage
+}
+
+export const chatDataPartSchemas = {
+  sessionTitle: z.object({
+    sessionId: z.string(),
+    title: z.string()
+  })
 }
 
 export type ResumeEditorModifyOutput = z.infer<
@@ -35,7 +49,7 @@ export type ResumeEditorReorderInput = z.infer<
 
 export type ChatUIMessage = UIMessage<
   ChatMessageMetadata,
-  UIDataTypes,
+  ChatDataParts & UIDataTypes,
   InferUITools<typeof tools>
 >
 

@@ -42,7 +42,7 @@ export function ChatTokenUsage() {
   const isRunning = useAuiState((s) => s.thread.isRunning)
   const messages = useAuiState((s) => s.thread.messages ?? [])
   const lastMessage = messages[messages.length - 1]
-  const refreshKey = `${messages.length}:${lastMessage?.id ?? "none"}:${lastMessage?.metadata?.tokenUsage?.totalTokens ?? 0}`
+  const refreshKey = `${sessionId}:${messages.length}:${lastMessage?.id ?? "none"}:${isRunning ? "running" : "idle"}`
   const { tokenUsage, isLoading, error } = useChatSessionTokenUsage({
     sessionId,
     refreshKey,
