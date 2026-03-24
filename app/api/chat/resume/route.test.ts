@@ -32,6 +32,7 @@ vi.mock("@/lib/agent/tools", () => ({
 }))
 
 vi.mock("@/lib/agent/chat-history", () => ({
+  generateSessionTitleIfNeeded: vi.fn(),
   getLatestValidSummaryCheckpoint: vi.fn(),
   loadHistory: vi.fn(),
   loadMessagesAfter: vi.fn(),
@@ -149,5 +150,149 @@ describe("POST /api/chat/resume", () => {
     expect(response.status).toBe(200)
     expect(aiModule.createUIMessageStreamResponse).toHaveBeenCalled()
     expect(chatHistoryModule.saveMessage).not.toHaveBeenCalled()
+  })
+
+  it("should update session token usage after message persistence completes", async () => {
+    const authHelpers = await import("@/server/auth-helpers")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const resumeModule = await import("@/server/resume")
+    const aiModule = await import("ai")
+    const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
+    const routeModule = await import("./route")
+
+    const events: string[] = []
+    let onFinishPromise: Promise<void> | null = null
+
+    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(quotaModule.buildChatTokenQuota).mockReturnValue({
+      used: 0,
+      limit: 0
+    })
+
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      resumeId: "resume-1",
+      title: "New Chat",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 1
+    } as never)
+    vi.mocked(
+      chatHistoryModule.getLatestValidSummaryCheckpoint
+    ).mockResolvedValue(null)
+    vi.mocked(chatHistoryModule.generateSessionTitleIfNeeded).mockResolvedValue(
+      "Tailor resume for PM role"
+    )
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.saveMessage).mockImplementation(async () => {
+      events.push("save")
+      return {} as never
+    })
+    vi.mocked(chatHistoryModule.updateMessage).mockImplementation(async () => {
+      events.push("update")
+    })
+    vi.mocked(chatHistoryModule.updateSessionTokenUsage).mockImplementation(
+      async () => {
+        expect(events).toEqual(["save", "update"])
+      }
+    )
+
+    vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
+      resumes: {
+        resume_json: {},
+        language: "en",
+        evaluation_report: {}
+      },
+      jobs: "job description"
+    } as never)
+
+    vi.mocked(promptModule.default.format).mockReturnValue("prompt")
+    vi.mocked(aiModule.validateUIMessages).mockImplementation(
+      async ({ messages }) => messages as never
+    )
+    vi.mocked(aiModule.convertToModelMessages).mockResolvedValue([] as never)
+    vi.mocked(aiModule.streamText).mockReturnValue({
+      toUIMessageStream: () => []
+    } as never)
+    const dataWriterWrite = vi.fn()
+    vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+      ({ execute, onFinish }) => {
+        onFinishPromise = (async () => {
+          await execute({
+            writer: {
+              write: dataWriterWrite,
+              merge: vi.fn()
+            }
+          } as never)
+
+          await onFinish?.({
+            messages: [
+              {
+                id: "message-1",
+                role: "user",
+                parts: [{ type: "text", text: "hello" }]
+              },
+              {
+                id: "message-2",
+                role: "assistant",
+                parts: [{ type: "text", text: "hi" }]
+              }
+            ],
+            responseMessage: {
+              id: "message-2",
+              role: "assistant",
+              parts: [{ type: "text", text: "hi" }],
+              metadata: {
+                tokenUsage: {
+                  inputTokens: 10,
+                  outputTokens: 20,
+                  cachedTokens: 0,
+                  reasoningTokens: 0,
+                  totalTokens: 30
+                }
+              }
+            }
+          } as never)
+        })()
+
+        return [] as never
+      }
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "hello" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+    await onFinishPromise
+
+    expect(response.status).toBe(200)
+    expect(chatHistoryModule.updateMessage).toHaveBeenCalledOnce()
+    expect(chatHistoryModule.saveMessage).toHaveBeenCalledTimes(2)
+    expect(chatHistoryModule.updateSessionTokenUsage).toHaveBeenCalledWith(
+      "session-1"
+    )
+    expect(dataWriterWrite).toHaveBeenCalledWith({
+      type: "data-sessionTitle",
+      data: {
+        sessionId: "session-1",
+        title: "Tailor resume for PM role"
+      },
+      transient: true
+    })
   })
 })

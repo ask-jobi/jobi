@@ -7,11 +7,7 @@ import {
   ResumeEditorModifyOutput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
-import {
-  DEFAULT_CHAT_SESSION_TITLE,
-  isDefaultChatSessionTitle
-} from "@/lib/chat-session-title"
-import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
+import { DEFAULT_CHAT_SESSION_TITLE } from "@/lib/chat-session-title"
 
 type ChatMessage = Database["public"]["Tables"]["resume_chat_messages"]["Row"]
 type ChatSession = Database["public"]["Tables"]["resume_chat_sessions"]["Row"]
@@ -189,10 +185,6 @@ export async function saveMessage({
   if (error) {
     console.error("Failed to save message:", error)
     throw new Error(`Failed to save message: ${error.message}`)
-  }
-
-  if (role === "user") {
-    await autoTitleSessionFromUserMessages(sessionId)
   }
 
   return data
@@ -774,49 +766,4 @@ export async function restoreConversationSummaryAfterTruncate(
     .from("resume_chat_sessions")
     .update({ conversation_summary: summaryText })
     .eq("id", sessionId)
-}
-
-async function autoTitleSessionFromUserMessages(
-  sessionId: string
-): Promise<void> {
-  const supabase = await createClient()
-
-  const { data: session, error: sessionError } = await supabase
-    .from("resume_chat_sessions")
-    .select("title")
-    .eq("id", sessionId)
-    .single()
-
-  if (sessionError || !isDefaultChatSessionTitle(session?.title)) {
-    if (sessionError) {
-      console.error("Failed to load session for auto-title:", sessionError)
-      throw new Error(`Failed to load session: ${sessionError.message}`)
-    }
-
-    return
-  }
-
-  const { data: userMessages, error: messagesError } = await supabase
-    .from("resume_chat_messages")
-    .select("parts")
-    .eq("session_id", sessionId)
-    .eq("role", "user")
-    .eq("truncated", false)
-    .order("created_at", { ascending: true })
-
-  if (messagesError) {
-    console.error("Failed to load user messages for auto-title:", messagesError)
-    throw new Error(`Failed to load user messages: ${messagesError.message}`)
-  }
-
-  for (const message of userMessages || []) {
-    const title = await generateChatSessionTitle(message.parts)
-
-    if (!title) {
-      continue
-    }
-
-    await updateSessionTitle(sessionId, title)
-    return
-  }
 }

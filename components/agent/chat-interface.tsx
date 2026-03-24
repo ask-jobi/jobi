@@ -17,13 +17,13 @@ import {
   executeResumeEditorReorderTool,
   toUIMessage
 } from "./chat"
+import { chatDataPartSchemas } from "@/types/chat"
 import type {
   ChatUIMessage,
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
 import { useEffect, useState } from "react"
-import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import { useChatSessionsState } from "@/lib/hooks/use-chat-sessions"
 import { useActiveChatSession } from "@/lib/hooks/use-active-chat-session"
 
@@ -44,9 +44,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { resumeData, updateResumeByToolOutput } = useResume()
   const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const { sessions, refreshSessions } = useChatSessionsState()
+  const { updateSessionTitleLocally } = useChatSessionsState()
   const { activeSessionId: sessionId } = useActiveChatSession()
-  const activeSession = sessions.find((session) => session.id === sessionId)
 
   useEffect(() => {
     setIsInitialLoading(Boolean(sessionId))
@@ -55,6 +54,16 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
     generateId: generateUUID,
+    dataPartSchemas: chatDataPartSchemas,
+    onData: (part) => {
+      if (part.type === "data-sessionTitle") {
+        const titleUpdate = part.data as {
+          sessionId: string
+          title: string
+        }
+        updateSessionTitleLocally(titleUpdate.sessionId, titleUpdate.title)
+      }
+    },
     onToolCall: async ({ toolCall }) => {
       const { input } = toolCall
 
@@ -81,11 +90,6 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    onFinish: () => {
-      if (activeSession && isDefaultChatSessionTitle(activeSession.title)) {
-        void refreshSessions()
-      }
-    },
     transport: new DefaultChatTransport({
       api: "/api/chat/resume",
       prepareSendMessagesRequest({ messages, id }) {
