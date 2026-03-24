@@ -10,6 +10,7 @@ export interface ChatSessionTokenUsage {
   totalCachedTokens: number
   totalReasoningTokens: number
   chatTokenLimit: number
+  usedChatTokens: number
 }
 
 interface TokenUsageResponse {

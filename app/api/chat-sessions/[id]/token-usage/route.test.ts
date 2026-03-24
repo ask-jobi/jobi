@@ -123,6 +123,7 @@ describe("GET /api/chat-sessions/[id]/token-usage", () => {
     expect(data.data.totalTokens).toBe(150)
     expect(data.data.totalCachedTokens).toBe(15)
     expect(data.data.chatTokenLimit).toBe(0)
+    expect(data.data.usedChatTokens).toBe(0)
     expect(data.data.messages).toHaveLength(2)
     expect(data.data.messages[1].reasoningTokens).toBe(5)
   })
