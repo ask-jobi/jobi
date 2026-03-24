@@ -102,10 +102,7 @@ describe("POST /api/chat-sessions", () => {
     vi.restoreAllMocks()
   })
 
-  const createMockRequest = (body: {
-    resumeId: string
-    title?: string
-  }): NextRequest => {
+  const createMockRequest = (body: { resumeId: string }): NextRequest => {
     return new NextRequest("http://localhost:3000/api/chat-sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -151,33 +148,6 @@ describe("POST /api/chat-sessions", () => {
     expect(response.status).toBe(400)
   })
 
-  it("should return 400 when title is too long", async () => {
-    const request = createMockRequest({
-      resumeId: "550e8400-e29b-41d4-a716-446655440000",
-      title: "a".repeat(201)
-    })
-    const response = await POST(request)
-
-    expect(response.status).toBe(400)
-    const data = await response.json()
-    expect(data.details[0].message).toContain("200 characters")
-  })
-
-  it("should create session with title", async () => {
-    const request = createMockRequest({
-      resumeId: "550e8400-e29b-41d4-a716-446655440000",
-      title: "My Resume Chat"
-    })
-    const response = await POST(request)
-
-    expect(response.status).toBe(200)
-    expect(vi.mocked(chatHistoryModule.createSession)).toHaveBeenCalledWith({
-      userId: "test-user-id",
-      resumeId: "550e8400-e29b-41d4-a716-446655440000",
-      title: "My Resume Chat"
-    })
-  })
-
   it("should create session without title", async () => {
     const request = createMockRequest({
       resumeId: "550e8400-e29b-41d4-a716-446655440000"
@@ -187,8 +157,7 @@ describe("POST /api/chat-sessions", () => {
     expect(response.status).toBe(200)
     expect(vi.mocked(chatHistoryModule.createSession)).toHaveBeenCalledWith({
       userId: "test-user-id",
-      resumeId: "550e8400-e29b-41d4-a716-446655440000",
-      title: undefined
+      resumeId: "550e8400-e29b-41d4-a716-446655440000"
     })
   })
 

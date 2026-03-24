@@ -120,6 +120,7 @@ describe("PATCH /api/chat-sessions/[id]", () => {
 
     vi.mocked(chatHistoryModule.verifySessionOwnership).mockResolvedValue(true)
     vi.mocked(chatHistoryModule.updateSessionStatus).mockResolvedValue()
+    vi.mocked(chatHistoryModule.updateSessionTitle).mockResolvedValue()
     vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
       id: "session-1",
       title: "Updated Chat",
@@ -215,6 +216,21 @@ describe("PATCH /api/chat-sessions/[id]", () => {
     expect(
       vi.mocked(chatHistoryModule.updateSessionStatus)
     ).toHaveBeenCalledWith("session-1", "completed")
+  })
+
+  it("should update session title", async () => {
+    const params = Promise.resolve({ id: "session-1" })
+    const response = await PATCH(
+      createMockRequest({ title: "Tailor for PM role" }),
+      {
+        params
+      }
+    )
+
+    expect(response.status).toBe(200)
+    expect(
+      vi.mocked(chatHistoryModule.updateSessionTitle)
+    ).toHaveBeenCalledWith("session-1", "Tailor for PM role")
   })
 
   it("should return 500 on internal error", async () => {

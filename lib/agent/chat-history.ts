@@ -7,6 +7,11 @@ import {
   ResumeEditorModifyOutput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
+import {
+  DEFAULT_CHAT_SESSION_TITLE,
+  deriveChatSessionTitleFromParts,
+  isDefaultChatSessionTitle
+} from "@/lib/chat-session-title"
 
 type ChatMessage = Database["public"]["Tables"]["resume_chat_messages"]["Row"]
 type ChatSession = Database["public"]["Tables"]["resume_chat_sessions"]["Row"]
@@ -104,7 +109,7 @@ export async function createSession({
     .insert({
       user_id: userId,
       resume_id: resumeId,
-      title: title || "New Chat"
+      title: title || DEFAULT_CHAT_SESSION_TITLE
     })
     .select()
     .single()
@@ -184,6 +189,10 @@ export async function saveMessage({
   if (error) {
     console.error("Failed to save message:", error)
     throw new Error(`Failed to save message: ${error.message}`)
+  }
+
+  if (role === "user") {
+    await autoTitleSessionFromUserMessages(sessionId)
   }
 
   return data
@@ -398,6 +407,23 @@ export async function updateSessionStatus(
   if (error) {
     console.error("Failed to update session status:", error)
     throw new Error(`Failed to update session status: ${error.message}`)
+  }
+}
+
+export async function updateSessionTitle(
+  sessionId: string,
+  title: string
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("resume_chat_sessions")
+    .update({ title })
+    .eq("id", sessionId)
+
+  if (error) {
+    console.error("Failed to update session title:", error)
+    throw new Error(`Failed to update session title: ${error.message}`)
   }
 }
 
@@ -748,4 +774,48 @@ export async function restoreConversationSummaryAfterTruncate(
     .from("resume_chat_sessions")
     .update({ conversation_summary: summaryText })
     .eq("id", sessionId)
+}
+
+async function autoTitleSessionFromUserMessages(
+  sessionId: string
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { data: session, error: sessionError } = await supabase
+    .from("resume_chat_sessions")
+    .select("title")
+    .eq("id", sessionId)
+    .single()
+
+  if (sessionError || !isDefaultChatSessionTitle(session?.title)) {
+    if (sessionError) {
+      console.error("Failed to load session for auto-title:", sessionError)
+      throw new Error(`Failed to load session: ${sessionError.message}`)
+    }
+
+    return
+  }
+
+  const { data: userMessages, error: messagesError } = await supabase
+    .from("resume_chat_messages")
+    .select("parts")
+    .eq("session_id", sessionId)
+    .eq("role", "user")
+    .eq("truncated", false)
+    .order("created_at", { ascending: true })
+
+  if (messagesError) {
+    console.error("Failed to load user messages for auto-title:", messagesError)
+    throw new Error(`Failed to load user messages: ${messagesError.message}`)
+  }
+
+  const title = (userMessages || [])
+    .map((message) => deriveChatSessionTitleFromParts(message.parts))
+    .find((value): value is string => Boolean(value))
+
+  if (!title) {
+    return
+  }
+
+  await updateSessionTitle(sessionId, title)
 }

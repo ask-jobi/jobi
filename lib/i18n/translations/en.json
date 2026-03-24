@@ -318,8 +318,9 @@
 
   "chat": {
     "loading": "Loading",
-    "aiChat": "AI Chat",
-    "chatAboutResume": "Chat about your resume",
+    "newSession": "New chat",
+    "sessionFallbackTitle": "New chat",
+    "close": "Close chat",
     "startConversation": "Start a conversation",
     "askToOptimizeResume": "Ask me to help optimize your resume...",
     "composerPlaceholder": "Send a message...",

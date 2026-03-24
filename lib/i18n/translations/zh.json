@@ -316,8 +316,9 @@
 
   "chat": {
     "loading": "加载中",
-    "aiChat": "AI 对话",
-    "chatAboutResume": "关于简历的对话",
+    "newSession": "新建对话",
+    "sessionFallbackTitle": "新对话",
+    "close": "关闭对话",
     "startConversation": "开始对话",
     "askToOptimizeResume": "让我帮您优化简历...",
     "composerPlaceholder": "发送消息...",
