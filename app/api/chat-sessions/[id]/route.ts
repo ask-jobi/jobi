@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
   getSessionSummary,
+  updateSessionTitle,
   updateSessionStatus,
   permanentlyDeleteSession
 } from "@/lib/agent/chat-history"
@@ -75,8 +76,10 @@ export async function PATCH(
       await updateSessionStatus(sessionId, validationResult.data.status)
     }
 
-    // 如果需要更新标题，可以在这里添加 updateSessionTitle 函数
-    // 目前使用 getSessionSummary 获取更新后的数据
+    if (validationResult.data.title) {
+      await updateSessionTitle(sessionId, validationResult.data.title)
+    }
+
     const session = await getSessionSummary(sessionId)
 
     return NextResponse.json({

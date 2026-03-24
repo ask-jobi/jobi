@@ -24,16 +24,19 @@ export function useChatHistory({
   const [messages, setMessages] = useState<ChatHistoryEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const initialized = useRef(false)
+  const requestIdRef = useRef(0)
 
   const sessionIdRef = useRef(sessionId)
   sessionIdRef.current = sessionId
 
   const fetchMessages = useCallback(async () => {
     if (!sessionIdRef.current) {
+      setMessages([])
       return
     }
 
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
     setLoading(true)
     setError(null)
 
@@ -49,24 +52,37 @@ export function useChatHistory({
 
       const messageList: ChatHistoryEntry[] = (await response.json()) || []
 
+      if (requestId !== requestIdRef.current) {
+        return
+      }
+
       setMessages(messageList)
       onLoad?.(messageList)
     } catch (err) {
+      if (requestId !== requestIdRef.current) {
+        return
+      }
+
       const error =
         err instanceof Error ? err : new Error("Unknown error occurred")
       setError(error)
       console.error("Failed to fetch chat messages:", err)
     } finally {
-      setLoading(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [limit, onLoad])
 
   useEffect(() => {
-    if (sessionIdRef.current && !initialized.current) {
-      initialized.current = true
-      fetchMessages()
+    if (!sessionId) {
+      setMessages([])
+      setLoading(false)
+      return
     }
-  }, [fetchMessages])
+
+    void fetchMessages()
+  }, [fetchMessages, sessionId])
 
   return {
     messages,

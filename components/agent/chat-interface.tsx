@@ -1,9 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { useSetChatSessionId } from "@/lib/store/chat"
 import { useResume } from "@/lib/store/resume"
-import { useChatId } from "@/lib/hooks/use-chat-id"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk"
@@ -21,25 +19,42 @@ import {
 } from "./chat"
 import type {
   ChatUIMessage,
+  MessagePart,
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
 import { useEffect, useState } from "react"
+import {
+  deriveChatSessionTitleFromParts,
+  isDefaultChatSessionTitle
+} from "@/lib/chat-session-title"
+import { useChatSessionsState } from "@/lib/hooks/use-chat-sessions"
+import { useActiveChatSession } from "@/lib/hooks/use-active-chat-session"
 
 interface ChatInterfaceProps {
   className?: string
 }
 
 export function ChatInterface({ className }: ChatInterfaceProps) {
-  const { application, resumeData, updateResumeByToolOutput } = useResume()
-  const resumeId = application?.resume.id
+  const { activeSessionId: sessionId } = useActiveChatSession()
+
+  if (!sessionId) {
+    return null
+  }
+
+  return <ChatInterfaceThread key={sessionId} className={className} />
+}
+
+function ChatInterfaceThread({ className }: ChatInterfaceProps) {
+  const { resumeData, updateResumeByToolOutput } = useResume()
   const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const { sessionId } = useChatId({ resumeId })
-  const setChatSessionId = useSetChatSessionId()
+  const { sessions, updateSessionTitleLocally } = useChatSessionsState()
+  const { activeSessionId: sessionId } = useActiveChatSession()
+  const activeSession = sessions.find((session) => session.id === sessionId)
 
   useEffect(() => {
-    setChatSessionId(sessionId)
-  }, [sessionId, setChatSessionId])
+    setIsInitialLoading(Boolean(sessionId))
+  }, [sessionId])
 
   const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
@@ -73,7 +88,18 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
     transport: new DefaultChatTransport({
       api: "/api/chat/resume",
       prepareSendMessagesRequest({ messages, id }) {
-        return { body: { message: messages[messages.length - 1], id } }
+        const latestMessage = messages[messages.length - 1]
+
+        if (latestMessage?.role === "user") {
+          syncSessionTitleFromMessage(
+            sessionId,
+            activeSession,
+            latestMessage.parts,
+            updateSessionTitleLocally
+          )
+        }
+
+        return { body: { message: latestMessage, id } }
       }
     })
   })
@@ -101,4 +127,23 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>
   )
+}
+
+function syncSessionTitleFromMessage(
+  sessionId: string,
+  session: SessionSummary | undefined,
+  parts: MessagePart,
+  onSessionTitleGenerated?: (sessionId: string, title: string) => void
+) {
+  if (!session || !isDefaultChatSessionTitle(session.title)) {
+    return
+  }
+
+  const title = deriveChatSessionTitleFromParts(parts)
+
+  if (!title) {
+    return
+  }
+
+  onSessionTitleGenerated?.(sessionId, title)
 }

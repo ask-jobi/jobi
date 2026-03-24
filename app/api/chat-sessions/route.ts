@@ -4,11 +4,7 @@ import { z } from "zod"
 import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 
 const createSessionSchema = z.object({
-  resumeId: z.uuid("Invalid resume ID format"),
-  title: z
-    .string()
-    .max(200, "Title must be less than 200 characters")
-    .optional()
+  resumeId: z.uuid("Invalid resume ID format")
 })
 
 export const dynamic = "force-dynamic"
@@ -47,8 +43,7 @@ export async function POST(request: NextRequest) {
 
     const session = await createSession({
       userId: user.id,
-      resumeId: validationResult.data.resumeId,
-      title: validationResult.data.title
+      resumeId: validationResult.data.resumeId
     })
 
     return NextResponse.json(session)
