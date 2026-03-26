@@ -1,12 +1,19 @@
 /**
- * @vitest-environment node
+ * @vitest-environment jsdom
  */
-import { describe, it, expect } from "vitest"
+import { createElement, useState } from "react"
+import { fireEvent, render, waitFor } from "@testing-library/react"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import type {
   UseChatHistoryOptions,
   UseChatHistoryReturn
 } from "./use-chat-history"
+import { useChatHistory } from "./use-chat-history"
 import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe("use-chat-history types", () => {
   describe("UseChatHistoryOptions", () => {
@@ -23,17 +30,6 @@ describe("use-chat-history types", () => {
         limit: 50
       }
       expect(options.limit).toBe(50)
-    })
-
-    it("should accept optional onLoad callback", () => {
-      const onLoad = (_messages: ChatHistoryEntry[]) => {
-        console.log(_messages)
-      }
-      const options: UseChatHistoryOptions = {
-        sessionId: "test-session-id",
-        onLoad
-      }
-      expect(options.onLoad).toBe(onLoad)
     })
 
     it("should allow null sessionId", () => {
@@ -56,11 +52,13 @@ describe("use-chat-history types", () => {
       const historyReturn: UseChatHistoryReturn = {
         messages: [],
         loading: false,
+        isInitialLoading: false,
         error: null,
         refetch: async () => {}
       }
       expect(historyReturn.messages).toEqual([])
       expect(historyReturn.loading).toBe(false)
+      expect(historyReturn.isInitialLoading).toBe(false)
       expect(historyReturn.error).toBeNull()
       expect(typeof historyReturn.refetch).toBe("function")
     })
@@ -77,6 +75,7 @@ describe("use-chat-history types", () => {
       const historyReturn: UseChatHistoryReturn = {
         messages: mockMessages,
         loading: false,
+        isInitialLoading: false,
         error: null,
         refetch: async () => {}
       }
@@ -88,10 +87,109 @@ describe("use-chat-history types", () => {
       const historyReturn: UseChatHistoryReturn = {
         messages: [],
         loading: false,
+        isInitialLoading: false,
         error,
         refetch: async () => {}
       }
       expect(historyReturn.error).toBe(error)
+    })
+  })
+
+  describe("behavior", () => {
+    it("should expose initial loading only before the first fetch completes", async () => {
+      const mockMessages: ChatHistoryEntry[] = []
+      let resolveFetch:
+        | ((value: {
+            ok: boolean
+            json: () => Promise<ChatHistoryEntry[]>
+          }) => void)
+        | null = null
+
+      const fetchMock = vi.fn(
+        () =>
+          new Promise<{
+            ok: boolean
+            json: () => Promise<ChatHistoryEntry[]>
+          }>((resolve) => {
+            resolveFetch = resolve
+          })
+      )
+
+      vi.stubGlobal("fetch", fetchMock)
+
+      function TestComponent() {
+        const { isInitialLoading } = useChatHistory({ sessionId: "session-1" })
+
+        return createElement("div", {
+          "data-initial-loading": String(isInitialLoading)
+        })
+      }
+
+      const { container } = render(createElement(TestComponent))
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+      })
+
+      expect(container.firstChild?.getAttribute("data-initial-loading")).toBe(
+        "true"
+      )
+
+      resolveFetch?.({
+        ok: true,
+        json: async () => mockMessages
+      })
+
+      await waitFor(() => {
+        expect(container.firstChild?.getAttribute("data-initial-loading")).toBe(
+          "false"
+        )
+      })
+    })
+
+    it("should not refetch when the parent re-renders", async () => {
+      const mockMessages: ChatHistoryEntry[] = [
+        {
+          id: "msg-1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          createdAt: "2024-01-01T00:00:00Z"
+        }
+      ]
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockMessages
+      })
+
+      vi.stubGlobal("fetch", fetchMock)
+
+      function TestComponent() {
+        const [renderCount, setRenderCount] = useState(0)
+
+        useChatHistory({ sessionId: "session-1" })
+
+        return createElement(
+          "button",
+          {
+            onClick: () => setRenderCount((count) => count + 1),
+            "data-count": renderCount
+          },
+          "rerender"
+        )
+      }
+
+      const { getByText } = render(createElement(TestComponent))
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+      })
+
+      fireEvent.click(getByText("rerender"))
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+      })
     })
   })
 })

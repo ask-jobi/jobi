@@ -6,23 +6,23 @@ import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
 export interface UseChatHistoryOptions {
   sessionId: string | null
   limit?: number
-  onLoad?: (messages: ChatHistoryEntry[]) => void
 }
 
 export interface UseChatHistoryReturn {
   messages: ChatHistoryEntry[]
   loading: boolean
+  isInitialLoading: boolean
   error: Error | null
   refetch: () => Promise<void>
 }
 
 export function useChatHistory({
   sessionId,
-  limit = 100,
-  onLoad
+  limit = 100
 }: UseChatHistoryOptions): UseChatHistoryReturn {
   const [messages, setMessages] = useState<ChatHistoryEntry[]>([])
   const [loading, setLoading] = useState(false)
+  const [didFinishFirstLoad, setDidFinishFirstLoad] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const requestIdRef = useRef(0)
 
@@ -57,7 +57,6 @@ export function useChatHistory({
       }
 
       setMessages(messageList)
-      onLoad?.(messageList)
     } catch (err) {
       if (requestId !== requestIdRef.current) {
         return
@@ -70,23 +69,27 @@ export function useChatHistory({
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false)
+        setDidFinishFirstLoad(true)
       }
     }
-  }, [limit, onLoad])
+  }, [limit])
 
   useEffect(() => {
     if (!sessionId) {
       setMessages([])
       setLoading(false)
+      setDidFinishFirstLoad(false)
       return
     }
 
+    setDidFinishFirstLoad(false)
     void fetchMessages()
   }, [fetchMessages, sessionId])
 
   return {
     messages,
     loading,
+    isInitialLoading: loading && !didFinishFirstLoad,
     error,
     refetch: fetchMessages
   }

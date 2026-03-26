@@ -25,7 +25,7 @@ import type {
   ResumeEditorReorderInput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
-import { useEffect, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useChatSessionState } from "@/lib/hooks/use-chat-session"
 import { useChatSessionIdValue } from "@/lib/store/chat"
 
@@ -45,13 +45,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { resumeData, updateResumeByToolOutput } = useResume()
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
   const { updateSessionTitleLocally } = useChatSessionState()
   const sessionId = useChatSessionIdValue()
-
-  useEffect(() => {
-    setIsInitialLoading(Boolean(sessionId))
-  }, [sessionId])
 
   const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
@@ -127,14 +122,14 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
         }
   ) => void
 
-  useChatHistory({
-    sessionId,
-    onLoad: (entries) => {
-      const loadedMessages = entries.map(toUIMessage)
-      chat.setMessages(loadedMessages as ChatUIMessage[])
-      setIsInitialLoading(false)
-    }
-  })
+  const { messages, isInitialLoading } = useChatHistory({ sessionId })
+  const setChatMessagesRef = useRef(chat.setMessages)
+  setChatMessagesRef.current = chat.setMessages
+
+  useEffect(() => {
+    const loadedMessages = messages.map(toUIMessage)
+    setChatMessagesRef.current(loadedMessages as ChatUIMessage[])
+  }, [messages])
 
   const runtime = useAISDKRuntime(chat)
 
