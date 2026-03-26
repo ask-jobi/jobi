@@ -20,6 +20,7 @@ vi.mock("ai", () => ({
   createUIMessageStreamResponse: vi.fn(() => {
     return new Response("stream", { status: 200 })
   }),
+  generateText: vi.fn(),
   smoothStream: vi.fn(),
   stepCountIs: vi.fn(),
   streamText: vi.fn(),
@@ -32,7 +33,6 @@ vi.mock("@/lib/agent/tools", () => ({
 }))
 
 vi.mock("@/lib/agent/chat-history", () => ({
-  generateSessionTitleIfNeeded: vi.fn(),
   getLatestValidSummaryCheckpoint: vi.fn(),
   loadHistory: vi.fn(),
   loadMessagesAfter: vi.fn(),
@@ -40,7 +40,12 @@ vi.mock("@/lib/agent/chat-history", () => ({
   updateMessage: vi.fn(),
   updateConversationSummary: vi.fn(),
   getSessionSummary: vi.fn(),
+  updateSessionTitle: vi.fn(),
   updateSessionTokenUsage: vi.fn()
+}))
+
+vi.mock("@/lib/agent/chat-session-title-generator", () => ({
+  generateChatSessionTitle: vi.fn()
 }))
 
 vi.mock("@/lib/agent/conversation-summary", () => ({
@@ -156,6 +161,8 @@ describe("POST /api/chat/resume", () => {
     const authHelpers = await import("@/server/auth-helpers")
     const quotaModule = await import("@/server/quota")
     const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatSessionTitleModule =
+      await import("@/lib/agent/chat-session-title-generator")
     const resumeModule = await import("@/server/resume")
     const aiModule = await import("ai")
     const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
@@ -186,9 +193,9 @@ describe("POST /api/chat/resume", () => {
     vi.mocked(
       chatHistoryModule.getLatestValidSummaryCheckpoint
     ).mockResolvedValue(null)
-    vi.mocked(chatHistoryModule.generateSessionTitleIfNeeded).mockResolvedValue(
-      "Tailor resume for PM role"
-    )
+    vi.mocked(
+      chatSessionTitleModule.generateChatSessionTitle
+    ).mockResolvedValue("Tailor resume for PM role")
     vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
     vi.mocked(chatHistoryModule.saveMessage).mockImplementation(async () => {
       events.push("save")

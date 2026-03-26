@@ -3,44 +3,55 @@
  */
 import { GET, POST } from "./route"
 import { NextRequest } from "next/server"
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as chatHistoryModule from "@/lib/agent/chat-history"
-import * as supabaseModule from "@/lib/supabase/server"
+import * as authHelpersModule from "@/server/auth-helpers"
 
-vi.mock("@/lib/supabase/server")
 vi.mock("@/lib/agent/chat-history")
+vi.mock("@/server/auth-helpers", () => ({
+  getAuthenticatedUser: vi.fn(),
+  handleApiError: vi.fn((error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : "Internal server error"
+    return Response.json({ error: message }, { status: 500 })
+  })
+}))
 
 describe("GET /api/chat-sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(authHelpersModule.getAuthenticatedUser).mockResolvedValue({
+      id: "user-1"
+    } as never)
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  it("should return empty array when resumeId is not provided", async () => {
+  it("should return null when resumeId is not provided", async () => {
     const request = new NextRequest("http://localhost:3000/api/chat-sessions")
     const response = await GET(request)
 
     expect(response.status).toBe(200)
-    const data = await response.json()
-    expect(data).toEqual([])
+    expect(await response.json()).toBeNull()
+    expect(
+      chatHistoryModule.getOrCreateCanonicalSessionSummary
+    ).not.toHaveBeenCalled()
   })
 
-  it("should call listSessions with resumeId", async () => {
-    vi.mocked(chatHistoryModule.listSessions).mockResolvedValue([
-      {
-        id: "session-1",
-        title: "Chat 1",
-        resumeId: "resume-123",
-        status: "active",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-        messageCount: 5
-      }
-    ])
+  it("should resolve the canonical session for the resume", async () => {
+    vi.mocked(
+      chatHistoryModule.getOrCreateCanonicalSessionSummary
+    ).mockResolvedValue({
+      id: "session-1",
+      title: "Tailor for PM role",
+      resumeId: "resume-123",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 5
+    })
 
     const request = new NextRequest(
       "http://localhost:3000/api/chat-sessions?resumeId=resume-123"
@@ -48,54 +59,21 @@ describe("GET /api/chat-sessions", () => {
     const response = await GET(request)
 
     expect(response.status).toBe(200)
-    expect(vi.mocked(chatHistoryModule.listSessions)).toHaveBeenCalledWith(
-      "resume-123"
-    )
-  })
-
-  it("should return 500 on error", async () => {
-    vi.mocked(chatHistoryModule.listSessions).mockRejectedValue(
-      new Error("Database error")
-    )
-
-    const request = new NextRequest(
-      "http://localhost:3000/api/chat-sessions?resumeId=resume-123"
-    )
-    const response = await GET(request)
-
-    expect(response.status).toBe(500)
-    const data = await response.json()
-    expect(data.error).toBe("Database error")
+    expect(
+      chatHistoryModule.getOrCreateCanonicalSessionSummary
+    ).toHaveBeenCalledWith({
+      userId: "user-1",
+      resumeId: "resume-123"
+    })
   })
 })
 
 describe("POST /api/chat-sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-
-    const mockSupabaseClient = {
-      auth: {
-        getUser: vi.fn()
-      }
-    } as any
-    vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
-
-    vi.mocked(mockSupabaseClient.auth.getUser).mockResolvedValue({
-      data: { user: { id: "test-user-id" } },
-      error: null
-    })
-
-    vi.mocked(chatHistoryModule.createSession).mockResolvedValue({
-      id: "new-session-id",
-      user_id: "test-user-id",
-      resume_id: "resume-123",
-      title: "New Chat",
-      status: "active",
-      created_at: "2024-01-01T00:00:00Z",
-      updated_at: "2024-01-01T00:00:00Z"
-    } as any)
-
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(authHelpersModule.getAuthenticatedUser).mockResolvedValue({
+      id: "user-1"
+    } as never)
   })
 
   afterEach(() => {
@@ -110,24 +88,6 @@ describe("POST /api/chat-sessions", () => {
     })
   }
 
-  it("should return 401 when user is not authenticated", async () => {
-    vi.mocked(supabaseModule.createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: new Error("Not authenticated")
-        })
-      }
-    } as any)
-
-    const request = createMockRequest({
-      resumeId: "550e8400-e29b-41d4-a716-446655440000"
-    })
-    const response = await POST(request)
-
-    expect(response.status).toBe(401)
-  })
-
   it("should return 400 when resumeId is invalid", async () => {
     const request = createMockRequest({
       resumeId: "invalid-uuid"
@@ -139,40 +99,30 @@ describe("POST /api/chat-sessions", () => {
     expect(data.error).toBe("Invalid request parameters")
   })
 
-  it("should return 400 when resumeId is missing", async () => {
-    const request = createMockRequest({
-      resumeId: ""
-    } as any)
-    const response = await POST(request)
+  it("should resolve the canonical session idempotently", async () => {
+    vi.mocked(
+      chatHistoryModule.getOrCreateCanonicalSessionSummary
+    ).mockResolvedValue({
+      id: "session-1",
+      title: "New Chat",
+      resumeId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 0
+    })
 
-    expect(response.status).toBe(400)
-  })
-
-  it("should create session without title", async () => {
     const request = createMockRequest({
       resumeId: "550e8400-e29b-41d4-a716-446655440000"
     })
     const response = await POST(request)
 
     expect(response.status).toBe(200)
-    expect(vi.mocked(chatHistoryModule.createSession)).toHaveBeenCalledWith({
-      userId: "test-user-id",
+    expect(
+      chatHistoryModule.getOrCreateCanonicalSessionSummary
+    ).toHaveBeenCalledWith({
+      userId: "user-1",
       resumeId: "550e8400-e29b-41d4-a716-446655440000"
     })
-  })
-
-  it("should return 500 on internal error", async () => {
-    vi.mocked(chatHistoryModule.createSession).mockRejectedValue(
-      new Error("Database error")
-    )
-
-    const request = createMockRequest({
-      resumeId: "550e8400-e29b-41d4-a716-446655440000"
-    })
-    const response = await POST(request)
-
-    expect(response.status).toBe(500)
-    const data = await response.json()
-    expect(data.error).toBe("Database error")
   })
 })

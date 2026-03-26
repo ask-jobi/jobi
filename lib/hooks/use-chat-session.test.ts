@@ -3,10 +3,10 @@
  */
 import { describe, expect, it } from "vitest"
 import type { SessionSummary } from "@/lib/agent/chat-history"
-import type { UseChatSessionsReturn } from "./use-chat-sessions"
+import type { UseChatSessionReturn } from "./use-chat-session"
 
-describe("use-chat-sessions types", () => {
-  it("should expose session collection state and mutators", () => {
+describe("use-chat-session types", () => {
+  it("should expose canonical session state and mutators", () => {
     const summary: SessionSummary = {
       id: "session-1",
       title: "PM tailoring",
@@ -17,17 +17,15 @@ describe("use-chat-sessions types", () => {
       messageCount: 3
     }
 
-    const value: UseChatSessionsReturn = {
-      sessions: [summary],
+    const value: UseChatSessionReturn = {
+      session: summary,
       loading: false,
-      creating: false,
       error: null,
-      createSession: async () => summary,
-      refreshSessions: async () => [summary],
+      refreshSession: async () => summary,
       updateSessionTitleLocally: () => {}
     }
 
-    expect(value.sessions[0].id).toBe("session-1")
-    expect(typeof value.createSession).toBe("function")
+    expect(value.session?.id).toBe("session-1")
+    expect(typeof value.refreshSession).toBe("function")
   })
 })

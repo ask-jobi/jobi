@@ -21,6 +21,11 @@ export interface CreateSessionParams {
   title?: string
 }
 
+interface GetOrCreateCanonicalSessionParams {
+  userId: string
+  resumeId: string
+}
+
 export interface SaveMessageParams {
   id: string
   sessionId: string
@@ -336,6 +341,7 @@ export async function updateConversationSummary(
 export async function listSessions(
   resumeId: string,
   options?: {
+    userId?: string
     status?: ChatSessionStatus
     limit?: number
     offset?: number
@@ -349,6 +355,10 @@ export async function listSessions(
     .from("resume_chat_sessions")
     .select("*")
     .eq("resume_id", resumeId)
+
+  if (options?.userId) {
+    query = query.eq("user_id", options.userId)
+  }
 
   if (options?.status) {
     query = query.eq("status", options.status)
@@ -373,6 +383,7 @@ export async function listSessions(
       return {
         id: session.id,
         title: session.title,
+        resumeId: session.resume_id!!,
         status: session.status,
         createdAt: session.created_at,
         updatedAt: session.updated_at,
@@ -380,6 +391,27 @@ export async function listSessions(
       } as SessionSummary
     })
   )
+}
+
+export async function getOrCreateCanonicalSessionSummary({
+  userId,
+  resumeId
+}: GetOrCreateCanonicalSessionParams): Promise<SessionSummary> {
+  const existingSessions = await listSessions(resumeId, { userId, limit: 1 })
+  const existingSession = existingSessions[0]
+
+  if (existingSession) {
+    return existingSession
+  }
+
+  await createSession({ userId, resumeId })
+
+  const createdSession = (await listSessions(resumeId, { userId, limit: 1 }))[0]
+  if (!createdSession) {
+    throw new Error("Failed to resolve canonical chat session")
+  }
+
+  return createdSession
 }
 
 /**
