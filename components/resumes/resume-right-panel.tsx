@@ -18,7 +18,7 @@ import { EmploymentForm } from "@/components/forms/employment-form"
 import { SkillsForm } from "@/components/forms/skills-form"
 import { ChatInterface } from "@/components/agent/chat-interface"
 import { ChatSessionControls } from "@/components/agent/chat-session-controls"
-import { useChatSessions } from "@/lib/hooks/use-chat-sessions"
+import { useChatSession } from "@/lib/hooks/use-chat-session"
 
 export function ResumeRightPanel() {
   const [rightPanelView] = useAtom(rightPanelViewAtom)
@@ -26,7 +26,7 @@ export function ResumeRightPanel() {
   const { selectedSectionId, resumeEvaluation, refreshEvaluationReport } =
     useResume()
   const t = useTranslations("rightPanel")
-  useChatSessions()
+  useChatSession()
 
   const renderSelectedSectionForm = () => {
     switch (selectedSectionId) {

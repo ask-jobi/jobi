@@ -10,14 +10,6 @@ function MainTemplate({ children }: { children: React.ReactNode }) {
   const t = useTranslations()
 
   const getPageTitle = () => {
-    if (pathname === "/jobs") {
-      return (
-        <>
-          <span className="text-foreground">Explore</span>{" "}
-          <span className="text-primary">jobs</span>
-        </>
-      )
-    }
     return t("dashboard")
   }
 

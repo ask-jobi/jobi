@@ -55,7 +55,8 @@ describe("parseTokenUsage", () => {
       outputTokenDetails: {
         textTokens: 270,
         reasoningTokens: 0
-      }
+      },
+      totalTokens: 4513
     })
 
     expect(usage).toEqual({

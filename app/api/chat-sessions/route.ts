@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createSession, listSessions } from "@/lib/agent/chat-history"
+import { getOrCreateCanonicalSessionSummary } from "@/lib/agent/chat-history"
 import { z } from "zod"
 import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
 
@@ -11,14 +11,20 @@ export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser()
     const { searchParams } = new URL(request.url)
     const resumeId = searchParams.get("resumeId")
 
     if (!resumeId) {
-      return NextResponse.json([])
+      return NextResponse.json(null)
     }
 
-    return NextResponse.json(await listSessions(resumeId))
+    return NextResponse.json(
+      await getOrCreateCanonicalSessionSummary({
+        userId: user.id,
+        resumeId
+      })
+    )
   } catch (error) {
     return handleApiError(error)
   }
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const user = await getAuthenticatedUser()
 
-    const session = await createSession({
+    const session = await getOrCreateCanonicalSessionSummary({
       userId: user.id,
       resumeId: validationResult.data.resumeId
     })

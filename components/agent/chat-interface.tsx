@@ -21,18 +21,20 @@ import { chatDataPartSchemas } from "@/types/chat"
 import type {
   ChatUIMessage,
   ResumeEditorModifyInput,
-  ResumeEditorReorderInput
+  ResumeEditorModifyOutput,
+  ResumeEditorReorderInput,
+  ResumeEditorReorderOutput
 } from "@/types/chat"
 import { useEffect, useState } from "react"
-import { useChatSessionsState } from "@/lib/hooks/use-chat-sessions"
-import { useActiveChatSession } from "@/lib/hooks/use-active-chat-session"
+import { useChatSessionState } from "@/lib/hooks/use-chat-session"
+import { useChatSessionIdValue } from "@/lib/store/chat"
 
 interface ChatInterfaceProps {
   className?: string
 }
 
 export function ChatInterface({ className }: ChatInterfaceProps) {
-  const { activeSessionId: sessionId } = useActiveChatSession()
+  const sessionId = useChatSessionIdValue()
 
   if (!sessionId) {
     return null
@@ -44,8 +46,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { resumeData, updateResumeByToolOutput } = useResume()
   const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const { updateSessionTitleLocally } = useChatSessionsState()
-  const { activeSessionId: sessionId } = useActiveChatSession()
+  const { updateSessionTitleLocally } = useChatSessionState()
+  const sessionId = useChatSessionIdValue()
 
   useEffect(() => {
     setIsInitialLoading(Boolean(sessionId))
@@ -61,32 +63,44 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           sessionId: string
           title: string
         }
-        updateSessionTitleLocally(titleUpdate.sessionId, titleUpdate.title)
+        if (titleUpdate.sessionId === sessionId) {
+          updateSessionTitleLocally(titleUpdate.title)
+        }
       }
     },
     onToolCall: async ({ toolCall }) => {
       const { input } = toolCall
 
-      let output = null
       if (toolCall.toolName === "resumeEditorModify") {
         const typedInput = input as ResumeEditorModifyInput
 
-        output = await executeResumeEditorModifyTool(typedInput, resumeData!!)
-      }
-      if (toolCall.toolName === "resumeEditorReorder") {
-        const typedInput = input as ResumeEditorReorderInput
+        const modifyOutput = (await executeResumeEditorModifyTool(
+          typedInput,
+          resumeData!!
+        )) as ResumeEditorModifyOutput
 
-        output = await executeResumeEditorReorderTool(typedInput, resumeData!!)
-      }
-
-      if (output) {
-        chat.addToolOutput({
-          tool: toolCall.toolName,
+        addToolOutput({
+          tool: "resumeEditorModify",
           toolCallId: toolCall.toolCallId,
-          output
+          output: modifyOutput
         })
 
-        await updateResumeByToolOutput(output)
+        await updateResumeByToolOutput(modifyOutput)
+      } else if (toolCall.toolName === "resumeEditorReorder") {
+        const typedInput = input as ResumeEditorReorderInput
+
+        const reorderOutput = (await executeResumeEditorReorderTool(
+          typedInput,
+          resumeData!!
+        )) as ResumeEditorReorderOutput
+
+        addToolOutput({
+          tool: "resumeEditorReorder",
+          toolCallId: toolCall.toolCallId,
+          output: reorderOutput
+        })
+
+        await updateResumeByToolOutput(reorderOutput)
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
@@ -99,11 +113,25 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
     })
   })
 
+  const addToolOutput = chat.addToolOutput as (
+    output:
+      | {
+          tool: "resumeEditorModify"
+          toolCallId: string
+          output: ResumeEditorModifyOutput
+        }
+      | {
+          tool: "resumeEditorReorder"
+          toolCallId: string
+          output: ResumeEditorReorderOutput
+        }
+  ) => void
+
   useChatHistory({
     sessionId,
     onLoad: (entries) => {
       const loadedMessages = entries.map(toUIMessage)
-      chat.setMessages(loadedMessages)
+      chat.setMessages(loadedMessages as ChatUIMessage[])
       setIsInitialLoading(false)
     }
   })
