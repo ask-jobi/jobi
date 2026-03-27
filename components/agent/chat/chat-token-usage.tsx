@@ -1,6 +1,5 @@
 "use client"
 
-import { useAuiState } from "@assistant-ui/react"
 import { Progress } from "@/components/ui/progress"
 import {
   Tooltip,
@@ -39,15 +38,10 @@ function getIndicatorClassName(percentage: number) {
 export function ChatTokenUsage() {
   const t = useTranslations("chat")
   const sessionId = useChatSessionIdValue()
-  const isRunning = useAuiState((s) => s.thread.isRunning)
-  const messages = useAuiState((s) => s.thread.messages ?? [])
-  const lastMessage = messages[messages.length - 1]
-  const refreshKey = `${sessionId}:${messages.length}:${lastMessage?.id ?? "none"}:${isRunning ? "running" : "idle"}`
   const { tokenUsage, isLoading, error } = useChatSessionTokenUsage({
-    sessionId,
-    refreshKey,
-    enabled: !isRunning
+    sessionId
   })
+
   const hasError = !!error
   const tokenLimit = tokenUsage?.chatTokenLimit ?? 0
   const usagePercentage = getUsagePercentage(

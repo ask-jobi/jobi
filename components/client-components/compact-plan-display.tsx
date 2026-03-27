@@ -28,7 +28,6 @@ interface SubscriptionData {
   isActive: boolean
   chatTokenLimit: number
   quotas: {
-    fullOptimize: { used: number; total: number }
     blockOptimize: { used: number; total: number }
     motivationLetter: { used: number; total: number }
   }
@@ -197,15 +196,6 @@ export function CompactPlanDisplay() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {t("fullOptimization")}
-              </span>
-              <span className="font-medium">
-                {subscription.quotas.fullOptimize.used} /{" "}
-                {subscription.quotas.fullOptimize.total}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
                 {t("blockOptimization")}
               </span>
               <span className="font-medium">
@@ -307,15 +297,6 @@ export function CompactPlanDisplay() {
                 </div>
 
                 <div className="pt-2 border-t space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {t("fullOptimization")}
-                    </span>
-                    <span className="font-medium">
-                      {subscription.quotas.fullOptimize.used} /{" "}
-                      {subscription.quotas.fullOptimize.total}
-                    </span>
-                  </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">
                       {t("blockOptimization")}

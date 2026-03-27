@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useAuiState } from "@assistant-ui/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export interface ChatSessionTokenUsage {
   sessionId: string
@@ -20,23 +21,33 @@ interface TokenUsageResponse {
 
 interface UseChatSessionTokenUsageParams {
   sessionId?: string
-  refreshKey?: string | number
-  enabled?: boolean
 }
 
 export function useChatSessionTokenUsage({
-  sessionId,
-  refreshKey,
-  enabled = true
+  sessionId
 }: UseChatSessionTokenUsageParams) {
+  const lastMessageId = useAuiState((s) => s.thread.messages.at(-1)?.id ?? "")
+  const lastMessageRole = useAuiState(
+    (s) => s.thread.messages.at(-1)?.role ?? ""
+  )
   const [tokenUsage, setTokenUsage] = useState<ChatSessionTokenUsage | null>(
     null
   )
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
+  const requestIdRef = useRef(0)
+  const isMountedRef = useRef(true)
+  const previousAssistantMessageIdRef = useRef("")
 
   useEffect(() => {
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  const fetchTokenUsage = useCallback(async () => {
     if (!sessionId) {
       setTokenUsage(null)
       setError(null)
@@ -44,50 +55,67 @@ export function useChatSessionTokenUsage({
       return
     }
 
-    if (!enabled) {
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+    setIsLoading(true)
+
+    try {
+      const response = await fetch(
+        `/api/chat-sessions/${sessionId}/token-usage`
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch token usage")
+      }
+
+      const payload = (await response.json()) as TokenUsageResponse
+
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return
+      }
+
+      setTokenUsage(payload.data)
+      setError(null)
+    } catch (fetchError: unknown) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return
+      }
+
+      setError(
+        fetchError instanceof Error
+          ? fetchError
+          : new Error("Failed to fetch token usage")
+      )
+    } finally {
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false)
+      }
+    }
+  }, [sessionId])
+
+  useEffect(() => {
+    void fetchTokenUsage()
+  }, [fetchTokenUsage])
+
+  useEffect(() => {
+    if (
+      sessionId &&
+      lastMessageRole === "assistant" &&
+      lastMessageId &&
+      previousAssistantMessageIdRef.current === ""
+    ) {
+      previousAssistantMessageIdRef.current = lastMessageId
+    }
+
+    if (!sessionId || lastMessageRole !== "assistant" || !lastMessageId) {
       return
     }
 
-    const abortController = new AbortController()
-    abortControllerRef.current?.abort()
-    abortControllerRef.current = abortController
-    setIsLoading(true)
-
-    fetch(`/api/chat-sessions/${sessionId}/token-usage`, {
-      signal: abortController.signal
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch token usage")
-        }
-
-        return (await response.json()) as TokenUsageResponse
-      })
-      .then((payload) => {
-        setTokenUsage(payload.data)
-        setError(null)
-      })
-      .catch((fetchError: unknown) => {
-        if (fetchError instanceof Error && fetchError.name === "AbortError") {
-          return
-        }
-
-        setError(
-          fetchError instanceof Error
-            ? fetchError
-            : new Error("Failed to fetch token usage")
-        )
-      })
-      .finally(() => {
-        if (!abortController.signal.aborted) {
-          setIsLoading(false)
-        }
-      })
-
-    return () => {
-      abortController.abort()
+    if (previousAssistantMessageIdRef.current !== lastMessageId) {
+      previousAssistantMessageIdRef.current = lastMessageId
+      void fetchTokenUsage()
     }
-  }, [enabled, refreshKey, sessionId])
+  }, [fetchTokenUsage, lastMessageId, lastMessageRole, sessionId])
 
   return {
     tokenUsage,

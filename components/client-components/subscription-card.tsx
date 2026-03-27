@@ -11,7 +11,6 @@ interface SubscriptionData {
   isActive: boolean
   chatTokenLimit: number
   quotas: {
-    fullOptimize: { used: number; total: number }
     blockOptimize: { used: number; total: number }
     motivationLetter: { used: number; total: number }
   }

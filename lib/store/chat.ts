@@ -5,6 +5,16 @@ export const chatSessionIdAtom = atom<string>("")
 export const chatSessionAtom = atom<SessionSummary | null>(null)
 export const chatSessionLoadingAtom = atom(false)
 export const chatSessionsErrorAtom = atom<Error | null>(null)
+export const chatSessionsAtom = atom<SessionSummary[]>([])
+export const chatSessionsLoadingAtom = atom(false)
+export const chatSessionsCreatingAtom = atom(false)
+export const chatHistoryLoadingAtom = atom(false)
+export type PendingChatHandoff = {
+  id: string
+  resumeId: string
+  message: string
+}
+export const pendingChatHandoffAtom = atom<PendingChatHandoff | null>(null)
 
 export function useChatSessionIdValue() {
   return useAtomValue(chatSessionIdAtom)
@@ -36,4 +46,44 @@ export function useChatSessionsErrorValue() {
 
 export function useSetChatSessionsError() {
   return useSetAtom(chatSessionsErrorAtom)
+}
+
+export function useChatSessionsValue() {
+  return useAtomValue(chatSessionsAtom)
+}
+
+export function useSetChatSessions() {
+  return useSetAtom(chatSessionsAtom)
+}
+
+export function useChatSessionsLoadingValue() {
+  return useAtomValue(chatSessionsLoadingAtom)
+}
+
+export function useSetChatSessionsLoading() {
+  return useSetAtom(chatSessionsLoadingAtom)
+}
+
+export function useChatSessionsCreatingValue() {
+  return useAtomValue(chatSessionsCreatingAtom)
+}
+
+export function useSetChatSessionsCreating() {
+  return useSetAtom(chatSessionsCreatingAtom)
+}
+
+export function useChatHistoryLoadingValue() {
+  return useAtomValue(chatHistoryLoadingAtom)
+}
+
+export function useSetChatHistoryLoading() {
+  return useSetAtom(chatHistoryLoadingAtom)
+}
+
+export function usePendingChatHandoffValue() {
+  return useAtomValue(pendingChatHandoffAtom)
+}
+
+export function useSetPendingChatHandoff() {
+  return useSetAtom(pendingChatHandoffAtom)
 }

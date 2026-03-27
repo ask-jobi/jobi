@@ -27,7 +27,12 @@ import type {
 } from "@/types/chat"
 import { useEffect, useRef } from "react"
 import { useChatSessionState } from "@/lib/hooks/use-chat-session"
-import { useChatSessionIdValue } from "@/lib/store/chat"
+import {
+  useChatSessionIdValue,
+  usePendingChatHandoffValue,
+  useSetPendingChatHandoff
+} from "@/lib/store/chat"
+import { ChatHandoffEffect } from "./chat/chat-handoff-effect"
 
 interface ChatInterfaceProps {
   className?: string
@@ -44,9 +49,11 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 }
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
-  const { resumeData, updateResumeByToolOutput } = useResume()
+  const { application, resumeData, updateResumeByToolOutput } = useResume()
   const { updateSessionTitleLocally } = useChatSessionState()
   const sessionId = useChatSessionIdValue()
+  const pendingChatHandoff = usePendingChatHandoffValue()
+  const setPendingChatHandoff = useSetPendingChatHandoff()
 
   const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
@@ -141,6 +148,12 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           className
         )}
       >
+        <ChatHandoffEffect
+          handoff={pendingChatHandoff}
+          resumeId={application?.resume.id}
+          isInitialLoading={isInitialLoading}
+          onConsumed={() => setPendingChatHandoff(null)}
+        />
         <ThreadViewport isInitialLoading={isInitialLoading} />
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>

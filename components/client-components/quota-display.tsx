@@ -16,7 +16,6 @@ interface QuotaDisplayProps {
     isActive: boolean
     chatTokenLimit: number
     quotas: {
-      fullOptimize: { used: number; total: number }
       blockOptimize: { used: number; total: number }
       motivationLetter: { used: number; total: number }
     }
@@ -109,26 +108,6 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-muted-foreground" />
             <h4 className="font-semibold text-sm">{t("detailedUsage")}</h4>
-          </div>
-
-          {/* 整体优化 */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {t("fullOptimization")}
-              </span>
-              <span className="font-medium">
-                {subscription.quotas.fullOptimize.used} /{" "}
-                {subscription.quotas.fullOptimize.total}
-              </span>
-            </div>
-            <Progress
-              value={getUsagePercentage(
-                subscription.quotas.fullOptimize.used,
-                subscription.quotas.fullOptimize.total
-              )}
-              className="h-2"
-            />
           </div>
 
           {/* 区块优化 */}

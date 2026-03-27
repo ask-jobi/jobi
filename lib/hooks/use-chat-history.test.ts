@@ -98,19 +98,15 @@ describe("use-chat-history types", () => {
   describe("behavior", () => {
     it("should expose initial loading only before the first fetch completes", async () => {
       const mockMessages: ChatHistoryEntry[] = []
-      let resolveFetch:
-        | ((value: {
-            ok: boolean
-            json: () => Promise<ChatHistoryEntry[]>
-          }) => void)
-        | null = null
+      type FetchResponse = {
+        ok: boolean
+        json: () => Promise<ChatHistoryEntry[]>
+      }
+      let resolveFetch: ((value: FetchResponse) => void) | undefined
 
       const fetchMock = vi.fn(
         () =>
-          new Promise<{
-            ok: boolean
-            json: () => Promise<ChatHistoryEntry[]>
-          }>((resolve) => {
+          new Promise<FetchResponse>((resolve) => {
             resolveFetch = resolve
           })
       )
@@ -131,19 +127,27 @@ describe("use-chat-history types", () => {
         expect(fetchMock).toHaveBeenCalledTimes(1)
       })
 
-      expect(container.firstChild?.getAttribute("data-initial-loading")).toBe(
-        "true"
-      )
+      expect(
+        (container.firstChild as HTMLElement | null)?.getAttribute(
+          "data-initial-loading"
+        )
+      ).toBe("true")
 
-      resolveFetch?.({
+      if (!resolveFetch) {
+        throw new Error("Expected resolveFetch to be assigned")
+      }
+
+      resolveFetch({
         ok: true,
         json: async () => mockMessages
       })
 
       await waitFor(() => {
-        expect(container.firstChild?.getAttribute("data-initial-loading")).toBe(
-          "false"
-        )
+        expect(
+          (container.firstChild as HTMLElement | null)?.getAttribute(
+            "data-initial-loading"
+          )
+        ).toBe("false")
       })
     })
 

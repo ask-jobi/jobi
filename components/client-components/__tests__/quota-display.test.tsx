@@ -54,17 +54,15 @@ describe("QuotaDisplay", () => {
   it("should display quota usage with progress bars", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByText("fullOptimization")).toBeInTheDocument()
     expect(screen.getByText("blockOptimization")).toBeInTheDocument()
     expect(screen.getByText("motivationLetter")).toBeInTheDocument()
     expect(screen.getByText("chatTokens")).toBeInTheDocument()
-    expect(screen.getAllByTestId("ui-progress")).toHaveLength(3)
+    expect(screen.getAllByTestId("ui-progress")).toHaveLength(2)
   })
 
   it("should display used/total quotas", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByText("5 / 10")).toBeInTheDocument()
     expect(screen.getByText("3 / 20")).toBeInTheDocument()
     expect(screen.getByText("2 / 5")).toBeInTheDocument()
     expect(screen.getByText("100,000,000")).toBeInTheDocument()
@@ -101,9 +99,8 @@ describe("QuotaDisplay", () => {
     const indicators = progressBars.map((bar) =>
       bar.querySelector('[data-slot="progress-indicator"]')
     )
-    expect(indicators[0]).toHaveStyle({ transform: "translateX(-50%)" })
-    expect(indicators[1]).toHaveStyle({ transform: "translateX(-85%)" })
-    expect(indicators[2]).toHaveStyle({ transform: "translateX(-60%)" })
+    expect(indicators[0]).toHaveStyle({ transform: "translateX(-85%)" })
+    expect(indicators[1]).toHaveStyle({ transform: "translateX(-60%)" })
   })
 
   it("should display no active plan message when expiry date is null", () => {
@@ -126,7 +123,7 @@ describe("QuotaDisplay", () => {
     render(<QuotaDisplay subscription={zeroQuotaSubscription} />)
 
     const usages = screen.getAllByText(/0 \/ 0/)
-    expect(usages).toHaveLength(3)
+    expect(usages).toHaveLength(2)
     expect(screen.getByText("0")).toBeInTheDocument()
   })
 

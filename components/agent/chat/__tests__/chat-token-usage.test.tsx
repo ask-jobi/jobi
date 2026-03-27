@@ -5,7 +5,6 @@ import { render, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ChatTokenUsage } from "../chat-token-usage"
-import * as auiModule from "@assistant-ui/react"
 import * as tokenUsageHookModule from "@/lib/hooks/use-chat-session-token-usage"
 import * as chatStoreModule from "@/lib/store/chat"
 
@@ -23,15 +22,6 @@ vi.mock("@/components/ui/tooltip", () => ({
   )
 }))
 
-vi.mock("@assistant-ui/react", async () => {
-  const actual = await vi.importActual("@assistant-ui/react")
-
-  return {
-    ...actual,
-    useAuiState: vi.fn()
-  }
-})
-
 vi.mock("@/lib/hooks/use-chat-session-token-usage", () => ({
   useChatSessionTokenUsage: vi.fn()
 }))
@@ -44,14 +34,6 @@ describe("ChatTokenUsage", () => {
   beforeEach(() => {
     vi.mocked(chatStoreModule.useChatSessionIdValue).mockReturnValue(
       "session-1"
-    )
-    vi.mocked(auiModule.useAuiState).mockImplementation((selector: any) =>
-      selector({
-        thread: {
-          isRunning: false,
-          messages: []
-        }
-      })
     )
   })
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
+import { useSetChatHistoryLoading } from "@/lib/store/chat"
 
 export interface UseChatHistoryOptions {
   sessionId: string | null
@@ -25,6 +26,7 @@ export function useChatHistory({
   const [didFinishFirstLoad, setDidFinishFirstLoad] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const requestIdRef = useRef(0)
+  const setChatHistoryLoading = useSetChatHistoryLoading()
 
   const sessionIdRef = useRef(sessionId)
   sessionIdRef.current = sessionId
@@ -32,12 +34,14 @@ export function useChatHistory({
   const fetchMessages = useCallback(async () => {
     if (!sessionIdRef.current) {
       setMessages([])
+      setChatHistoryLoading(false)
       return
     }
 
     const requestId = requestIdRef.current + 1
     requestIdRef.current = requestId
     setLoading(true)
+    setChatHistoryLoading(true)
     setError(null)
 
     try {
@@ -70,21 +74,23 @@ export function useChatHistory({
       if (requestId === requestIdRef.current) {
         setLoading(false)
         setDidFinishFirstLoad(true)
+        setChatHistoryLoading(false)
       }
     }
-  }, [limit])
+  }, [limit, setChatHistoryLoading])
 
   useEffect(() => {
     if (!sessionId) {
       setMessages([])
       setLoading(false)
       setDidFinishFirstLoad(false)
+      setChatHistoryLoading(false)
       return
     }
 
     setDidFinishFirstLoad(false)
     void fetchMessages()
-  }, [fetchMessages, sessionId])
+  }, [fetchMessages, sessionId, setChatHistoryLoading])
 
   return {
     messages,
