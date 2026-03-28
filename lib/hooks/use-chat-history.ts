@@ -1,8 +1,15 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useRef
+} from "react"
 import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
 import { useSetChatHistoryLoading } from "@/lib/store/chat"
+import { useChatThreadLifecycle } from "./use-chat-thread-lifecycle"
 
 export interface UseChatHistoryOptions {
   sessionId: string | null
@@ -28,6 +35,8 @@ export function useChatHistory({
   const [error, setError] = useState<Error | null>(null)
   const requestIdRef = useRef(0)
   const setChatHistoryLoading = useSetChatHistoryLoading()
+  const { markHistoryLoading, markHistoryLoaded, markFailed } =
+    useChatThreadLifecycle()
 
   const sessionIdRef = useRef(sessionId)
   sessionIdRef.current = sessionId
@@ -44,6 +53,7 @@ export function useChatHistory({
     setLoading(true)
     setChatHistoryLoading(true)
     setError(null)
+    markHistoryLoading()
 
     try {
       const response = await fetch(
@@ -70,15 +80,31 @@ export function useChatHistory({
       const error =
         err instanceof Error ? err : new Error("Unknown error occurred")
       setError(error)
+      markFailed()
       console.error("Failed to fetch chat messages:", err)
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false)
         setDidFinishFirstLoad(true)
         setChatHistoryLoading(false)
+        markHistoryLoaded()
       }
     }
-  }, [limit, setChatHistoryLoading])
+  }, [
+    limit,
+    markFailed,
+    markHistoryLoaded,
+    markHistoryLoading,
+    setChatHistoryLoading
+  ])
+
+  useLayoutEffect(() => {
+    if (!sessionId) {
+      return
+    }
+
+    markHistoryLoading()
+  }, [markHistoryLoading, sessionId])
 
   useEffect(() => {
     if (!sessionId) {

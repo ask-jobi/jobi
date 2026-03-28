@@ -57,9 +57,6 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const setPendingChatAction = useSetPendingChatAction()
   const {
     lifecycle,
-    resetLifecycle,
-    markHistoryLoading,
-    markHistoryLoaded,
     markThreadSynced,
     markRunStarted,
     markRunFinished,
@@ -140,27 +137,9 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
         }
   ) => void
 
-  const { messages, hasLoadedInitialHistory } = useChatHistory({
-    sessionId
-  })
+  const { messages, hasLoadedInitialHistory } = useChatHistory({ sessionId })
   const setChatMessagesRef = useRef(chat.setMessages)
   setChatMessagesRef.current = chat.setMessages
-
-  useEffect(() => {
-    resetLifecycle()
-  }, [resetLifecycle, sessionId])
-
-  useEffect(() => {
-    if (sessionId) {
-      markHistoryLoading()
-    }
-  }, [markHistoryLoading, sessionId])
-
-  useEffect(() => {
-    if (hasLoadedInitialHistory) {
-      markHistoryLoaded()
-    }
-  }, [hasLoadedInitialHistory, markHistoryLoaded])
 
   useEffect(() => {
     if (!hasLoadedInitialHistory) {
