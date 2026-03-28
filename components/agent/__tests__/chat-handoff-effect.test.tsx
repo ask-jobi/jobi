@@ -4,10 +4,9 @@
 import type { ReactNode } from "react"
 import { render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { ChatHandoffEffect } from "../chat/chat-handoff-effect"
+import { ChatPendingActionEffect } from "../chat/chat-pending-action-effect"
 
 const mockAppend = vi.fn()
-const mockUseAuiState = vi.fn()
 
 vi.mock("@assistant-ui/react", () => ({
   useAui: () => ({
@@ -20,48 +19,42 @@ vi.mock("@assistant-ui/react", () => ({
       })
     })
   }),
-  useAuiState: (
-    selector: (state: { thread: { isRunning: boolean } }) => boolean
-  ) => mockUseAuiState(selector),
   AssistantRuntimeProvider: ({ children }: { children: ReactNode }) => children,
   ThreadPrimitive: {
     Root: ({ children }: { children: ReactNode }) => children
   }
 }))
 
-describe("ChatHandoffEffect", () => {
+describe("ChatPendingActionEffect", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseAuiState.mockImplementation((selector) =>
-      selector({ thread: { isRunning: false } })
-    )
   })
 
-  it("should append the pending handoff message once and consume it", () => {
+  it("should append the pending action once and consume it", () => {
     const onConsumed = vi.fn()
 
     const { rerender } = render(
-      <ChatHandoffEffect
-        handoff={{
+      <ChatPendingActionEffect
+        action={{
           id: "handoff-1",
           resumeId: "resume-123",
           message: "让我帮您优化简历..."
         }}
+        lifecycle="ready"
         resumeId="resume-123"
-        isInitialLoading={false}
         onConsumed={onConsumed}
       />
     )
 
     rerender(
-      <ChatHandoffEffect
-        handoff={{
+      <ChatPendingActionEffect
+        action={{
           id: "handoff-1",
           resumeId: "resume-123",
           message: "让我帮您优化简历..."
         }}
+        lifecycle="ready"
         resumeId="resume-123"
-        isInitialLoading={false}
         onConsumed={onConsumed}
       />
     )
@@ -74,16 +67,16 @@ describe("ChatHandoffEffect", () => {
     expect(onConsumed).toHaveBeenCalledTimes(1)
   })
 
-  it("should not append while initial history is loading", () => {
+  it("should not append before the thread is ready", () => {
     render(
-      <ChatHandoffEffect
-        handoff={{
+      <ChatPendingActionEffect
+        action={{
           id: "handoff-1",
           resumeId: "resume-123",
           message: "让我帮您优化简历..."
         }}
+        lifecycle="loading-history"
         resumeId="resume-123"
-        isInitialLoading={true}
         onConsumed={vi.fn()}
       />
     )
@@ -91,16 +84,16 @@ describe("ChatHandoffEffect", () => {
     expect(mockAppend).not.toHaveBeenCalled()
   })
 
-  it("should not append when the handoff belongs to a different resume", () => {
+  it("should not append when the action belongs to a different resume", () => {
     render(
-      <ChatHandoffEffect
-        handoff={{
+      <ChatPendingActionEffect
+        action={{
           id: "handoff-1",
           resumeId: "resume-123",
           message: "让我帮您优化简历..."
         }}
+        lifecycle="ready"
         resumeId="resume-456"
-        isInitialLoading={false}
         onConsumed={vi.fn()}
       />
     )

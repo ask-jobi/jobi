@@ -1,15 +1,63 @@
 "use client"
 
-import { ComposerPrimitive, AuiIf } from "@assistant-ui/react"
+import type { FormEvent } from "react"
+import {
+  ComposerPrimitive,
+  AuiIf,
+  useAui,
+  useAuiState
+} from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
 import { ArrowUpIcon, SquareIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { ChatTokenUsage } from "./chat-token-usage"
+import { useResume } from "@/lib/store/resume"
+import {
+  useSetPendingChatAction,
+  type ChatThreadLifecycle
+} from "@/lib/store/chat"
 
-export function Composer() {
+interface ComposerProps {
+  lifecycle: ChatThreadLifecycle
+}
+
+export function Composer({ lifecycle }: ComposerProps) {
   const t = useTranslations("chat")
+  const aui = useAui()
+  const { application } = useResume()
+  const setPendingChatAction = useSetPendingChatAction()
+  const isSendDisabled = useAuiState(
+    (s) => s.thread.isRunning || !s.composer.isEditing || s.composer.isEmpty
+  )
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (lifecycle === "ready") {
+      return
+    }
+
+    const message = aui.composer().getState().text.trim()
+    if (!message || !application?.resume.id) {
+      event.preventDefault()
+      return
+    }
+
+    event.preventDefault()
+    setPendingChatAction({
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}`,
+      resumeId: application.resume.id,
+      message
+    })
+    aui.composer().setText("")
+  }
+
   return (
-    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col gap-2">
+    <ComposerPrimitive.Root
+      className="aui-composer-root relative flex w-full flex-col gap-2"
+      onSubmit={handleSubmit}
+    >
       <div className="relative">
         <ComposerPrimitive.Input
           placeholder={t("composerPlaceholder")}
@@ -20,16 +68,15 @@ export function Composer() {
         />
         <div className="aui-composer-action-wrapper absolute bottom-3 right-2 flex items-center gap-1">
           <AuiIf condition={(s) => !s.thread.isRunning}>
-            <ComposerPrimitive.Send asChild>
-              <Button
-                type="submit"
-                size="icon"
-                className="rounded-full h-8 w-8"
-                aria-label="Send message"
-              >
-                <ArrowUpIcon className="h-4 w-4" />
-              </Button>
-            </ComposerPrimitive.Send>
+            <Button
+              type="submit"
+              size="icon"
+              className="rounded-full h-8 w-8"
+              aria-label="Send message"
+              disabled={isSendDisabled}
+            >
+              <ArrowUpIcon className="h-4 w-4" />
+            </Button>
           </AuiIf>
           <AuiIf condition={(s) => s.thread.isRunning}>
             <ComposerPrimitive.Cancel asChild>

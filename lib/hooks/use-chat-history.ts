@@ -13,6 +13,7 @@ export interface UseChatHistoryReturn {
   messages: ChatHistoryEntry[]
   loading: boolean
   isInitialLoading: boolean
+  hasLoadedInitialHistory: boolean
   error: Error | null
   refetch: () => Promise<void>
 }
@@ -96,6 +97,7 @@ export function useChatHistory({
     messages,
     loading,
     isInitialLoading: loading && !didFinishFirstLoad,
+    hasLoadedInitialHistory: didFinishFirstLoad,
     error,
     refetch: fetchMessages
   }

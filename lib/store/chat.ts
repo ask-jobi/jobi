@@ -9,12 +9,19 @@ export const chatSessionsAtom = atom<SessionSummary[]>([])
 export const chatSessionsLoadingAtom = atom(false)
 export const chatSessionsCreatingAtom = atom(false)
 export const chatHistoryLoadingAtom = atom(false)
-export type PendingChatHandoff = {
+export type ChatThreadLifecycle =
+  | "idle"
+  | "loading-history"
+  | "syncing-thread"
+  | "ready"
+  | "running"
+  | "error"
+export type PendingChatAction = {
   id: string
   resumeId: string
   message: string
 }
-export const pendingChatHandoffAtom = atom<PendingChatHandoff | null>(null)
+export const pendingChatActionAtom = atom<PendingChatAction | null>(null)
 
 export function useChatSessionIdValue() {
   return useAtomValue(chatSessionIdAtom)
@@ -80,10 +87,10 @@ export function useSetChatHistoryLoading() {
   return useSetAtom(chatHistoryLoadingAtom)
 }
 
-export function usePendingChatHandoffValue() {
-  return useAtomValue(pendingChatHandoffAtom)
+export function usePendingChatActionValue() {
+  return useAtomValue(pendingChatActionAtom)
 }
 
-export function useSetPendingChatHandoff() {
-  return useSetAtom(pendingChatHandoffAtom)
+export function useSetPendingChatAction() {
+  return useSetAtom(pendingChatActionAtom)
 }

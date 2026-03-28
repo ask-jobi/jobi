@@ -53,6 +53,7 @@ describe("use-chat-history types", () => {
         messages: [],
         loading: false,
         isInitialLoading: false,
+        hasLoadedInitialHistory: true,
         error: null,
         refetch: async () => {}
       }
@@ -76,6 +77,7 @@ describe("use-chat-history types", () => {
         messages: mockMessages,
         loading: false,
         isInitialLoading: false,
+        hasLoadedInitialHistory: true,
         error: null,
         refetch: async () => {}
       }
@@ -88,6 +90,7 @@ describe("use-chat-history types", () => {
         messages: [],
         loading: false,
         isInitialLoading: false,
+        hasLoadedInitialHistory: true,
         error,
         refetch: async () => {}
       }

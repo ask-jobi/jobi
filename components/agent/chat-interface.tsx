@@ -29,10 +29,11 @@ import { useEffect, useRef } from "react"
 import { useChatSessionState } from "@/lib/hooks/use-chat-session"
 import {
   useChatSessionIdValue,
-  usePendingChatHandoffValue,
-  useSetPendingChatHandoff
+  usePendingChatActionValue,
+  useSetPendingChatAction
 } from "@/lib/store/chat"
-import { ChatHandoffEffect } from "./chat/chat-handoff-effect"
+import { ChatPendingActionEffect } from "./chat/chat-pending-action-effect"
+import { useChatThreadLifecycle } from "@/lib/hooks/use-chat-thread-lifecycle"
 
 interface ChatInterfaceProps {
   className?: string
@@ -52,8 +53,18 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { application, resumeData, updateResumeByToolOutput } = useResume()
   const { updateSessionTitleLocally } = useChatSessionState()
   const sessionId = useChatSessionIdValue()
-  const pendingChatHandoff = usePendingChatHandoffValue()
-  const setPendingChatHandoff = useSetPendingChatHandoff()
+  const pendingChatAction = usePendingChatActionValue()
+  const setPendingChatAction = useSetPendingChatAction()
+  const {
+    lifecycle,
+    resetLifecycle,
+    markHistoryLoading,
+    markHistoryLoaded,
+    markThreadSynced,
+    markRunStarted,
+    markRunFinished,
+    markFailed
+  } = useChatThreadLifecycle()
 
   const chat = useAIChat<ChatUIMessage>({
     id: sessionId,
@@ -129,14 +140,57 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
         }
   ) => void
 
-  const { messages, isInitialLoading } = useChatHistory({ sessionId })
+  const { messages, hasLoadedInitialHistory } = useChatHistory({
+    sessionId
+  })
   const setChatMessagesRef = useRef(chat.setMessages)
   setChatMessagesRef.current = chat.setMessages
 
   useEffect(() => {
+    resetLifecycle()
+  }, [resetLifecycle, sessionId])
+
+  useEffect(() => {
+    if (sessionId) {
+      markHistoryLoading()
+    }
+  }, [markHistoryLoading, sessionId])
+
+  useEffect(() => {
+    if (hasLoadedInitialHistory) {
+      markHistoryLoaded()
+    }
+  }, [hasLoadedInitialHistory, markHistoryLoaded])
+
+  useEffect(() => {
+    if (!hasLoadedInitialHistory) {
+      return
+    }
+
     const loadedMessages = messages.map(toUIMessage)
     setChatMessagesRef.current(loadedMessages as ChatUIMessage[])
-  }, [messages])
+    const frameId = requestAnimationFrame(() => {
+      markThreadSynced()
+    })
+
+    return () => cancelAnimationFrame(frameId)
+  }, [hasLoadedInitialHistory, markThreadSynced, messages])
+
+  useEffect(() => {
+    if (chat.status === "error") {
+      markFailed()
+      return
+    }
+
+    if (chat.status === "submitted" || chat.status === "streaming") {
+      markRunStarted()
+      return
+    }
+
+    if (chat.status === "ready" && lifecycle === "running") {
+      markRunFinished()
+    }
+  }, [chat.status, lifecycle, markFailed, markRunFinished, markRunStarted])
 
   const runtime = useAISDKRuntime(chat)
 
@@ -148,13 +202,13 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           className
         )}
       >
-        <ChatHandoffEffect
-          handoff={pendingChatHandoff}
+        <ChatPendingActionEffect
+          action={pendingChatAction}
+          lifecycle={lifecycle}
           resumeId={application?.resume.id}
-          isInitialLoading={isInitialLoading}
-          onConsumed={() => setPendingChatHandoff(null)}
+          onConsumed={() => setPendingChatAction(null)}
         />
-        <ThreadViewport isInitialLoading={isInitialLoading} />
+        <ThreadViewport lifecycle={lifecycle} />
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>
   )

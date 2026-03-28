@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 import { openRightPanelAtom, useResume } from "@/lib/store/resume"
 import SkeletonCard from "../skeletons/skeleton-card"
 import { useSetAtom } from "jotai"
-import { useSetPendingChatHandoff } from "@/lib/store/chat"
+import { useSetPendingChatAction } from "@/lib/store/chat"
 import { trackClickAiFullSuggestion } from "@/lib/user-tracking/user-tracking"
 
 interface EvaluationReportProps {
@@ -31,7 +31,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const [loading, setLoading] = useState<boolean>(false)
   const { application, refreshEvaluationReport } = useResume()
   const openRightPanel = useSetAtom(openRightPanelAtom)
-  const setPendingChatHandoff = useSetPendingChatHandoff()
+  const setPendingChatAction = useSetPendingChatAction()
 
   const getGateStatus = (status: "pass" | "borderline" | "fail") => {
     switch (status) {
@@ -116,7 +116,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
     }
 
     trackClickAiFullSuggestion()
-    setPendingChatHandoff({
+    setPendingChatAction({
       id:
         typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { EvaluationReport } from "../evaluation-report"
 
 const mockOpenRightPanel = vi.fn()
-const mockSetPendingChatHandoff = vi.fn()
+const mockSetPendingChatAction = vi.fn()
 const mockTrackClickAiFullSuggestion = vi.fn()
 
 vi.mock("next-intl", () => ({
@@ -44,7 +44,7 @@ vi.mock("@/lib/store/resume", async () => {
 })
 
 vi.mock("@/lib/store/chat", () => ({
-  useSetPendingChatHandoff: () => mockSetPendingChatHandoff
+  useSetPendingChatAction: () => mockSetPendingChatAction
 }))
 
 vi.mock("@/lib/user-tracking/user-tracking", () => ({
@@ -71,8 +71,8 @@ describe("EvaluationReport", () => {
 
     expect(mockTrackClickAiFullSuggestion).toHaveBeenCalled()
     expect(mockOpenRightPanel).toHaveBeenCalledWith("chat")
-    expect(mockSetPendingChatHandoff).toHaveBeenCalledTimes(1)
-    expect(mockSetPendingChatHandoff).toHaveBeenCalledWith(
+    expect(mockSetPendingChatAction).toHaveBeenCalledTimes(1)
+    expect(mockSetPendingChatAction).toHaveBeenCalledWith(
       expect.objectContaining({
         resumeId: "resume-123",
         message: "让我帮您优化简历..."
