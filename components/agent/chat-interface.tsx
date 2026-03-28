@@ -26,7 +26,6 @@ import type {
   ResumeEditorReorderOutput
 } from "@/types/chat"
 import { useEffect, useRef } from "react"
-import { useChatSessionState } from "@/lib/hooks/use-chat-session"
 import {
   useChatSessionIdValue,
   usePendingChatActionValue,
@@ -51,7 +50,6 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { application, resumeData, updateResumeByToolOutput } = useResume()
-  const { updateSessionTitleLocally } = useChatSessionState()
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()
   const setPendingChatAction = useSetPendingChatAction()
@@ -67,17 +65,6 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
     id: sessionId,
     generateId: generateUUID,
     dataPartSchemas: chatDataPartSchemas,
-    onData: (part) => {
-      if (part.type === "data-sessionTitle") {
-        const titleUpdate = part.data as {
-          sessionId: string
-          title: string
-        }
-        if (titleUpdate.sessionId === sessionId) {
-          updateSessionTitleLocally(titleUpdate.title)
-        }
-      }
-    },
     onToolCall: async ({ toolCall }) => {
       const { input } = toolCall
 

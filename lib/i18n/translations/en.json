@@ -317,9 +317,6 @@
   },
 
   "chat": {
-    "loading": "Loading",
-    "sessionFallbackTitle": "New chat",
-    "close": "Close chat",
     "startConversation": "Start a conversation",
     "askToOptimizeResume": "Ask me to help optimize your resume...",
     "composerPlaceholder": "Send a message...",

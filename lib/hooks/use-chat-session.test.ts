@@ -21,8 +21,7 @@ describe("use-chat-session types", () => {
       session: summary,
       loading: false,
       error: null,
-      refreshSession: async () => summary,
-      updateSessionTitleLocally: () => {}
+      refreshSession: async () => summary
     }
 
     expect(value.session?.id).toBe("session-1")

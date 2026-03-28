@@ -293,13 +293,9 @@ describe("POST /api/chat/resume", () => {
     expect(chatHistoryModule.updateSessionTokenUsage).toHaveBeenCalledWith(
       "session-1"
     )
-    expect(dataWriterWrite).toHaveBeenCalledWith({
-      type: "data-sessionTitle",
-      data: {
-        sessionId: "session-1",
-        title: "Tailor resume for PM role"
-      },
-      transient: true
-    })
+    expect(chatHistoryModule.updateSessionTitle).toHaveBeenCalledWith(
+      "session-1",
+      "Tailor resume for PM role"
+    )
   })
 })

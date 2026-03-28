@@ -17,7 +17,6 @@ import { EducationForm } from "@/components/forms/education-form"
 import { EmploymentForm } from "@/components/forms/employment-form"
 import { SkillsForm } from "@/components/forms/skills-form"
 import { ChatInterface } from "@/components/agent/chat-interface"
-import { ChatSessionControls } from "@/components/agent/chat-session-controls"
 import { useChatSession } from "@/lib/hooks/use-chat-session"
 
 export function ResumeRightPanel() {
@@ -55,7 +54,6 @@ export function ResumeRightPanel() {
     <>
       {rightPanelView === "chat" && (
         <div className="flex flex-col h-full">
-          <ChatSessionControls />
           <div className="flex-1 overflow-hidden">
             <ChatInterface className="h-full" />
           </div>

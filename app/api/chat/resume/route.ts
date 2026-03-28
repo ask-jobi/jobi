@@ -231,14 +231,6 @@ export async function POST(request: NextRequest) {
               return
             }
 
-            dataStream.write({
-              type: "data-sessionTitle",
-              data: {
-                sessionId,
-                title
-              },
-              transient: true
-            })
             await updateSessionTitle(sessionId, title)
           })
         }

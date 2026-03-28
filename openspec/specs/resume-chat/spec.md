@@ -232,7 +232,7 @@ The system SHALL automatically filter out truncated messages from UI and API res
 
 ### Requirement: Single Chat Session Per Resume
 
-The system SHALL expose exactly one chat session for each resume in the product experience.
+The system SHALL expose exactly one implicit chat session for each resume in the product experience, without rendering session-specific header controls in the resume chat panel.
 
 #### Scenario: Opening chat resolves the canonical session
 
@@ -253,6 +253,13 @@ The system SHALL expose exactly one chat session for each resume in the product 
 - **THEN** the UI does not display a session list
 - **AND** the UI does not provide a control to create another session
 - **AND** the active conversation remains the single canonical session for that resume
+
+#### Scenario: Resume chat panel does not render session header controls
+
+- **WHEN** the user opens the resume chat panel
+- **THEN** the panel does not render a session title header
+- **AND** the panel does not render a header loading indicator for session metadata
+- **AND** the panel does not render a close or dismiss action that exists only within the removed chat session controls
 
 ### Requirement: Evaluation Optimize Button Hands Off To Chat
 

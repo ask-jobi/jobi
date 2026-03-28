@@ -18,7 +18,6 @@ export interface UseChatSessionReturn {
   loading: boolean
   error: Error | null
   refreshSession: () => Promise<SessionSummary | null>
-  updateSessionTitleLocally: (title: string) => void
 }
 
 export function useChatSession(): UseChatSessionReturn {
@@ -93,9 +92,6 @@ function useChatSessionStoreState(
     session,
     loading,
     error,
-    refreshSession,
-    updateSessionTitleLocally: (title) => {
-      setSession((prev) => (prev ? { ...prev, title } : prev))
-    }
+    refreshSession
   }
 }
