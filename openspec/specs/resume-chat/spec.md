@@ -133,28 +133,27 @@ The system SHALL track whether a message contains tool calls using the has_tools
 
 ### Requirement: Truncated Message Filtering
 
-The system SHALL automatically filter out truncated messages from UI and API responses for the resume's canonical chat session.
+The system SHALL automatically filter out truncated messages from UI and API responses for the active session only.
 
-#### Scenario: Truncated messages hidden in resume chat UI
+#### Scenario: Truncated messages hidden in selected session UI
 
-- **GIVEN** a resume has truncated messages in its canonical chat session
-- **WHEN** the chat UI renders the conversation
-- **THEN** truncated messages are not displayed
-- **AND** non-canonical sessions, if any legacy data exists, are not mixed into the conversation
+- **GIVEN** a user switches to a specific chat session
+- **WHEN** the chat UI renders the message list for that session
+- **THEN** truncated messages from that selected session are not displayed
+- **AND** messages from other sessions are never mixed into the active conversation
 
 #### Scenario: Truncated messages excluded from history load
 
 - **GIVEN** a conversation with some truncated messages in the database
-- **WHEN** loading chat history for a resume
-- **THEN** the system reads from the canonical session only
-- **AND** the query filters by `truncated=false`
+- **WHEN** loading chat history for the active session
+- **THEN** the query filters by `truncated=false`
 - **AND** truncated messages are not returned in the results
 - **AND** RLS policy enforces this filtering at database level
 
 #### Scenario: Re-open page shows no truncated messages
 
-- **GIVEN** user previously truncated a conversation in the canonical session
-- **WHEN** user refreshes or reopens the page
+- **GIVEN** user previously truncated a conversation in one session
+- **WHEN** user refreshes or reopens the page and selects that session again
 - **THEN** truncated messages are not displayed
 - **AND** the conversation appears as it did before truncation
 - **AND** token statistics are preserved in the database
@@ -162,7 +161,7 @@ The system SHALL automatically filter out truncated messages from UI and API res
 #### Scenario: has_tools used for efficient queries
 
 - **GIVEN** a conversation with many messages
-- **WHEN** truncating at a message in the canonical session
+- **WHEN** truncating at a message within the active session
 - **THEN** the system queries only messages where `has_tools=true`
 - **AND** the query uses the filtered index for performance
 
@@ -271,12 +270,13 @@ The system SHALL keep the evaluation-panel optimize button as a chat entrypoint 
 - **WHEN** the user clicks the "`一键润色简历`" button
 - **THEN** the system switches the right panel to the chat view
 - **AND** the system resolves the resume's canonical chat session
-- **AND** the system automatically sends one predefined optimization message to the agent for that resume
+- **AND** the system queues one predefined optimization message for that resume
+- **AND** the system sends that message only after the chat thread becomes ready
 
 #### Scenario: Automatic handoff message is sent only once per click
 
 - **GIVEN** the optimize button was clicked once
-- **WHEN** the chat panel rerenders or the session finishes loading
+- **WHEN** the chat thread transitions through initialization states before becoming ready
 - **THEN** the predefined optimization message is delivered at most once for that click
 - **AND** no duplicate user messages are created
 
@@ -307,4 +307,201 @@ The system SHALL not expose or execute the legacy one-click resume optimization 
 - **WHEN** the user starts resume optimization from the retained evaluation button
 - **THEN** the system does not consume `fullOptimize` quota
 - **AND** any usage accounting follows the resume chat flow instead
+
+### Requirement: Chat Thread Lifecycle Readiness
+
+The system SHALL model resume chat initialization with a single thread lifecycle state so that message execution is gated by explicit readiness instead of multiple independent boolean checks.
+
+#### Scenario: Thread becomes ready only after history is synchronized
+
+- **GIVEN** the user opens the resume chat panel
+- **WHEN** the system resolves the canonical session and loads chat history
+- **THEN** the thread does not enter the ready state until the loaded history has been synchronized into the active chat runtime
+
+#### Scenario: Thread readiness drives message execution
+
+- **WHEN** the thread is not yet ready
+- **THEN** the system does not execute outgoing chat actions immediately
+- **AND** message execution waits until the lifecycle reaches ready
+
+### Requirement: Pending Chat Actions Queue
+
+The system SHALL use a unified pending action mechanism for chat actions that are requested before the thread is ready.
+
+#### Scenario: Handoff waits in pending actions
+
+- **GIVEN** the user triggers the evaluation-panel optimize handoff before the chat thread is ready
+- **WHEN** the thread is still resolving session, loading history, or synchronizing history
+- **THEN** the system stores the handoff as a pending action
+- **AND** executes it exactly once after the thread becomes ready
+
+#### Scenario: User send before readiness is queued
+
+- **GIVEN** the user types a message before the chat thread is ready
+- **WHEN** the user submits the message
+- **THEN** the system stores that send request as a pending action
+- **AND** executes it exactly once after the thread becomes ready
+
+#### Scenario: Pending action respects resume scope
+
+- **GIVEN** a pending chat action was created for one resume
+- **WHEN** the user navigates to another resume before the action is executed
+- **THEN** the system does not execute the pending action in the other resume's chat thread
+
+### Requirement: Multiple Chat Sessions Per Resume
+
+The system SHALL let a user manage multiple chat sessions for the same resume from the resume chat panel.
+
+#### Scenario: User sees existing sessions for the current resume
+
+- **GIVEN** a resume has multiple chat sessions
+- **WHEN** the user opens the chat panel for that resume
+- **THEN** the UI shows the available sessions in the session management area
+- **AND** the user can switch the active conversation to a selected session
+
+#### Scenario: User creates a new session
+
+- **GIVEN** the user is viewing the chat panel for a resume
+- **WHEN** the user creates a new chat session from the session management area
+- **THEN** the system creates a separate empty session for that same resume
+- **AND** the new session becomes the active session
+- **AND** existing sessions remain available for later switching
+
+### Requirement: Session Title Auto-Generation From First User Message
+
+The system SHALL generate a chat session title from the first user message instead of requiring a manual title at session creation time.
+
+#### Scenario: First user message names the session
+
+- **GIVEN** a session is newly created and still has no meaningful title
+- **WHEN** the first user message is saved with text content
+- **THEN** the system derives the session title from that first user message
+- **AND** the title is normalized and truncated to the supported title length
+
+#### Scenario: Existing titled sessions are not renamed
+
+- **GIVEN** a session already has a meaningful non-placeholder title
+- **WHEN** additional user messages are saved
+- **THEN** the existing session title remains unchanged
+
+#### Scenario: Placeholder title remains until usable text exists
+
+- **GIVEN** a new session has not yet received a usable text message
+- **WHEN** the system cannot derive text for the title
+- **THEN** the session keeps its placeholder title
+- **AND** the system retries title generation when a later usable user message is saved
+
+### Requirement: Chat Panel Uses Session Controls Instead Of Static Header Copy
+
+The system SHALL use the current right-panel chat header area for session management controls instead of rendering a fixed title and subtitle.
+
+#### Scenario: Static chat title is removed
+
+- **WHEN** the user opens the resume chat panel
+- **THEN** the UI does not display a fixed localized chat title or subtitle above the conversation
+- **AND** the header area is reserved for session management controls and dismiss actions
+
+### Requirement: Chat Event Logging
+
+The system SHALL log chat events to track resume modifications, summary checkpoints, and rollback operations.
+
+#### Scenario: Log resume modification event
+
+- **WHEN** AI executes a tool that modifies the resume (rewrite, delete, add, reorder) in frontend onToolCall
+- **THEN** the frontend calls a Server Action to create a `resume_modification` event with:
+  - session_id
+  - message_id
+  - event_type = 'resume_modification'
+  - operation details (operation type, entity, block IDs, etc.)
+  - original_value (for rewrite/delete/reorder)
+  - new_value (for rewrite/add)
+  - created_at timestamp
+
+#### Scenario: Log summary checkpoint event
+
+- **WHEN** AI generates a conversation summary (every 5 messages)
+- **THEN** a `summary_checkpoint` event is created with:
+  - session_id
+  - message_count at checkpoint
+  - event_type = 'summary_checkpoint'
+  - summary_text (the generated summary)
+  - created_at timestamp
+
+#### Scenario: Log rollback event
+
+- **WHEN** user truncates/rolls back conversation
+- **THEN** a `rollback` event is created with:
+  - session_id
+  - truncated_message_id
+  - event_type = 'rollback'
+  - message_count before rollback
+  - created_at timestamp
+
+### Requirement: Event Append-Only
+
+The system SHALL ensure chat events are append-only (no updates or deletes).
+
+#### Scenario: No update operations allowed
+
+- **WHEN** user attempts to update an existing chat_event
+- **THEN** the operation fails
+- **AND** error is returned
+
+#### Scenario: No delete operations allowed
+
+- **WHEN** user attempts to delete an existing chat_event
+- **THEN** the operation fails
+- **AND** error is returned
+
+### Requirement: Event Query API
+
+The system SHALL provide an API to query chat events for a session.
+
+#### Scenario: Get all events for session
+
+- **WHEN** GET request is made to `/api/chat/events?session_id=xxx`
+- **THEN** returns all events for the session ordered by created_at asc
+
+#### Scenario: Filter events by type
+
+- **WHEN** GET request is made to `/api/chat/events?session_id=xxx&event_type=resume_modification`
+- **THEN** returns only events matching the specified event_type
+
+### Requirement: Resume Editor Tool
+
+The system SHALL provide a comprehensive tool for AI to edit resume blocks and sections, supporting field modification, block deletion, block addition, block reordering, and section reordering.
+
+#### Scenario: Rewrite block field
+
+- **WHEN** AI calls the tool with operation="rewrite" and specifies entity, id, field, reason, and value
+- **THEN** the specified field in the block is updated
+- **AND** the original value is returned for potential revert
+- **AND** the output language matches the resume language
+
+#### Scenario: Delete a block
+
+- **WHEN** AI calls the tool with operation="delete" and specifies entity and id
+- **THEN** the specified block is removed from the section
+- **AND** the removed block data is returned for potential revert
+
+#### Scenario: Add a new block
+
+- **WHEN** AI calls the tool with operation="add" and specifies entity and block data
+- **THEN** a new block is created in the specified section
+- **AND** the new block is assigned a unique ID
+- **AND** the new block is added to the end of the section
+
+#### Scenario: Reorder blocks within a section
+
+- **WHEN** AI calls the tool with operation="reorderBlocks" and specifies entity and orderedIds
+- **THEN** blocks in the specified section are reordered to match the orderedIds array
+- **AND** the original order is preserved for potential revert
+
+#### Scenario: Reorder sections
+
+- **WHEN** AI calls the tool with operation="reorderSections" and specifies orderedSectionIds
+- **THEN** the sectionOrder array in the resume is updated
+- **AND** sections are reordered to match the orderedSectionIds array
+- **AND** personalInfo remains fixed at the first position
+- **AND** the original order is preserved for potential revert
 
