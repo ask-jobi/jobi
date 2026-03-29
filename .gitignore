@@ -51,6 +51,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /test/e2e/.auth
+/.playwright-cli/
+/output/playwright/
 
 # Worktrees
 .worktrees/
