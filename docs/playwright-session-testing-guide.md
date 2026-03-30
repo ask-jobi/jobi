@@ -4,6 +4,8 @@
 
 如需先了解页面结构、路由关系和主要业务路径，请先阅读 `docs/web-structure.md`。
 
+如果当前运行环境支持子 agent，且改动命中了 UI 主流程相关区域，Agent 应优先调用 `playwright_tester` 执行回归；只有在该 agent 不可用时，才退回到手动 Playwright session 检查。
+
 ## 启动方式
 
 先启动测试环境：
@@ -90,6 +92,7 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - 这个项目里受控输入框有时对 `fill` 不够稳定，优先用 `click + type`
 - 页面结构变化后，旧的元素 ref 可能失效，记得重新 `snapshot`
 - 如果改动涉及表单、弹窗、导航、首页布局，必须做一次 UI 巡检
+- 如果改动涉及列表页、登录流、支付流或关键跳转路径，也按 UI 主流程处理，优先安排 `playwright_tester` 做针对性验证
 - 如果发现错误提示直接暴露原始技术文案，需要记录为 UI/UX 问题
 
 ## 当前已知风险点
