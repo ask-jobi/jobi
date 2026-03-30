@@ -1,15 +1,18 @@
 "use client"
 
 import React from "react"
+import type { Locale } from "@/lib/i18n/config"
 import type { ResumeData, SortableSectionId } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
 import { SectionBlocks } from "@/components/resume-templates/section-blocks"
 import "./default-template.css"
 import ResumeSkeleton from "../skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
+import { getSectionLabel } from "@/lib/templates/section-labels"
 
 interface Props {
   data: ResumeData | null
+  language: Locale
   options?: TemplateOptions
 }
 
@@ -17,15 +20,17 @@ const renderers: Record<
   SortableSectionId,
   (
     data: ResumeData,
+    language: Locale,
     isInteractive?: boolean,
     onSectionClick?: (id: keyof ResumeData, index?: number) => void
   ) => React.ReactElement | null
 > = {
-  education: (data, isInteractive, onSectionClick) => (
+  education: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="education"
       sectionId="education"
       section={data.education}
+      sectionTitle={getSectionLabel("education", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -42,11 +47,12 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  employment: (data, isInteractive, onSectionClick) => (
+  employment: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="employment"
       sectionId="employment"
       section={data.employment}
+      sectionTitle={getSectionLabel("employment", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -63,11 +69,12 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  skills: (data, isInteractive, onSectionClick) => (
+  skills: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="skills"
       sectionId="skills"
       section={data.skills}
+      sectionTitle={getSectionLabel("skills", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -87,11 +94,12 @@ const renderers: Record<
       )}
     />
   ),
-  research: (data, isInteractive, onSectionClick) => (
+  research: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="research"
       sectionId="research"
       section={data.research}
+      sectionTitle={getSectionLabel("research", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -110,11 +118,12 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  projects: (data, isInteractive, onSectionClick) => (
+  projects: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="projects"
       sectionId="projects"
       section={data.projects}
+      sectionTitle={getSectionLabel("projects", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -133,11 +142,12 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  publications: (data, isInteractive, onSectionClick) => (
+  publications: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="publications"
       sectionId="publications"
       section={data.publications}
+      sectionTitle={getSectionLabel("publications", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -154,11 +164,12 @@ const renderers: Record<
       blockRender={() => null}
     />
   ),
-  awards: (data, isInteractive, onSectionClick) => (
+  awards: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="awards"
       sectionId="awards"
       section={data.awards}
+      sectionTitle={getSectionLabel("awards", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -177,11 +188,12 @@ const renderers: Record<
       }
     />
   ),
-  certifications: (data, isInteractive, onSectionClick) => (
+  certifications: (data, language, isInteractive, onSectionClick) => (
     <SectionBlocks
       key="certifications"
       sectionId="certifications"
       section={data.certifications}
+      sectionTitle={getSectionLabel("certifications", language)}
       isInteractive={isInteractive}
       onBlockClick={onSectionClick}
       headRender={(block) => (
@@ -200,7 +212,11 @@ const renderers: Record<
   )
 }
 
-export const DefaultTemplate: React.FC<Props> = ({ data, options }) => {
+export const DefaultTemplate: React.FC<Props> = ({
+  data,
+  language,
+  options
+}) => {
   const { onSectionClick, isInteractive } = options ?? {}
   if (!data) {
     return (
@@ -226,7 +242,7 @@ export const DefaultTemplate: React.FC<Props> = ({ data, options }) => {
 
       {/* Dynamic Sections based on sectionOrder */}
       {data.sectionOrder.map((sectionId) =>
-        renderers[sectionId]?.(data, isInteractive, onSectionClick)
+        renderers[sectionId]?.(data, language, isInteractive, onSectionClick)
       )}
     </article>
   )

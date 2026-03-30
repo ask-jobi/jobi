@@ -6,6 +6,7 @@ import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { rollbackStorage } from "@/server/rollback"
+import { buildEmptyResumeData } from "@/lib/templates/section-factories"
 import {
   BUCKET_NAME,
   extractFilePathFromPublicUrl,
@@ -149,6 +150,41 @@ export async function getResumeData(id: string): Promise<ResumeData> {
   }
 
   return resume[0].resume_json as ResumeData
+}
+
+export async function getResumeForPrint(id: string): Promise<{
+  resumeData: ResumeData
+  language: Locale
+}> {
+  const supabase = await createClient()
+
+  const { data: resume, error } = await supabase
+    .from("resumes")
+    .select(
+      `
+      id,
+      language,
+      resume_json
+    `
+    )
+    .eq("id", id)
+
+  if (error) {
+    throw new Error(`Failed to fetch resume: ${error.message}`)
+  }
+
+  if (!resume || resume.length === 0) {
+    throw new Error(`No resume found with id: ${id}`)
+  }
+
+  if (resume.length > 1) {
+    throw new Error(`Multiple resume found with id: ${id}`)
+  }
+
+  return {
+    resumeData: resume[0].resume_json as ResumeData,
+    language: resume[0].language as Locale
+  }
 }
 
 export async function uploadResumeFile(resumeFile: File) {
@@ -296,7 +332,10 @@ export async function saveResumeChange(resumeId: string, data: ResumeData) {
   if (error) throw error
 }
 
-export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
+export async function createEmptyResumeRecord(
+  jobInfos: JobInfoFormType,
+  language: Locale = "en"
+) {
   const supabase = await createClient()
   const user = await supabase.auth.getUser()
   const rollbackCtx = rollbackStorage.getStore()
@@ -319,66 +358,7 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
       await supabase.from("jobs").delete().eq("id", savedJobId)
     })
 
-    // 创建空的简历数据
-    const emptyResumeData: ResumeData = {
-      sectionOrder: [
-        "education",
-        "employment",
-        "research",
-        "projects",
-        "publications",
-        "awards",
-        "certifications",
-        "skills"
-      ],
-      personalInfo: {
-        blockId: nanoid(),
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: ""
-      },
-      education: {
-        sectionId: nanoid(),
-        title: "Education History",
-        blocks: []
-      },
-      employment: {
-        sectionId: nanoid(),
-        title: "Employment History",
-        blocks: []
-      },
-      skills: {
-        sectionId: nanoid(),
-        title: "Skills",
-        blocks: []
-      },
-      research: {
-        sectionId: nanoid(),
-        title: "Research Experience",
-        blocks: []
-      },
-      projects: {
-        sectionId: nanoid(),
-        title: "Projects",
-        blocks: []
-      },
-      publications: {
-        sectionId: nanoid(),
-        title: "Publications",
-        blocks: []
-      },
-      awards: {
-        sectionId: nanoid(),
-        title: "Awards",
-        blocks: []
-      },
-      certifications: {
-        sectionId: nanoid(),
-        title: "Certifications",
-        blocks: []
-      }
-    }
+    const emptyResumeData = buildEmptyResumeData(language)
 
     const { data: resumeData, error: resumeError } = await supabase
       .from("resumes")
@@ -386,7 +366,7 @@ export async function createEmptyResumeRecord(jobInfos: JobInfoFormType) {
         user_id: user.data.user.id,
         job_id: jobData.id,
         upload_url: null, // 空简历没有上传文件
-        language: "en", // 默认英语
+        language,
         resume_json: emptyResumeData
       })
       .select()

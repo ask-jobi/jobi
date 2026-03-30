@@ -12,6 +12,7 @@ type ExtractBlock<ID extends SortableSectionId> =
 interface SectionBlocksProps<ID extends SortableSectionId> {
   sectionId: ID
   section?: ResumeData[ID] | null
+  sectionTitle?: string
   isInteractive?: boolean
   onBlockClick?: (id: ID, index?: number) => void
 
@@ -32,6 +33,7 @@ interface SectionBlocksProps<ID extends SortableSectionId> {
 export function SectionBlocks<ID extends SortableSectionId>({
   sectionId,
   section,
+  sectionTitle,
   isInteractive,
   onBlockClick,
   headRender,
@@ -57,9 +59,11 @@ export function SectionBlocks<ID extends SortableSectionId>({
       style={sectionStyle}
     >
       {titleRender ? (
-        titleRender(section.title)
+        titleRender(sectionTitle ?? section.title)
       ) : (
-        <h2 className="text-lg font-bold mb-2">{section.title}</h2>
+        <h2 className="text-lg font-bold mb-2">
+          {sectionTitle ?? section.title}
+        </h2>
       )}
 
       {section.blocks.map((block, index) => (

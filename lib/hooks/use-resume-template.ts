@@ -6,6 +6,11 @@ import {
   type ResumeTemplateComponent
 } from "@/lib/templates/registry"
 
+interface UseResumeTemplateOptions {
+  initialId?: string
+  templateId?: string | null
+}
+
 interface UseResumeTemplateReturn {
   Template: ResumeTemplateComponent
   templates: { id: string; name: string }[]
@@ -13,20 +18,22 @@ interface UseResumeTemplateReturn {
 }
 
 export function useResumeTemplate(
-  initialId: string = "default"
+  options: UseResumeTemplateOptions = {}
 ): UseResumeTemplateReturn {
-  const [templateId, setTemplateId] = useState(initialId)
+  const { initialId = "default", templateId: controlledTemplateId } = options
+  const [internalTemplateId, setInternalTemplateId] = useState(initialId)
+  const activeTemplateId = controlledTemplateId ?? internalTemplateId
 
   const templates = useMemo(() => registry.getAll(), [])
 
   const Template = useMemo(() => {
-    const component = registry.get(templateId)
+    const component = registry.get(activeTemplateId)
     return component || registry.get("default")!
-  }, [templateId])
+  }, [activeTemplateId])
 
   return {
     Template,
     templates,
-    switchTemplate: setTemplateId
+    switchTemplate: setInternalTemplateId
   }
 }

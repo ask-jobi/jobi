@@ -71,7 +71,10 @@ describe("POST /api/resume/create-empty", () => {
       const data = await response.json()
       expect(data.success).toBe(true)
       expect(data.data).toEqual(mockResult)
-      expect(mockCreateEmptyResumeRecord).toHaveBeenCalledWith(mockJobInfo)
+      expect(mockCreateEmptyResumeRecord).toHaveBeenCalledWith(
+        mockJobInfo,
+        "en"
+      )
     })
 
     it("should handle empty job description", async () => {
@@ -88,6 +91,28 @@ describe("POST /api/resume/create-empty", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(200)
+    })
+
+    it("should pass through supported language", async () => {
+      const mockJobInfo = {
+        name: "Developer",
+        company: "Startup",
+        description: ""
+      }
+
+      mockCreateEmptyResumeRecord.mockResolvedValue({ id: "resume-zh" })
+
+      const request = createMockRequest({
+        jobInfo: mockJobInfo,
+        language: "zh"
+      })
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockCreateEmptyResumeRecord).toHaveBeenCalledWith(
+        mockJobInfo,
+        "zh"
+      )
     })
   })
 

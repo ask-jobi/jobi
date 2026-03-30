@@ -1,18 +1,25 @@
 "use client"
 
 import React from "react"
+import type { Locale } from "@/lib/i18n/config"
 import type { ResumeData } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
 import { SectionBlocks } from "@/components/resume-templates/section-blocks"
 import ResumeSkeleton from "@/components/skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
+import { getSectionLabel } from "@/lib/templates/section-labels"
 
 interface Props {
   data: ResumeData | null
+  language: Locale
   options?: TemplateOptions
 }
 
-export const ModernTemplate: React.FC<Props> = ({ data, options }) => {
+export const ModernTemplate: React.FC<Props> = ({
+  data,
+  language,
+  options
+}) => {
   const { onSectionClick, isInteractive } = options ?? {}
   if (!data) {
     return (
@@ -50,6 +57,7 @@ export const ModernTemplate: React.FC<Props> = ({ data, options }) => {
       <SectionBlocks
         sectionId="education"
         section={data.education}
+        sectionTitle={getSectionLabel("education", language)}
         isInteractive={isInteractive}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
@@ -77,6 +85,7 @@ export const ModernTemplate: React.FC<Props> = ({ data, options }) => {
       <SectionBlocks
         sectionId="employment"
         section={data.employment}
+        sectionTitle={getSectionLabel("employment", language)}
         isInteractive={isInteractive}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
@@ -112,6 +121,7 @@ export const ModernTemplate: React.FC<Props> = ({ data, options }) => {
       <SectionBlocks
         sectionId="skills"
         section={data.skills}
+        sectionTitle={getSectionLabel("skills", language)}
         isInteractive={isInteractive}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
