@@ -19,6 +19,7 @@ describe("QuotaDisplay", () => {
     expiryDate: "2025-12-31",
     isActive: true,
     chatTokenLimit: 100000000,
+    chatTokenUsed: 25000000,
     quotas: {
       fullOptimize: { used: 5, total: 10 },
       blockOptimize: { used: 3, total: 20 },
@@ -41,137 +42,63 @@ describe("QuotaDisplay", () => {
   it("should display plan name as badge", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByTestId("ui-badge")).toHaveTextContent("pro30Days")
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("planPro")
   })
 
-  it("should display expiry date", () => {
+  it("should display token total, used, and remaining", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(screen.getByText("validUntil")).toBeInTheDocument()
-    expect(screen.getByText(/2025/)).toBeInTheDocument()
-  })
-
-  it("should display quota usage with progress bars", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
-
-    expect(screen.getByText("blockOptimization")).toBeInTheDocument()
-    expect(screen.getByText("motivationLetter")).toBeInTheDocument()
-    expect(screen.getByText("chatTokens")).toBeInTheDocument()
-    expect(screen.getAllByTestId("ui-progress")).toHaveLength(2)
-  })
-
-  it("should display used/total quotas", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
-
-    expect(screen.getByText("3 / 20")).toBeInTheDocument()
-    expect(screen.getByText("2 / 5")).toBeInTheDocument()
+    expect(screen.getByText("tokenTotal")).toBeInTheDocument()
+    expect(screen.getByText("tokenUsed")).toBeInTheDocument()
+    expect(screen.getByText("tokenRemaining")).toBeInTheDocument()
     expect(screen.getByText("100,000,000")).toBeInTheDocument()
+    expect(screen.getByText("25,000,000")).toBeInTheDocument()
+    expect(screen.getByText("75,000,000")).toBeInTheDocument()
   })
 
-  it("should show renew button when subscription is active", () => {
+  it("should not display legacy quota labels", () => {
     render(<QuotaDisplay subscription={defaultSubscription} />)
 
-    expect(
-      screen.getByRole("button", { name: "renewPlan" })
-    ).toBeInTheDocument()
-  })
-
-  it("should show buy button when subscription is not active", () => {
-    const inactiveSubscription = { ...defaultSubscription, isActive: false }
-    render(<QuotaDisplay subscription={inactiveSubscription} />)
-
-    expect(screen.getByRole("button", { name: "buyPlan" })).toBeInTheDocument()
-  })
-
-  it("should show upgrade button for LITE plan", () => {
-    const liteSubscription = { ...defaultSubscription, plan: "LITE" as const }
-    render(<QuotaDisplay subscription={liteSubscription} />)
-
-    expect(
-      screen.getByRole("button", { name: "upgradeToPro" })
-    ).toBeInTheDocument()
-  })
-
-  it("should calculate correct usage percentage", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
-
-    const progressBars = screen.getAllByTestId("ui-progress")
-    const indicators = progressBars.map((bar) =>
-      bar.querySelector('[data-slot="progress-indicator"]')
-    )
-    expect(indicators[0]).toHaveStyle({ transform: "translateX(-85%)" })
-    expect(indicators[1]).toHaveStyle({ transform: "translateX(-60%)" })
-  })
-
-  it("should display no active plan message when expiry date is null", () => {
-    const noPlanSubscription = { ...defaultSubscription, expiryDate: null }
-    render(<QuotaDisplay subscription={noPlanSubscription} />)
-
-    expect(screen.getByText("noActivePlan")).toBeInTheDocument()
-  })
-
-  it("should handle zero total quota", () => {
-    const zeroQuotaSubscription = {
-      ...defaultSubscription,
-      quotas: {
-        fullOptimize: { used: 0, total: 0 },
-        blockOptimize: { used: 0, total: 0 },
-        motivationLetter: { used: 0, total: 0 }
-      },
-      chatTokenLimit: 0
-    }
-    render(<QuotaDisplay subscription={zeroQuotaSubscription} />)
-
-    const usages = screen.getAllByText(/0 \/ 0/)
-    expect(usages).toHaveLength(2)
-    expect(screen.getByText("0")).toBeInTheDocument()
+    expect(screen.queryByText("blockOptimization")).not.toBeInTheDocument()
+    expect(screen.queryByText("motivationLetter")).not.toBeInTheDocument()
+    expect(screen.queryByText("chatTokens")).not.toBeInTheDocument()
   })
 
   it("should display correct badge for LITE plan", () => {
     const liteSubscription = { ...defaultSubscription, plan: "LITE" as const }
     render(<QuotaDisplay subscription={liteSubscription} />)
 
-    expect(screen.getByTestId("ui-badge")).toHaveTextContent("lite14Days")
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("planLite")
   })
 
   it("should display correct badge for FREE plan", () => {
     const freeSubscription = { ...defaultSubscription, plan: "FREE" as const }
     render(<QuotaDisplay subscription={freeSubscription} />)
 
-    expect(screen.getByTestId("ui-badge")).toHaveTextContent("freeTrial")
+    expect(screen.getByTestId("ui-badge")).toHaveTextContent("planFree")
   })
 
-  it("should handle subscription with null plan", () => {
-    const nullPlanSubscription = { ...defaultSubscription, plan: null }
-    render(<QuotaDisplay subscription={nullPlanSubscription} />)
-
-    expect(screen.getByTestId("ui-badge")).toHaveTextContent("noPlan")
-  })
-
-  it("should show upgrade button for FREE plan", () => {
-    const freeSubscription = {
+  it("should handle zero token totals", () => {
+    const zeroQuotaSubscription = {
       ...defaultSubscription,
-      plan: "FREE" as const,
-      isActive: false
+      chatTokenLimit: 0,
+      chatTokenUsed: 0
     }
-    render(<QuotaDisplay subscription={freeSubscription} />)
+    render(<QuotaDisplay subscription={zeroQuotaSubscription} />)
 
-    expect(screen.getByRole("button", { name: "buyPlan" })).toBeInTheDocument()
+    expect(screen.getAllByText("0")).toHaveLength(3)
   })
 
-  it("should show both renew and upgrade buttons for LITE plan when active", () => {
-    const liteActiveSubscription = {
+  it("should display used and remaining tokens from compatibility fields", () => {
+    const customTokenSubscription = {
       ...defaultSubscription,
-      plan: "LITE" as const,
-      isActive: true
+      chatTokenLimit: 500000,
+      chatTokenUsed: 120000
     }
-    render(<QuotaDisplay subscription={liteActiveSubscription} />)
+    render(<QuotaDisplay subscription={customTokenSubscription} />)
 
-    expect(
-      screen.getByRole("button", { name: "renewPlan" })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "upgradeToPro" })
-    ).toBeInTheDocument()
+    expect(screen.getByText("500,000")).toBeInTheDocument()
+    expect(screen.getByText("120,000")).toBeInTheDocument()
+    expect(screen.getByText("380,000")).toBeInTheDocument()
   })
 })

@@ -12,13 +12,25 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/payment/quota", () => ({
   QUOTA: {
     FREE: {
-      quota_full_optimize: 2,
-      quota_block_optimize: 10,
-      quota_motivation_letter: 1,
-      quota_chat_tokens: 100000
+      quota_full_optimize: 1_000_000,
+      quota_block_optimize: 1_000_000,
+      quota_motivation_letter: 1_000_000,
+      quota_chat_tokens: 50_000
     }
   }
 }))
+
+const buildHistoryQueryMock = (result: { data: any; error: any }) => ({
+  select: vi.fn().mockReturnValue({
+    eq: vi.fn().mockReturnValue({
+      order: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue(result)
+        })
+      })
+    })
+  })
+})
 
 describe("POST /api/access-passes/create-free", () => {
   let mockCreateClient: any
@@ -68,28 +80,51 @@ describe("POST /api/access-passes/create-free", () => {
     })
   })
 
-  describe("Existing pass scenarios", () => {
-    it("should return success when user already has active pass", async () => {
+  describe("History scenarios", () => {
+    it("should create free pass when user has no pass history", async () => {
       const mockUser = { id: "user_123", email: "test@example.com" }
-      const existingPass = {
+      const insertedPass = {
         id: "pass_123",
         plan: "FREE",
         start_at: new Date().toISOString(),
-        end_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        end_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        quota_full_optimize: 1_000_000,
+        quota_block_optimize: 1_000_000,
+        quota_motivation_letter: 1_000_000,
+        quota_chat_tokens: 50_000,
+        used_full_optimize: 0,
+        used_block_optimize: 0,
+        used_motivation_letter: 0,
+        used_chat_tokens: 0
       }
 
-      const mockFrom = vi.fn()
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
+      const mockFrom = vi.fn().mockImplementation((table: string) => {
+        if (table !== "access_passes") {
+          return {}
+        }
+
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: { code: "PGRST116" }
+                  })
+                })
+              })
+            })
+          }),
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
-                data: existingPass,
+                data: insertedPass,
                 error: null
               })
             })
           })
-        })
+        }
       })
 
       mockCreateClient.mockResolvedValue({
@@ -106,50 +141,29 @@ describe("POST /api/access-passes/create-free", () => {
 
       expect(response.status).toBe(200)
       const data = await response.json()
-      expect(data.message).toBe("User already has an active pass")
-      expect(data.accessPass).toEqual(existingPass)
+      expect(data.message).toBe("Free pass created successfully")
+      expect(data.accessPass).toEqual(insertedPass)
     })
-  })
 
-  describe("Trial history scenarios", () => {
-    it("should return 400 when user has tried before", async () => {
+    it("should return 400 when user has any pass history", async () => {
       const mockUser = { id: "user_tried", email: "tried@example.com" }
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockImplementation((_table: string) => {
-          let callCount = 0
-          return {
-            eq: vi.fn().mockImplementation((_column: string) => {
-              callCount++
-              if (callCount === 1) {
-                return {
-                  gt: vi
-                    .fn()
-                    .mockImplementation((_column2: string, _value: string) => {
-                      return {
-                        single: vi.fn().mockResolvedValue({
-                          error: { code: "PGRST116" }
-                        })
-                      }
-                    })
-                }
-              }
-              return {
-                order: vi.fn().mockResolvedValue({
-                  data: [
-                    {
-                      id: "old_pass_1",
-                      plan: "FREE",
-                      created_at: new Date(
-                        Date.now() - 7 * 24 * 60 * 60 * 1000
-                      ).toISOString()
-                    }
-                  ],
-                  error: null
-                })
-              }
-            })
-          }
+      const mockFrom = vi.fn().mockImplementation((table: string) => {
+        if (table !== "access_passes") {
+          return {}
+        }
+
+        return buildHistoryQueryMock({
+          data: {
+            id: "old_pass_1",
+            plan: "PRO",
+            created_at: new Date(
+              Date.now() - 7 * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            quota_chat_tokens: 500_000,
+            used_chat_tokens: 250_000
+          },
+          error: null
         })
       })
 
@@ -165,25 +179,24 @@ describe("POST /api/access-passes/create-free", () => {
 
       const response = await POST()
 
-      // The test verifies the route handles the scenario
-      // Expected behavior is 400 but mock complexity may affect this
-      expect([400, 500]).toContain(response.status)
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.code).toBe("ALREADY_TRIED")
     })
   })
 
   describe("Database error scenarios", () => {
-    it("should return 500 when checking existing pass fails", async () => {
+    it("should return 500 when checking history fails", async () => {
       const mockUser = { id: "user_error", email: "error@example.com" }
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                error: { message: "Database connection failed" }
-              })
-            })
-          })
+      const mockFrom = vi.fn().mockImplementation((table: string) => {
+        if (table !== "access_passes") {
+          return {}
+        }
+
+        return buildHistoryQueryMock({
+          data: null,
+          error: { message: "Database connection failed" }
         })
       })
 
@@ -201,58 +214,7 @@ describe("POST /api/access-passes/create-free", () => {
 
       expect(response.status).toBe(500)
       const data = await response.json()
-      expect(data.error).toBe("检查通行证状态失败")
-    })
-
-    it("should return 500 when checking history fails", async () => {
-      const mockUser = {
-        id: "user_history_error",
-        email: "history@example.com"
-      }
-
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockImplementation((_table: string) => {
-          let callCount = 0
-          return {
-            eq: vi.fn().mockImplementation((_column: string) => {
-              callCount++
-              if (callCount === 1) {
-                return {
-                  gt: vi
-                    .fn()
-                    .mockImplementation((_column2: string, _value: string) => {
-                      return {
-                        single: vi.fn().mockResolvedValue({
-                          error: { code: "PGRST116" }
-                        })
-                      }
-                    })
-                }
-              }
-              return {
-                order: vi.fn().mockResolvedValue({
-                  error: { message: "Query failed" }
-                })
-              }
-            })
-          }
-        })
-      })
-
-      mockCreateClient.mockResolvedValue({
-        auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
-            error: null
-          })
-        },
-        from: mockFrom
-      })
-
-      const response = await POST()
-
-      // History check fails, but it falls through to insert which also fails
-      expect(response.status).toBe(500)
+      expect(data.error).toBe("检查通行证历史失败")
     })
   })
 })

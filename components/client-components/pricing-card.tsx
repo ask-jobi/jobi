@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl"
 interface PricingCardProps {
   title: string
   price: string
+  tokenAmount: string
   description: string
   features: readonly string[]
   priceId?: string
@@ -32,6 +33,7 @@ interface PricingCardProps {
 export function PricingCard({
   title,
   price,
+  tokenAmount,
   description,
   features,
   priceId,
@@ -198,18 +200,25 @@ export function PricingCard({
         )}
         <CardHeader className="text-center pb-4">
           <CardTitle className="text-2xl">{getTranslatedText(title)}</CardTitle>
-          <div className="text-4xl font-bold text-primary mb-2">{price}</div>
+          <div className="text-4xl font-bold text-primary mb-2">
+            {getTranslatedText(price)}
+          </div>
+          <div className="text-sm font-semibold text-foreground/80 uppercase tracking-[0.16em]">
+            {getTranslatedText(tokenAmount)}
+          </div>
           <CardDescription>{getTranslatedText(description)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="space-y-2">
-            {getTranslatedFeatures().map((feature, index) => (
-              <div key={index} className="flex items-center">
-                <Check className="w-4 h-4 text-green-500 mr-3" />
-                <span className="text-sm">{feature}</span>
-              </div>
-            ))}
-          </div>
+          {features.length > 0 && (
+            <div className="space-y-2">
+              {getTranslatedFeatures().map((feature, index) => (
+                <div key={index} className="flex items-center">
+                  <Check className="w-4 h-4 text-green-500 mr-3" />
+                  <span className="text-sm">{feature}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <Button
             className="w-full mt-4"
             variant={buttonVariant}

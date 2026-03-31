@@ -21,6 +21,45 @@ vi.mock("@/lib/supabase/server")
 
 const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
 
+const buildAccessPassQueryMock = (result: { data: any; error: any }) => ({
+  select: vi.fn().mockReturnValue({
+    eq: vi.fn().mockReturnValue({
+      order: vi.fn().mockResolvedValue(result)
+    })
+  })
+})
+
+const buildConsumeQuotaSupabaseMock = (
+  result: { data: any; error: any },
+  updateResult: { error: any } = { error: null }
+) => {
+  const selectEq = vi.fn().mockReturnValue({
+    order: vi.fn().mockResolvedValue(result)
+  })
+  const updateEq = vi.fn().mockResolvedValue(updateResult)
+
+  return {
+    selectEq,
+    updateEq,
+    mockSupabase: {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-id" } },
+          error: null
+        })
+      },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: selectEq
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: updateEq
+        })
+      })
+    }
+  }
+}
+
 describe("verifyAndUpdateQuota", () => {
   it("should return update params when used is less than total", () => {
     const result = verifyAndUpdateQuota("fullOptimize", {
@@ -150,28 +189,31 @@ describe("getActiveAccessPass", () => {
     vi.clearAllMocks()
   })
 
-  it("should return access pass when valid subscription exists", async () => {
+  it("should return the latest pass that still has remaining chat tokens", async () => {
     const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: {
-                      id: "pass-id",
-                      user_id: "user-id",
-                      plan: "PRO",
-                      end_at: "2025-12-31"
-                    }
-                  })
-                })
-              })
-            })
-          })
+      from: vi.fn().mockReturnValue(
+        buildAccessPassQueryMock({
+          data: [
+            {
+              id: "newer-exhausted-pass",
+              user_id: "user-id",
+              plan: "PRO",
+              created_at: "2025-02-01",
+              quota_chat_tokens: 1_000_000,
+              used_chat_tokens: 1_000_000
+            },
+            {
+              id: "older-active-pass",
+              user_id: "user-id",
+              plan: "LITE",
+              created_at: "2025-01-01",
+              quota_chat_tokens: 500_000,
+              used_chat_tokens: 120_000
+            }
+          ],
+          error: null
         })
-      })
+      )
     }
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
@@ -180,28 +222,27 @@ describe("getActiveAccessPass", () => {
     const result = await getActiveAccessPass("user-id")
 
     expect(result).not.toBeNull()
-    expect(result?.id).toBe("pass-id")
-    expect(result?.plan).toBe("PRO")
+    expect(result?.id).toBe("older-active-pass")
+    expect(result?.plan).toBe("LITE")
   })
 
   it("should return null when no valid subscription exists", async () => {
     const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { code: "PGRST116" }
-                  })
-                })
-              })
-            })
-          })
+      from: vi.fn().mockReturnValue(
+        buildAccessPassQueryMock({
+          data: [
+            {
+              id: "exhausted-pass",
+              user_id: "user-id",
+              plan: "PRO",
+              created_at: "2025-02-01",
+              quota_chat_tokens: 1_000_000,
+              used_chat_tokens: 1_000_000
+            }
+          ],
+          error: null
         })
-      })
+      )
     }
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
@@ -217,13 +258,7 @@ describe("getActiveAccessPass", () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockRejectedValue(new Error("DB Error"))
-                })
-              })
-            })
+            order: vi.fn().mockRejectedValue(new Error("DB Error"))
           })
         })
       })
@@ -237,22 +272,12 @@ describe("getActiveAccessPass", () => {
 
   it("should return null when database error is PGRST116", async () => {
     const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            gt: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { code: "PGRST116", message: "Row not found" }
-                  })
-                })
-              })
-            })
-          })
+      from: vi.fn().mockReturnValue(
+        buildAccessPassQueryMock({
+          data: null,
+          error: { code: "PGRST116", message: "Row not found" }
         })
-      })
+      )
     }
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
@@ -272,6 +297,26 @@ describe("getUserSubscription", () => {
     const mockFrom = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: [
+                {
+                  id: "pass-id",
+                  user_id: "user-id",
+                  plan: "PRO" as const,
+                  end_at: "2025-12-31",
+                  created_at: "2025-01-01",
+                  quota_full_optimize: 10,
+                  used_full_optimize: 3,
+                quota_block_optimize: 20,
+                used_block_optimize: 5,
+                quota_motivation_letter: 5,
+                used_motivation_letter: 1,
+                quota_chat_tokens: 1_000_000,
+                used_chat_tokens: 12345
+              }
+            ],
+            error: null
+          }),
           gt: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
               limit: vi.fn().mockReturnValue({
@@ -287,7 +332,7 @@ describe("getUserSubscription", () => {
                     used_block_optimize: 5,
                     quota_motivation_letter: 5,
                     used_motivation_letter: 1,
-                    quota_chat_tokens: 100000000,
+                    quota_chat_tokens: 1_000_000,
                     used_chat_tokens: 12345
                   }
                 })
@@ -331,13 +376,17 @@ describe("getUserSubscription", () => {
       total: 5,
       colName: "motivation_letter"
     })
-    expect(result.chatTokenLimit).toBe(100000000)
+    expect(result.chatTokenLimit).toBe(1000000)
   })
 
   it("should return default values when user has no active pass", async () => {
     const mockFrom = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: [],
+            error: null
+          }),
           gt: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
               limit: vi.fn().mockReturnValue({
@@ -427,31 +476,27 @@ describe("consumeQuota", () => {
   })
 
   it("should successfully consume quota", async () => {
-    const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: "pass-id",
-              user_id: "user-id",
-              plan: "PRO" as const,
-              end_at: "2025-12-31",
-              quota_full_optimize: 10,
-              used_full_optimize: 5,
-              quota_block_optimize: 20,
-              used_block_optimize: 10,
-              quota_motivation_letter: 5,
-              used_motivation_letter: 2,
-              quota_chat_tokens: 100000000,
-              used_chat_tokens: 50
-            }
-          })
-        }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: null })
-        })
-      })
-    }
+    const { mockSupabase, selectEq, updateEq } = buildConsumeQuotaSupabaseMock(
+      {
+        data: [
+          {
+            id: "pass-id",
+            user_id: "user-id",
+            plan: "PRO" as const,
+            end_at: "2025-12-31",
+            quota_full_optimize: 1_000_000,
+            used_full_optimize: 5,
+            quota_block_optimize: 1_000_000,
+            used_block_optimize: 10,
+            quota_motivation_letter: 1_000_000,
+            used_motivation_letter: 2,
+            quota_chat_tokens: 1_000_000,
+            used_chat_tokens: 50
+          }
+        ],
+        error: null
+      }
+    )
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
@@ -459,31 +504,30 @@ describe("consumeQuota", () => {
     await consumeQuota("fullOptimize")
 
     expect(mockSupabase.from).toHaveBeenCalledWith("access_passes")
+    expect(selectEq).toHaveBeenCalledWith("user_id", "user-id")
+    expect(updateEq).toHaveBeenCalledWith("id", "pass-id")
   })
 
   it("should throw error when quota is exhausted", async () => {
-    const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: "pass-id",
-              user_id: "user-id",
-              plan: "PRO" as const,
-              end_at: "2025-12-31",
-              quota_full_optimize: 10,
-              used_full_optimize: 10,
-              quota_block_optimize: 20,
-              used_block_optimize: 10,
-              quota_motivation_letter: 5,
-              used_motivation_letter: 2,
-              quota_chat_tokens: 100000000,
-              used_chat_tokens: 50
-            }
-          })
-        })
-      })
-    }
+    const { mockSupabase } = buildConsumeQuotaSupabaseMock({
+      data: [
+        {
+          id: "pass-id",
+          user_id: "user-id",
+          plan: "PRO" as const,
+          end_at: "2025-12-31",
+          quota_full_optimize: 1_000_000,
+          used_full_optimize: 1_000_000,
+          quota_block_optimize: 1_000_000,
+          used_block_optimize: 10,
+          quota_motivation_letter: 1_000_000,
+          used_motivation_letter: 2,
+          quota_chat_tokens: 1_000_000,
+          used_chat_tokens: 50
+        }
+      ],
+      error: null
+    })
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
@@ -493,9 +537,17 @@ describe("consumeQuota", () => {
 
   it("should throw error when database fails on select", async () => {
     const mockSupabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-id" } },
+          error: null
+        })
+      },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockRejectedValue(new Error("DB Error"))
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockRejectedValue(new Error("DB Error"))
+          })
         })
       })
     }
@@ -507,33 +559,30 @@ describe("consumeQuota", () => {
   })
 
   it("should throw error when update fails", async () => {
-    const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: "pass-id",
-              user_id: "user-id",
-              plan: "PRO" as const,
-              end_at: "2025-12-31",
-              quota_full_optimize: 10,
-              used_full_optimize: 5,
-              quota_block_optimize: 20,
-              used_block_optimize: 10,
-              quota_motivation_letter: 5,
-              used_motivation_letter: 2,
-              quota_chat_tokens: 100000000,
-              used_chat_tokens: 50
-            }
-          })
-        }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            error: { message: "Update failed" }
-          })
-        })
-      })
-    }
+    const { mockSupabase } = buildConsumeQuotaSupabaseMock(
+      {
+        data: [
+          {
+            id: "pass-id",
+            user_id: "user-id",
+            plan: "PRO" as const,
+            end_at: "2025-12-31",
+            quota_full_optimize: 1_000_000,
+            used_full_optimize: 5,
+            quota_block_optimize: 1_000_000,
+            used_block_optimize: 10,
+            quota_motivation_letter: 1_000_000,
+            used_motivation_letter: 2,
+            quota_chat_tokens: 1_000_000,
+            used_chat_tokens: 50
+          }
+        ],
+        error: null
+      },
+      {
+        error: { message: "Update failed" }
+      }
+    )
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
@@ -544,29 +593,23 @@ describe("consumeQuota", () => {
   })
 
   it("should successfully consume quota with update success", async () => {
-    const mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: "pass-id",
-              user_id: "user-id",
-              plan: "PRO" as const,
-              end_at: "2025-12-31",
-              quota_full_optimize: 10,
-              used_full_optimize: 5,
-              quota_block_optimize: 20,
-              used_block_optimize: 10,
-              quota_motivation_letter: 5,
-              used_motivation_letter: 2
-            }
-          })
-        }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: null })
-        })
-      })
-    }
+    const { mockSupabase, selectEq, updateEq } = buildConsumeQuotaSupabaseMock({
+      data: [
+        {
+          id: "pass-id",
+          user_id: "user-id",
+          plan: "PRO" as const,
+          end_at: "2025-12-31",
+          quota_full_optimize: 1_000_000,
+          used_full_optimize: 5,
+          quota_block_optimize: 1_000_000,
+          used_block_optimize: 10,
+          quota_motivation_letter: 1_000_000,
+          used_motivation_letter: 2
+        }
+      ],
+      error: null
+    })
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
@@ -574,6 +617,83 @@ describe("consumeQuota", () => {
     await consumeQuota("fullOptimize")
 
     expect(mockSupabase.from).toHaveBeenCalledWith("access_passes")
+    expect(selectEq).toHaveBeenCalledWith("user_id", "user-id")
+    expect(updateEq).toHaveBeenCalledWith("id", "pass-id")
+  })
+
+  it("should pick the newest pass that still has quota", async () => {
+    const { mockSupabase, updateEq, selectEq } = buildConsumeQuotaSupabaseMock({
+      data: [
+        {
+          id: "newer-exhausted",
+          user_id: "user-id",
+          plan: "PRO" as const,
+          end_at: "2025-12-31",
+          quota_full_optimize: 1_000_000,
+          used_full_optimize: 1_000_000,
+          quota_block_optimize: 1_000_000,
+          used_block_optimize: 1_000_000,
+          quota_motivation_letter: 1_000_000,
+          used_motivation_letter: 1_000_000,
+          quota_chat_tokens: 1_000_000,
+          used_chat_tokens: 1_000_000
+        },
+        {
+          id: "older-active",
+          user_id: "user-id",
+          plan: "LITE" as const,
+          end_at: "2025-12-31",
+          quota_full_optimize: 1_000_000,
+          used_full_optimize: 5,
+          quota_block_optimize: 1_000_000,
+          used_block_optimize: 10,
+          quota_motivation_letter: 1_000_000,
+          used_motivation_letter: 2,
+          quota_chat_tokens: 500_000,
+          used_chat_tokens: 250
+        }
+      ],
+      error: null
+    })
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    await consumeQuota("fullOptimize")
+
+    expect(mockSupabase.from).toHaveBeenCalledWith("access_passes")
+    expect(selectEq).toHaveBeenCalledWith("user_id", "user-id")
+    expect(updateEq).toHaveBeenCalledWith("id", "older-active")
+  })
+
+  it("should only consume quota from the current logged-in user", async () => {
+    const { mockSupabase, selectEq, updateEq } = buildConsumeQuotaSupabaseMock({
+      data: [
+        {
+          id: "current-user-pass",
+          user_id: "user-id",
+          plan: "LITE" as const,
+          end_at: "2025-12-31",
+          quota_full_optimize: 1_000_000,
+          used_full_optimize: 1,
+          quota_block_optimize: 1_000_000,
+          used_block_optimize: 1,
+          quota_motivation_letter: 1_000_000,
+          used_motivation_letter: 1,
+          quota_chat_tokens: 500_000,
+          used_chat_tokens: 10
+        }
+      ],
+      error: null
+    })
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    await consumeQuota("fullOptimize")
+
+    expect(selectEq).toHaveBeenCalledWith("user_id", "user-id")
+    expect(updateEq).toHaveBeenCalledWith("id", "current-user-pass")
   })
 })
 
@@ -722,7 +842,7 @@ describe("chat token quota helpers", () => {
 
     expect(result).toEqual({
       used: 250,
-      limit: 1000
+      limit: 1_000_000
     })
   })
 
@@ -864,6 +984,60 @@ describe("buildQuotas", () => {
     expect(result.fullOptimize.total).toBe(2)
     expect(result.blockOptimize.total).toBe(10)
     expect(result.motivationLetter.total).toBe(1)
+  })
+})
+
+describe("buildChatTokenQuota", () => {
+  it("should preserve larger purchased quota values", () => {
+    const accessPass = {
+      id: "pass-id",
+      user_id: "user-id",
+      plan: "PRO" as const,
+      source: "purchase",
+      stripe_checkout_session_id: "cs_test_123",
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 1_000_000,
+      used_full_optimize: 0,
+      quota_block_optimize: 1_000_000,
+      used_block_optimize: 0,
+      quota_motivation_letter: 1_000_000,
+      used_motivation_letter: 0,
+      quota_chat_tokens: 2_000_000,
+      used_chat_tokens: 10_000
+    }
+
+    expect(buildChatTokenQuota(accessPass)).toEqual({
+      limit: 2_000_000,
+      used: 10_000
+    })
+  })
+
+  it("should upgrade legacy PRO quotas to the current minimum allowance", () => {
+    const accessPass = {
+      id: "legacy-pass",
+      user_id: "user-id",
+      plan: "PRO" as const,
+      source: "purchase",
+      stripe_checkout_session_id: "cs_test_legacy",
+      start_at: "2025-01-01",
+      end_at: "2025-12-31",
+      created_at: "2025-01-01",
+      quota_full_optimize: 1_000_000,
+      used_full_optimize: 0,
+      quota_block_optimize: 1_000_000,
+      used_block_optimize: 0,
+      quota_motivation_letter: 1_000_000,
+      used_motivation_letter: 0,
+      quota_chat_tokens: 100_000,
+      used_chat_tokens: 25_000
+    }
+
+    expect(buildChatTokenQuota(accessPass)).toEqual({
+      limit: 1_000_000,
+      used: 25_000
+    })
   })
 })
 

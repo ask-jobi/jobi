@@ -10,6 +10,7 @@ interface SubscriptionData {
   expiryDate: string | null
   isActive: boolean
   chatTokenLimit: number
+  chatTokenUsed: number
   quotas: {
     blockOptimize: { used: number; total: number }
     motivationLetter: { used: number; total: number }

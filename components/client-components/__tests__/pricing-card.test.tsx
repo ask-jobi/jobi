@@ -38,7 +38,8 @@ describe("PricingCard", () => {
   const defaultProps = {
     title: "Pro Plan",
     price: "$9.99",
-    description: "Everything you need",
+    tokenAmount: "1,000,000 Tokens",
+    description: "Best for heavy usage",
     features: ["Feature 1", "Feature 2"],
     plan: "PRO",
     buttonText: "Get Started"
@@ -56,7 +57,8 @@ describe("PricingCard", () => {
 
     expect(screen.getByText("Pro Plan")).toBeInTheDocument()
     expect(screen.getByText("$9.99")).toBeInTheDocument()
-    expect(screen.getByText("Everything you need")).toBeInTheDocument()
+    expect(screen.getByText("Best for heavy usage")).toBeInTheDocument()
+    expect(screen.getByText("1,000,000 Tokens")).toBeInTheDocument()
     expect(screen.getByText("Feature 1")).toBeInTheDocument()
     expect(screen.getByText("Feature 2")).toBeInTheDocument()
     // Use a more flexible matcher for button text
@@ -88,6 +90,18 @@ describe("PricingCard", () => {
     render(<PricingCard {...defaultProps} />)
 
     expect(screen.getByText("pricing.loading")).toBeInTheDocument()
+  })
+
+  it("should render token amount even when feature list is empty", () => {
+    render(
+      <PricingCard
+        {...defaultProps}
+        features={[]}
+        tokenAmount="500,000 Tokens"
+      />
+    )
+
+    expect(screen.getByText("500,000 Tokens")).toBeInTheDocument()
   })
 
   it("should handle free plan selection", async () => {

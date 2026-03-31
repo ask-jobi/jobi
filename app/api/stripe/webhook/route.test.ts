@@ -20,22 +20,22 @@ vi.mock("@/lib/payment/stripe", () => ({
 vi.mock("@/lib/payment/quota", () => ({
   QUOTA: {
     FREE: {
-      quota_full_optimize: 2,
-      quota_block_optimize: 10,
-      quota_motivation_letter: 1,
-      quota_chat_tokens: 100000
+      quota_full_optimize: 1_000_000,
+      quota_block_optimize: 1_000_000,
+      quota_motivation_letter: 1_000_000,
+      quota_chat_tokens: 50_000
     },
     LITE: {
-      quota_full_optimize: 5,
-      quota_block_optimize: 30,
-      quota_motivation_letter: 3,
-      quota_chat_tokens: 1000000
+      quota_full_optimize: 1_000_000,
+      quota_block_optimize: 1_000_000,
+      quota_motivation_letter: 1_000_000,
+      quota_chat_tokens: 500_000
     },
     PRO: {
-      quota_full_optimize: 10,
-      quota_block_optimize: 50,
-      quota_motivation_letter: 5,
-      quota_chat_tokens: 100000000
+      quota_full_optimize: 1_000_000,
+      quota_block_optimize: 1_000_000,
+      quota_motivation_letter: 1_000_000,
+      quota_chat_tokens: 1_000_000
     }
   }
 }))
@@ -298,6 +298,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -353,6 +361,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -403,6 +419,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -457,6 +481,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -520,6 +552,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -593,6 +633,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -626,7 +674,7 @@ describe("POST /api/stripe/webhook", () => {
       expect(response.status).toBe(200)
     })
 
-    it("should calculate 3 days for FREE plan", async () => {
+    it("should reject FREE plan in Stripe webhook", async () => {
       const mockSignature = createMockSignature()
       const mockRequest = createMockRequest(
         JSON.stringify({
@@ -649,54 +697,12 @@ describe("POST /api/stripe/webhook", () => {
         }
       })
 
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_free", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockImplementation((data: any) => {
-                // Verify FREE quotas
-                expect(data.quota_full_optimize).toBe(
-                  QUOTA.FREE.quota_full_optimize
-                )
-                expect(data.quota_block_optimize).toBe(
-                  QUOTA.FREE.quota_block_optimize
-                )
-                expect(data.quota_motivation_letter).toBe(
-                  QUOTA.FREE.quota_motivation_letter
-                )
-                expect(data.quota_chat_tokens).toBe(
-                  QUOTA.FREE.quota_chat_tokens
-                )
-                return { insert: vi.fn().mockResolvedValue({ error: null }) }
-              })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
       const response = await POST(mockRequest)
 
-      expect(response.status).toBe(200)
+      expect(response.status).toBe(400)
+      const text = await response.text()
+      expect(text).toBe("FREE plan is not supported")
+      expect(mockCreateServerRoleClient).not.toHaveBeenCalled()
     })
 
     it("should throw error for invalid plan", async () => {
@@ -737,6 +743,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -793,6 +807,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -822,6 +844,241 @@ describe("POST /api/stripe/webhook", () => {
       expect(response.status).toBe(200)
       const data = await response.json()
       expect(data.received).toBe(true)
+    })
+
+    it("should ignore duplicate checkout session when it would update an active pass", async () => {
+      const mockSignature = createMockSignature()
+      const session = createCheckoutSession({
+        metadata: { plan: "LITE", supabase_user_id: "user_lite" }
+      })
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: session }
+        }),
+        mockSignature
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: session }
+      })
+
+      const profileSelect = vi.fn()
+      const updateMock = vi.fn()
+      const insertMock = vi.fn()
+
+      const mockSupabaseClient = {
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table === "access_passes") {
+            return {
+              select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  order: vi.fn().mockResolvedValue({
+                    data: [
+                      {
+                        id: "duplicate-pass",
+                        user_id: "user_lite",
+                        plan: "LITE",
+                        stripe_checkout_session_id: "cs_test_123",
+                        created_at: "2025-04-01",
+                        quota_full_optimize: 1_000_000,
+                        used_full_optimize: 10,
+                        quota_block_optimize: 1_000_000,
+                        used_block_optimize: 20,
+                        quota_motivation_letter: 1_000_000,
+                        used_motivation_letter: 3,
+                        quota_chat_tokens: 500_000,
+                        used_chat_tokens: 120_000
+                      }
+                    ],
+                    error: null
+                  })
+                })
+              }),
+              update: updateMock,
+              insert: insertMock
+            }
+          }
+          if (table === "user_profiles") {
+            return {
+              select: profileSelect
+            }
+          }
+          return {}
+        })
+      }
+      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.received).toBe(true)
+      expect(profileSelect).not.toHaveBeenCalled()
+      expect(updateMock).not.toHaveBeenCalled()
+      expect(insertMock).not.toHaveBeenCalled()
+    })
+
+    it("should ignore duplicate checkout session when it would create a new pass", async () => {
+      const mockSignature = createMockSignature()
+      const session = createCheckoutSession({
+        metadata: { plan: "PRO", supabase_user_id: "user_pro" }
+      })
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: session }
+        }),
+        mockSignature
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: session }
+      })
+
+      const profileSelect = vi.fn()
+      const updateMock = vi.fn()
+      const insertMock = vi.fn()
+
+      const mockSupabaseClient = {
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table === "access_passes") {
+            return {
+              select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  order: vi.fn().mockResolvedValue({
+                    data: [
+                      {
+                        id: "duplicate-pass",
+                        user_id: "user_pro",
+                        plan: "FREE",
+                        stripe_checkout_session_id: "cs_test_123",
+                        created_at: "2025-04-01",
+                        quota_full_optimize: 1_000_000,
+                        used_full_optimize: 1_000_000,
+                        quota_block_optimize: 1_000_000,
+                        used_block_optimize: 1_000_000,
+                        quota_motivation_letter: 1_000_000,
+                        used_motivation_letter: 1_000_000,
+                        quota_chat_tokens: 50_000,
+                        used_chat_tokens: 50_000
+                      }
+                    ],
+                    error: null
+                  })
+                })
+              }),
+              update: updateMock,
+              insert: insertMock
+            }
+          }
+          if (table === "user_profiles") {
+            return {
+              select: profileSelect
+            }
+          }
+          return {}
+        })
+      }
+      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.received).toBe(true)
+      expect(profileSelect).not.toHaveBeenCalled()
+      expect(updateMock).not.toHaveBeenCalled()
+      expect(insertMock).not.toHaveBeenCalled()
+    })
+
+    it("should accumulate chat token quota when user already has remaining balance", async () => {
+      const mockSignature = createMockSignature()
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: {
+            object: createCheckoutSession({
+              metadata: { plan: "LITE", supabase_user_id: "user_lite" }
+            })
+          }
+        }),
+        mockSignature
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: {
+          object: createCheckoutSession({
+            metadata: { plan: "LITE", supabase_user_id: "user_lite" }
+          })
+        }
+      })
+
+      const deleteMock = vi.fn().mockResolvedValue({ error: null })
+      const updateMock = vi.fn().mockImplementation((data: any) => {
+        expect(data.plan).toBe("LITE")
+        expect(data.quota_full_optimize).toBe(1_000_000)
+        expect(data.quota_block_optimize).toBe(1_000_000)
+        expect(data.quota_motivation_letter).toBe(1_000_000)
+        expect(data.quota_chat_tokens).toBe(1_000_000)
+        expect(data.used_chat_tokens).toBeUndefined()
+        return {
+          eq: vi.fn().mockResolvedValue({ error: null })
+        }
+      })
+      const mockSupabaseClient = {
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table === "user_profiles") {
+            return {
+              select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { id: "user_lite", stripe_customer_id: "cus_123" },
+                    error: null
+                  })
+                })
+              })
+            }
+          }
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [
+                    {
+                      id: "active-pass",
+                      user_id: "user_lite",
+                      plan: "LITE",
+                      created_at: "2025-04-01",
+                      quota_full_optimize: 1_000_000,
+                      used_full_optimize: 1,
+                      quota_block_optimize: 1_000_000,
+                      used_block_optimize: 2,
+                      quota_motivation_letter: 1_000_000,
+                      used_motivation_letter: 0,
+                      quota_chat_tokens: 500_000,
+                      used_chat_tokens: 120_000
+                    }
+                  ],
+                  error: null
+                })
+              })
+            }),
+            update: updateMock,
+            delete: deleteMock,
+            insert: vi.fn()
+          }
+        })
+      }
+      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(deleteMock).not.toHaveBeenCalled()
     })
   })
 
@@ -946,6 +1203,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -996,6 +1261,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({
@@ -1054,6 +1327,14 @@ describe("POST /api/stripe/webhook", () => {
             }
           }
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({
+                  data: [],
+                  error: null
+                })
+              })
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 gt: vi.fn().mockReturnValue({

@@ -81,11 +81,11 @@ export default function PricingPage() {
           {/* Free Plan */}
           <PricingCard {...PRICING_CONFIG.FREE} />
 
-          {/* Pro Plan */}
-          <PricingCard {...PRICING_CONFIG.PRO} />
-
           {/* Lite Plan */}
           <PricingCard {...PRICING_CONFIG.LITE} />
+
+          {/* Pro Plan */}
+          <PricingCard {...PRICING_CONFIG.PRO} />
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import "server-only"
 import { createClient } from "@/lib/supabase/server"
+import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
 
 type QuotaObj<Col> = {
@@ -31,6 +32,7 @@ export type UserSubscription = {
   isActive: boolean
   quotas: Quota
   chatTokenLimit: number
+  chatTokenUsed: number
 }
 
 const EMPTY_QUOTAS: Quota = {
@@ -44,6 +46,10 @@ const EMPTY_CHAT_TOKENS: ChatTokenQuota = {
   limit: 0
 }
 
+const hasRemainingChatTokens = (accessPass: DBAccessPass) => {
+  return (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
+}
+
 // 获取用户有效订阅的方法
 export async function getActiveAccessPass(
   userId: string
@@ -51,20 +57,30 @@ export async function getActiveAccessPass(
   const supabase = await createClient()
 
   // todo 拆分所有的supabase出去为单独的方法，方便测试进行mock
-  const { data: accessPass, error } = await supabase
+  const queryResult = await supabase
     .from("access_passes")
     .select("*")
     .eq("user_id", userId)
-    .gt("end_at", new Date().toISOString())
-    .order("end_at", { ascending: false })
-    .limit(1)
-    .single()
+    .order("created_at", { ascending: false })
 
+  const error = (queryResult as { error?: { code?: string } })?.error
   if (error && error.code !== "PGRST116") {
     throw error
   }
 
-  return accessPass
+  const accessPasses = Array.isArray(queryResult)
+    ? queryResult
+    : Array.isArray((queryResult as { data?: unknown[] })?.data)
+      ? ((queryResult as { data: DBAccessPass[] }).data ?? [])
+      : (queryResult as { data?: DBAccessPass | null })?.data
+        ? [((queryResult as { data: DBAccessPass }).data as DBAccessPass)]
+        : []
+
+  if (!Array.isArray(accessPasses)) {
+    return null
+  }
+
+  return accessPasses.find(hasRemainingChatTokens) ?? null
 }
 
 // 新增：获取用户订阅信息
@@ -90,16 +106,20 @@ export async function getUserSubscription(): Promise<UserSubscription> {
       expiryDate: null,
       isActive: false,
       quotas: EMPTY_QUOTAS,
-      chatTokenLimit: 0
+      chatTokenLimit: 0,
+      chatTokenUsed: 0
     }
   }
+
+  const chatTokenQuota = buildChatTokenQuota(accessPass)
 
   return {
     plan: accessPass.plan,
     expiryDate: accessPass.end_at,
     isActive: true,
     quotas: buildQuotas(accessPass),
-    chatTokenLimit: buildChatTokenQuota(accessPass).limit
+    chatTokenLimit: chatTokenQuota.limit,
+    chatTokenUsed: chatTokenQuota.used
   }
 }
 
@@ -130,7 +150,11 @@ export const buildChatTokenQuota = (
     return EMPTY_CHAT_TOKENS
   }
 
-  const limit = accessPass.quota_chat_tokens ?? 0
+  const minimumPlanQuota =
+    accessPass.plan && accessPass.plan in QUOTA
+      ? QUOTA[accessPass.plan as keyof typeof QUOTA].quota_chat_tokens
+      : 0
+  const limit = Math.max(accessPass.quota_chat_tokens ?? 0, minimumPlanQuota)
   const used = accessPass.used_chat_tokens ?? 0
 
   return {
@@ -141,13 +165,34 @@ export const buildChatTokenQuota = (
 
 export async function consumeQuota(key: QuotaKey) {
   const supabase = await createClient()
-  const { data: accessPass, error } = await supabase
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    throw new Error("用户未登录")
+  }
+
+  const { data: accessPasses, error } = await supabase
     .from("access_passes")
     .select("*")
-    .single()
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
 
   if (error) {
     throw error
+  }
+
+  const accessPass = Array.isArray(accessPasses)
+    ? accessPasses.find((pass) => {
+        const quotas = buildQuotas(pass)
+        return quotas[key].used < quotas[key].total
+      })
+    : null
+
+  if (!accessPass) {
+    throw new Error("Limit reached")
   }
 
   const quotas = buildQuotas(accessPass)

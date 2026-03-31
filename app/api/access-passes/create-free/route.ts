@@ -15,41 +15,27 @@ export async function POST() {
       return NextResponse.json({ error: "用户未登录" }, { status: 401 })
     }
 
-    // 检查用户是否已经有通行证
-    const { data: existingPass, error: checkError } = await supabase
-      .from("access_passes")
-      .select("*")
-      .eq("user_id", user.id)
-      .gt("end_at", new Date().toISOString())
-      .single()
-
-    if (checkError && checkError.code !== "PGRST116") {
-      console.error("Error checking existing access pass:", checkError)
-      return NextResponse.json({ error: "检查通行证状态失败" }, { status: 500 })
-    }
-
-    // 如果用户已经有有效通行证，直接返回成功
-    if (existingPass) {
-      return NextResponse.json({
-        message: "User already has an active pass",
-        accessPass: existingPass
-      })
-    }
-
-    // 检查用户是否有任何通行证历史（包括已过期的）
-    const { data: accessPasses, error: historyError } = await supabase
+    // 只允许从未拥有过任何 access pass 历史的用户领取一次免费包
+    const { data: accessPassHistory, error: historyError } = await supabase
       .from("access_passes")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
+      .limit(1)
+      .single()
 
     if (historyError) {
-      console.error("Error checking access pass history:", historyError)
-      return NextResponse.json({ error: "检查通行证历史失败" }, { status: 500 })
+      if (historyError.code !== "PGRST116") {
+        console.error("Error checking access pass history:", historyError)
+        return NextResponse.json(
+          { error: "检查通行证历史失败" },
+          { status: 500 }
+        )
+      }
     }
 
-    // 如果用户之前试用过任何通行证，拒绝创建免费通行证
-    if (accessPasses && accessPasses.length > 0) {
+    // 只要存在任何历史记录，就不能再次领取 FREE
+    if (accessPassHistory) {
       return NextResponse.json(
         {
           error: "您已经试用过该产品，请选择付费套餐继续使用",
@@ -59,7 +45,7 @@ export async function POST() {
       )
     }
 
-    // 计算免费通行证的有效期（3天）
+    // 计算免费通行证的兼容有效期字段（仍保留，但不作为余额语义判断依据）
     const startAt = new Date()
     const endAt = new Date()
     endAt.setDate(startAt.getDate() + 3)
@@ -76,7 +62,11 @@ export async function POST() {
         quota_full_optimize: QUOTA.FREE.quota_full_optimize,
         quota_block_optimize: QUOTA.FREE.quota_block_optimize,
         quota_motivation_letter: QUOTA.FREE.quota_motivation_letter,
-        quota_chat_tokens: QUOTA.FREE.quota_chat_tokens
+        quota_chat_tokens: QUOTA.FREE.quota_chat_tokens,
+        used_full_optimize: 0,
+        used_block_optimize: 0,
+        used_motivation_letter: 0,
+        used_chat_tokens: 0
       })
       .select()
       .single()

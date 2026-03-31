@@ -60,28 +60,21 @@
   "overallOptimized": "整体优化额度",
 
   "currentPlan": "当前套餐",
-  "validUntil": "有效期至",
-  "remainingUsage": "剩余使用次数",
-  "renewPlan": "重新购买套餐",
-  "upgradeToPro": "升级到 Pro 套餐",
-  "buyPlan": "购买套餐",
+  "tokenTotal": "Token 总量",
+  "tokenUsed": "Token 已用",
+  "tokenRemaining": "Token 剩余",
   "noPlan": "无套餐",
   "unknownPlan": "未知套餐",
-  "freeTrial": "免费试用",
-  "lite14Days": "Lite 14天",
-  "pro30Days": "Pro 30天",
-  "detailedUsage": "详细用量信息",
+  "planFree": "免费",
+  "planLite": "Lite",
+  "planPro": "Pro",
   "fullOptimization": "整体优化",
   "blockOptimization": "区块优化",
   "motivationLetter": "动机信生成",
   "planExpiry": "套餐有效期至",
-  "noActivePlan": "当前无有效套餐，请购买套餐以使用完整功能",
+  "noActivePlan": "当前无有效套餐",
   "usage": "用量",
   "planDetails": "套餐详情",
-  "planType": "套餐类型",
-  "status": "状态",
-  "active": "有效",
-  "expired": "已过期",
   "subscriptionAndUsage": "套餐与用量",
   "loadingSubscriptionError": "加载套餐信息时出现错误",
   "failedToLoadSubscription": "无法加载套餐信息",
@@ -125,10 +118,10 @@
   },
 
   "pricing": {
-    "choosePlan": "选择最适合您的套餐",
-    "heroTitle": "简单透明的",
-    "heroTitleHighlight": "定价方案",
-    "heroDescription": "无论您是个人求职者还是企业用户，我们都有适合您的套餐选择。我们承诺不自动续费，一次付费，享受完整功能。",
+    "choosePlan": "选择最适合您的 Token 套餐",
+    "heroTitle": "简单、纯 Token 的",
+    "heroTitleHighlight": "定价",
+    "heroDescription": "每个套餐只由 Token 额度和价格定义。按你的使用量选择最合适的套餐。",
     "faqTitle": "常见问题",
     "faqCancelSubscription": "可以随时取消订阅吗？",
     "faqCancelSubscriptionAnswer": "是的，您可以随时取消订阅，取消后仍可使用到当前计费周期结束。",
@@ -138,8 +131,8 @@
     "faqRefundPolicyAnswer": "我们提供7天无理由退款保证，如果您不满意我们的服务。",
     "faqEnterpriseCustomization": "企业版可以定制吗？",
     "faqEnterpriseCustomizationAnswer": "是的，企业版支持定制化需求，请联系我们的销售团队。",
-    "ctaTitle": "准备好开始了吗？",
-    "ctaDescription": "选择最适合您的套餐，开始打造完美简历",
+    "ctaTitle": "选择你的 Token 套餐",
+    "ctaDescription": "Free、Lite、Pro 只在 Token 额度和价格上不同。",
     "ctaButtonLoggedIn": "进入仪表板",
     "ctaButtonLoggedOut": "立即开始",
     "mostPopular": "最受欢迎",
@@ -155,43 +148,28 @@
     },
     "plans": {
       "free": {
-        "title": "Free Pass",
+        "title": "免费版",
         "price": "免费",
-        "description": "适合个人用户试用，3 天完整功能",
-        "features": [
-          "每月 3 次简历优化",
-          "基础 AI 分析",
-          "动机信生成",
-          "邮件支持"
-        ],
-        "buttonText": "开始免费试用"
+        "tokenAmount": "50,000 个 Token",
+        "description": "适合首次体验，包含一小包 Token。",
+        "features": [],
+        "buttonText": "领取免费额度"
       },
       "pro": {
-        "title": "Pro Pass",
+        "title": "专业版",
         "price": "€24.99",
-        "description": "最受欢迎！一次付费，享受 30 天的完整功能 + 简历优化高亮建议",
-        "features": [
-          "每月 50 次简历优化",
-          "高级 AI 分析",
-          "简历优化高亮建议",
-          "优先客服支持",
-          "导出 PDF 格式",
-          "30 天完整功能",
-          "24h 邮件支持"
-        ],
-        "buttonText": "选择 Pro Pass"
+        "tokenAmount": "1,000,000 个 Token",
+        "description": "适合高频、长期使用。",
+        "features": [],
+        "buttonText": "选择专业版"
       },
       "lite": {
-        "title": "Lite Pass",
+        "title": "轻量版",
         "price": "€19.99",
-        "description": "短期冲刺，一次付费，享受 7 天的完整功能",
-        "features": [
-          "每月 3 次简历优化",
-          "基础 AI 分析",
-          "动机信生成",
-          "24h 邮件支持"
-        ],
-        "buttonText": "选择 Lite Pass"
+        "tokenAmount": "500,000 个 Token",
+        "description": "适合中等强度使用。",
+        "features": [],
+        "buttonText": "选择轻量版"
       }
     },
     "paymentCancelled": {

@@ -42,10 +42,40 @@ export async function POST(req: Request) {
       return new Response("Missing required metadata", { status: 400 })
     }
 
+    if (plan === "FREE") {
+      console.error("FREE plan is not supported in Stripe webhook")
+      return new Response("FREE plan is not supported", { status: 400 })
+    }
+
     const supabase = await createServerRoleClient()
 
     try {
-      // 1. 查询 user_profiles
+      // 1. 找出当前用户的 access passes，并先处理幂等重放
+      const { data: accessPasses, error: accessPassError } = await supabase
+        .from("access_passes")
+        .select("*")
+        .eq("user_id", supabaseUserId)
+        .order("created_at", { ascending: false })
+
+      if (accessPassError && accessPassError.code !== "PGRST116") {
+        console.error("Error querying access passes:", accessPassError)
+        throw new Error(
+          `Failed to query access passes: ${accessPassError.message}`
+        )
+      }
+
+      const duplicateSessionPass = Array.isArray(accessPasses)
+        ? accessPasses.find(
+            (accessPass) =>
+              accessPass.stripe_checkout_session_id === session.id
+          )
+        : null
+
+      if (duplicateSessionPass) {
+        return NextResponse.json({ received: true })
+      }
+
+      // 2. 查询 user_profiles
       const { data: profile, error: profileError } = await supabase
         .from("user_profiles")
         .select("*")
@@ -58,7 +88,7 @@ export async function POST(req: Request) {
         throw new Error(`Failed to query user profile: ${profileError.message}`)
       }
 
-      // 2. 处理 user_profiles 的插入或更新
+      // 3. 处理 user_profiles 的插入或更新
       if (!profile) {
         // 如果用户不存在，则创建用户 profile
         const { error: insertError } = await supabase
@@ -93,64 +123,94 @@ export async function POST(req: Request) {
         console.log("Updated stripe_customer_id for user:", supabaseUserId)
       }
 
-      // 3. 删除当前未过期的 access_passes
-      const { error: deleteError } = await supabase
-        .from("access_passes")
-        .delete()
-        .eq("user_id", supabaseUserId)
-        .gt("end_at", new Date().toISOString())
+      // 4. 找出当前仍有余额的最新 access pass
+      const activeAccessPass = Array.isArray(accessPasses)
+        ? accessPasses.find(
+            (accessPass) =>
+              (accessPass.quota_chat_tokens ?? 0) >
+              (accessPass.used_chat_tokens ?? 0)
+          )
+        : null
 
-      if (deleteError) {
-        console.error("Error deleting existing access passes:", deleteError)
-        throw new Error(
-          `Failed to delete existing access passes: ${deleteError.message}`
-        )
-      }
-
-      console.log("Deleted existing access passes for user:", supabaseUserId)
-
-      // 4. 计算有效期
+      // 5. 计算有效期
       const startAt = new Date()
       const endAt = new Date()
       if (plan === "LITE") {
         endAt.setDate(startAt.getDate() + 14)
       } else if (plan === "PRO") {
         endAt.setDate(startAt.getDate() + 30)
-      } else if (plan === "FREE") {
-        endAt.setDate(startAt.getDate() + 3)
       } else {
         throw new Error(`Invalid plan: ${plan}`)
       }
 
-      // 5. 创建新的 access_pass
-      const { error: insertAccessPassError } = await supabase
-        .from("access_passes")
-        .insert({
-          user_id: supabaseUserId,
-          plan,
-          source: "stripe",
-          start_at: startAt.toISOString(),
-          end_at: endAt.toISOString(),
-          stripe_checkout_session_id: session.id,
-          quota_full_optimize: QUOTA[plan].quota_full_optimize,
-          quota_block_optimize: QUOTA[plan].quota_block_optimize,
-          quota_motivation_letter: QUOTA[plan].quota_motivation_letter,
-          quota_chat_tokens: QUOTA[plan].quota_chat_tokens
-        })
+      const quotaConfig = QUOTA[plan]
 
-      if (insertAccessPassError) {
-        console.error("Error creating access pass:", insertAccessPassError)
-        throw new Error(
-          `Failed to create access pass: ${insertAccessPassError.message}`
+      if (activeAccessPass) {
+        const { error: updateAccessPassError } = await supabase
+          .from("access_passes")
+          .update({
+            plan,
+            source: "stripe",
+            start_at: startAt.toISOString(),
+            end_at: endAt.toISOString(),
+            stripe_checkout_session_id: session.id,
+            quota_full_optimize: quotaConfig.quota_full_optimize,
+            quota_block_optimize: quotaConfig.quota_block_optimize,
+            quota_motivation_letter: quotaConfig.quota_motivation_letter,
+            quota_chat_tokens:
+              (activeAccessPass.quota_chat_tokens ?? 0) +
+              quotaConfig.quota_chat_tokens
+          })
+          .eq("id", activeAccessPass.id)
+
+        if (updateAccessPassError) {
+          console.error("Error updating access pass:", updateAccessPassError)
+          throw new Error(
+            `Failed to update access pass: ${updateAccessPassError.message}`
+          )
+        }
+
+        console.log(
+          "Successfully updated access pass for user:",
+          supabaseUserId,
+          "plan:",
+          plan
+        )
+      } else {
+        // 5. 创建新的 access_pass
+        const { error: insertAccessPassError } = await supabase
+          .from("access_passes")
+          .insert({
+            user_id: supabaseUserId,
+            plan,
+            source: "stripe",
+            start_at: startAt.toISOString(),
+            end_at: endAt.toISOString(),
+            stripe_checkout_session_id: session.id,
+            quota_full_optimize: quotaConfig.quota_full_optimize,
+            quota_block_optimize: quotaConfig.quota_block_optimize,
+            quota_motivation_letter: quotaConfig.quota_motivation_letter,
+            quota_chat_tokens: quotaConfig.quota_chat_tokens,
+            used_full_optimize: 0,
+            used_block_optimize: 0,
+            used_motivation_letter: 0,
+            used_chat_tokens: 0
+          })
+
+        if (insertAccessPassError) {
+          console.error("Error creating access pass:", insertAccessPassError)
+          throw new Error(
+            `Failed to create access pass: ${insertAccessPassError.message}`
+          )
+        }
+
+        console.log(
+          "Successfully created access pass for user:",
+          supabaseUserId,
+          "plan:",
+          plan
         )
       }
-
-      console.log(
-        "Successfully created access pass for user:",
-        supabaseUserId,
-        "plan:",
-        plan
-      )
     } catch (error: any) {
       console.error("Database operation failed:", error.message)
       // 返回 500 错误，但 webhook 仍然被认为是成功的

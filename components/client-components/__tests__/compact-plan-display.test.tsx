@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { CompactPlanDisplay } from "../compact-plan-display"
 
@@ -85,6 +85,8 @@ describe("CompactPlanDisplay", () => {
     plan: "PRO" as const,
     expiryDate: "2024-12-31",
     isActive: true,
+    chatTokenLimit: 100000000,
+    chatTokenUsed: 25000000,
     quotas: {
       fullOptimize: { used: 5, total: 10 },
       blockOptimize: { used: 15, total: 30 },
@@ -131,7 +133,7 @@ describe("CompactPlanDisplay", () => {
     consoleError.mockRestore()
   })
 
-  it("should render subscription data when loaded", async () => {
+  it("should render token summary when loaded", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     vi.spyOn(global, "fetch").mockResolvedValueOnce({
       ok: true,
@@ -144,10 +146,19 @@ describe("CompactPlanDisplay", () => {
       expect(screen.getByTestId("badge")).toBeInTheDocument()
     })
 
+    expect(screen.getByTestId("badge")).toHaveTextContent("planPro")
+    const dialogContent = screen.getByTestId("dialog-content")
+    expect(within(dialogContent).getByText("tokenTotal")).toBeInTheDocument()
+    expect(within(dialogContent).getByText("tokenUsed")).toBeInTheDocument()
+    expect(within(dialogContent).getByText("tokenRemaining")).toBeInTheDocument()
+    expect(within(dialogContent).getByText("100,000,000")).toBeInTheDocument()
+    expect(within(dialogContent).getByText("25,000,000")).toBeInTheDocument()
+    expect(within(dialogContent).getByText("75,000,000")).toBeInTheDocument()
+
     consoleError.mockRestore()
   })
 
-  it("should show tooltip with plan details on hover", async () => {
+  it("should not render legacy quota labels", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     vi.spyOn(global, "fetch").mockResolvedValueOnce({
       ok: true,
@@ -157,8 +168,12 @@ describe("CompactPlanDisplay", () => {
     render(<CompactPlanDisplay />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("tooltip")).toBeInTheDocument()
+      expect(screen.getByTestId("badge")).toBeInTheDocument()
     })
+
+    expect(screen.queryByText("blockOptimization")).not.toBeInTheDocument()
+    expect(screen.queryByText("motivationLetter")).not.toBeInTheDocument()
+    expect(screen.queryByText("chatTokens")).not.toBeInTheDocument()
 
     consoleError.mockRestore()
   })

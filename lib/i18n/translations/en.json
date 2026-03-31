@@ -60,28 +60,21 @@
   "overallOptimized": "Overall Optimized",
 
   "currentPlan": "Current Plan",
-  "validUntil": "Valid Until",
-  "remainingUsage": "Remaining Usage",
-  "renewPlan": "Renew Plan",
-  "upgradeToPro": "Upgrade to Pro",
-  "buyPlan": "Buy Plan",
+  "tokenTotal": "Token Total",
+  "tokenUsed": "Token Used",
+  "tokenRemaining": "Token Remaining",
   "noPlan": "No Plan",
   "unknownPlan": "Unknown Plan",
-  "freeTrial": "Free Trial",
-  "lite14Days": "Lite 14 Days",
-  "pro30Days": "Pro 30 Days",
-  "detailedUsage": "Detailed Usage",
+  "planFree": "Free",
+  "planLite": "Lite",
+  "planPro": "Pro",
   "fullOptimization": "Full Optimization",
   "blockOptimization": "Block Optimization",
   "motivationLetter": "Motivation Letter",
   "planExpiry": "Plan Expiry",
-  "noActivePlan": "No active plan, please purchase a plan to use full features",
+  "noActivePlan": "No active plan",
   "usage": "Usage",
   "planDetails": "Plan Details",
-  "planType": "Plan Type",
-  "status": "Status",
-  "active": "Active",
-  "expired": "Expired",
   "subscriptionAndUsage": "Subscription & Usage",
   "loadingSubscriptionError": "Error loading subscription information",
   "failedToLoadSubscription": "Failed to load subscription information",
@@ -123,10 +116,10 @@
   },
 
   "pricing": {
-    "choosePlan": "Choose the plan that best fits you",
-    "heroTitle": "Simple and transparent",
-    "heroTitleHighlight": "pricing plans",
-    "heroDescription": "Whether you're an individual job seeker or a business user, we have the right plan for you. We promise no auto-renewal - pay once and enjoy full features.",
+    "choosePlan": "Choose the token bundle that best fits your usage",
+    "heroTitle": "Simple, token-based",
+    "heroTitleHighlight": "pricing",
+    "heroDescription": "Each plan is defined only by token allowance and price. Pick the bundle that matches how much you build.",
     "faqTitle": "Frequently Asked Questions",
     "faqCancelSubscription": "Can I cancel my subscription anytime?",
     "faqCancelSubscriptionAnswer": "Yes, you can cancel your subscription at any time. After cancellation, you can still use the service until the end of your current billing cycle.",
@@ -136,8 +129,8 @@
     "faqRefundPolicyAnswer": "Yes, we offer a 7-day no-questions-asked refund guarantee if you're not satisfied with our service.",
     "faqEnterpriseCustomization": "Can enterprise plans be customized?",
     "faqEnterpriseCustomizationAnswer": "Yes, enterprise plans support customization. Please contact our sales team for your specific needs.",
-    "ctaTitle": "Ready to get started?",
-    "ctaDescription": "Choose the plan that best fits you and start building your perfect resume",
+    "ctaTitle": "Pick your token bundle",
+    "ctaDescription": "Free, Lite, and Pro differ only by token allowance and price.",
     "ctaButtonLoggedIn": "Go to Dashboard",
     "ctaButtonLoggedOut": "Get Started Now",
     "mostPopular": "Most Popular",
@@ -146,43 +139,28 @@
     "paymentError": "An error occurred during payment, please try again",
     "plans": {
       "free": {
-        "title": "Free Pass",
+        "title": "Free",
         "price": "Free",
-        "description": "Perfect for individual users to try, 3 days full features",
-        "features": [
-          "3 resume optimizations per month",
-          "Basic AI analysis",
-          "Motivation letter generation",
-          "Email support"
-        ],
-        "buttonText": "Start Free Trial"
+        "tokenAmount": "50,000 Tokens",
+        "description": "For trying the product with a small token bundle.",
+        "features": [],
+        "buttonText": "Choose Free"
       },
       "pro": {
-        "title": "Pro Pass",
+        "title": "Pro",
         "price": "€24.99",
-        "description": "Most popular! One-time payment, enjoy 30 days full features + resume optimization highlight suggestions",
-        "features": [
-          "50 resume optimizations per month",
-          "Advanced AI analysis",
-          "Resume optimization highlight suggestions",
-          "Priority customer support",
-          "Export to PDF format",
-          "30 days full features",
-          "24h email support"
-        ],
-        "buttonText": "Choose Pro Pass"
+        "tokenAmount": "1,000,000 Tokens",
+        "description": "For regular, high-volume usage.",
+        "features": [],
+        "buttonText": "Choose Pro"
       },
       "lite": {
-        "title": "Lite Pass",
+        "title": "Lite",
         "price": "€19.99",
-        "description": "Short-term sprint, one-time payment, enjoy 7 days full features",
-        "features": [
-          "3 resume optimizations per month",
-          "Basic AI analysis",
-          "Motivation letter generation",
-          "24h email support"
-        ],
-        "buttonText": "Choose Lite Pass"
+        "tokenAmount": "500,000 Tokens",
+        "description": "For lighter paid usage.",
+        "features": [],
+        "buttonText": "Choose Lite"
       }
     },
     "paymentCancelled": {

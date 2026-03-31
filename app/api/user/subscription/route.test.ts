@@ -32,7 +32,8 @@ describe("GET /api/user/subscription", () => {
           blockOptimize: { used: 5, total: 20 },
           motivationLetter: { used: 1, total: 5 }
         },
-        chatTokenLimit: 100000000
+        chatTokenLimit: 1000000,
+        chatTokenUsed: 250000
       }
 
       mockGetUserSubscription.mockResolvedValue(mockSubscription)
@@ -54,7 +55,8 @@ describe("GET /api/user/subscription", () => {
           blockOptimize: { used: 0, total: 10 },
           motivationLetter: { used: 0, total: 1 }
         },
-        chatTokenLimit: 100000
+        chatTokenLimit: 50000,
+        chatTokenUsed: 0
       }
 
       mockGetUserSubscription.mockResolvedValue(mockSubscription)
@@ -74,7 +76,8 @@ describe("GET /api/user/subscription", () => {
           blockOptimize: { used: 20, total: 20 },
           motivationLetter: { used: 5, total: 5 }
         },
-        chatTokenLimit: 100000000
+        chatTokenLimit: 1000000,
+        chatTokenUsed: 1000000
       }
 
       mockGetUserSubscription.mockResolvedValue(mockSubscription)

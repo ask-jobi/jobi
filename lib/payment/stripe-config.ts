@@ -31,34 +31,21 @@ export const BASE_PRICING_CONFIG = {
 
 // 价格配置（包含文本内容，需要国际化）
 export const PRICING_CONFIG = {
-  // TODO: Handle free plan logic - if user hasn't tried before, create free pass for 3 days trial
-  // If user already has a pass, check if expired, if expired guide user to purchase, if not go directly to DASHBOARD
   FREE: {
     title: "pricing.plans.free.title",
-    price: "Free",
+    price: "pricing.plans.free.price",
+    tokenAmount: "pricing.plans.free.tokenAmount",
     description: "pricing.plans.free.description",
-    features: [
-      "pricing.plans.free.features.0",
-      "pricing.plans.free.features.1",
-      "pricing.plans.free.features.2",
-      "pricing.plans.free.features.3"
-    ],
+    features: [],
     plan: "FREE",
     buttonText: "pricing.plans.free.buttonText"
   },
   PRO: {
     title: "pricing.plans.pro.title",
-    price: "€24.99",
+    price: "pricing.plans.pro.price",
+    tokenAmount: "pricing.plans.pro.tokenAmount",
     description: "pricing.plans.pro.description",
-    features: [
-      "pricing.plans.pro.features.0",
-      "pricing.plans.pro.features.1",
-      "pricing.plans.pro.features.2",
-      "pricing.plans.pro.features.3",
-      "pricing.plans.pro.features.4",
-      "pricing.plans.pro.features.5",
-      "pricing.plans.pro.features.6"
-    ],
+    features: [],
     plan: "PRO",
     priceId: STRIPE_PRICE_IDS.PRO_PASS,
     mode: "payment" as const,
@@ -68,14 +55,10 @@ export const PRICING_CONFIG = {
   },
   LITE: {
     title: "pricing.plans.lite.title",
-    price: "€19.99",
+    price: "pricing.plans.lite.price",
+    tokenAmount: "pricing.plans.lite.tokenAmount",
     description: "pricing.plans.lite.description",
-    features: [
-      "pricing.plans.lite.features.0",
-      "pricing.plans.lite.features.1",
-      "pricing.plans.lite.features.2",
-      "pricing.plans.lite.features.3"
-    ],
+    features: [],
     plan: "LITE",
     priceId: STRIPE_PRICE_IDS.LITE_PASS,
     mode: "payment" as const,

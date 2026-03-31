@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Package, Info } from "lucide-react"
+import { Package } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
@@ -24,10 +24,11 @@ import { cn } from "@/lib/utils"
 
 interface SubscriptionData {
   plan: "FREE" | "LITE" | "PRO" | null
-  expiryDate: string | null
-  isActive: boolean
+  expiryDate?: string | null
+  isActive?: boolean
   chatTokenLimit: number
-  quotas: {
+  chatTokenUsed?: number
+  quotas?: {
     blockOptimize: { used: number; total: number }
     motivationLetter: { used: number; total: number }
   }
@@ -76,20 +77,53 @@ export function CompactPlanDisplay() {
   const getPlanName = (plan: string | null) => {
     switch (plan) {
       case "PRO":
-        return "pro30Days"
+        return "planPro"
       case "LITE":
-        return "lite14Days"
+        return "planLite"
       case "FREE":
-        return "freeTrial"
+        return "planFree"
       default:
         return "noPlan"
     }
   }
 
-  // 使用与侧边栏按钮相同的样式类
+  const numberFormatter = new Intl.NumberFormat("en-US")
+  const tokenTotal = subscription?.chatTokenLimit ?? 0
+  const tokenUsed = subscription?.chatTokenUsed ?? 0
+  const tokenRemaining = Math.max(tokenTotal - tokenUsed, 0)
+
   const sidebarButtonStyle = cn(
     "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
     "h-8 text-sm"
+  )
+
+  const renderTokenSummary = (compact = false) => (
+    <div className={compact ? "space-y-2 text-xs" : "space-y-3 text-sm"}>
+      <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">{t("currentPlan")}</span>
+        <span className="font-medium">
+          {subscription ? t(getPlanName(subscription.plan)) : t("noPlan")}
+        </span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">{t("tokenTotal")}</span>
+        <span className="font-medium tabular-nums">
+          {numberFormatter.format(tokenTotal)}
+        </span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">{t("tokenUsed")}</span>
+        <span className="font-medium tabular-nums">
+          {numberFormatter.format(tokenUsed)}
+        </span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">{t("tokenRemaining")}</span>
+        <span className="font-medium tabular-nums">
+          {numberFormatter.format(tokenRemaining)}
+        </span>
+      </div>
+    </div>
   )
 
   const buttonContent = () => {
@@ -105,20 +139,6 @@ export function CompactPlanDisplay() {
       )
     }
 
-    if (!subscription) {
-      return (
-        <>
-          <div className="flex items-center gap-2 w-full">
-            <Package className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{t("currentPlan")}</span>
-          </div>
-          <Badge variant="outline" className="text-xs ml-auto">
-            {t("noPlan")}
-          </Badge>
-        </>
-      )
-    }
-
     return (
       <>
         <div className="flex items-center gap-2 w-full">
@@ -128,121 +148,12 @@ export function CompactPlanDisplay() {
         <Badge
           className={cn(
             "text-white border-0 text-xs",
-            getPlanGradient(subscription.plan)
+            getPlanGradient(subscription?.plan ?? null)
           )}
         >
-          {t(getPlanName(subscription.plan))}
+          {subscription ? t(getPlanName(subscription.plan)) : t("noPlan")}
         </Badge>
       </>
-    )
-  }
-
-  const dialogBody = () => {
-    if (loading) {
-      return (
-        <div className="space-y-4">
-          <div className="h-5 w-24 bg-muted rounded" />
-          <div className="space-y-2">
-            <div className="h-4 bg-muted rounded" />
-            <div className="h-4 bg-muted rounded" />
-            <div className="h-4 bg-muted rounded" />
-          </div>
-        </div>
-      )
-    }
-
-    if (!subscription) {
-      return (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{t("noPlan")}</p>
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => router.push("/pricing")}
-          >
-            {t("buyPlan")}
-          </Button>
-        </div>
-      )
-    }
-
-    return (
-      <div className="space-y-6">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t("planType")}</span>
-            <span className="font-medium">
-              {t(getPlanName(subscription.plan))}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t("status")}</span>
-            <span className="font-medium">
-              {subscription.isActive ? t("active") : t("expired")}
-            </span>
-          </div>
-          {subscription.expiryDate && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("validUntil")}</span>
-              <span className="font-medium">
-                {new Date(subscription.expiryDate).toLocaleDateString("zh-CN")}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-3 text-sm">
-          <div className="font-semibold">{t("detailedUsage")}</div>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("blockOptimization")}
-              </span>
-              <span className="font-medium">
-                {subscription.quotas.blockOptimize.used} /{" "}
-                {subscription.quotas.blockOptimize.total}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("motivationLetter")}
-              </span>
-              <span className="font-medium">
-                {subscription.quotas.motivationLetter.used} /{" "}
-                {subscription.quotas.motivationLetter.total}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("chatTokens")}</span>
-              <span className="font-medium">
-                {new Intl.NumberFormat("en-US").format(
-                  subscription.chatTokenLimit
-                )}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            className="flex-1"
-            variant={subscription.isActive ? "outline" : "default"}
-            onClick={() => router.push("/pricing")}
-          >
-            {subscription.isActive ? t("renewPlan") : t("buyPlan")}
-          </Button>
-          {subscription.plan === "LITE" && (
-            <Button
-              type="button"
-              className="flex-1"
-              onClick={() => router.push("/pricing")}
-            >
-              {t("upgradeToPro")}
-            </Button>
-          )}
-        </div>
-      </div>
     )
   }
 
@@ -257,66 +168,9 @@ export function CompactPlanDisplay() {
               </button>
             </DialogTrigger>
           </TooltipTrigger>
-          {subscription && !loading && (
+          {!loading && (
             <TooltipContent side="right" className="w-64 p-3">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Info className="w-4 h-4" />
-                  <h4 className="font-semibold text-sm">{t("planDetails")}</h4>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t("planType")}
-                    </span>
-                    <span className="font-medium">
-                      {t(getPlanName(subscription.plan))}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("status")}</span>
-                    <span className="font-medium">
-                      {subscription.isActive ? t("active") : t("expired")}
-                    </span>
-                  </div>
-
-                  {subscription.expiryDate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t("validUntil")}
-                      </span>
-                      <span className="font-medium">
-                        {new Date(subscription.expiryDate).toLocaleDateString(
-                          "zh-CN"
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-2 border-t space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {t("blockOptimization")}
-                    </span>
-                    <span className="font-medium">
-                      {subscription.quotas.blockOptimize.used} /{" "}
-                      {subscription.quotas.blockOptimize.total}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {t("motivationLetter")}
-                    </span>
-                    <span className="font-medium">
-                      {subscription.quotas.motivationLetter.used} /{" "}
-                      {subscription.quotas.motivationLetter.total}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {renderTokenSummary(true)}
             </TooltipContent>
           )}
         </Tooltip>
@@ -326,7 +180,23 @@ export function CompactPlanDisplay() {
         <DialogHeader>
           <DialogTitle>{t("subscriptionAndUsage")}</DialogTitle>
         </DialogHeader>
-        {dialogBody()}
+        {loading ? (
+          <div className="space-y-4">
+            <div className="h-5 w-24 bg-muted rounded" />
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded" />
+              <div className="h-4 bg-muted rounded" />
+              <div className="h-4 bg-muted rounded" />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {renderTokenSummary()}
+            <Button type="button" className="w-full" onClick={() => router.push("/pricing")}>
+              {t("pricingPage")}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
