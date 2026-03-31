@@ -18,34 +18,34 @@
   "landingPage": {
     "hero": {
       "slogan": "Make every resume hit the target",
-      "valueProposition": "Enter job descriptions with one click, AI intelligently generates perfectly matched resumes for you, easily pass screening, and win interview opportunities.",
+      "valueProposition": "Stop rewriting your resume from scratch for every job. Upload your current resume, paste the job description, and Jobi helps you turn it into a sharper, more targeted version in minutes.",
       "startFreeTrial": "Start Free Trial",
-      "learnMore": "Learn More"
+      "learnMore": "See How It Works"
     },
     "problem": {
-      "title": "Have you encountered these problems?",
-      "subtitle": "Resumes sent but no response, few interview opportunities",
-      "problem1": "Resumes sent but no response",
-      "problem1Desc": "Submitted dozens of resumes, but received no replies, don't know where the problem lies",
-      "problem2": "Resumes are all the same",
-      "problem2Desc": "Using the same resume for all positions, unable to highlight core advantages matching the position",
-      "problem3": "Filtered by ATS system",
-      "problem3Desc": "Resume format or keywords do not meet system requirements, HR cannot even see your resume",
+      "title": "Why are you applying so much and still hearing nothing back?",
+      "subtitle": "Most of the time, the problem is not effort. It is spending too much time on low-return resume edits.",
+      "problem1": "Your resume feels too generic",
+      "problem1Desc": "Recruiters cannot quickly see why you fit this specific role, so your resume gets skimmed and passed over.",
+      "problem2": "You burn energy on repetitive edits",
+      "problem2Desc": "Every new job means more deleting, rewriting, and reshuffling. It takes time, drains focus, and still may not improve your odds.",
+      "problem3": "You get filtered out before a human sees you",
+      "problem3Desc": "If your wording, keywords, or structure do not match the role, ATS and early screening can block you first.",
       "atsExplanation": "ATS (Applicant Tracking System) is used by HR to automatically screen resumes. If your resume format is incorrect or missing keywords, ATS will filter out your resume before HR even sees it."
     },
     "features": {
-      "title": "No worries, Jobi can help you solve it.",
-      "description": "We provide a seamless resume editing experience to help you create the most competitive customized resumes",
+      "title": "This is not about making your resume longer. It is about making it feel right for the job.",
+      "description": "Jobi helps you turn your existing experience into a version that feels more relevant, more focused, and easier to shortlist.",
       "feature1": "One-Click Import",
-      "feature1Desc": "No need to re-enter your resume, upload your existing PDF resume, and instantly generate professional resume templates familiar to HR.",
+      "feature1Desc": "Skip the manual re-entry. Upload your existing PDF resume and start editing a usable version right away.",
       "feature2": "Job Customization",
-      "feature2Desc": "Using AI models fine-tuned by job search experts, accurately rewrite resume content based on job descriptions, improving ATS and machine screening pass rates.",
+      "feature2Desc": "Rewrite key experience, keywords, and phrasing around the job description so your resume feels tailored instead of reused.",
       "feature3": "Authentic Expression",
-      "feature3Desc": "Fact-based content modifications and suggestions, avoiding template feel and AI traces, ensuring your resume is authentic and professional."
+      "feature3Desc": "Suggestions stay grounded in your real experience, so the final result sounds credible, specific, and still like you."
     },
-    "readyToStart": "Ready to Boost Your Career?",
-    "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
-    "getStarted": "Get Started",
+    "readyToStart": "Less busywork. More interview chances.",
+    "ctaDescription": "Try it free for 3 days with no card required, and see if it helps you send stronger applications faster.",
+    "getStarted": "Start Free Trial",
     "copyright": "© 2025 Jobi. All rights reserved."
   },
 
