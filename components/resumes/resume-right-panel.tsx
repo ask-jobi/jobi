@@ -16,6 +16,11 @@ import { PersonalInfoForm } from "@/components/forms/personal-info-form"
 import { EducationForm } from "@/components/forms/education-form"
 import { EmploymentForm } from "@/components/forms/employment-form"
 import { SkillsForm } from "@/components/forms/skills-form"
+import { ProjectsForm } from "@/components/forms/projects-form"
+import { ResearchForm } from "@/components/forms/research-form"
+import { PublicationsForm } from "@/components/forms/publications-form"
+import { AwardsForm } from "@/components/forms/awards-form"
+import { CertificationsForm } from "@/components/forms/certifications-form"
 import { ChatInterface } from "@/components/agent/chat-interface"
 import { useChatSession } from "@/lib/hooks/use-chat-session"
 
@@ -37,6 +42,16 @@ export function ResumeRightPanel() {
         return <EmploymentForm />
       case "skills":
         return <SkillsForm />
+      case "projects":
+        return <ProjectsForm />
+      case "research":
+        return <ResearchForm />
+      case "publications":
+        return <PublicationsForm />
+      case "awards":
+        return <AwardsForm />
+      case "certifications":
+        return <CertificationsForm />
       default:
         return (
           <p className="text-gray-500">Select a part of resume to edit。</p>

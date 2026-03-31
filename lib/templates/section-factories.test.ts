@@ -19,7 +19,8 @@ describe("section-factories", () => {
   it("builds empty resume data with language-specific section titles", () => {
     const resume = buildEmptyResumeData("zh")
     expect(resume.education.title).toBe("教育经历")
-    expect(resume.employment?.title).toBe("工作经历")
+    expect(resume.employment).toBeUndefined()
+    expect(resume.sectionOrder).toEqual(["education", "skills"])
     expect(resume.personalInfo.website).toBe("")
     expect(resume.personalInfo.linkedin).toBe("")
   })

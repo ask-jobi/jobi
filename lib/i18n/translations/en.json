@@ -219,6 +219,16 @@
     "evaluationLoadingDescription": "Please wait while we process your request. Do not refresh the page."
   },
 
+  "resumeCanvas": {
+    "addSection": "Add Section",
+    "emptyHint": "Start building this resume by adding your first section.",
+    "popoverTitle": "Add a section",
+    "popoverDescription": "Choose an optional section to place on this resume.",
+    "emptyPopoverDescription": "Choose where you want to start writing.",
+    "startWith": "Start With",
+    "personalInfoSection": "Personal Info"
+  },
+
   "evaluation": {
     "refreshEvaluation": "Refresh Evaluation",
     "oneClickOptimize": "One-Click Optimize Resume",
