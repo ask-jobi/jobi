@@ -108,7 +108,8 @@ describe("PricingCard", () => {
     mockUseAuth.user = { id: "user123" } as any
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ message: "Free pass created successfully" })
+      json: () =>
+        Promise.resolve({ message: "Free token grant created successfully" })
     })
 
     render(<PricingCard {...defaultProps} priceId={undefined} />)
@@ -149,24 +150,6 @@ describe("PricingCard", () => {
         priceId: "price_123",
         plan: "PRO"
       })
-    })
-  })
-
-  it("should redirect to dashboard when free pass already exists", async () => {
-    mockUseAuth.user = { id: "user123" } as any
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () =>
-        Promise.resolve({ message: "User already has an active pass" })
-    })
-
-    render(<PricingCard {...defaultProps} priceId={undefined} />)
-
-    const button = screen.getByText("Get Started")
-    fireEvent.click(button)
-
-    await vi.waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard")
     })
   })
 
@@ -260,7 +243,8 @@ describe("PricingCard", () => {
     // Resolve the fetch
     resolveFetch!({
       ok: true,
-      json: () => Promise.resolve({ message: "Free pass created successfully" })
+      json: () =>
+        Promise.resolve({ message: "Free token grant created successfully" })
     })
 
     await vi.waitFor(() => {

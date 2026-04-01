@@ -15,16 +15,9 @@ import { QuotaDisplay } from "../quota-display"
 describe("QuotaDisplay", () => {
   const defaultSubscription = {
     plan: "PRO" as const,
-    planName: "Pro Plan",
-    expiryDate: "2025-12-31",
-    isActive: true,
     chatTokenLimit: 100000000,
     chatTokenUsed: 25000000,
-    quotas: {
-      fullOptimize: { used: 5, total: 10 },
-      blockOptimize: { used: 3, total: 20 },
-      motivationLetter: { used: 2, total: 5 }
-    }
+    chatTokenRemaining: 75000000
   }
 
   beforeEach(() => {
@@ -32,7 +25,7 @@ describe("QuotaDisplay", () => {
   })
 
   it("should render with subscription data", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
+    render(<QuotaDisplay tokenBalance={defaultSubscription} />)
 
     expect(screen.getByTestId("ui-card")).toBeInTheDocument()
     expect(screen.getByTestId("ui-card-header")).toBeInTheDocument()
@@ -40,13 +33,13 @@ describe("QuotaDisplay", () => {
   })
 
   it("should display plan name as badge", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
+    render(<QuotaDisplay tokenBalance={defaultSubscription} />)
 
     expect(screen.getByTestId("ui-badge")).toHaveTextContent("planPro")
   })
 
   it("should display token total, used, and remaining", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
+    render(<QuotaDisplay tokenBalance={defaultSubscription} />)
 
     expect(screen.getByText("tokenTotal")).toBeInTheDocument()
     expect(screen.getByText("tokenUsed")).toBeInTheDocument()
@@ -57,7 +50,7 @@ describe("QuotaDisplay", () => {
   })
 
   it("should not display legacy quota labels", () => {
-    render(<QuotaDisplay subscription={defaultSubscription} />)
+    render(<QuotaDisplay tokenBalance={defaultSubscription} />)
 
     expect(screen.queryByText("blockOptimization")).not.toBeInTheDocument()
     expect(screen.queryByText("motivationLetter")).not.toBeInTheDocument()
@@ -66,14 +59,14 @@ describe("QuotaDisplay", () => {
 
   it("should display correct badge for LITE plan", () => {
     const liteSubscription = { ...defaultSubscription, plan: "LITE" as const }
-    render(<QuotaDisplay subscription={liteSubscription} />)
+    render(<QuotaDisplay tokenBalance={liteSubscription} />)
 
     expect(screen.getByTestId("ui-badge")).toHaveTextContent("planLite")
   })
 
   it("should display correct badge for FREE plan", () => {
     const freeSubscription = { ...defaultSubscription, plan: "FREE" as const }
-    render(<QuotaDisplay subscription={freeSubscription} />)
+    render(<QuotaDisplay tokenBalance={freeSubscription} />)
 
     expect(screen.getByTestId("ui-badge")).toHaveTextContent("planFree")
   })
@@ -82,9 +75,10 @@ describe("QuotaDisplay", () => {
     const zeroQuotaSubscription = {
       ...defaultSubscription,
       chatTokenLimit: 0,
-      chatTokenUsed: 0
+      chatTokenUsed: 0,
+      chatTokenRemaining: 0
     }
-    render(<QuotaDisplay subscription={zeroQuotaSubscription} />)
+    render(<QuotaDisplay tokenBalance={zeroQuotaSubscription} />)
 
     expect(screen.getAllByText("0")).toHaveLength(3)
   })
@@ -93,9 +87,10 @@ describe("QuotaDisplay", () => {
     const customTokenSubscription = {
       ...defaultSubscription,
       chatTokenLimit: 500000,
-      chatTokenUsed: 120000
+      chatTokenUsed: 120000,
+      chatTokenRemaining: 380000
     }
-    render(<QuotaDisplay subscription={customTokenSubscription} />)
+    render(<QuotaDisplay tokenBalance={customTokenSubscription} />)
 
     expect(screen.getByText("500,000")).toBeInTheDocument()
     expect(screen.getByText("120,000")).toBeInTheDocument()

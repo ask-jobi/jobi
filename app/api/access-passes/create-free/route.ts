@@ -45,27 +45,13 @@ export async function POST() {
       )
     }
 
-    // 计算免费通行证的兼容有效期字段（仍保留，但不作为余额语义判断依据）
-    const startAt = new Date()
-    const endAt = new Date()
-    endAt.setDate(startAt.getDate() + 3)
-
-    // 创建免费通行证
+    // 创建一次性免费 token 赠送记录
     const { data: accessPass, error: insertError } = await supabase
       .from("access_passes")
       .insert({
         user_id: user.id,
         plan: "FREE",
-        source: "free_trial",
-        start_at: startAt.toISOString(),
-        end_at: endAt.toISOString(),
-        quota_full_optimize: QUOTA.FREE.quota_full_optimize,
-        quota_block_optimize: QUOTA.FREE.quota_block_optimize,
-        quota_motivation_letter: QUOTA.FREE.quota_motivation_letter,
         quota_chat_tokens: QUOTA.FREE.quota_chat_tokens,
-        used_full_optimize: 0,
-        used_block_optimize: 0,
-        used_motivation_letter: 0,
         used_chat_tokens: 0
       })
       .select()
@@ -82,7 +68,7 @@ export async function POST() {
     console.log("Successfully created free access pass for user:", user.id)
 
     return NextResponse.json({
-      message: "Free pass created successfully",
+      message: "Free token grant created successfully",
       accessPass
     })
   } catch (error: any) {

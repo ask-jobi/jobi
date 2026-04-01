@@ -31,7 +31,7 @@ export default async function SuccessPage({
                 支付成功！
               </CardTitle>
               <CardDescription className="text-lg">
-                感谢您的订阅，您的账户已成功升级
+                您购买的 Token 额度已到账，可以继续使用了
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -46,15 +46,15 @@ export default async function SuccessPage({
                 <div className="grid gap-3 text-left">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>开始使用高级简历优化功能</span>
+                    <span>继续在聊天和改写流程中消耗 Token</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>探索更多专业模板</span>
+                    <span>查看当前 Token 余额和使用情况</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>享受优先客服支持</span>
+                    <span>继续购买新的 Token 套餐来累加余额</span>
                   </div>
                 </div>
               </div>

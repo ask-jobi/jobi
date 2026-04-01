@@ -6,9 +6,9 @@ export async function GET() {
     const tokenBalance = await getUserTokenBalance()
     return NextResponse.json(tokenBalance)
   } catch (error) {
-    console.error("Error fetching subscription:", error)
+    console.error("Error fetching token balance:", error)
     return NextResponse.json(
-      { error: "Failed to fetch subscription data" },
+      { error: "Failed to fetch token balance" },
       { status: 500 }
     )
   }

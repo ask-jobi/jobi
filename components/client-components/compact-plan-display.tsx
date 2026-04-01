@@ -24,41 +24,36 @@ import { cn } from "@/lib/utils"
 
 interface SubscriptionData {
   plan: "FREE" | "LITE" | "PRO" | null
-  expiryDate?: string | null
-  isActive?: boolean
   chatTokenLimit: number
   chatTokenUsed?: number
-  quotas?: {
-    blockOptimize: { used: number; total: number }
-    motivationLetter: { used: number; total: number }
-  }
+  chatTokenRemaining?: number
 }
 
 export function CompactPlanDisplay() {
   const t = useTranslations()
   const router = useRouter()
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(
+  const [tokenBalance, setTokenBalance] = useState<SubscriptionData | null>(
     null
   )
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const fetchSubscription = async () => {
+    const fetchTokenBalance = async () => {
       try {
-        const response = await fetch("/api/user/subscription")
+        const response = await fetch("/api/user/token-balance")
         if (response.ok) {
           const data = await response.json()
-          setSubscription(data)
+          setTokenBalance(data)
         }
       } catch (error) {
-        console.error("Error fetching subscription:", error)
+        console.error("Error fetching token balance:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchSubscription()
+    fetchTokenBalance()
   }, [])
 
   const getPlanGradient = (plan: string | null) => {
@@ -88,9 +83,10 @@ export function CompactPlanDisplay() {
   }
 
   const numberFormatter = new Intl.NumberFormat("en-US")
-  const tokenTotal = subscription?.chatTokenLimit ?? 0
-  const tokenUsed = subscription?.chatTokenUsed ?? 0
-  const tokenRemaining = Math.max(tokenTotal - tokenUsed, 0)
+  const tokenTotal = tokenBalance?.chatTokenLimit ?? 0
+  const tokenUsed = tokenBalance?.chatTokenUsed ?? 0
+  const tokenRemaining =
+    tokenBalance?.chatTokenRemaining ?? Math.max(tokenTotal - tokenUsed, 0)
 
   const sidebarButtonStyle = cn(
     "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
@@ -102,7 +98,7 @@ export function CompactPlanDisplay() {
       <div className="flex justify-between gap-4">
         <span className="text-muted-foreground">{t("currentPlan")}</span>
         <span className="font-medium">
-          {subscription ? t(getPlanName(subscription.plan)) : t("noPlan")}
+          {tokenBalance ? t(getPlanName(tokenBalance.plan)) : t("noPlan")}
         </span>
       </div>
       <div className="flex justify-between gap-4">
@@ -148,10 +144,10 @@ export function CompactPlanDisplay() {
         <Badge
           className={cn(
             "text-white border-0 text-xs",
-            getPlanGradient(subscription?.plan ?? null)
+            getPlanGradient(tokenBalance?.plan ?? null)
           )}
         >
-          {subscription ? t(getPlanName(subscription.plan)) : t("noPlan")}
+          {tokenBalance ? t(getPlanName(tokenBalance.plan)) : t("noPlan")}
         </Badge>
       </>
     )
@@ -178,7 +174,7 @@ export function CompactPlanDisplay() {
 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("subscriptionAndUsage")}</DialogTitle>
+          <DialogTitle>{t("tokenBalance")}</DialogTitle>
         </DialogHeader>
         {loading ? (
           <div className="space-y-4">

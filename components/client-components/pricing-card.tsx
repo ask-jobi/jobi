@@ -93,11 +93,7 @@ export function PricingCard({
         const result = await response.json()
 
         if (response.ok) {
-          if (result.message === "Free pass created successfully") {
-            // 新创建了免费通行证，跳转到仪表板
-            router.push("/dashboard")
-          } else if (result.message === "User already has an active pass") {
-            // 用户已有有效通行证，直接跳转到仪表板
+          if (result.message === "Free token grant created successfully") {
             router.push("/dashboard")
           }
         } else {

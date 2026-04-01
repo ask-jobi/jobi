@@ -12,9 +12,6 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/payment/quota", () => ({
   QUOTA: {
     FREE: {
-      quota_full_optimize: 1_000_000,
-      quota_block_optimize: 1_000_000,
-      quota_motivation_letter: 1_000_000,
       quota_chat_tokens: 50_000
     }
   }
@@ -81,20 +78,12 @@ describe("POST /api/access-passes/create-free", () => {
   })
 
   describe("History scenarios", () => {
-    it("should create free pass when user has no pass history", async () => {
+    it("should create a one-time free token grant when user has no history", async () => {
       const mockUser = { id: "user_123", email: "test@example.com" }
       const insertedPass = {
         id: "pass_123",
         plan: "FREE",
-        start_at: new Date().toISOString(),
-        end_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        quota_full_optimize: 1_000_000,
-        quota_block_optimize: 1_000_000,
-        quota_motivation_letter: 1_000_000,
         quota_chat_tokens: 50_000,
-        used_full_optimize: 0,
-        used_block_optimize: 0,
-        used_motivation_letter: 0,
         used_chat_tokens: 0
       }
 
@@ -116,13 +105,19 @@ describe("POST /api/access-passes/create-free", () => {
               })
             })
           }),
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: insertedPass,
-                error: null
+          insert: vi.fn().mockImplementation((data: any) => {
+            expect(data).not.toHaveProperty("source")
+            expect(data).not.toHaveProperty("start_at")
+            expect(data).not.toHaveProperty("end_at")
+
+            return {
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: insertedPass,
+                  error: null
+                })
               })
-            })
+            }
           })
         }
       })
@@ -141,8 +136,14 @@ describe("POST /api/access-passes/create-free", () => {
 
       expect(response.status).toBe(200)
       const data = await response.json()
-      expect(data.message).toBe("Free pass created successfully")
+      expect(data.message).toBe("Free token grant created successfully")
       expect(data.accessPass).toEqual(insertedPass)
+      expect(data.accessPass).not.toHaveProperty("quota_full_optimize")
+      expect(data.accessPass).not.toHaveProperty("quota_block_optimize")
+      expect(data.accessPass).not.toHaveProperty("quota_motivation_letter")
+      expect(data.accessPass).not.toHaveProperty("used_full_optimize")
+      expect(data.accessPass).not.toHaveProperty("used_block_optimize")
+      expect(data.accessPass).not.toHaveProperty("used_motivation_letter")
     })
 
     it("should return 400 when user has any pass history", async () => {

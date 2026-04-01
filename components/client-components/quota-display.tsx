@@ -8,21 +8,15 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
 interface QuotaDisplayProps {
-  subscription: {
+  tokenBalance: {
     plan: "FREE" | "LITE" | "PRO" | null
-    planName: string
-    expiryDate?: string | null
-    isActive?: boolean
     chatTokenLimit: number
     chatTokenUsed?: number
-    quotas?: {
-      blockOptimize: { used: number; total: number }
-      motivationLetter: { used: number; total: number }
-    }
+    chatTokenRemaining?: number
   }
 }
 
-export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
+export function QuotaDisplay({ tokenBalance }: QuotaDisplayProps) {
   const t = useTranslations()
   const router = useRouter()
   const numberFormatter = new Intl.NumberFormat("en-US")
@@ -53,9 +47,10 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
     }
   }
 
-  const tokenTotal = subscription.chatTokenLimit ?? 0
-  const tokenUsed = subscription.chatTokenUsed ?? 0
-  const tokenRemaining = Math.max(tokenTotal - tokenUsed, 0)
+  const tokenTotal = tokenBalance.chatTokenLimit ?? 0
+  const tokenUsed = tokenBalance.chatTokenUsed ?? 0
+  const tokenRemaining =
+    tokenBalance.chatTokenRemaining ?? Math.max(tokenTotal - tokenUsed, 0)
 
   return (
     <Card className="w-full border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 hover:shadow-md">
@@ -66,9 +61,9 @@ export function QuotaDisplay({ subscription }: QuotaDisplayProps) {
             {t("currentPlan")}
           </CardTitle>
           <Badge
-            className={`text-white border-0 ${getPlanGradient(subscription.plan)}`}
+            className={`text-white border-0 ${getPlanGradient(tokenBalance.plan)}`}
           >
-            {t(getPlanName(subscription.plan))}
+            {t(getPlanName(tokenBalance.plan))}
           </Badge>
         </div>
       </CardHeader>

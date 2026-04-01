@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import type { RewriteBlockRequest } from "@/types/api/requests"
 import { rewriteBlock } from "@/server/ai/resume-rewriter"
-import { consumeQuota, verifyQuota, getUserSubscription } from "@/server/quota"
 
 export async function POST(request: Request) {
   try {
@@ -14,9 +13,6 @@ export async function POST(request: Request) {
       )
     }
 
-    const subscription = await getUserSubscription()
-    verifyQuota("blockOptimize", subscription.quotas)
-
     const response = await rewriteBlock({
       resumeSection: body.resumeSection,
       originalContent: body.originalContent,
@@ -24,8 +20,6 @@ export async function POST(request: Request) {
       instruction: body.instruction,
       language: body.language
     })
-
-    await consumeQuota("blockOptimize")
 
     return NextResponse.json(response)
   } catch (error) {

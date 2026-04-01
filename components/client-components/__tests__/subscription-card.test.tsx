@@ -7,9 +7,9 @@ import { SubscriptionCard } from "../subscription-card"
 
 // Mock QuotaDisplay component
 vi.mock("../quota-display", () => ({
-  QuotaDisplay: ({ subscription }: { subscription: any }) => (
+  QuotaDisplay: ({ tokenBalance }: { tokenBalance: any }) => (
     <div data-testid="quota-display">
-      Quota Display for {subscription.planName}
+      Token Balance for {tokenBalance.plan ?? "NONE"}
     </div>
   )
 }))
@@ -17,15 +17,9 @@ vi.mock("../quota-display", () => ({
 describe("SubscriptionCard", () => {
   const mockSubscription = {
     plan: "PRO",
-    planName: "Pro Plan",
-    expiryDate: "2025-12-31",
-    isActive: true,
     chatTokenLimit: 100000000,
-    quotas: {
-      fullOptimize: { used: 5, total: 10 },
-      blockOptimize: { used: 3, total: 20 },
-      motivationLetter: { used: 2, total: 5 }
-    }
+    chatTokenUsed: 25000000,
+    chatTokenRemaining: 75000000
   }
 
   beforeEach(() => {
@@ -53,7 +47,7 @@ describe("SubscriptionCard", () => {
     await screen.findByTestId("quota-display")
 
     expect(screen.getByTestId("quota-display")).toBeInTheDocument()
-    expect(screen.getByText("Quota Display for Pro Plan")).toBeInTheDocument()
+    expect(screen.getByText("Token Balance for PRO")).toBeInTheDocument()
   })
 
   it("should show error message when fetch fails", async () => {
@@ -64,9 +58,9 @@ describe("SubscriptionCard", () => {
     render(<SubscriptionCard />)
 
     // Wait for the component to update
-    await screen.findByText("loadingSubscriptionError")
+    await screen.findByText("loadingTokenBalanceError")
 
-    expect(screen.getByText("loadingSubscriptionError")).toBeInTheDocument()
+    expect(screen.getByText("loadingTokenBalanceError")).toBeInTheDocument()
   })
 
   it("should show failed to load message when data is null", async () => {
@@ -78,8 +72,8 @@ describe("SubscriptionCard", () => {
     render(<SubscriptionCard />)
 
     // Wait for the component to update
-    await screen.findByText("failedToLoadSubscription")
+    await screen.findByText("failedToLoadTokenBalance")
 
-    expect(screen.getByText("failedToLoadSubscription")).toBeInTheDocument()
+    expect(screen.getByText("failedToLoadTokenBalance")).toBeInTheDocument()
   })
 })

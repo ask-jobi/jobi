@@ -1,6 +1,5 @@
 import { POST } from "./route"
 import { rewriteBlock } from "@/server/ai/resume-rewriter"
-import { consumeQuota, verifyQuota, getUserSubscription } from "@/server/quota"
 import type { RewriteBlockRequest } from "@/types/api/requests"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
@@ -9,34 +8,11 @@ vi.mock("@/server/ai/resume-rewriter", () => ({
   rewriteBlock: vi.fn()
 }))
 
-vi.mock("@/server/quota", () => ({
-  consumeQuota: vi.fn(),
-  verifyQuota: vi.fn(),
-  getUserSubscription: vi.fn()
-}))
-
 const mockRewriteBlock = rewriteBlock as unknown as ReturnType<typeof vi.fn>
-const mockConsumeQuota = consumeQuota as unknown as ReturnType<typeof vi.fn>
-const mockVerifyQuota = verifyQuota as unknown as ReturnType<typeof vi.fn>
-const mockGetUserSubscription = getUserSubscription as unknown as ReturnType<
-  typeof vi.fn
->
 
 describe("POST /api/resume/rewrite-block", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockConsumeQuota.mockResolvedValue(undefined)
-    mockVerifyQuota.mockReturnValue(undefined)
-    mockGetUserSubscription.mockResolvedValue({
-      plan: "PRO",
-      isActive: true,
-      expiryDate: "2025-12-31",
-      quotas: {
-        fullOptimize: { used: 3, total: 10, colName: "full_optimize" },
-        blockOptimize: { used: 5, total: 20, colName: "block_optimize" },
-        motivationLetter: { used: 1, total: 5, colName: "motivation_letter" }
-      }
-    })
   })
 
   const createMockRequest = (body: RewriteBlockRequest): Request => {

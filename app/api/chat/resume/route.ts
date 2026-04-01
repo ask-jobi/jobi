@@ -47,7 +47,7 @@ import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generat
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 const CHAT_TOKEN_LIMIT_MESSAGE =
-  "You have reached your chat token limit for the current plan. Please upgrade your plan to continue chatting."
+  "Your token balance is exhausted. Buy another token bundle to continue chatting."
 
 const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
   return {

@@ -3,18 +3,6 @@ import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
 
-type QuotaObj<Col> = {
-  total: number
-  used: number
-  colName: Col
-}
-
-export type Quota = {
-  fullOptimize: QuotaObj<"full_optimize">
-  blockOptimize: QuotaObj<"block_optimize">
-  motivationLetter: QuotaObj<"motivation_letter">
-}
-
 export type ChatTokenQuota = {
   limit: number
   used: number
@@ -22,23 +10,14 @@ export type ChatTokenQuota = {
 
 type DBAccessPass = Database["public"]["Tables"]["access_passes"]["Row"]
 
-type QuotaKey = keyof Quota
 // 单个用户允许创建的最大岗位申请数量，防止太多的垃圾数据。
 const JOB_APPLICATION_LIMIT = 20
 
-export type UserSubscription = {
+export type UserTokenBalance = {
   plan: "FREE" | "LITE" | "PRO" | null
-  expiryDate: string | null
-  isActive: boolean
-  quotas: Quota
   chatTokenLimit: number
   chatTokenUsed: number
-}
-
-const EMPTY_QUOTAS: Quota = {
-  fullOptimize: { used: 0, total: 0, colName: "full_optimize" },
-  blockOptimize: { used: 0, total: 0, colName: "block_optimize" },
-  motivationLetter: { used: 0, total: 0, colName: "motivation_letter" }
+  chatTokenRemaining: number
 }
 
 const EMPTY_CHAT_TOKENS: ChatTokenQuota = {
@@ -83,8 +62,7 @@ export async function getActiveAccessPass(
   return accessPasses.find(hasRemainingChatTokens) ?? null
 }
 
-// 新增：获取用户订阅信息
-export async function getUserSubscription(): Promise<UserSubscription> {
+export async function getUserTokenBalance(): Promise<UserTokenBalance> {
   const supabase = await createClient()
 
   // 获取当前用户
@@ -103,11 +81,9 @@ export async function getUserSubscription(): Promise<UserSubscription> {
   if (!accessPass) {
     return {
       plan: null,
-      expiryDate: null,
-      isActive: false,
-      quotas: EMPTY_QUOTAS,
       chatTokenLimit: 0,
-      chatTokenUsed: 0
+      chatTokenUsed: 0,
+      chatTokenRemaining: 0
     }
   }
 
@@ -115,31 +91,9 @@ export async function getUserSubscription(): Promise<UserSubscription> {
 
   return {
     plan: accessPass.plan,
-    expiryDate: accessPass.end_at,
-    isActive: true,
-    quotas: buildQuotas(accessPass),
     chatTokenLimit: chatTokenQuota.limit,
-    chatTokenUsed: chatTokenQuota.used
-  }
-}
-
-export const buildQuotas = (accessPass: DBAccessPass): Quota => {
-  return {
-    fullOptimize: {
-      total: accessPass.quota_full_optimize!!,
-      used: accessPass.used_full_optimize!!,
-      colName: "full_optimize"
-    },
-    blockOptimize: {
-      total: accessPass.quota_block_optimize!!,
-      used: accessPass.used_block_optimize!!,
-      colName: "block_optimize"
-    },
-    motivationLetter: {
-      total: accessPass.quota_motivation_letter!!,
-      used: accessPass.used_motivation_letter!!,
-      colName: "motivation_letter"
-    }
+    chatTokenUsed: chatTokenQuota.used,
+    chatTokenRemaining: Math.max(chatTokenQuota.limit - chatTokenQuota.used, 0)
   }
 }
 
@@ -161,56 +115,6 @@ export const buildChatTokenQuota = (
     limit,
     used
   }
-}
-
-export async function consumeQuota(key: QuotaKey) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    throw new Error("用户未登录")
-  }
-
-  const { data: accessPasses, error } = await supabase
-    .from("access_passes")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    throw error
-  }
-
-  const accessPass = Array.isArray(accessPasses)
-    ? accessPasses.find((pass) => {
-        const quotas = buildQuotas(pass)
-        return quotas[key].used < quotas[key].total
-      })
-    : null
-
-  if (!accessPass) {
-    throw new Error("Limit reached")
-  }
-
-  const quotas = buildQuotas(accessPass)
-
-  const updateParams = verifyAndUpdateQuota(key, quotas)
-
-  const { error: updateError } = await supabase
-    .from("access_passes")
-    .update({
-      ...updateParams
-    })
-    .eq("id", accessPass.id)
-
-  if (updateError) {
-    throw updateError
-  }
-
-  console.log("consuming quota", key, "success")
 }
 
 export function verifyChatTokenQuota(used: number, limit: number): void {
@@ -270,24 +174,6 @@ export async function consumeChatTokens(
   }
 
   throw new Error("Failed to update chat token usage")
-}
-
-export function verifyQuota(key: QuotaKey, quotas: Quota): void {
-  const quotaItem = quotas[key]
-  if (quotaItem.used >= quotaItem.total) {
-    throw new Error("Limit reached")
-  }
-}
-
-export function verifyAndUpdateQuota(key: QuotaKey, quotas: Quota) {
-  const quotaItem = quotas[key]
-  if (quotaItem.used >= quotaItem.total) {
-    throw new Error("Limit reached")
-  }
-
-  return {
-    [`used_${quotaItem.colName}`]: quotaItem.used + 1
-  }
 }
 
 // 目前不做配额的限制，但是需要限制用户申请岗位的数量， 未来考虑设计进配额

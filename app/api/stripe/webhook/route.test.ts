@@ -20,21 +20,12 @@ vi.mock("@/lib/payment/stripe", () => ({
 vi.mock("@/lib/payment/quota", () => ({
   QUOTA: {
     FREE: {
-      quota_full_optimize: 1_000_000,
-      quota_block_optimize: 1_000_000,
-      quota_motivation_letter: 1_000_000,
       quota_chat_tokens: 50_000
     },
     LITE: {
-      quota_full_optimize: 1_000_000,
-      quota_block_optimize: 1_000_000,
-      quota_motivation_letter: 1_000_000,
       quota_chat_tokens: 500_000
     },
     PRO: {
-      quota_full_optimize: 1_000_000,
-      quota_block_optimize: 1_000_000,
-      quota_motivation_letter: 1_000_000,
       quota_chat_tokens: 1_000_000
     }
   }
@@ -511,10 +502,10 @@ describe("POST /api/stripe/webhook", () => {
     })
   })
 
-  // ==================== Plan Duration Scenarios ====================
+  // ==================== Token Bundle Scenarios ====================
 
-  describe("Plan duration calculation", () => {
-    it("should calculate 14 days for LITE plan", async () => {
+  describe("Token bundle handling", () => {
+    it("should create a LITE token bundle without duration semantics", async () => {
       const mockSignature = createMockSignature()
       const mockRequest = createMockRequest(
         JSON.stringify({
@@ -569,19 +560,18 @@ describe("POST /api/stripe/webhook", () => {
             }),
             insert: vi.fn().mockReturnValue({
               insert: vi.fn().mockImplementation((data: any) => {
-                // Verify LITE quotas
-                expect(data.quota_full_optimize).toBe(
-                  QUOTA.LITE.quota_full_optimize
-                )
-                expect(data.quota_block_optimize).toBe(
-                  QUOTA.LITE.quota_block_optimize
-                )
-                expect(data.quota_motivation_letter).toBe(
-                  QUOTA.LITE.quota_motivation_letter
-                )
                 expect(data.quota_chat_tokens).toBe(
                   QUOTA.LITE.quota_chat_tokens
                 )
+                expect(data).not.toHaveProperty("source")
+                expect(data).not.toHaveProperty("start_at")
+                expect(data).not.toHaveProperty("end_at")
+                expect(data).not.toHaveProperty("quota_full_optimize")
+                expect(data).not.toHaveProperty("quota_block_optimize")
+                expect(data).not.toHaveProperty("quota_motivation_letter")
+                expect(data).not.toHaveProperty("used_full_optimize")
+                expect(data).not.toHaveProperty("used_block_optimize")
+                expect(data).not.toHaveProperty("used_motivation_letter")
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })
             })
@@ -595,7 +585,7 @@ describe("POST /api/stripe/webhook", () => {
       expect(response.status).toBe(200)
     })
 
-    it("should calculate 30 days for PRO plan", async () => {
+    it("should create a PRO token bundle without duration semantics", async () => {
       const mockSignature = createMockSignature()
       const mockRequest = createMockRequest(
         JSON.stringify({
@@ -650,17 +640,16 @@ describe("POST /api/stripe/webhook", () => {
             }),
             insert: vi.fn().mockReturnValue({
               insert: vi.fn().mockImplementation((data: any) => {
-                // Verify PRO quotas
-                expect(data.quota_full_optimize).toBe(
-                  QUOTA.PRO.quota_full_optimize
-                )
-                expect(data.quota_block_optimize).toBe(
-                  QUOTA.PRO.quota_block_optimize
-                )
-                expect(data.quota_motivation_letter).toBe(
-                  QUOTA.PRO.quota_motivation_letter
-                )
                 expect(data.quota_chat_tokens).toBe(QUOTA.PRO.quota_chat_tokens)
+                expect(data).not.toHaveProperty("source")
+                expect(data).not.toHaveProperty("start_at")
+                expect(data).not.toHaveProperty("end_at")
+                expect(data).not.toHaveProperty("quota_full_optimize")
+                expect(data).not.toHaveProperty("quota_block_optimize")
+                expect(data).not.toHaveProperty("quota_motivation_letter")
+                expect(data).not.toHaveProperty("used_full_optimize")
+                expect(data).not.toHaveProperty("used_block_optimize")
+                expect(data).not.toHaveProperty("used_motivation_letter")
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })
             })
@@ -768,7 +757,7 @@ describe("POST /api/stripe/webhook", () => {
 
       const response = await POST(mockRequest)
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(400)
       const text = await response.text()
       expect(text).toContain("Invalid plan")
     })
@@ -827,10 +816,10 @@ describe("POST /api/stripe/webhook", () => {
                 // Verify all metadata fields
                 expect(data.user_id).toBe("user_123")
                 expect(data.plan).toBe("PRO")
-                expect(data.source).toBe("stripe")
                 expect(data.stripe_checkout_session_id).toBe("cs_test_123")
-                expect(data.start_at).toBeDefined()
-                expect(data.end_at).toBeDefined()
+                expect(data).not.toHaveProperty("source")
+                expect(data).not.toHaveProperty("start_at")
+                expect(data).not.toHaveProperty("end_at")
                 return { insert: vi.fn().mockResolvedValue({ error: null }) }
               })
             })
@@ -882,12 +871,6 @@ describe("POST /api/stripe/webhook", () => {
                         plan: "LITE",
                         stripe_checkout_session_id: "cs_test_123",
                         created_at: "2025-04-01",
-                        quota_full_optimize: 1_000_000,
-                        used_full_optimize: 10,
-                        quota_block_optimize: 1_000_000,
-                        used_block_optimize: 20,
-                        quota_motivation_letter: 1_000_000,
-                        used_motivation_letter: 3,
                         quota_chat_tokens: 500_000,
                         used_chat_tokens: 120_000
                       }
@@ -956,12 +939,6 @@ describe("POST /api/stripe/webhook", () => {
                         plan: "FREE",
                         stripe_checkout_session_id: "cs_test_123",
                         created_at: "2025-04-01",
-                        quota_full_optimize: 1_000_000,
-                        used_full_optimize: 1_000_000,
-                        quota_block_optimize: 1_000_000,
-                        used_block_optimize: 1_000_000,
-                        quota_motivation_letter: 1_000_000,
-                        used_motivation_letter: 1_000_000,
                         quota_chat_tokens: 50_000,
                         used_chat_tokens: 50_000
                       }
@@ -1020,11 +997,17 @@ describe("POST /api/stripe/webhook", () => {
       const deleteMock = vi.fn().mockResolvedValue({ error: null })
       const updateMock = vi.fn().mockImplementation((data: any) => {
         expect(data.plan).toBe("LITE")
-        expect(data.quota_full_optimize).toBe(1_000_000)
-        expect(data.quota_block_optimize).toBe(1_000_000)
-        expect(data.quota_motivation_letter).toBe(1_000_000)
         expect(data.quota_chat_tokens).toBe(1_000_000)
         expect(data.used_chat_tokens).toBeUndefined()
+        expect(data).not.toHaveProperty("source")
+        expect(data).not.toHaveProperty("start_at")
+        expect(data).not.toHaveProperty("end_at")
+        expect(data).not.toHaveProperty("quota_full_optimize")
+        expect(data).not.toHaveProperty("quota_block_optimize")
+        expect(data).not.toHaveProperty("quota_motivation_letter")
+        expect(data).not.toHaveProperty("used_full_optimize")
+        expect(data).not.toHaveProperty("used_block_optimize")
+        expect(data).not.toHaveProperty("used_motivation_letter")
         return {
           eq: vi.fn().mockResolvedValue({ error: null })
         }
@@ -1053,12 +1036,6 @@ describe("POST /api/stripe/webhook", () => {
                       user_id: "user_lite",
                       plan: "LITE",
                       created_at: "2025-04-01",
-                      quota_full_optimize: 1_000_000,
-                      used_full_optimize: 1,
-                      quota_block_optimize: 1_000_000,
-                      used_block_optimize: 2,
-                      quota_motivation_letter: 1_000_000,
-                      used_motivation_letter: 0,
                       quota_chat_tokens: 500_000,
                       used_chat_tokens: 120_000
                     }

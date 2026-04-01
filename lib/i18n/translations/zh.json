@@ -44,8 +44,8 @@
       "feature3Desc": "所有建议都围绕你已有的真实经历展开，减少模板感和 AI 味，写出来的内容更像你，也更像一个靠谱候选人。"
     },
     "readyToStart": "少一点无效修改，多一点面试机会",
-    "ctaDescription": "3 天免费体验，无需绑卡。先试试它能不能帮你更快投出更像样的一版。",
-    "getStarted": "开始免费试用",
+    "ctaDescription": "领取一次免费的 Token 额度，无需绑卡。先试试看它能不能帮你更快投出更像样的一版。",
+    "getStarted": "领取免费 Token",
     "copyright": "© 2025 Jobi. 保留所有权利。"
   },
 
@@ -76,9 +76,13 @@
   "usage": "用量",
   "planDetails": "套餐详情",
   "subscriptionAndUsage": "套餐与用量",
+  "tokenBalance": "Token 余额",
   "loadingSubscriptionError": "加载套餐信息时出现错误",
   "failedToLoadSubscription": "无法加载套餐信息",
+  "loadingTokenBalanceError": "加载 Token 余额时出现错误",
+  "failedToLoadTokenBalance": "无法加载 Token 余额",
   "subscriptionAndUsageSettings": "套餐与用量设置",
+  "tokenBalanceSettings": "Token 余额设置",
   "chatTokens": "Chat Token",
 
   "createNewResume": "创建新简历",
@@ -140,10 +144,10 @@
     "loginToPurchase": "登录后购买",
     "paymentError": "支付过程中发生错误，请重试",
     "freePass": {
-      "createSuccess": "免费通行证创建成功",
-      "alreadyExists": "用户已有有效通行证",
-      "createFailed": "创建免费通行证失败",
-      "createError": "创建免费通行证时出现错误",
+      "createSuccess": "免费 Token 额度创建成功",
+      "alreadyExists": "用户已有 Token 余额",
+      "createFailed": "创建免费 Token 额度失败",
+      "createError": "创建免费 Token 额度时出现错误",
       "alreadyTried": "您已经试用过该产品，请选择付费套餐继续使用"
     },
     "plans": {
@@ -178,9 +182,9 @@
     },
     "loginRequired": {
       "title": "需要登录",
-      "description": "购买 {planName} 需要先登录您的账户",
+      "description": "购买 {planName} Token 套餐前，需要先登录您的账户",
       "benefitsTitle": "登录后您可以：",
-      "benefits": ["安全完成支付", "管理您的订阅", "查看购买历史"],
+      "benefits": ["安全完成支付", "管理您的 Token 余额", "查看购买历史"],
       "loginButton": "登录",
       "signUpButton": "注册",
       "laterButton": "稍后再说"

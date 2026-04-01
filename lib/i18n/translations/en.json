@@ -44,8 +44,8 @@
       "feature3Desc": "Suggestions stay grounded in your real experience, so the final result sounds credible, specific, and still like you."
     },
     "readyToStart": "Less busywork. More interview chances.",
-    "ctaDescription": "Try it free for 3 days with no card required, and see if it helps you send stronger applications faster.",
-    "getStarted": "Start Free Trial",
+    "ctaDescription": "Claim a one-time free token bundle and see if it helps you send stronger applications faster.",
+    "getStarted": "Claim Free Tokens",
     "copyright": "© 2025 Jobi. All rights reserved."
   },
 
@@ -76,9 +76,13 @@
   "usage": "Usage",
   "planDetails": "Plan Details",
   "subscriptionAndUsage": "Subscription & Usage",
+  "tokenBalance": "Token Balance",
   "loadingSubscriptionError": "Error loading subscription information",
   "failedToLoadSubscription": "Failed to load subscription information",
+  "loadingTokenBalanceError": "Error loading token balance",
+  "failedToLoadTokenBalance": "Failed to load token balance",
   "subscriptionAndUsageSettings": "Subscription & Usage Settings",
+  "tokenBalanceSettings": "Token Balance Settings",
   "chatTokens": "Chat tokens",
 
   "createNewResume": "Create New Resume",
@@ -169,11 +173,11 @@
     },
     "loginRequired": {
       "title": "Login Required",
-      "description": "To purchase {planName}, you need to log in to your account first",
+      "description": "To purchase the {planName} token bundle, you need to log in to your account first",
       "benefitsTitle": "After logging in, you can:",
       "benefits": [
         "Complete payments securely",
-        "Manage your subscriptions",
+        "Manage your token balance",
         "View purchase history"
       ],
       "loginButton": "Login",
@@ -181,10 +185,10 @@
       "laterButton": "Maybe Later"
     },
     "freePass": {
-      "createSuccess": "Free pass created successfully",
-      "alreadyExists": "User already has an active pass",
-      "createFailed": "Failed to create free pass",
-      "createError": "Error occurred while creating free pass",
+      "createSuccess": "Free token grant created successfully",
+      "alreadyExists": "User already has token balance",
+      "createFailed": "Failed to create free token grant",
+      "createError": "Error occurred while creating free token grant",
       "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
     }
   },

@@ -83,15 +83,9 @@ vi.mock("next-intl", () => ({
 describe("CompactPlanDisplay", () => {
   const defaultSubscription = {
     plan: "PRO" as const,
-    expiryDate: "2024-12-31",
-    isActive: true,
     chatTokenLimit: 100000000,
     chatTokenUsed: 25000000,
-    quotas: {
-      fullOptimize: { used: 5, total: 10 },
-      blockOptimize: { used: 15, total: 30 },
-      motivationLetter: { used: 2, total: 5 }
-    }
+    chatTokenRemaining: 75000000
   }
 
   beforeEach(() => {

@@ -47,6 +47,10 @@ export async function POST(req: Request) {
       return new Response("FREE plan is not supported", { status: 400 })
     }
 
+    if (!(plan in QUOTA)) {
+      return new Response(`Invalid plan: ${plan}`, { status: 400 })
+    }
+
     const supabase = await createServerRoleClient()
 
     try {
@@ -132,17 +136,6 @@ export async function POST(req: Request) {
           )
         : null
 
-      // 5. 计算有效期
-      const startAt = new Date()
-      const endAt = new Date()
-      if (plan === "LITE") {
-        endAt.setDate(startAt.getDate() + 14)
-      } else if (plan === "PRO") {
-        endAt.setDate(startAt.getDate() + 30)
-      } else {
-        throw new Error(`Invalid plan: ${plan}`)
-      }
-
       const quotaConfig = QUOTA[plan]
 
       if (activeAccessPass) {
@@ -150,13 +143,7 @@ export async function POST(req: Request) {
           .from("access_passes")
           .update({
             plan,
-            source: "stripe",
-            start_at: startAt.toISOString(),
-            end_at: endAt.toISOString(),
             stripe_checkout_session_id: session.id,
-            quota_full_optimize: quotaConfig.quota_full_optimize,
-            quota_block_optimize: quotaConfig.quota_block_optimize,
-            quota_motivation_letter: quotaConfig.quota_motivation_letter,
             quota_chat_tokens:
               (activeAccessPass.quota_chat_tokens ?? 0) +
               quotaConfig.quota_chat_tokens
@@ -183,17 +170,8 @@ export async function POST(req: Request) {
           .insert({
             user_id: supabaseUserId,
             plan,
-            source: "stripe",
-            start_at: startAt.toISOString(),
-            end_at: endAt.toISOString(),
             stripe_checkout_session_id: session.id,
-            quota_full_optimize: quotaConfig.quota_full_optimize,
-            quota_block_optimize: quotaConfig.quota_block_optimize,
-            quota_motivation_letter: quotaConfig.quota_motivation_letter,
             quota_chat_tokens: quotaConfig.quota_chat_tokens,
-            used_full_optimize: 0,
-            used_block_optimize: 0,
-            used_motivation_letter: 0,
             used_chat_tokens: 0
           })
 
