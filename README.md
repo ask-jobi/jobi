@@ -47,41 +47,72 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## 开发指南
 
-如果你在supabase中添加了新的表或者字段，你需要重新生成types/supabase.ts文件可以通过生成
+如果你在 Supabase 中新增了表、字段、约束或 RLS policy，需要同步更新 `types/supabase.ts`。
+
+推荐优先从本地数据库生成类型：
 ```shell
-npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > supabase.ts
+npx supabase gen types typescript --local --schema public > types/supabase.ts
 ```
+
+如果你需要直接从远程项目生成，也可以使用：
+```shell
+npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > types/supabase.ts
+```
+
 或者访问这个地址手动生成
 https://supabase.com/docs/reference/cli/supabase-gen-types
 
 ## 本地启动supabase
 
-参考这个链接安装supabase cli工具
+参考这个链接安装 Supabase CLI 工具
 https://supabase.com/docs/guides/local-development/cli/getting-started
 
-连接生产环境的服务器
+连接远程 Supabase 项目：
 ```shell
 supabase link --project-ref antnnixumdyjbmqacvhv
 ```
 
-启动本地服务器，这需要依赖docker环境，会在本地创建一个postgresql服务器
+启动本地 Supabase 服务。这依赖 Docker，并会在本地启动 PostgreSQL、Studio、Auth 等服务：
 ```shell
 supabase start
 ```
 
 ### 修改数据库
-使用这个命令创建migration文件
+
+这个项目使用 `supabase/migrations/*.sql` 维护数据库表结构。表、索引、外键、RLS policy、trigger 都应该通过 migration SQL 维护，`types/supabase.ts` 只是从数据库 schema 生成的类型文件，不是表结构真相源。
+
+创建新的 migration 文件：
 ```shell
 supabase migration new {file_name}
 ```
-编写完sql语句后，推送migration到本地服务器
+
+编写完 SQL 后，重建本地数据库并自动执行 migrations 和 `supabase/seed.sql`：
 ```shell
-supabase migration up
+supabase db reset
 ```
-推送migration到远程服务器
+
+如果你已经将本地项目 link 到远程项目，并确认要把本地 migrations 推到远程数据库：
 ```shell
-supabase migration up --linked
+supabase db push
 ```
+
+如果远程数据库上已经存在手工改动，需要先把远程 schema 拉回本地生成新的 migration：
+```shell
+supabase db pull
+```
+
+推荐日常流程：
+1. `supabase start`
+2. `supabase migration new <name>`
+3. 编辑 `supabase/migrations/<timestamp>_<name>.sql`
+4. `supabase db reset`
+5. `npx supabase gen types typescript --local --schema public > types/supabase.ts`
+
+相关文件：
+- `supabase/migrations/`：数据库结构变更
+- `supabase/seed.sql`：本地 reset 后加载的初始化数据
+- `supabase/config.toml`：本地 Supabase 配置
+- `types/supabase.ts`：从数据库 schema 生成的 TypeScript 类型
 
 ## 测试指南
 
