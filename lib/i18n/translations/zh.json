@@ -86,6 +86,19 @@
   "chatTokens": "Chat Token",
 
   "createNewResume": "创建新简历",
+  "paymentSuccess": {
+    "title": "支付成功！",
+    "description": "您购买的 Token 额度已到账，可以继续使用了",
+    "checkingStatus": "正在确认支付状态...",
+    "processingDelay": "我们已收到支付，但 Token 同步比预期更慢。请稍后刷新 Dashboard 查看最新余额。",
+    "orderNumber": "订单号",
+    "nextStepsTitle": "接下来您可以：",
+    "nextStepUseTokens": "继续在聊天和改写流程中消耗 Token",
+    "nextStepViewBalance": "查看当前 Token 余额和使用情况",
+    "nextStepBuyMore": "继续购买新的 Token 套餐来累加余额",
+    "goToDashboard": "进入控制台",
+    "backToHome": "返回首页"
+  },
 
   "form": {
     "stepJobInfo": "岗位信息",

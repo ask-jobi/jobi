@@ -86,6 +86,19 @@
   "chatTokens": "Chat tokens",
 
   "createNewResume": "Create New Resume",
+  "paymentSuccess": {
+    "title": "Payment successful!",
+    "description": "Your token bundle has been added successfully and is ready to use.",
+    "checkingStatus": "Checking payment status...",
+    "processingDelay": "Payment was received, but token synchronization is taking longer than expected. Please refresh the dashboard shortly.",
+    "orderNumber": "Order ID",
+    "nextStepsTitle": "What you can do next:",
+    "nextStepUseTokens": "Continue spending tokens in chat and resume rewrite flows",
+    "nextStepViewBalance": "Check your current token balance and usage",
+    "nextStepBuyMore": "Buy another token bundle any time to add more balance",
+    "goToDashboard": "Go to Dashboard",
+    "backToHome": "Back to Home"
+  },
 
   "form": {
     "stepJobInfo": "Job Information",

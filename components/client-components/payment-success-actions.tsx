@@ -1,0 +1,116 @@
+"use client"
+
+import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+
+import { Button } from "@/components/ui/button"
+
+type PaymentSuccessActionsProps = {
+  sessionId?: string
+  checkingLabel: string
+  delayedLabel: string
+  dashboardLabel: string
+  homeLabel: string
+}
+
+const POLL_INTERVAL_MS = 2_000
+const MAX_POLL_ATTEMPTS = 15
+
+export function PaymentSuccessActions({
+  sessionId,
+  checkingLabel,
+  delayedLabel,
+  dashboardLabel,
+  homeLabel
+}: PaymentSuccessActionsProps) {
+  const router = useRouter()
+  const [isReady, setIsReady] = useState(!sessionId)
+  const [isDelayed, setIsDelayed] = useState(false)
+  const attemptCountRef = useRef(0)
+
+  useEffect(() => {
+    if (!sessionId) {
+      return
+    }
+
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/stripe/checkout-status?session_id=${encodeURIComponent(sessionId)}`,
+          { cache: "no-store" }
+        )
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch checkout status")
+        }
+
+        const payload = (await response.json()) as { processed?: boolean }
+
+        if (cancelled) {
+          return
+        }
+
+        if (payload.processed) {
+          setIsReady(true)
+          setIsDelayed(false)
+          router.refresh()
+          return
+        }
+      } catch (error) {
+        console.error("Error checking checkout status:", error)
+      }
+
+      if (cancelled) {
+        return
+      }
+
+      attemptCountRef.current += 1
+
+      if (attemptCountRef.current >= MAX_POLL_ATTEMPTS) {
+        setIsDelayed(true)
+        setIsReady(true)
+        return
+      }
+
+      timer = setTimeout(() => {
+        void checkStatus()
+      }, POLL_INTERVAL_MS)
+    }
+
+    void checkStatus()
+
+    return () => {
+      cancelled = true
+      if (timer) {
+        clearTimeout(timer)
+      }
+    }
+  }, [router, sessionId])
+
+  return (
+    <div className="flex flex-col gap-4 pt-4">
+      {isDelayed ? (
+        <p className="text-sm text-muted-foreground">{delayedLabel}</p>
+      ) : null}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button
+          className="w-full"
+          disabled={!isReady}
+          onClick={() => router.push("/dashboard")}
+          size="lg"
+        >
+          {isReady ? dashboardLabel : checkingLabel}
+        </Button>
+        <Link href="/" className="flex-1">
+          <Button className="w-full" variant="outline" size="lg">
+            {homeLabel}
+          </Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
