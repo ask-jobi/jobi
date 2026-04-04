@@ -22,7 +22,6 @@ export type Database = {
           id: string
           plan: "FREE" | "LITE" | "PRO"
           quota_chat_tokens: number
-          stripe_checkout_session_id: string | null
           used_chat_tokens: number
           user_id: string
         }
@@ -31,7 +30,6 @@ export type Database = {
           id?: string
           plan: "FREE" | "LITE" | "PRO"
           quota_chat_tokens?: number
-          stripe_checkout_session_id?: string | null
           used_chat_tokens?: number
           user_id: string
         }
@@ -40,8 +38,34 @@ export type Database = {
           id?: string
           plan?: "FREE" | "LITE" | "PRO"
           quota_chat_tokens?: number
-          stripe_checkout_session_id?: string | null
           used_chat_tokens?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_checkout_events: {
+        Row: {
+          checkout_session_id: string
+          created_at: string | null
+          granted_tokens: number
+          id: string
+          plan: "FREE" | "LITE" | "PRO"
+          user_id: string
+        }
+        Insert: {
+          checkout_session_id: string
+          created_at?: string | null
+          granted_tokens?: number
+          id?: string
+          plan: "FREE" | "LITE" | "PRO"
+          user_id: string
+        }
+        Update: {
+          checkout_session_id?: string
+          created_at?: string | null
+          granted_tokens?: number
+          id?: string
+          plan?: "FREE" | "LITE" | "PRO"
           user_id?: string
         }
         Relationships: []

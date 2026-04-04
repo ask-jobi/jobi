@@ -24,18 +24,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: accessPass, error } = await supabase
-      .from("access_passes")
+    const { data: checkoutEvent, error } = await supabase
+      .from("stripe_checkout_events")
       .select("id")
       .eq("user_id", user.id)
-      .eq("stripe_checkout_session_id", sessionId)
+      .eq("checkout_session_id", sessionId)
       .maybeSingle()
 
     if (error) {
       throw error
     }
 
-    return NextResponse.json({ processed: Boolean(accessPass) })
+    return NextResponse.json({ processed: Boolean(checkoutEvent) })
   } catch (error) {
     console.error("Error fetching checkout status:", error)
     return NextResponse.json(

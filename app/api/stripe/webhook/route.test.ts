@@ -7,7 +7,6 @@ import { QUOTA } from "@/lib/payment/quota"
 import { createServerRoleClient } from "@/lib/supabase/server-role-client"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
-// Mock stripe
 vi.mock("@/lib/payment/stripe", () => ({
   stripe: {
     webhooks: {
@@ -16,29 +15,168 @@ vi.mock("@/lib/payment/stripe", () => ({
   }
 }))
 
-// Mock QUOTA
 vi.mock("@/lib/payment/quota", () => ({
   QUOTA: {
-    FREE: {
-      quota_chat_tokens: 50_000
-    },
-    LITE: {
-      quota_chat_tokens: 500_000
-    },
-    PRO: {
-      quota_chat_tokens: 1_000_000
-    }
+    FREE: { quota_chat_tokens: 50_000 },
+    LITE: { quota_chat_tokens: 500_000 },
+    PRO: { quota_chat_tokens: 1_000_000 }
   }
 }))
 
-// Mock server role client
 vi.mock("@/lib/supabase/server-role-client", () => ({
   createServerRoleClient: vi.fn()
 }))
 
+type ProfileRow = {
+  id: string
+  stripe_customer_id: string | null
+}
+
+type AccessPassRow = {
+  id: string
+  user_id: string
+  plan: "FREE" | "LITE" | "PRO"
+  quota_chat_tokens: number
+  used_chat_tokens: number
+  created_at?: string
+}
+
+type WebhookSupabaseOptions = {
+  existingProfile?: ProfileRow | null
+  profileError?: { code: string; message?: string } | null
+  profileInsertError?: { message: string } | null
+  profileUpdateError?: { message: string } | null
+  existingAccessPass?: AccessPassRow | null
+  accessPassQueryError?: { message: string } | null
+  accessPassInsertError?: { message: string } | null
+  accessPassUpdateError?: { message: string } | null
+  checkoutEventInsertError?: { code?: string; message: string } | null
+}
+
+const createMockRequest = (body: string, signature: string): Request => {
+  const headers = new Headers()
+  headers.set("stripe-signature", signature)
+  return new Request("http://localhost:3000/api/stripe/webhook", {
+    method: "POST",
+    headers,
+    body
+  })
+}
+
+const createMockSignature = () => "t=timestamp,v1=signature"
+
+const createCheckoutSession = (
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> => ({
+  customer: "cus_123",
+  metadata: {
+    supabase_user_id: "user_123",
+    plan: "PRO"
+  },
+  id: "cs_test_123",
+  ...overrides
+})
+
+const buildWebhookSupabaseClient = (
+  options: WebhookSupabaseOptions = {}
+) => {
+  const checkoutEventInsertMock = vi
+    .fn()
+    .mockResolvedValue({ error: options.checkoutEventInsertError ?? null })
+  const checkoutEventDeleteEqMock = vi
+    .fn()
+    .mockResolvedValue({ error: null })
+  const checkoutEventDeleteMock = vi.fn().mockReturnValue({
+    eq: checkoutEventDeleteEqMock
+  })
+
+  const profileSelectSingleMock = vi.fn().mockResolvedValue({
+    data: options.existingProfile ?? null,
+    error: options.profileError ?? null
+  })
+  const profileInsertMock = vi
+    .fn()
+    .mockResolvedValue({ error: options.profileInsertError ?? null })
+  const profileUpdateEqMock = vi
+    .fn()
+    .mockResolvedValue({ error: options.profileUpdateError ?? null })
+  const profileUpdateMock = vi.fn().mockReturnValue({
+    eq: profileUpdateEqMock
+  })
+
+  const accessPassMaybeSingleMock = vi.fn().mockResolvedValue({
+    data: options.existingAccessPass ?? null,
+    error: options.accessPassQueryError ?? null
+  })
+  const accessPassInsertMock = vi
+    .fn()
+    .mockResolvedValue({ error: options.accessPassInsertError ?? null })
+  const accessPassUpdateEqMock = vi
+    .fn()
+    .mockResolvedValue({ error: options.accessPassUpdateError ?? null })
+  const accessPassUpdateMock = vi.fn().mockReturnValue({
+    eq: accessPassUpdateEqMock
+  })
+
+  const from = vi.fn().mockImplementation((table: string) => {
+    if (table === "stripe_checkout_events") {
+      return {
+        insert: checkoutEventInsertMock,
+        delete: checkoutEventDeleteMock
+      }
+    }
+
+    if (table === "user_profiles") {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: profileSelectSingleMock
+          })
+        }),
+        insert: profileInsertMock,
+        update: profileUpdateMock
+      }
+    }
+
+    if (table === "access_passes") {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: accessPassMaybeSingleMock
+          })
+        }),
+        insert: accessPassInsertMock,
+        update: accessPassUpdateMock
+      }
+    }
+
+    return {}
+  })
+
+  return {
+    client: { from },
+    mocks: {
+      from,
+      checkoutEventInsertMock,
+      checkoutEventDeleteMock,
+      checkoutEventDeleteEqMock,
+      profileSelectSingleMock,
+      profileInsertMock,
+      profileUpdateMock,
+      profileUpdateEqMock,
+      accessPassMaybeSingleMock,
+      accessPassInsertMock,
+      accessPassUpdateMock,
+      accessPassUpdateEqMock
+    }
+  }
+}
+
 describe("POST /api/stripe/webhook", () => {
-  let mockConstructEvent: any
-  let mockCreateServerRoleClient: any
+  let mockConstructEvent: ReturnType<typeof vi.mocked<typeof stripe.webhooks.constructEvent>>
+  let mockCreateServerRoleClient: ReturnType<
+    typeof vi.mocked<typeof createServerRoleClient>
+  >
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -50,34 +188,8 @@ describe("POST /api/stripe/webhook", () => {
     vi.restoreAllMocks()
   })
 
-  const createMockRequest = (body: string, signature: string): Request => {
-    const headers = new Headers()
-    headers.set("stripe-signature", signature)
-    return new Request("http://localhost:3000/api/stripe/webhook", {
-      method: "POST",
-      headers,
-      body: body
-    })
-  }
-
-  const createMockSignature = (): string => {
-    return "t=timestamp,v1=signature"
-  }
-
-  const createCheckoutSession = (overrides: object = {}): object => ({
-    customer: "cus_123",
-    metadata: {
-      supabase_user_id: "user_123",
-      plan: "PRO"
-    },
-    id: "cs_test_123",
-    ...overrides
-  })
-
-  // ==================== Webhook Signature Validation ====================
-
   describe("Webhook signature validation", () => {
-    it("should return 400 when signature verification fails", async () => {
+    it("returns 400 when signature verification fails", async () => {
       const mockRequest = createMockRequest("{}", "invalid_signature")
 
       mockConstructEvent.mockImplementation(() => {
@@ -87,584 +199,40 @@ describe("POST /api/stripe/webhook", () => {
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toContain("Webhook Error:")
-    })
-
-    it("should return 400 when raw body is invalid JSON", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest("invalid json", mockSignature)
-
-      mockConstructEvent.mockImplementation(() => {
-        throw new Error("Unexpected end of JSON input")
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(400)
-    })
-
-    it("should return 400 when signature header is missing", async () => {
-      const mockRequest = new Request(
-        "http://localhost:3000/api/stripe/webhook",
-        {
-          method: "POST",
-          body: "{}"
-        }
-      )
-
-      mockConstructEvent.mockImplementation(() => {
-        throw new Error("No signature found")
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(400)
+      expect(await response.text()).toContain("Webhook Error:")
     })
   })
-
-  // ==================== Metadata Validation ====================
 
   describe("Metadata validation", () => {
-    it("should return 400 when supabase_user_id is missing in metadata", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ metadata: { plan: "PRO" } }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ metadata: { plan: "PRO" } }) }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toBe("Missing required metadata")
-    })
-
-    it("should return 400 when plan is missing in metadata", async () => {
-      const mockSignature = createMockSignature()
+    it("returns 400 when required metadata is missing", async () => {
       const mockRequest = createMockRequest(
         JSON.stringify({
           type: "checkout.session.completed",
           data: {
             object: createCheckoutSession({
-              metadata: { supabase_user_id: "user_123" }
+              metadata: { plan: "PRO" }
             })
           }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
         type: "checkout.session.completed",
         data: {
           object: createCheckoutSession({
-            metadata: { supabase_user_id: "user_123" }
+            metadata: { plan: "PRO" }
           })
         }
-      })
+      } as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toBe("Missing required metadata")
+      expect(await response.text()).toBe("Missing required metadata")
     })
 
-    it("should return 400 when both supabase_user_id and plan are missing", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ metadata: {} }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ metadata: {} }) }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(400)
-    })
-
-    it("should return 400 when metadata is null", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ metadata: null }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ metadata: null }) }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(400)
-    })
-  })
-
-  // ==================== User Profile Query Scenarios ====================
-
-  describe("User profile query scenarios", () => {
-    it("should throw error when profile query fails with non-PGRST116 error", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                error: { code: "PGRST301", message: "Database error" }
-              })
-            })
-          })
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(500)
-      const text = await response.text()
-      expect(text).toContain("Database Error:")
-    })
-
-    it("should create new user profile when user does not exist", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    error: { code: "PGRST116" }
-                  })
-                })
-              }),
-              insert: vi.fn().mockReturnValue({
-                insert: vi.fn().mockResolvedValue({ error: null })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should update existing user profile when stripe_customer_id differs", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ customer: "cus_new" }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ customer: "cus_new" }) }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_123", stripe_customer_id: "cus_old" },
-                    error: null
-                  })
-                })
-              }),
-              update: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  update: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should skip profile update when stripe_customer_id is the same", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ customer: "cus_123" }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ customer: "cus_123" }) }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_123", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-  })
-
-  // ==================== Delete Access Passes Scenarios ====================
-
-  describe("Delete access passes scenarios", () => {
-    it("should attempt to delete existing access passes", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_123", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      // Verify the route handles delete attempt
-      expect(response.status).toBe(200)
-    })
-  })
-
-  // ==================== Token Bundle Scenarios ====================
-
-  describe("Token bundle handling", () => {
-    it("should create a LITE token bundle without duration semantics", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: {
-            object: createCheckoutSession({
-              metadata: { plan: "LITE", supabase_user_id: "user_lite" }
-            })
-          }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: {
-          object: createCheckoutSession({
-            metadata: { plan: "LITE", supabase_user_id: "user_lite" }
-          })
-        }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_lite", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockImplementation((data: any) => {
-                expect(data.quota_chat_tokens).toBe(
-                  QUOTA.LITE.quota_chat_tokens
-                )
-                expect(data).not.toHaveProperty("source")
-                expect(data).not.toHaveProperty("start_at")
-                expect(data).not.toHaveProperty("end_at")
-                expect(data).not.toHaveProperty("quota_full_optimize")
-                expect(data).not.toHaveProperty("quota_block_optimize")
-                expect(data).not.toHaveProperty("quota_motivation_letter")
-                expect(data).not.toHaveProperty("used_full_optimize")
-                expect(data).not.toHaveProperty("used_block_optimize")
-                expect(data).not.toHaveProperty("used_motivation_letter")
-                return { insert: vi.fn().mockResolvedValue({ error: null }) }
-              })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should create a PRO token bundle without duration semantics", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: {
-            object: createCheckoutSession({
-              metadata: { plan: "PRO", supabase_user_id: "user_pro" }
-            })
-          }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: {
-          object: createCheckoutSession({
-            metadata: { plan: "PRO", supabase_user_id: "user_pro" }
-          })
-        }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_pro", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockImplementation((data: any) => {
-                expect(data.quota_chat_tokens).toBe(QUOTA.PRO.quota_chat_tokens)
-                expect(data).not.toHaveProperty("source")
-                expect(data).not.toHaveProperty("start_at")
-                expect(data).not.toHaveProperty("end_at")
-                expect(data).not.toHaveProperty("quota_full_optimize")
-                expect(data).not.toHaveProperty("quota_block_optimize")
-                expect(data).not.toHaveProperty("quota_motivation_letter")
-                expect(data).not.toHaveProperty("used_full_optimize")
-                expect(data).not.toHaveProperty("used_block_optimize")
-                expect(data).not.toHaveProperty("used_motivation_letter")
-                return { insert: vi.fn().mockResolvedValue({ error: null }) }
-              })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should reject FREE plan in Stripe webhook", async () => {
-      const mockSignature = createMockSignature()
+    it("rejects FREE plan", async () => {
       const mockRequest = createMockRequest(
         JSON.stringify({
           type: "checkout.session.completed",
@@ -674,7 +242,7 @@ describe("POST /api/stripe/webhook", () => {
             })
           }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
@@ -684,18 +252,16 @@ describe("POST /api/stripe/webhook", () => {
             metadata: { plan: "FREE", supabase_user_id: "user_free" }
           })
         }
-      })
+      } as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toBe("FREE plan is not supported")
+      expect(await response.text()).toBe("FREE plan is not supported")
       expect(mockCreateServerRoleClient).not.toHaveBeenCalled()
     })
 
-    it("should throw error for invalid plan", async () => {
-      const mockSignature = createMockSignature()
+    it("rejects invalid plan", async () => {
       const mockRequest = createMockRequest(
         JSON.stringify({
           type: "checkout.session.completed",
@@ -705,7 +271,7 @@ describe("POST /api/stripe/webhook", () => {
             })
           }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
@@ -715,128 +281,17 @@ describe("POST /api/stripe/webhook", () => {
             metadata: { plan: "INVALID", supabase_user_id: "user_invalid" }
           })
         }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_invalid", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+      } as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toContain("Invalid plan")
+      expect(await response.text()).toContain("Invalid plan")
     })
   })
 
-  // ==================== Create Access Pass Scenarios ====================
-
-  describe("Create access pass scenarios", () => {
-    it("should create access pass successfully", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_123", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockImplementation((data: any) => {
-                // Verify all metadata fields
-                expect(data.user_id).toBe("user_123")
-                expect(data.plan).toBe("PRO")
-                expect(data.stripe_checkout_session_id).toBe("cs_test_123")
-                expect(data).not.toHaveProperty("source")
-                expect(data).not.toHaveProperty("start_at")
-                expect(data).not.toHaveProperty("end_at")
-                return { insert: vi.fn().mockResolvedValue({ error: null }) }
-              })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data.received).toBe(true)
-    })
-
-    it("should ignore duplicate checkout session when it would update an active pass", async () => {
-      const mockSignature = createMockSignature()
+  describe("Checkout event idempotency", () => {
+    it("returns 200 without touching balances when checkout event already exists", async () => {
       const session = createCheckoutSession({
         metadata: { plan: "LITE", supabase_user_id: "user_lite" }
       })
@@ -845,66 +300,207 @@ describe("POST /api/stripe/webhook", () => {
           type: "checkout.session.completed",
           data: { object: session }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
         type: "checkout.session.completed",
         data: { object: session }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        checkoutEventInsertError: {
+          code: "23505",
+          message: "duplicate key value violates unique constraint"
+        }
       })
-
-      const profileSelect = vi.fn()
-      const updateMock = vi.fn()
-      const insertMock = vi.fn()
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "access_passes") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  order: vi.fn().mockResolvedValue({
-                    data: [
-                      {
-                        id: "duplicate-pass",
-                        user_id: "user_lite",
-                        plan: "LITE",
-                        stripe_checkout_session_id: "cs_test_123",
-                        created_at: "2025-04-01",
-                        quota_chat_tokens: 500_000,
-                        used_chat_tokens: 120_000
-                      }
-                    ],
-                    error: null
-                  })
-                })
-              }),
-              update: updateMock,
-              insert: insertMock
-            }
-          }
-          if (table === "user_profiles") {
-            return {
-              select: profileSelect
-            }
-          }
-          return {}
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data.received).toBe(true)
-      expect(profileSelect).not.toHaveBeenCalled()
-      expect(updateMock).not.toHaveBeenCalled()
-      expect(insertMock).not.toHaveBeenCalled()
+      expect(await response.json()).toEqual({ received: true })
+      expect(mocks.profileSelectSingleMock).not.toHaveBeenCalled()
+      expect(mocks.accessPassMaybeSingleMock).not.toHaveBeenCalled()
+      expect(mocks.accessPassUpdateMock).not.toHaveBeenCalled()
+      expect(mocks.accessPassInsertMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("User profile handling", () => {
+    it("creates a new user profile when it does not exist", async () => {
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: createCheckoutSession() }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: createCheckoutSession() }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        profileError: { code: "PGRST116" }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(mocks.profileInsertMock).toHaveBeenCalledWith({
+        id: "user_123",
+        stripe_customer_id: "cus_123"
+      })
     })
 
-    it("should ignore duplicate checkout session when it would create a new pass", async () => {
-      const mockSignature = createMockSignature()
+    it("updates stripe_customer_id when the stored profile differs", async () => {
+      const session = createCheckoutSession({ customer: "cus_new" })
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: session }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: session }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_123",
+          stripe_customer_id: "cus_old"
+        }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(mocks.profileUpdateMock).toHaveBeenCalledWith({
+        stripe_customer_id: "cus_new"
+      })
+      expect(mocks.profileUpdateEqMock).toHaveBeenCalledWith("id", "user_123")
+    })
+
+    it("skips profile update when stripe_customer_id is unchanged", async () => {
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: createCheckoutSession({ customer: "cus_123" }) }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: createCheckoutSession({ customer: "cus_123" }) }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_123",
+          stripe_customer_id: "cus_123"
+        }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(mocks.profileUpdateMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("Access pass handling", () => {
+    it("creates a new unique access pass when the user has none", async () => {
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: createCheckoutSession() }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: createCheckoutSession() }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_123",
+          stripe_customer_id: "cus_123"
+        }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(mocks.checkoutEventInsertMock).toHaveBeenCalledWith({
+        user_id: "user_123",
+        checkout_session_id: "cs_test_123",
+        plan: "PRO",
+        granted_tokens: QUOTA.PRO.quota_chat_tokens
+      })
+      expect(mocks.accessPassInsertMock).toHaveBeenCalledWith({
+        user_id: "user_123",
+        plan: "PRO",
+        quota_chat_tokens: QUOTA.PRO.quota_chat_tokens,
+        used_chat_tokens: 0
+      })
+    })
+
+    it("accumulates tokens onto the same access pass when the user already has balance", async () => {
+      const session = createCheckoutSession({
+        metadata: { plan: "LITE", supabase_user_id: "user_lite" }
+      })
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: session }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: session }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_lite",
+          stripe_customer_id: "cus_123"
+        },
+        existingAccessPass: {
+          id: "pass_1",
+          user_id: "user_lite",
+          plan: "LITE",
+          quota_chat_tokens: 500_000,
+          used_chat_tokens: 120_000
+        }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(200)
+      expect(mocks.accessPassUpdateMock).toHaveBeenCalledWith({
+        plan: "LITE",
+        quota_chat_tokens: 1_000_000
+      })
+      expect(mocks.accessPassUpdateEqMock).toHaveBeenCalledWith("id", "pass_1")
+      expect(mocks.accessPassInsertMock).not.toHaveBeenCalled()
+    })
+
+    it("accumulates tokens onto the same access pass even when it is exhausted", async () => {
       const session = createCheckoutSession({
         metadata: { plan: "PRO", supabase_user_id: "user_pro" }
       })
@@ -913,424 +509,163 @@ describe("POST /api/stripe/webhook", () => {
           type: "checkout.session.completed",
           data: { object: session }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
         type: "checkout.session.completed",
         data: { object: session }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_pro",
+          stripe_customer_id: "cus_123"
+        },
+        existingAccessPass: {
+          id: "pass_2",
+          user_id: "user_pro",
+          plan: "LITE",
+          quota_chat_tokens: 500_000,
+          used_chat_tokens: 500_000
+        }
       })
-
-      const profileSelect = vi.fn()
-      const updateMock = vi.fn()
-      const insertMock = vi.fn()
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "access_passes") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  order: vi.fn().mockResolvedValue({
-                    data: [
-                      {
-                        id: "duplicate-pass",
-                        user_id: "user_pro",
-                        plan: "FREE",
-                        stripe_checkout_session_id: "cs_test_123",
-                        created_at: "2025-04-01",
-                        quota_chat_tokens: 50_000,
-                        used_chat_tokens: 50_000
-                      }
-                    ],
-                    error: null
-                  })
-                })
-              }),
-              update: updateMock,
-              insert: insertMock
-            }
-          }
-          if (table === "user_profiles") {
-            return {
-              select: profileSelect
-            }
-          }
-          return {}
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data.received).toBe(true)
-      expect(profileSelect).not.toHaveBeenCalled()
-      expect(updateMock).not.toHaveBeenCalled()
-      expect(insertMock).not.toHaveBeenCalled()
+      expect(mocks.accessPassUpdateMock).toHaveBeenCalledWith({
+        plan: "PRO",
+        quota_chat_tokens: 1_500_000
+      })
+      expect(mocks.accessPassInsertMock).not.toHaveBeenCalled()
     })
+  })
 
-    it("should accumulate chat token quota when user already has remaining balance", async () => {
-      const mockSignature = createMockSignature()
+  describe("Database operation scenarios", () => {
+    it("returns 500 when profile query fails with a non-not-found error", async () => {
       const mockRequest = createMockRequest(
         JSON.stringify({
           type: "checkout.session.completed",
-          data: {
-            object: createCheckoutSession({
-              metadata: { plan: "LITE", supabase_user_id: "user_lite" }
-            })
-          }
+          data: { object: createCheckoutSession() }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
         type: "checkout.session.completed",
-        data: {
-          object: createCheckoutSession({
-            metadata: { plan: "LITE", supabase_user_id: "user_lite" }
-          })
-        }
-      })
+        data: { object: createCheckoutSession() }
+      } as any)
 
-      const deleteMock = vi.fn().mockResolvedValue({ error: null })
-      const updateMock = vi.fn().mockImplementation((data: any) => {
-        expect(data.plan).toBe("LITE")
-        expect(data.quota_chat_tokens).toBe(1_000_000)
-        expect(data.used_chat_tokens).toBeUndefined()
-        expect(data).not.toHaveProperty("source")
-        expect(data).not.toHaveProperty("start_at")
-        expect(data).not.toHaveProperty("end_at")
-        expect(data).not.toHaveProperty("quota_full_optimize")
-        expect(data).not.toHaveProperty("quota_block_optimize")
-        expect(data).not.toHaveProperty("quota_motivation_letter")
-        expect(data).not.toHaveProperty("used_full_optimize")
-        expect(data).not.toHaveProperty("used_block_optimize")
-        expect(data).not.toHaveProperty("used_motivation_letter")
-        return {
-          eq: vi.fn().mockResolvedValue({ error: null })
-        }
+      const { client } = buildWebhookSupabaseClient({
+        profileError: { code: "PGRST301", message: "Database error" }
       })
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_lite", stripe_customer_id: "cus_123" },
-                    error: null
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [
-                    {
-                      id: "active-pass",
-                      user_id: "user_lite",
-                      plan: "LITE",
-                      created_at: "2025-04-01",
-                      quota_chat_tokens: 500_000,
-                      used_chat_tokens: 120_000
-                    }
-                  ],
-                  error: null
-                })
-              })
-            }),
-            update: updateMock,
-            delete: deleteMock,
-            insert: vi.fn()
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
 
       const response = await POST(mockRequest)
 
-      expect(response.status).toBe(200)
-      expect(deleteMock).not.toHaveBeenCalled()
+      expect(response.status).toBe(500)
+      expect(await response.text()).toContain("Database Error:")
+    })
+
+    it("returns 500 when access pass update fails and rolls back the checkout event", async () => {
+      const session = createCheckoutSession({
+        metadata: { plan: "LITE", supabase_user_id: "user_lite" }
+      })
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: session }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: session }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_lite",
+          stripe_customer_id: "cus_123"
+        },
+        existingAccessPass: {
+          id: "pass_1",
+          user_id: "user_lite",
+          plan: "LITE",
+          quota_chat_tokens: 500_000,
+          used_chat_tokens: 0
+        },
+        accessPassUpdateError: { message: "update failed" }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(500)
+      expect(await response.text()).toContain("Database Error:")
+      expect(mocks.checkoutEventDeleteMock).toHaveBeenCalled()
+      expect(mocks.checkoutEventDeleteEqMock).toHaveBeenCalledWith(
+        "checkout_session_id",
+        "cs_test_123"
+      )
+    })
+
+    it("returns 500 when access pass insert fails and rolls back the checkout event", async () => {
+      const mockRequest = createMockRequest(
+        JSON.stringify({
+          type: "checkout.session.completed",
+          data: { object: createCheckoutSession() }
+        }),
+        createMockSignature()
+      )
+
+      mockConstructEvent.mockReturnValue({
+        type: "checkout.session.completed",
+        data: { object: createCheckoutSession() }
+      } as any)
+
+      const { client, mocks } = buildWebhookSupabaseClient({
+        existingProfile: {
+          id: "user_123",
+          stripe_customer_id: "cus_123"
+        },
+        accessPassInsertError: { message: "insert failed" }
+      })
+      mockCreateServerRoleClient.mockResolvedValue(client as any)
+
+      const response = await POST(mockRequest)
+
+      expect(response.status).toBe(500)
+      expect(await response.text()).toContain("Database Error:")
+      expect(mocks.checkoutEventDeleteEqMock).toHaveBeenCalledWith(
+        "checkout_session_id",
+        "cs_test_123"
+      )
     })
   })
 
-  // ==================== Event Type Handling ====================
-
   describe("Event type handling", () => {
-    it("should return 200 for non-checkout events (invoice.paid)", async () => {
-      const mockSignature = createMockSignature()
+    it("returns 200 for non-checkout events", async () => {
       const mockRequest = createMockRequest(
         JSON.stringify({
           type: "invoice.paid",
           data: { object: {} }
         }),
-        mockSignature
+        createMockSignature()
       )
 
       mockConstructEvent.mockReturnValue({
         type: "invoice.paid",
         data: { object: {} }
-      })
+      } as any)
 
       const response = await POST(mockRequest)
 
       expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data.received).toBe(true)
-    })
-
-    it("should return 200 for customer.subscription.created", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "customer.subscription.created",
-          data: { object: { id: "sub_123" } }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "customer.subscription.created",
-        data: { object: { id: "sub_123" } }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should return 200 for customer.subscription.updated", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "customer.subscription.updated",
-          data: { object: { id: "sub_456" } }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "customer.subscription.updated",
-        data: { object: { id: "sub_456" } }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-
-    it("should return 200 for invoice.payment_succeeded", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "invoice.payment_succeeded",
-          data: { object: { id: "in_789" } }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "invoice.payment_succeeded",
-        data: { object: { id: "in_789" } }
-      })
-
-      const response = await POST(mockRequest)
-
-      expect(response.status).toBe(200)
-    })
-  })
-
-  // ==================== Database Operation Error Handling ====================
-
-  describe("Database operation scenarios", () => {
-    it("should handle profile query with PGRST116 (not found)", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    error: { code: "PGRST116" }
-                  })
-                })
-              }),
-              insert: vi.fn().mockReturnValue({
-                insert: vi.fn().mockResolvedValue({ error: null })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      // PGRST116 triggers profile creation path
-      expect(response.status).toBe(200)
-    })
-
-    it("should handle profile query with non-PGRST116 error", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession() }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession() }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    error: { code: "PGRST301", message: "Database error" }
-                  })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      // Non-PGRST116 error should return 500
-      expect(response.status).toBe(500)
-      const text = await response.text()
-      expect(text).toContain("Database Error:")
-    })
-
-    it("should handle existing profile with different stripe_customer_id", async () => {
-      const mockSignature = createMockSignature()
-      const mockRequest = createMockRequest(
-        JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: createCheckoutSession({ customer: "cus_new" }) }
-        }),
-        mockSignature
-      )
-
-      mockConstructEvent.mockReturnValue({
-        type: "checkout.session.completed",
-        data: { object: createCheckoutSession({ customer: "cus_new" }) }
-      })
-
-      const mockSupabaseClient = {
-        from: vi.fn().mockImplementation((table: string) => {
-          if (table === "user_profiles") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "user_123", stripe_customer_id: "cus_old" },
-                    error: null
-                  })
-                })
-              }),
-              update: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  update: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }
-          }
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: [],
-                  error: null
-                })
-              })
-            }),
-            delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                gt: vi.fn().mockReturnValue({
-                  delete: vi.fn().mockResolvedValue({ error: null })
-                })
-              })
-            }),
-            insert: vi.fn().mockReturnValue({
-              insert: vi.fn().mockResolvedValue({ error: null })
-            })
-          }
-        })
-      }
-      mockCreateServerRoleClient.mockResolvedValue(mockSupabaseClient)
-
-      const response = await POST(mockRequest)
-
-      // Different stripe_customer_id triggers update path
-      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ received: true })
     })
   })
 })

@@ -141,7 +141,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: mockUser },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       const mockSession = {
@@ -191,7 +207,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: mockUser },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       const mockSession = {
@@ -229,7 +261,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: mockUser },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       const mockSession = {
@@ -262,6 +310,71 @@ describe("POST /api/checkout_sessions", () => {
         })
       )
     })
+
+    it("should reuse stored stripe customer id when profile already has one", async () => {
+      const mockUser = {
+        id: "user_existing_customer",
+        email: "existing@example.com"
+      }
+
+      mockCreateClient.mockResolvedValue({
+        auth: {
+          getUser: vi.fn().mockResolvedValue({
+            data: { user: mockUser },
+            error: null
+          })
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: mockUser.id,
+                    stripe_customer_id: "cus_existing_123"
+                  },
+                  error: null
+                })
+              })
+            })
+          }
+        })
+      })
+
+      mockStripeCreate.mockResolvedValue({
+        url: "https://checkout.stripe.com/pay/cs_existing"
+      })
+
+      const request = createMockRequest({
+        priceId: "price_pro_existing",
+        plan: "PRO"
+      })
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockStripeCreate).toHaveBeenCalledWith({
+        line_items: [
+          {
+            price: "price_pro_existing",
+            quantity: 1
+          }
+        ],
+        mode: "payment",
+        success_url:
+          "http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: "http://localhost:3000/pricing?cancelled=true",
+        automatic_tax: { enabled: true },
+        customer: "cus_existing_123",
+        metadata: {
+          supabase_user_id: mockUser.id,
+          plan: "PRO"
+        }
+      })
+    })
   })
 
   describe("Error scenarios", () => {
@@ -272,7 +385,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: { id: "user_123", email: "test@example.com" } },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       mockStripeCreate.mockRejectedValue(new Error("Stripe API error"))
@@ -292,7 +421,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: { id: "user_123", email: "test@example.com" } },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       const stripeError = new Error("Rate limit exceeded") as any
@@ -314,7 +459,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: { id: "user_123", email: "test@example.com" } },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       mockStripeCreate.mockRejectedValue("Unknown error")
@@ -334,7 +495,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: { id: "user_123", email: "test@example.com" } },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       const mockSession = { url: "https://checkout.stripe.com/pay/cs_test" }
@@ -365,7 +542,23 @@ describe("POST /api/checkout_sessions", () => {
             data: { user: mockUser },
             error: null
           })
-        }
+        },
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table !== "user_profiles") {
+            return {}
+          }
+
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: "PGRST116" }
+                })
+              })
+            })
+          }
+        })
       })
 
       mockStripeCreate.mockResolvedValue({ url: "https://checkout.stripe.com" })

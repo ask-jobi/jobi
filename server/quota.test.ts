@@ -19,7 +19,7 @@ const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
 const buildAccessPassQueryMock = (result: { data: any; error: any }) => ({
   select: vi.fn().mockReturnValue({
     eq: vi.fn().mockReturnValue({
-      order: vi.fn().mockResolvedValue(result)
+      maybeSingle: vi.fn().mockResolvedValue(result)
     })
   })
 })
@@ -29,28 +29,18 @@ describe("getActiveAccessPass", () => {
     vi.clearAllMocks()
   })
 
-  it("returns the latest pass with remaining chat tokens", async () => {
+  it("returns the access pass when it has remaining chat tokens", async () => {
     mockCreateClient.mockResolvedValue({
       from: vi.fn().mockReturnValue(
         buildAccessPassQueryMock({
-          data: [
-            {
-              id: "newer-exhausted-pass",
-              user_id: "user-id",
-              plan: "PRO",
-              created_at: "2025-02-01",
-              quota_chat_tokens: 1_000_000,
-              used_chat_tokens: 1_000_000
-            },
-            {
-              id: "older-active-pass",
-              user_id: "user-id",
-              plan: "LITE",
-              created_at: "2025-01-01",
-              quota_chat_tokens: 500_000,
-              used_chat_tokens: 120_000
-            }
-          ],
+          data: {
+            id: "active-pass",
+            user_id: "user-id",
+            plan: "LITE",
+            created_at: "2025-01-01",
+            quota_chat_tokens: 500_000,
+            used_chat_tokens: 120_000
+          },
           error: null
         })
       )
@@ -58,7 +48,7 @@ describe("getActiveAccessPass", () => {
 
     const result = await getActiveAccessPass("user-id")
 
-    expect(result?.id).toBe("older-active-pass")
+    expect(result?.id).toBe("active-pass")
     expect(result?.plan).toBe("LITE")
   })
 
@@ -66,16 +56,14 @@ describe("getActiveAccessPass", () => {
     mockCreateClient.mockResolvedValue({
       from: vi.fn().mockReturnValue(
         buildAccessPassQueryMock({
-          data: [
-            {
-              id: "exhausted-pass",
-              user_id: "user-id",
-              plan: "PRO",
-              created_at: "2025-02-01",
-              quota_chat_tokens: 1_000_000,
-              used_chat_tokens: 1_000_000
-            }
-          ],
+          data: {
+            id: "exhausted-pass",
+            user_id: "user-id",
+            plan: "PRO",
+            created_at: "2025-02-01",
+            quota_chat_tokens: 1_000_000,
+            used_chat_tokens: 1_000_000
+          },
           error: null
         })
       )
@@ -91,25 +79,19 @@ describe("getUserTokenBalance", () => {
   })
 
   it("returns token balance data for the active pass", async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: [
-              {
-                id: "pass-id",
-                user_id: "user-id",
-                plan: "PRO" as const,
-                created_at: "2025-01-01",
-                quota_chat_tokens: 1_000_000,
-                used_chat_tokens: 12_345
-              }
-            ],
-            error: null
-          })
-        })
+    const mockFrom = vi.fn().mockReturnValue(
+      buildAccessPassQueryMock({
+        data: {
+          id: "pass-id",
+          user_id: "user-id",
+          plan: "PRO" as const,
+          created_at: "2025-01-01",
+          quota_chat_tokens: 1_000_000,
+          used_chat_tokens: 12_345
+        },
+        error: null
       })
-    })
+    )
 
     mockCreateClient.mockResolvedValue({
       auth: {
@@ -139,7 +121,7 @@ describe("getUserTokenBalance", () => {
       },
       from: vi.fn().mockReturnValue(
         buildAccessPassQueryMock({
-          data: [],
+          data: null,
           error: null
         })
       )
@@ -161,7 +143,6 @@ describe("chat token helpers", () => {
         id: "pass-id",
         user_id: "user-id",
         plan: "PRO",
-        stripe_checkout_session_id: "cs_test_123",
         created_at: "2025-01-01",
         quota_chat_tokens: 2_000_000,
         used_chat_tokens: 10_000
@@ -178,7 +159,6 @@ describe("chat token helpers", () => {
         id: "legacy-pass",
         user_id: "user-id",
         plan: "PRO",
-        stripe_checkout_session_id: "cs_test_legacy",
         created_at: "2025-01-01",
         quota_chat_tokens: 100_000,
         used_chat_tokens: 25_000

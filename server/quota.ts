@@ -29,37 +29,35 @@ const hasRemainingChatTokens = (accessPass: DBAccessPass) => {
   return (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
 }
 
+const getAccessPassByUserId = async (
+  userId: string
+): Promise<DBAccessPass | null> => {
+  const supabase = await createClient()
+
+  const { data: accessPass, error } = await supabase
+    .from("access_passes")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return accessPass
+}
+
 // 获取用户有效订阅的方法
 export async function getActiveAccessPass(
   userId: string
 ): Promise<DBAccessPass | null> {
-  const supabase = await createClient()
+  const accessPass = await getAccessPassByUserId(userId)
 
-  // todo 拆分所有的supabase出去为单独的方法，方便测试进行mock
-  const queryResult = await supabase
-    .from("access_passes")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-
-  const error = (queryResult as { error?: { code?: string } })?.error
-  if (error && error.code !== "PGRST116") {
-    throw error
-  }
-
-  const accessPasses = Array.isArray(queryResult)
-    ? queryResult
-    : Array.isArray((queryResult as { data?: unknown[] })?.data)
-      ? ((queryResult as { data: DBAccessPass[] }).data ?? [])
-      : (queryResult as { data?: DBAccessPass | null })?.data
-        ? [((queryResult as { data: DBAccessPass }).data as DBAccessPass)]
-        : []
-
-  if (!Array.isArray(accessPasses)) {
+  if (!accessPass) {
     return null
   }
 
-  return accessPasses.find(hasRemainingChatTokens) ?? null
+  return hasRemainingChatTokens(accessPass) ? accessPass : null
 }
 
 export async function getUserTokenBalance(): Promise<UserTokenBalance> {
@@ -74,10 +72,8 @@ export async function getUserTokenBalance(): Promise<UserTokenBalance> {
     throw new Error("用户未登录")
   }
 
-  // 获取用户有效订阅
-  const accessPass = await getActiveAccessPass(user.id)
+  const accessPass = await getAccessPassByUserId(user.id)
 
-  // 如果没有有效订阅，返回默认值
   if (!accessPass) {
     return {
       plan: null,

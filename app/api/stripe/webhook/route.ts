@@ -54,29 +54,30 @@ export async function POST(req: Request) {
     const supabase = await createServerRoleClient()
 
     try {
-      // 1. 找出当前用户的 access passes，并先处理幂等重放
-      const { data: accessPasses, error: accessPassError } = await supabase
-        .from("access_passes")
-        .select("*")
-        .eq("user_id", supabaseUserId)
-        .order("created_at", { ascending: false })
+      const quotaConfig = QUOTA[plan]
 
-      if (accessPassError && accessPassError.code !== "PGRST116") {
-        console.error("Error querying access passes:", accessPassError)
-        throw new Error(
-          `Failed to query access passes: ${accessPassError.message}`
+      // 1. 先记录 checkout 事件，用唯一 session_id 做幂等
+      const { error: insertCheckoutEventError } = await supabase
+        .from("stripe_checkout_events")
+        .insert({
+          user_id: supabaseUserId,
+          checkout_session_id: session.id,
+          plan,
+          granted_tokens: quotaConfig.quota_chat_tokens
+        })
+
+      if (insertCheckoutEventError) {
+        if (insertCheckoutEventError.code === "23505") {
+          return NextResponse.json({ received: true })
+        }
+
+        console.error(
+          "Error creating stripe checkout event:",
+          insertCheckoutEventError
         )
-      }
-
-      const duplicateSessionPass = Array.isArray(accessPasses)
-        ? accessPasses.find(
-            (accessPass) =>
-              accessPass.stripe_checkout_session_id === session.id
-          )
-        : null
-
-      if (duplicateSessionPass) {
-        return NextResponse.json({ received: true })
+        throw new Error(
+          `Failed to create stripe checkout event: ${insertCheckoutEventError.message}`
+        )
       }
 
       // 2. 查询 user_profiles
@@ -127,30 +128,37 @@ export async function POST(req: Request) {
         console.log("Updated stripe_customer_id for user:", supabaseUserId)
       }
 
-      // 4. 找出当前仍有余额的最新 access pass
-      const activeAccessPass = Array.isArray(accessPasses)
-        ? accessPasses.find(
-            (accessPass) =>
-              (accessPass.quota_chat_tokens ?? 0) >
-              (accessPass.used_chat_tokens ?? 0)
-          )
-        : null
+      // 4. access_passes 现在是每用户唯一一条余额记录
+      const { data: existingAccessPass, error: accessPassError } =
+        await supabase
+          .from("access_passes")
+          .select("*")
+          .eq("user_id", supabaseUserId)
+          .maybeSingle()
 
-      const quotaConfig = QUOTA[plan]
+      if (accessPassError) {
+        console.error("Error querying access pass:", accessPassError)
+        throw new Error(
+          `Failed to query access pass: ${accessPassError.message}`
+        )
+      }
 
-      if (activeAccessPass) {
+      if (existingAccessPass) {
         const { error: updateAccessPassError } = await supabase
           .from("access_passes")
           .update({
             plan,
-            stripe_checkout_session_id: session.id,
             quota_chat_tokens:
-              (activeAccessPass.quota_chat_tokens ?? 0) +
+              (existingAccessPass.quota_chat_tokens ?? 0) +
               quotaConfig.quota_chat_tokens
           })
-          .eq("id", activeAccessPass.id)
+          .eq("id", existingAccessPass.id)
 
         if (updateAccessPassError) {
+          await supabase
+            .from("stripe_checkout_events")
+            .delete()
+            .eq("checkout_session_id", session.id)
           console.error("Error updating access pass:", updateAccessPassError)
           throw new Error(
             `Failed to update access pass: ${updateAccessPassError.message}`
@@ -170,12 +178,15 @@ export async function POST(req: Request) {
           .insert({
             user_id: supabaseUserId,
             plan,
-            stripe_checkout_session_id: session.id,
             quota_chat_tokens: quotaConfig.quota_chat_tokens,
             used_chat_tokens: 0
           })
 
         if (insertAccessPassError) {
+          await supabase
+            .from("stripe_checkout_events")
+            .delete()
+            .eq("checkout_session_id", session.id)
           console.error("Error creating access pass:", insertAccessPassError)
           throw new Error(
             `Failed to create access pass: ${insertAccessPassError.message}`

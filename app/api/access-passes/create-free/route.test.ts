@@ -20,11 +20,7 @@ vi.mock("@/lib/payment/quota", () => ({
 const buildHistoryQueryMock = (result: { data: any; error: any }) => ({
   select: vi.fn().mockReturnValue({
     eq: vi.fn().mockReturnValue({
-      order: vi.fn().mockReturnValue({
-        limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue(result)
-        })
-      })
+      maybeSingle: vi.fn().mockResolvedValue(result)
     })
   })
 })
@@ -95,13 +91,9 @@ describe("POST /api/access-passes/create-free", () => {
         return {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { code: "PGRST116" }
-                  })
-                })
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: null,
+                error: null
               })
             })
           }),

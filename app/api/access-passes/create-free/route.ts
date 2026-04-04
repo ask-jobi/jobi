@@ -20,9 +20,7 @@ export async function POST() {
       .from("access_passes")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
+      .maybeSingle()
 
     if (historyError) {
       if (historyError.code !== "PGRST116") {
