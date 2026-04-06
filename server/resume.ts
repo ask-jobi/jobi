@@ -294,7 +294,7 @@ export async function createResumeRecord(
         .eq("id", savedApplicationId)
     })
 
-    return { jobData, resumeData }
+    return { jobData, resumeData, applicationData }
   } catch (error: any) {
     // 错误会由外层 rollbackStorage.run() 的回滚逻辑处理
     throw new Error(`Failed to create resume record: ${error.message}`)

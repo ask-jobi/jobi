@@ -156,6 +156,14 @@ describe("POST /api/resume/upload-and-analyze", () => {
       language: "en" as Locale,
       resume_json: mockResumeData,
       created_at: "2024-01-01T00:00:00Z"
+    },
+    applicationData: {
+      id: "application-123",
+      user_id: "user-123",
+      resume_id: "resume-123",
+      job_id: "job-123",
+      optimized_resume_url: null,
+      created_at: "2024-01-01T00:00:00Z"
     }
   }
 
@@ -215,7 +223,8 @@ describe("POST /api/resume/upload-and-analyze", () => {
       expect(sentData[9]).toEqual({
         step: "evaluate",
         status: "success",
-        resumeId: "resume-123"
+        resumeId: "resume-123",
+        applicationId: "application-123"
       })
 
       expect(resumeModule.uploadResumeFile).toHaveBeenCalledWith(

@@ -394,6 +394,7 @@ describe("createResumeRecord", () => {
 
     expect(result.jobData.id).toBe("job-123")
     expect(result.resumeData.id).toBe("resume-123")
+    expect(result.applicationData.id).toBe("app-123")
     expect(mockRollbackContext.addRollback).toHaveBeenCalledTimes(3)
   })
 

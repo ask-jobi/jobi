@@ -135,7 +135,7 @@ async function processFile(
         step: "prepare",
         status: "loading"
       })
-      const { resumeData, jobData } = await createResumeRecord(
+      const { resumeData, jobData, applicationData } = await createResumeRecord(
         jobInfo,
         uploadResult,
         resumeTextData,
@@ -159,7 +159,8 @@ async function processFile(
       await sendData(processId, {
         step: "evaluate",
         status: "success",
-        resumeId: resumeData.id
+        resumeId: resumeData.id,
+        applicationId: applicationData.id
       })
     } catch (error: any) {
       console.error(error)
