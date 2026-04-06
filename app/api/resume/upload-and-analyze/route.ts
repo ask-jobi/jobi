@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createResumeRecord, uploadResumeFile } from "@/server/resume"
-import { parseResume } from "@/server/ai/resume-parser"
-import { verifyJobApplicationLimit } from "@/server/quota"
+import { parseResumeWithTokenUsage } from "@/server/ai/resume-parser"
+import {
+  buildChatTokenQuota,
+  consumeChatTokens,
+  getActiveAccessPass,
+  verifyChatTokenQuota,
+  verifyJobApplicationLimit
+} from "@/server/quota"
 import {
   registerWriter,
   sendData,
@@ -106,7 +112,19 @@ async function processFile(
         step: "parse",
         status: "loading"
       })
-      const [resumeTextData, language] = await parseResume(docs[0].pageContent)
+      const activeAccessPass = await getActiveAccessPass(uploadResult.userId)
+      if (activeAccessPass) {
+        const chatTokenQuota = buildChatTokenQuota(activeAccessPass)
+        verifyChatTokenQuota(chatTokenQuota.used, chatTokenQuota.limit)
+      }
+
+      const { resumeData: resumeTextData, language, tokenUsage } =
+        await parseResumeWithTokenUsage(docs[0].pageContent)
+
+      if (activeAccessPass && tokenUsage.totalTokens > 0) {
+        await consumeChatTokens(activeAccessPass.id, tokenUsage.totalTokens)
+      }
+
       await sendData(processId, {
         step: "parse",
         status: "success"

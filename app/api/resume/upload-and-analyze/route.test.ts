@@ -38,10 +38,16 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
     vi.clearAllMocks()
 
-    vi.mocked(quotaModule.consumeQuota).mockResolvedValue(undefined)
     vi.mocked(quotaModule.verifyJobApplicationLimit).mockResolvedValue(
       undefined
     )
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
+    vi.mocked(quotaModule.buildChatTokenQuota).mockReturnValue({
+      used: 0,
+      limit: 0
+    })
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(quotaModule.consumeChatTokens).mockResolvedValue(0)
     vi.mocked(toolsModule.loadPdfToDoc).mockResolvedValue([
       { pageContent: "test content", metadata: { totalPages: 1 } }
     ])
@@ -71,8 +77,21 @@ describe("POST /api/resume/upload-and-analyze", () => {
     vi.restoreAllMocks()
   })
 
+  const flushAsyncWork = async () => {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+
   const wait = async (ms: number) => {
-    await vi.advanceTimersByTimeAsync(ms)
+    const step = 100
+    let elapsed = 0
+
+    while (elapsed <= ms) {
+      await vi.advanceTimersByTimeAsync(step)
+      await flushAsyncWork()
+
+      elapsed += step
+    }
   }
 
   const createMockRequest = (file?: File, jobInfo?: any): NextRequest => {
@@ -156,14 +175,20 @@ describe("POST /api/resume/upload-and-analyze", () => {
       vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
         mockUploadResult
       )
-      vi.mocked(resumeParser.parseResume).mockResolvedValue([
-        mockResumeData,
-        "en"
-      ])
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
+        resumeData: mockResumeData,
+        language: "en",
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cachedTokens: 0,
+          reasoningTokens: 0,
+          totalTokens: 0
+        }
+      })
       vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
-      vi.mocked(quotaModule.consumeQuota).mockResolvedValue(undefined)
 
       const request = createMockRequest(file, mockJobInfo)
       const responsePromise = POST(request)
@@ -193,11 +218,24 @@ describe("POST /api/resume/upload-and-analyze", () => {
         resumeId: "resume-123"
       })
 
-      expect(resumeModule.uploadResumeFile).toHaveBeenCalledWith(file)
-      expect(toolsModule.loadPdfToDoc).toHaveBeenCalledWith(file, {
-        splitPages: false
-      })
-      expect(resumeParser.parseResume).toHaveBeenCalledWith("test content")
+      expect(resumeModule.uploadResumeFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "test_pdf.pdf",
+          type: "application/pdf"
+        })
+      )
+      expect(toolsModule.loadPdfToDoc).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "test_pdf.pdf",
+          type: "application/pdf"
+        }),
+        {
+          splitPages: false
+        }
+      )
+      expect(resumeParser.parseResumeWithTokenUsage).toHaveBeenCalledWith(
+        "test content"
+      )
       expect(resumeModule.createResumeRecord).toHaveBeenCalledWith(
         mockJobInfo,
         mockUploadResult,
@@ -222,14 +260,20 @@ describe("POST /api/resume/upload-and-analyze", () => {
       vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
         mockUploadResult
       )
-      vi.mocked(resumeParser.parseResume).mockResolvedValue([
-        mockResumeData,
-        "zh"
-      ])
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
+        resumeData: mockResumeData,
+        language: "zh",
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cachedTokens: 0,
+          reasoningTokens: 0,
+          totalTokens: 0
+        }
+      })
       vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
-      vi.mocked(quotaModule.consumeQuota).mockResolvedValue(undefined)
 
       const request = createMockRequest(file, mockJobInfo)
       const responsePromise = POST(request)
@@ -248,6 +292,48 @@ describe("POST /api/resume/upload-and-analyze", () => {
         mockUploadResult,
         mockResumeData,
         "zh"
+      )
+    })
+
+    it("should consume chat tokens after resume parsing", async () => {
+      const file = new File([Buffer.from("test pdf content")], "test.pdf", {
+        type: "application/pdf"
+      })
+
+      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
+        mockUploadResult
+      )
+      vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue({
+        id: "pass-123"
+      } as never)
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
+        resumeData: mockResumeData,
+        language: "en",
+        tokenUsage: {
+          inputTokens: 100,
+          outputTokens: 80,
+          cachedTokens: 20,
+          reasoningTokens: 0,
+          totalTokens: 200
+        }
+      })
+      vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
+        mockCreateResumeRecordResult
+      )
+
+      const request = createMockRequest(file, mockJobInfo)
+      const responsePromise = POST(request)
+
+      await wait(5000)
+
+      const response = await responsePromise
+
+      expect(response.status).toBe(200)
+      expect(quotaModule.getActiveAccessPass).toHaveBeenCalledWith("user-123")
+      expect(quotaModule.verifyChatTokenQuota).toHaveBeenCalledWith(0, 0)
+      expect(quotaModule.consumeChatTokens).toHaveBeenCalledWith(
+        "pass-123",
+        200
       )
     })
   })
@@ -290,7 +376,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       })
 
       expect(resumeModule.uploadResumeFile).not.toHaveBeenCalled()
-      expect(resumeParser.parseResume).not.toHaveBeenCalled()
+      expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
       expect(resumeModule.createResumeRecord).not.toHaveBeenCalled()
     })
   })
@@ -350,7 +436,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       const lastMessage = sentData[sentData.length - 1]
       expect(lastMessage).toEqual({ error: "Upload failed" })
 
-      expect(resumeParser.parseResume).not.toHaveBeenCalled()
+      expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
       expect(resumeModule.createResumeRecord).not.toHaveBeenCalled()
     })
 
@@ -364,7 +450,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
         mockUploadResult
       )
-      vi.mocked(resumeParser.parseResume).mockRejectedValue(
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockRejectedValue(
         new Error("Parsing failed")
       )
 
@@ -395,10 +481,17 @@ describe("POST /api/resume/upload-and-analyze", () => {
       vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
         mockUploadResult
       )
-      vi.mocked(resumeParser.parseResume).mockResolvedValue([
-        mockResumeData,
-        "en"
-      ])
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
+        resumeData: mockResumeData,
+        language: "en",
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cachedTokens: 0,
+          reasoningTokens: 0,
+          totalTokens: 0
+        }
+      })
       vi.mocked(resumeModule.createResumeRecord).mockRejectedValue(
         new Error("Database error")
       )
@@ -430,10 +523,17 @@ describe("POST /api/resume/upload-and-analyze", () => {
       vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
         mockUploadResult
       )
-      vi.mocked(resumeParser.parseResume).mockResolvedValue([
-        mockResumeData,
-        "en"
-      ])
+      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
+        resumeData: mockResumeData,
+        language: "en",
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cachedTokens: 0,
+          reasoningTokens: 0,
+          totalTokens: 0
+        }
+      })
       vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
