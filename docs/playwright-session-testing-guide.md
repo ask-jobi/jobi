@@ -21,6 +21,8 @@ export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 ```
 
+如果环境里已经配置好了 `PWCLI`，后续命令应直接复用，不要在每次调用前重复拼接 `export CODEX_HOME=...; export PWCLI=...`。
+
 ## 建议流程
 
 每次检查都尽量按这个顺序：
@@ -40,6 +42,13 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 "$PWCLI" --session ui-check console
 "$PWCLI" --session ui-check screenshot
 ```
+
+## 执行约束
+
+- 优先使用已配置好的 `PWCLI` 执行 Playwright CLI。
+- 如果 `PWCLI` 已可用，不要为单次命令重复追加环境变量导出前缀。
+- 如果 `PWCLI` 调用失败，先报告具体错误并停止，不要自动 fallback 到 `node <<'NODE'`、临时脚本或直接调用 `@playwright/test`。
+- 只有用户明确要求编写或运行 Playwright test 文件时，才切换到 `@playwright/test` 工作流。
 
 ## 优先检查页面
 
