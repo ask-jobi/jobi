@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og"
 import { NextRequest } from "next/server"
 import { ResumeData } from "@/types/resume"
 import { createClient } from "@/lib/supabase/server"
+import { getResumeThumbnailSections } from "@/lib/resume-thumbnail"
 
 export const runtime = "edge"
 
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     const parsedData: ResumeData = resumeData.resume_json!!
+    const sections = getResumeThumbnailSections(parsedData)
 
     return new ImageResponse(
       <div
@@ -41,7 +43,6 @@ export async function GET(request: NextRequest) {
           lineHeight: "1.4"
         }}
       >
-        {/* 个人信息 */}
         <div
           style={{
             display: "flex",
@@ -68,131 +69,15 @@ export async function GET(request: NextRequest) {
           </p>
         </div>
 
-        {/* 教育经历 */}
-        {parsedData.education?.blocks &&
-          parsedData.education.blocks.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                marginBottom: "16px"
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  margin: "0 0 8px 0",
-                  color: "#1a1a1a",
-                  borderBottom: "2px solid #e5e5e5",
-                  paddingBottom: "4px"
-                }}
-              >
-                {parsedData.education.title}
-              </h2>
-              {parsedData.education.blocks.map((block, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    marginBottom: "8px"
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "4px"
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        margin: 0
-                      }}
-                    >
-                      {block.school}
-                    </h3>
-                    <span style={{ fontSize: "12px", color: "#666" }}>
-                      {block.start} - {block.end}
-                    </span>
-                  </div>
-                  <p
-                    style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}
-                  >
-                    {block.degree}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-        {/* 工作经历 */}
-        {parsedData.employment?.blocks &&
-          parsedData.employment.blocks.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                marginBottom: "16px"
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  margin: "0 0 8px 0",
-                  color: "#1a1a1a",
-                  borderBottom: "2px solid #e5e5e5",
-                  paddingBottom: "4px"
-                }}
-              >
-                {parsedData.employment.title}
-              </h2>
-              {parsedData.employment.blocks.map((block, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    marginBottom: "8px"
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "4px"
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        margin: 0
-                      }}
-                    >
-                      {block.company}
-                    </h3>
-                    <span style={{ fontSize: "12px", color: "#666" }}>
-                      {block.start} - {block.end}
-                    </span>
-                  </div>
-                  <p
-                    style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}
-                  >
-                    {block.jobTitle}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-        {/* 技能 */}
-        {parsedData.skills?.blocks && parsedData.skills.blocks.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+        {sections.map((section) => (
+          <div
+            key={section.id}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              marginBottom: "16px"
+            }}
+          >
             <h2
               style={{
                 fontSize: "16px",
@@ -203,46 +88,73 @@ export async function GET(request: NextRequest) {
                 paddingBottom: "4px"
               }}
             >
-              {parsedData.skills.title}
+              {section.title}
             </h2>
-            {parsedData.skills.blocks.map((block, index) => (
+
+            {section.blocks.map((block, index) => (
               <div
-                key={index}
+                key={`${section.id}-${index}`}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   marginBottom: "8px"
                 }}
               >
-                <h3
+                <div
                   style={{
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    margin: "0 0 4px 0"
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "4px"
                   }}
                 >
-                  {block.group}
-                </h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                  {block.content.split(",").map((skill, skillIndex) => (
-                    <span
-                      key={skillIndex}
-                      style={{
-                        fontSize: "10px",
-                        backgroundColor: "#f0f0f0",
-                        padding: "2px 6px",
-                        borderRadius: "12px",
-                        color: "#666"
-                      }}
-                    >
-                      {skill.trim()}
+                  <h3
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      margin: 0
+                    }}
+                  >
+                    {block.heading}
+                  </h3>
+                  {block.meta && (
+                    <span style={{ fontSize: "12px", color: "#666" }}>
+                      {block.meta}
                     </span>
-                  ))}
+                  )}
                 </div>
+
+                {block.subheading && (
+                  <p
+                    style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}
+                  >
+                    {block.subheading}
+                  </p>
+                )}
+
+                {block.tags && block.tags.length > 0 && (
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
+                  >
+                    {block.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        style={{
+                          fontSize: "10px",
+                          backgroundColor: "#f0f0f0",
+                          padding: "2px 6px",
+                          borderRadius: "12px",
+                          color: "#666"
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        )}
+        ))}
       </div>,
       {
         width: 600,
