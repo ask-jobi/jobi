@@ -216,7 +216,7 @@
     "addSection": "添加板块",
     "emptyHint": "从添加第一个板块开始搭建这份简历。",
     "popoverTitle": "添加板块",
-    "popoverDescription": "选择一个可选板块加入当前简历。",
+    "popoverDescription": "选择一个板块开始填写或继续编辑。",
     "emptyPopoverDescription": "选择你想先开始填写的部分。",
     "startWith": "从这里开始",
     "personalInfoSection": "个人信息"

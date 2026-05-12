@@ -18,18 +18,11 @@ import {
   useResume,
   useResumeLanguage
 } from "@/lib/store/resume"
-import {
-  OPTIONAL_SECTION_IDS,
-  REQUIRED_SECTION_IDS
-} from "@/lib/templates/section-definitions"
+import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
+import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
 import { addSection } from "@/lib/templates/section-helpers"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
-
-type OptionalSectionAction = {
-  sectionId: SortableSectionId
-  action: "add" | "open"
-}
 
 const QUICK_START_SECTIONS: SectionId[] = [
   "personalInfo",
@@ -84,23 +77,8 @@ export function ResumeCanvasSectionEntry() {
     null
   )
 
-  const optionalSectionActions = useMemo(
-    (): OptionalSectionAction[] =>
-      OPTIONAL_SECTION_IDS.flatMap((sectionId): OptionalSectionAction[] => {
-        const currentResume = resumeData ?? getValues()
-        const section = currentResume[sectionId]
-        const isInOrder = currentResume.sectionOrder.includes(sectionId)
-
-        if (!section || !isInOrder) {
-          return [{ sectionId, action: "add" as const }]
-        }
-
-        if (section.blocks.length === 0) {
-          return [{ sectionId, action: "open" as const }]
-        }
-
-        return []
-      }),
+  const sectionActions = useMemo(
+    () => getSectionEntryActions(resumeData ?? getValues()),
     [getValues, resumeData]
   )
 
@@ -125,7 +103,7 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  if (!isEmpty && optionalSectionActions.length === 0) {
+  if (!isEmpty && sectionActions.length === 0) {
     return null
   }
 
@@ -239,7 +217,7 @@ export function ResumeCanvasSectionEntry() {
           )}
           {!isEmpty && (
             <div className="space-y-2">
-              {optionalSectionActions.map(({ sectionId, action }) => (
+              {sectionActions.map(({ sectionId, action }) => (
                 <Button
                   key={`${sectionId}-${action}`}
                   type="button"
