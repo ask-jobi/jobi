@@ -145,19 +145,19 @@ export const openRightPanelAtom = atom(
   }
 )
 
+export const showRightPanelAtom = atom(
+  null,
+  (_get, set, view: "form" | "evaluation" | "chat" = "form") => {
+    set(rightPanelViewAtom, view)
+    set(isRightPanelCollapsedAtom, false)
+  }
+)
+
 export const focusSectionAtom = atom(
   null,
   (get, set, id: string, index?: number) => {
     set(selectedSectionIdAtom, id)
-    let sectionId = `section-${id}`
     const formSectionId = `form-${id}-${index}`
-    if (index && index > 0) {
-      sectionId = `section-${id}-${index}`
-    }
-    const sectionElement = document.getElementById(sectionId)
-    if (sectionElement) {
-      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
     setTimeout(() => {
       const formElement = document.getElementById(formSectionId)
       if (formElement) {
