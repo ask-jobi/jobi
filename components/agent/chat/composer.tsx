@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { ArrowUpIcon, SquareIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { ChatTokenUsage } from "./chat-token-usage"
 import { useResume } from "@/lib/store/resume"
 import {
   useSetPendingChatAction,
@@ -55,7 +54,7 @@ export function Composer({ lifecycle }: ComposerProps) {
 
   return (
     <ComposerPrimitive.Root
-      className="aui-composer-root relative flex w-full flex-col gap-2"
+      className="aui-composer-root relative flex w-full flex-col"
       onSubmit={handleSubmit}
     >
       <div className="relative">
@@ -93,7 +92,6 @@ export function Composer({ lifecycle }: ComposerProps) {
           </AuiIf>
         </div>
       </div>
-      <ChatTokenUsage />
     </ComposerPrimitive.Root>
   )
 }

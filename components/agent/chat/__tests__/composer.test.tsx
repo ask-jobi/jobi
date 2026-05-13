@@ -39,10 +39,6 @@ vi.mock("@/lib/store/chat", () => ({
   useSetPendingChatAction: () => mockSetPendingChatAction
 }))
 
-vi.mock("../chat-token-usage", () => ({
-  ChatTokenUsage: () => <div>token-usage</div>
-}))
-
 vi.mock("@assistant-ui/react", () => ({
   ComposerPrimitive: {
     Root: ({

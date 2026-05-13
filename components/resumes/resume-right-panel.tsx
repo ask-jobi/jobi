@@ -68,8 +68,8 @@ export function ResumeRightPanel() {
   return (
     <>
       {rightPanelView === "chat" && (
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col bg-background">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <ChatInterface className="h-full" />
           </div>
         </div>

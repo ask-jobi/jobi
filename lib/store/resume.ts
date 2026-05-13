@@ -14,6 +14,7 @@ import type {
 } from "@/types/chat"
 import { toast } from "sonner"
 import { saveResumeChange } from "@/server/resume"
+import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
 
 export const applicationAtom = atom<JobApplication | null>(null)
 export const resumeDataAtom = atom(
@@ -294,6 +295,7 @@ export function useResume() {
     } else {
       setResumeEvaluation(result)
       setEvaluationRefreshFlag(false)
+      notifyTokenBalanceUpdated()
     }
   }
 

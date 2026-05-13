@@ -60,6 +60,7 @@
   "overallOptimized": "Overall Optimized",
 
   "currentPlan": "Current Plan",
+  "tokenHeader": "Token",
   "tokenTotal": "Token Total",
   "tokenUsed": "Token Used",
   "tokenRemaining": "Token Remaining",

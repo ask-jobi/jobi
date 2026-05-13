@@ -60,6 +60,7 @@
   "overallOptimized": "整体优化额度",
 
   "currentPlan": "当前套餐",
+  "tokenHeader": "Token",
   "tokenTotal": "Token 总量",
   "tokenUsed": "Token 已用",
   "tokenRemaining": "Token 剩余",
