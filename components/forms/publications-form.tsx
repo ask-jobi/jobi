@@ -8,7 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ResumeData } from "@/types/resume"
 
-export function PublicationsForm() {
+interface PublicationsFormProps {
+  focusIndex?: number | null
+}
+
+export function PublicationsForm({
+  focusIndex = null
+}: PublicationsFormProps) {
   const { control, register } = useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -24,9 +30,19 @@ export function PublicationsForm() {
     })
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
+    <div
+      id="form-publications"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => (
         <div
           id={`form-publications-${blockIndex}`}
           key={field.id}
@@ -62,15 +78,17 @@ export function PublicationsForm() {
         </div>
       ))}
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-4 w-full"
-        onClick={handleAddBlock}
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Publication
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-4 w-full"
+          onClick={handleAddBlock}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Publication
+        </Button>
+      )}
     </div>
   )
 }

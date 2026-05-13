@@ -1,10 +1,11 @@
-// SectionBlocks.tsx（改造版）
 import React from "react"
 import type {
   ResumeData,
   SectionBlock,
   SortableSectionId
 } from "@/types/resume"
+import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
+import { cn } from "@/lib/utils"
 
 type ExtractBlock<ID extends SortableSectionId> =
   NonNullable<ResumeData[ID]> extends SectionBlock<infer B> ? B : never
@@ -55,7 +56,7 @@ export function SectionBlocks<ID extends SortableSectionId>({
   const content = (
     <div
       id={`section-${sectionId}`}
-      className={`mb-5 p-2 ${sectionClassName}`}
+      className={cn("mb-5 rounded-xl p-3", sectionClassName)}
       style={sectionStyle}
     >
       {titleRender ? (
@@ -70,16 +71,17 @@ export function SectionBlocks<ID extends SortableSectionId>({
         <div
           key={index}
           id={`section-${sectionId}-${index}`}
-          className={`mb-4 ${
-            isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""
-          }`}
-          onClick={() => {
-            if (isInteractive) {
-              onBlockClick?.(sectionId, index)
-            }
-          }}
-          tabIndex={isInteractive ? 0 : undefined}
+          className={cn(
+            "group/resume-section relative mb-4 rounded-lg p-2 transition-colors",
+            isInteractive && "hover:bg-muted/40 focus-within:bg-muted/40"
+          )}
         >
+          {isInteractive && onBlockClick && (
+            <ResumeSectionEditAction
+              className="-right-26"
+              onClick={() => onBlockClick(sectionId, index)}
+            />
+          )}
           <div id={`${sectionId}-${index}-head`}>
             {headRender(block as ExtractBlock<ID>, index)}
           </div>

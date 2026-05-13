@@ -2,13 +2,14 @@
 
 import React from "react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ResumeData, SortableSectionId } from "@/types/resume"
+import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
 import { SectionBlocks } from "@/components/resume-templates/section-blocks"
 import "./default-template.css"
 import ResumeSkeleton from "../skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
+import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
 
 interface Props {
   data: ResumeData | null
@@ -22,7 +23,7 @@ const renderers: Record<
     data: ResumeData,
     language: Locale,
     isInteractive?: boolean,
-    onSectionClick?: (id: keyof ResumeData, index?: number) => void
+    onSectionClick?: (id: SectionId, index?: number) => void
   ) => React.ReactElement | null
 > = {
   education: (data, language, isInteractive, onSectionClick) => (
@@ -230,9 +231,18 @@ export const DefaultTemplate: React.FC<Props> = ({
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
       {/* Header */}
       <div
-        onClick={() => onSectionClick?.("personalInfo")}
-        className={isInteractive ? "hover:bg-gray-200 cursor-pointer" : ""}
+        className={
+          isInteractive
+            ? "group/resume-section relative rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40"
+            : ""
+        }
       >
+        {isInteractive && onSectionClick && (
+          <ResumeSectionEditAction
+            className="-right-26"
+            onClick={() => onSectionClick("personalInfo")}
+          />
+        )}
         <h1 className="text-2xl font-bold mb-1">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
         </h1>

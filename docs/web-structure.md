@@ -186,11 +186,11 @@
 
 - 左侧：A4 简历预览区
 - 中间偏右：浮动操作按钮组
-- 右侧：可折叠面板
+- 右侧：工作面板
+- 区块编辑：通过 hover 后的编辑按钮打开弹窗
 
-右侧面板有三种视图：
+右侧面板有两种主视图：
 
-- `form`
 - `evaluation`
 - `chat`
 
@@ -198,7 +198,9 @@
 
 #### 左侧简历预览
 
-- 点击简历 section 会切换右侧到 `form`
+- hover 简历中的单个 block 会显示 `Edit Section / 编辑区块` 按钮
+- 点击编辑按钮会打开对应 section 的 modal 表单，并定位到该 block
+- `personalInfo` 这类没有 blocks 的区域仍保留整块编辑入口
 - section DOM id 规则：
   - `section-personalInfo`
   - `section-education`
@@ -214,9 +216,9 @@
 - 奖杯按钮：打开右侧 `evaluation`
 - 下载按钮：导出 PDF，调用 `/api/resume/print`
 
-#### 右侧表单视图
+#### Section 编辑弹窗
 
-点击 section 后，右侧会打开对应表单：
+点击 section 的编辑按钮后，会打开对应表单：
 
 - `personalInfo`
   - First Name

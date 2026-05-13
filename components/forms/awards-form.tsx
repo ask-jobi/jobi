@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ResumeData } from "@/types/resume"
 
-export function AwardsForm() {
+interface AwardsFormProps {
+  focusIndex?: number | null
+}
+
+export function AwardsForm({ focusIndex = null }: AwardsFormProps) {
   const { control, register } = useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -25,9 +29,19 @@ export function AwardsForm() {
     })
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
+    <div
+      id="form-awards"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => (
         <div
           id={`form-awards-${blockIndex}`}
           key={field.id}
@@ -69,15 +83,17 @@ export function AwardsForm() {
         </div>
       ))}
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-4 w-full"
-        onClick={handleAddBlock}
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Award
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-4 w-full"
+          onClick={handleAddBlock}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Award
+        </Button>
+      )}
     </div>
   )
 }

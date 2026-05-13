@@ -1,7 +1,6 @@
 import React from "react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ResumeData } from "@/types/resume"
-import type { SortableSectionId } from "@/types/resume"
+import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 import { DefaultTemplate } from "@/components/resume-templates/default-template"
 import { ModernTemplate } from "@/components/resume-templates/modern-template"
 import {
@@ -12,7 +11,7 @@ import {
 
 export interface TemplateOptions {
   isInteractive?: boolean
-  onSectionClick?: (id: keyof ResumeData, index?: number) => void
+  onSectionClick?: (id: SectionId, index?: number) => void
 }
 
 export type ResumeTemplateComponent = React.ComponentType<{

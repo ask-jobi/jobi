@@ -1,11 +1,12 @@
-import { atom, useAtom, useSetAtom } from "jotai"
+import { atom, useAtom } from "jotai"
 import {
   ResumeData,
   JobApplication,
   ResumeMetadata,
   ResumeJobDescription,
   SortableSectionId,
-  SectionBlock
+  SectionBlock,
+  SectionId
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type {
@@ -126,16 +127,49 @@ export const evaluationRefreshFlagAtom = atom(
 )
 
 export const isLoadingAtom = atom(false)
-export const selectedSectionIdAtom = atom<string | null>(null)
-export const rightPanelViewAtom = atom<"form" | "evaluation" | "chat">(
-  "evaluation"
-)
+export const selectedSectionIdAtom = atom<SectionId | null>(null)
+export const selectedBlockIdAtom = atom<string | null>(null)
+export const selectedBlockIndexAtom = atom((get) => {
+  const selectedSectionId = get(selectedSectionIdAtom)
+  const selectedBlockId = get(selectedBlockIdAtom)
+  const resumeData = get(resumeDataAtom)
+
+  if (!selectedSectionId || !selectedBlockId || !resumeData) {
+    return null
+  }
+
+  const section = resumeData[selectedSectionId]
+
+  if (!section || !("blocks" in section)) {
+    return null
+  }
+
+  const blockIndex = section.blocks.findIndex(
+    (block: { blockId: string }) => block.blockId === selectedBlockId
+  )
+
+  return blockIndex >= 0 ? blockIndex : null
+})
+export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
+export const editModalOpenAtom = atom(false)
 
 export const focusSectionAtom = atom(
   null,
-  (get, set, id: string, index?: number) => {
+  (get, set, id: SectionId, index?: number) => {
+    const resumeData = get(resumeDataAtom)
     set(selectedSectionIdAtom, id)
-    const formSectionId = `form-${id}-${index}`
+    if (typeof index === "number" && resumeData) {
+      const section = resumeData[id]
+      if (section && "blocks" in section) {
+        set(selectedBlockIdAtom, section.blocks[index]?.blockId ?? null)
+      } else {
+        set(selectedBlockIdAtom, null)
+      }
+    } else {
+      set(selectedBlockIdAtom, null)
+    }
+    const formSectionId =
+      typeof index === "number" ? `form-${id}-${index}` : `form-${id}`
     setTimeout(() => {
       const formElement = document.getElementById(formSectionId)
       if (formElement) {
@@ -156,12 +190,10 @@ export function useResume() {
   const [application] = useAtom(applicationAtom)
   const [jobDescription, setJobDescription] = useAtom(jobAtom)
   const [isLoading, setLoading] = useAtom(isLoadingAtom)
-  const [selectedSectionId] = useAtom(selectedSectionIdAtom)
   const [resumeEvaluation, setResumeEvaluation] = useAtom(resumeEvaluationAtom)
   const [evaluationRefreshFlag, setEvaluationRefreshFlag] = useAtom(
     evaluationRefreshFlagAtom
   )
-  const handleSectionClick = useSetAtom(focusSectionAtom)
 
   const updateResumeData = (data: ResumeData) => setResumeData(data)
 
@@ -284,8 +316,6 @@ export function useResume() {
     updateResumeData,
     updateResumeDataWithSave,
     updateResumeByToolOutput,
-    selectedSectionId,
-    handleSectionClick,
     resumeEvaluation,
     setResumeEvaluation,
     jobDescription,

@@ -10,7 +10,11 @@ import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form
 import { MarkdownModal } from "@/components/ui/markdown-modal"
 import { ResumeData } from "@/types/resume"
 
-export function ProjectsForm() {
+interface ProjectsFormProps {
+  focusIndex?: number | null
+}
+
+export function ProjectsForm({ focusIndex = null }: ProjectsFormProps) {
   const { control, register, setValue, getValues } =
     useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
@@ -55,9 +59,19 @@ export function ProjectsForm() {
     }
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
+    <div
+      id="form-projects"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => (
         <div
           id={`form-projects-${blockIndex}`}
           key={field.id}
@@ -107,15 +121,17 @@ export function ProjectsForm() {
         </div>
       ))}
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-4 w-full"
-        onClick={handleAddBlock}
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Project
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-4 w-full"
+          onClick={handleAddBlock}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Project
+        </Button>
+      )}
 
       <MarkdownModal
         isOpen={editingBlockIndex !== null}

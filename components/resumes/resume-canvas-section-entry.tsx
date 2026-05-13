@@ -12,8 +12,8 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover"
 import {
-  rightPanelViewAtom,
-  selectedSectionIdAtom,
+  editModalOpenAtom,
+  focusSectionAtom,
   useResume,
   useResumeLanguage
 } from "@/lib/store/resume"
@@ -68,8 +68,8 @@ export function ResumeCanvasSectionEntry() {
   const { getValues, reset } = useFormContext<ResumeData>()
   const { resumeData, updateResumeDataWithSave } = useResume()
   const resumeLanguage = useResumeLanguage()
-  const setRightPanelView = useSetAtom(rightPanelViewAtom)
-  const setSelectedSectionId = useSetAtom(selectedSectionIdAtom)
+  const openSectionEditor = useSetAtom(focusSectionAtom)
+  const setEditModalOpen = useSetAtom(editModalOpenAtom)
   const [open, setOpen] = useState(false)
   const [pendingSectionId, setPendingSectionId] = useState<SectionId | null>(
     null
@@ -105,8 +105,9 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  const openFormPanel = () => {
-    setRightPanelView("form")
+  const openEditModal = (sectionId: SectionId) => {
+    openSectionEditor(sectionId)
+    setEditModalOpen(true)
   }
 
   const handleOpenSection = async (sectionId: SectionId) => {
@@ -118,8 +119,7 @@ export function ResumeCanvasSectionEntry() {
       await updateResumeDataWithSave(nextResume)
     }
 
-    setSelectedSectionId(sectionId)
-    openFormPanel()
+    openEditModal(sectionId)
     setOpen(false)
     setPendingSectionId(null)
   }
@@ -129,8 +129,7 @@ export function ResumeCanvasSectionEntry() {
     const nextResume = addSection(getValues(), sectionId, resumeLanguage)
     reset(nextResume)
     await updateResumeDataWithSave(nextResume)
-    setSelectedSectionId(sectionId)
-    openFormPanel()
+    openEditModal(sectionId)
     setOpen(false)
     setPendingSectionId(null)
   }

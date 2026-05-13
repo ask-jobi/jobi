@@ -8,7 +8,7 @@ export function PersonalInfoForm() {
   const { register } = useFormContext<ResumeData>()
 
   return (
-    <div className="space-y-4">
+    <div id="form-personalInfo" className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">First Name</label>

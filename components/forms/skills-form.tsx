@@ -9,7 +9,11 @@ import { InputTags } from "@/components/ui/input-tags"
 import React from "react"
 import { nanoid } from "nanoid"
 
-export function SkillsForm() {
+interface SkillsFormProps {
+  focusIndex?: number | null
+}
+
+export function SkillsForm({ focusIndex = null }: SkillsFormProps) {
   const { control, register, setValue } = useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -28,9 +32,19 @@ export function SkillsForm() {
     remove(index)
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => {
+    <div
+      id="form-skills"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => {
         return (
           <div
             id={`form-skills-${blockIndex}`}
@@ -76,15 +90,17 @@ export function SkillsForm() {
           </div>
         )
       })}
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full mt-4"
-        onClick={handleAddBlock}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Skill Group
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full mt-4"
+          onClick={handleAddBlock}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Skill Group
+        </Button>
+      )}
     </div>
   )
 }

@@ -10,7 +10,11 @@ import { useState } from "react"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
 import { nanoid } from "nanoid"
 
-export function EmploymentForm() {
+interface EmploymentFormProps {
+  focusIndex?: number | null
+}
+
+export function EmploymentForm({ focusIndex = null }: EmploymentFormProps) {
   const { control, register, setValue, getValues } =
     useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
@@ -53,9 +57,19 @@ export function EmploymentForm() {
     }
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
+    <div
+      id="form-employment"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => (
         <div
           id={`form-employment-${blockIndex}`}
           key={field.id}
@@ -108,15 +122,17 @@ export function EmploymentForm() {
           </div>
         </div>
       ))}
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full mt-4"
-        onClick={handleAddBlock}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Experience
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full mt-4"
+          onClick={handleAddBlock}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Experience
+        </Button>
+      )}
 
       <MarkdownModal
         isOpen={editingBlockIndex !== null}

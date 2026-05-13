@@ -13,15 +13,6 @@ import {
 } from "../ui/empty"
 import { Spinner } from "../ui/spinner"
 import { useTranslations } from "next-intl"
-import { PersonalInfoForm } from "@/components/forms/personal-info-form"
-import { EducationForm } from "@/components/forms/education-form"
-import { EmploymentForm } from "@/components/forms/employment-form"
-import { SkillsForm } from "@/components/forms/skills-form"
-import { ProjectsForm } from "@/components/forms/projects-form"
-import { ResearchForm } from "@/components/forms/research-form"
-import { PublicationsForm } from "@/components/forms/publications-form"
-import { AwardsForm } from "@/components/forms/awards-form"
-import { CertificationsForm } from "@/components/forms/certifications-form"
 import { ChatInterface } from "@/components/agent/chat-interface"
 import { useChatSession } from "@/lib/hooks/use-chat-session"
 import { cn } from "@/lib/utils"
@@ -29,49 +20,11 @@ import { cn } from "@/lib/utils"
 export function ResumeRightPanel() {
   const [rightPanelView, setRightPanelView] = useAtom(rightPanelViewAtom)
   const [loading, setLoading] = useState(false)
-  const { selectedSectionId, resumeEvaluation, refreshEvaluationReport } =
-    useResume()
+  const { resumeEvaluation, refreshEvaluationReport } = useResume()
   const t = useTranslations("rightPanel")
   const commonT = useTranslations()
-  const sectionT = useTranslations("chat.toolOutput.entity")
   const evaluationT = useTranslations("evaluation")
   useChatSession()
-
-  const selectedSectionLabel = selectedSectionId
-    ? sectionT(selectedSectionId as Parameters<typeof sectionT>[0])
-    : null
-
-  const renderSelectedSectionForm = () => {
-    switch (selectedSectionId) {
-      case "personalInfo":
-        return <PersonalInfoForm />
-      case "education":
-        return <EducationForm />
-      case "employment":
-        return <EmploymentForm />
-      case "skills":
-        return <SkillsForm />
-      case "projects":
-        return <ProjectsForm />
-      case "research":
-        return <ResearchForm />
-      case "publications":
-        return <PublicationsForm />
-      case "awards":
-        return <AwardsForm />
-      case "certifications":
-        return <CertificationsForm />
-      default:
-        return (
-          <Empty className="min-h-[280px] w-full justify-center rounded-xl border border-dashed bg-muted/35 px-6">
-            <EmptyHeader>
-              <EmptyTitle>{t("formEmptyTitle")}</EmptyTitle>
-              <EmptyDescription>{t("formEmptyDescription")}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )
-    }
-  }
 
   const handleCreateEvaluationReport = async () => {
     setLoading(true)
@@ -131,10 +84,6 @@ export function ResumeRightPanel() {
                   ? evaluationT("refreshEvaluation")
                   : t("evaluateResume")}
               </Button>
-            ) : rightPanelView === "form" && selectedSectionLabel ? (
-              <div className="rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground">
-                {selectedSectionLabel}
-              </div>
             ) : null}
           </div>
         </div>
@@ -189,21 +138,6 @@ export function ResumeRightPanel() {
                     </EmptyContent>
                   </Empty>
                 )}
-              </div>
-            )}
-            {rightPanelView === "form" && (
-              <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-                {selectedSectionLabel && (
-                  <div className="mb-4 border-b pb-3">
-                    <div className="text-base font-semibold">
-                      {selectedSectionLabel}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {t("formDescription")}
-                    </div>
-                  </div>
-                )}
-                {renderSelectedSectionForm()}
               </div>
             )}
           </div>

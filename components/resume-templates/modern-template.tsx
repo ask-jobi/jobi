@@ -8,6 +8,7 @@ import { SectionBlocks } from "@/components/resume-templates/section-blocks"
 import ResumeSkeleton from "@/components/skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
+import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
 
 interface Props {
   data: ResumeData | null
@@ -33,11 +34,16 @@ export const ModernTemplate: React.FC<Props> = ({
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
       {/* Header */}
       <div
-        className={`border-b-2 border-gray-800 pb-4 mb-6 ${
-          isInteractive ? "hover:bg-gray-100 cursor-pointer" : ""
+        className={`group/resume-section relative mb-6 border-b-2 border-gray-800 pb-4 ${
+          isInteractive ? "rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40" : ""
         }`}
-        onClick={() => onSectionClick?.("personalInfo")}
       >
+        {isInteractive && onSectionClick && (
+          <ResumeSectionEditAction
+            className="-right-26"
+            onClick={() => onSectionClick("personalInfo")}
+          />
+        )}
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
         </h1>

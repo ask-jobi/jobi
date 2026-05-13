@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ResumeData } from "@/types/resume"
 
-export function CertificationsForm() {
+interface CertificationsFormProps {
+  focusIndex?: number | null
+}
+
+export function CertificationsForm({
+  focusIndex = null
+}: CertificationsFormProps) {
   const { control, register } = useFormContext<ResumeData>()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -23,9 +29,19 @@ export function CertificationsForm() {
     })
   }
 
+  const visibleFields =
+    typeof focusIndex === "number"
+      ? fields
+          .map((field, blockIndex) => ({ field, blockIndex }))
+          .filter(({ blockIndex }) => blockIndex === focusIndex)
+      : fields.map((field, blockIndex) => ({ field, blockIndex }))
+
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
+    <div
+      id="form-certifications"
+      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
+    >
+      {visibleFields.map(({ field, blockIndex }) => (
         <div
           id={`form-certifications-${blockIndex}`}
           key={field.id}
@@ -63,15 +79,17 @@ export function CertificationsForm() {
         </div>
       ))}
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-4 w-full"
-        onClick={handleAddBlock}
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Certification
-      </Button>
+      {focusIndex === null && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-4 w-full"
+          onClick={handleAddBlock}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Certification
+        </Button>
+      )}
     </div>
   )
 }
