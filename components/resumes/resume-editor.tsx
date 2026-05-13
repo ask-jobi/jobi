@@ -3,7 +3,6 @@
 import { useResume } from "@/lib/store/resume"
 import { useResumeTemplate } from "@/lib/hooks/use-resume-template"
 import { useSectionClickHandler } from "@/lib/hooks/use-section-click"
-import { FloatingButtonGroup } from "@/components/client-components/floating-button-group"
 import { useResumeLanguage } from "@/lib/store/resume"
 import {
   isResumeCanvasEmpty,
@@ -36,9 +35,6 @@ export function ResumeEditor() {
             }}
           />
         )}
-      </div>
-      <div className="sticky left-[calc(50%+205mm/2)] top-[20%] -translate-y-1/2">
-        <FloatingButtonGroup />
       </div>
     </div>
   )

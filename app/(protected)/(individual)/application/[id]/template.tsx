@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { ApplicationTokenUsage } from "@/components/application/application-token-usage"
+import { ResumeExportButton } from "@/components/resumes/resume-export-button"
 
 type NavigationLink = {
   href: string
@@ -31,6 +32,7 @@ function ApplicationTemplate({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const segment = useSelectedLayoutSegment()
   const [navigationLinks, setNavigationLinks] = useState(defaultNavigationLinks)
+  const isResumePage = segment === "resume"
 
   const handleGoBack = () => {
     router.replace(`/dashboard`)
@@ -79,8 +81,13 @@ function ApplicationTemplate({ children }: { children: React.ReactNode }) {
               </NavigationMenuList>
             </NavigationMenu>
           </div>
-          <div className="hidden sm:block">
-            <ApplicationTokenUsage />
+          <div className="flex items-center gap-2">
+            {isResumePage && (
+              <ResumeExportButton className="rounded-full" showLabel />
+            )}
+            <div className="hidden sm:block">
+              <ApplicationTokenUsage />
+            </div>
           </div>
         </div>
       </header>
