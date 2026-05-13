@@ -114,7 +114,7 @@ export default function ResumePage() {
               <Button
                 size="icon"
                 variant="outline"
-                className="absolute z-100 h-6 w-6 -left-3 top-[45%] hover:bg-gray-100 hover:bl-1 rounded-full cursor-pointer"
+                className="absolute z-10 h-6 w-6 -left-3 top-[45%] hover:bg-gray-100 hover:bl-1 rounded-full cursor-pointer"
                 onClick={toggleRightPanel}
               >
                 <PanelRightClose height="4px" width="4px" />
