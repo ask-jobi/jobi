@@ -130,29 +130,6 @@ export const selectedSectionIdAtom = atom<string | null>(null)
 export const rightPanelViewAtom = atom<"form" | "evaluation" | "chat">(
   "evaluation"
 )
-export const isRightPanelCollapsedAtom = atom(false)
-
-export const openRightPanelAtom = atom(
-  null,
-  (get, set, view: "form" | "evaluation" | "chat" = "form") => {
-    const isRightPanelCollapsed = get(isRightPanelCollapsedAtom)
-    const rightPanelView = get(rightPanelViewAtom)
-    if (rightPanelView !== view) {
-      set(rightPanelViewAtom, view)
-      set(isRightPanelCollapsedAtom, false)
-    } else {
-      set(isRightPanelCollapsedAtom, !isRightPanelCollapsed)
-    }
-  }
-)
-
-export const showRightPanelAtom = atom(
-  null,
-  (_get, set, view: "form" | "evaluation" | "chat" = "form") => {
-    set(rightPanelViewAtom, view)
-    set(isRightPanelCollapsedAtom, false)
-  }
-)
 
 export const focusSectionAtom = atom(
   null,

@@ -12,7 +12,6 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover"
 import {
-  isRightPanelCollapsedAtom,
   rightPanelViewAtom,
   selectedSectionIdAtom,
   useResume,
@@ -70,7 +69,6 @@ export function ResumeCanvasSectionEntry() {
   const { resumeData, updateResumeDataWithSave } = useResume()
   const resumeLanguage = useResumeLanguage()
   const setRightPanelView = useSetAtom(rightPanelViewAtom)
-  const setIsRightPanelCollapsed = useSetAtom(isRightPanelCollapsedAtom)
   const setSelectedSectionId = useSetAtom(selectedSectionIdAtom)
   const [open, setOpen] = useState(false)
   const [pendingSectionId, setPendingSectionId] = useState<SectionId | null>(
@@ -109,7 +107,6 @@ export function ResumeCanvasSectionEntry() {
 
   const openFormPanel = () => {
     setRightPanelView("form")
-    setIsRightPanelCollapsed(false)
   }
 
   const handleOpenSection = async (sectionId: SectionId) => {

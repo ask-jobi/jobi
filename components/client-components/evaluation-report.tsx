@@ -3,11 +3,9 @@
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import {
   AlertCircle,
-  Target,
   AlertTriangle,
   Sparkles,
   CheckCircle2,
@@ -15,7 +13,7 @@ import {
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { openRightPanelAtom, useResume } from "@/lib/store/resume"
+import { rightPanelViewAtom, useResume } from "@/lib/store/resume"
 import SkeletonCard from "../skeletons/skeleton-card"
 import { useSetAtom } from "jotai"
 import { useSetPendingChatAction } from "@/lib/store/chat"
@@ -30,7 +28,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const tChat = useTranslations("chat")
   const [loading, setLoading] = useState<boolean>(false)
   const { application, refreshEvaluationReport } = useResume()
-  const openRightPanel = useSetAtom(openRightPanelAtom)
+  const setRightPanelView = useSetAtom(rightPanelViewAtom)
   const setPendingChatAction = useSetPendingChatAction()
 
   const getGateStatus = (status: "pass" | "borderline" | "fail") => {
@@ -124,7 +122,7 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
       resumeId: application.resume.id,
       message: tChat("askToOptimizeResume")
     })
-    openRightPanel("chat")
+    setRightPanelView("chat")
   }
 
   return (

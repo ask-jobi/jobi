@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { EvaluationReport } from "../evaluation-report"
 
-const mockOpenRightPanel = vi.fn()
+const mockSetRightPanelView = vi.fn()
 const mockSetPendingChatAction = vi.fn()
 const mockTrackClickAiFullSuggestion = vi.fn()
 
@@ -23,7 +23,7 @@ vi.mock("jotai", async () => {
   const actual = await vi.importActual("jotai")
   return {
     ...actual,
-    useSetAtom: vi.fn(() => mockOpenRightPanel)
+    useSetAtom: vi.fn(() => mockSetRightPanelView)
   }
 })
 
@@ -39,7 +39,7 @@ vi.mock("@/lib/store/resume", async () => {
       },
       refreshEvaluationReport: vi.fn()
     }),
-    openRightPanelAtom: {}
+    rightPanelViewAtom: {}
   }
 })
 
@@ -70,7 +70,7 @@ describe("EvaluationReport", () => {
     fireEvent.click(screen.getByRole("button", { name: "oneClickOptimize" }))
 
     expect(mockTrackClickAiFullSuggestion).toHaveBeenCalled()
-    expect(mockOpenRightPanel).toHaveBeenCalledWith("chat")
+    expect(mockSetRightPanelView).toHaveBeenCalledWith("chat")
     expect(mockSetPendingChatAction).toHaveBeenCalledTimes(1)
     expect(mockSetPendingChatAction).toHaveBeenCalledWith(
       expect.objectContaining({
