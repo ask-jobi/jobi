@@ -1,6 +1,5 @@
 "use client"
 
-import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
@@ -14,7 +13,6 @@ import {
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { rightPanelViewAtom, useResume } from "@/lib/store/resume"
-import SkeletonCard from "../skeletons/skeleton-card"
 import { useSetAtom } from "jotai"
 import { useSetPendingChatAction } from "@/lib/store/chat"
 import { trackClickAiFullSuggestion } from "@/lib/user-tracking/user-tracking"
@@ -26,8 +24,7 @@ interface EvaluationReportProps {
 export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const t = useTranslations("evaluation")
   const tChat = useTranslations("chat")
-  const [loading, setLoading] = useState<boolean>(false)
-  const { application, refreshEvaluationReport } = useResume()
+  const { application } = useResume()
   const setRightPanelView = useSetAtom(rightPanelViewAtom)
   const setPendingChatAction = useSetPendingChatAction()
 
@@ -99,15 +96,6 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
     }
   }
 
-  const refreshEvaluation = async () => {
-    setLoading(true)
-    try {
-      await refreshEvaluationReport()
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleOptimizeViaChat = () => {
     if (!application?.resume.id) {
       return
@@ -128,166 +116,133 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        {!loading && (
-          <>
-            <Button onClick={refreshEvaluation} variant="outline">
-              {t("refreshEvaluation")}
-            </Button>
-            <Button
-              onClick={handleOptimizeViaChat}
-              className="flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              {t("oneClickOptimize")}
-            </Button>
-          </>
-        )}
+        <Button onClick={handleOptimizeViaChat} className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          {t("oneClickOptimize")}
+        </Button>
       </div>
 
-      {loading && (
-        <>
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </>
+      {/* Screening Readiness */}
+      {evaluation.gates && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("screeningReadiness")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* ATS Screening */}
+            <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+              <span className="text-sm font-medium">
+                {t("gates.atsScreening")}
+              </span>
+              <div className="flex items-center gap-2">
+                {getGateStatus(evaluation.gates.ats).icon}
+                <span
+                  className={`text-sm font-medium ${getGateStatus(evaluation.gates.ats).color}`}
+                >
+                  {getGateStatus(evaluation.gates.ats).label}
+                </span>
+              </div>
+            </div>
+
+            {/* HR 30-Second Scan */}
+            <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+              <span className="text-sm font-medium">{t("gates.hrScan")}</span>
+              <div className="flex items-center gap-2">
+                {getGateStatus(evaluation.gates.hr).icon}
+                <span
+                  className={`text-sm font-medium ${getGateStatus(evaluation.gates.hr).color}`}
+                >
+                  {getGateStatus(evaluation.gates.hr).label}
+                </span>
+              </div>
+            </div>
+
+            {/* Hiring Manager Fit */}
+            <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+              <span className="text-sm font-medium">
+                {t("gates.hiringManagerFit")}
+              </span>
+              <div className="flex items-center gap-2">
+                {getGateStatus(evaluation.gates.hiringManager).icon}
+                <span
+                  className={`text-sm font-medium ${getGateStatus(evaluation.gates.hiringManager).color}`}
+                >
+                  {getGateStatus(evaluation.gates.hiringManager).label}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {!loading && (
-        <>
-          {/* Screening Readiness */}
-          {evaluation.gates && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {t("screeningReadiness")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* ATS Screening */}
-                <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-                  <span className="text-sm font-medium">
-                    {t("gates.atsScreening")}
-                  </span>
+      {/* 差距分析 */}
+      {evaluation.gaps && evaluation.gaps.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("gaps")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {evaluation.gaps.map((gap, index) => (
+              <div key={index} className="p-3 bg-muted rounded-md space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {getGateStatus(evaluation.gates.ats).icon}
-                    <span
-                      className={`text-sm font-medium ${getGateStatus(evaluation.gates.ats).color}`}
-                    >
-                      {getGateStatus(evaluation.gates.ats).label}
+                    {getSeverityIcon(gap.severity)}
+                    <span className="text-sm font-medium">
+                      {t(`dimension.${gap.dimension}`)}
                     </span>
                   </div>
+                  <Badge className={getSeverityColor(gap.severity)}>
+                    {t(`severity.${gap.severity}`)}
+                  </Badge>
                 </div>
-
-                {/* HR 30-Second Scan */}
-                <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-                  <span className="text-sm font-medium">
-                    {t("gates.hrScan")}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {getGateStatus(evaluation.gates.hr).icon}
-                    <span
-                      className={`text-sm font-medium ${getGateStatus(evaluation.gates.hr).color}`}
-                    >
-                      {getGateStatus(evaluation.gates.hr).label}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Hiring Manager Fit */}
-                <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-                  <span className="text-sm font-medium">
-                    {t("gates.hiringManagerFit")}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {getGateStatus(evaluation.gates.hiringManager).icon}
-                    <span
-                      className={`text-sm font-medium ${getGateStatus(evaluation.gates.hiringManager).color}`}
-                    >
-                      {getGateStatus(evaluation.gates.hiringManager).label}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 差距分析 */}
-          {evaluation.gaps && evaluation.gaps.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("gaps")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {evaluation.gaps.map((gap, index) => (
-                  <div
-                    key={index}
-                    className="p-3 bg-muted rounded-md space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getSeverityIcon(gap.severity)}
-                        <span className="text-sm font-medium">
-                          {t(`dimension.${gap.dimension}`)}
-                        </span>
-                      </div>
-                      <Badge className={getSeverityColor(gap.severity)}>
-                        {t(`severity.${gap.severity}`)}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {gap.description}
+                <p className="text-sm text-muted-foreground">
+                  {gap.description}
+                </p>
+                {gap.evidence && (
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                      {t("evidence")}:
                     </p>
-                    {gap.evidence && (
-                      <div className="mt-2 pt-2 border-t border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">
-                          {t("evidence")}:
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {gap.evidence}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 改进建议 */}
-          {evaluation.actions && evaluation.actions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("actions")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {evaluation.actions.map((action, index) => (
-                  <div
-                    key={index}
-                    className="p-3 bg-muted rounded-md space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {t(`targetSection.${action.targetSection}`)}
-                        </span>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={getPriorityColor(action.priority)}
-                      >
-                        {t(`priority.${action.priority}`)}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {action.instruction}
+                    <p className="text-xs text-muted-foreground">
+                      {gap.evidence}
                     </p>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 改进建议 */}
+      {evaluation.actions && evaluation.actions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("actions")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {evaluation.actions.map((action, index) => (
+              <div key={index} className="p-3 bg-muted rounded-md space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {t(`targetSection.${action.targetSection}`)}
+                    </span>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={getPriorityColor(action.priority)}
+                  >
+                    {t(`priority.${action.priority}`)}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {action.instruction}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   )

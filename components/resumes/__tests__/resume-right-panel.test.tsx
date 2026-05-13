@@ -90,9 +90,23 @@ describe("ResumeRightPanel", () => {
       screen.getByRole("button", { name: "button.aiChat" })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "button.viewEvaluationReport" })
+      screen.getByRole("button", { name: "evaluationTabLabel" })
     ).toBeInTheDocument()
+    expect(screen.getAllByText("personalInfo")).toHaveLength(2)
     expect(screen.getByText("personal-info-form")).toBeInTheDocument()
+  })
+
+  it("shows the empty state when no section is selected on the form view", () => {
+    mockUseResume.mockReturnValue({
+      selectedSectionId: null,
+      resumeEvaluation: null,
+      refreshEvaluationReport: vi.fn()
+    })
+    mockUseAtom.mockReturnValue(["form", mockSetRightPanelView])
+
+    render(<ResumeRightPanel />)
+
+    expect(screen.getByText("formEmptyTitle")).toBeInTheDocument()
   })
 
   it("switches to chat from the header action", () => {

@@ -206,6 +206,17 @@
   },
 
   "rightPanel": {
+    "panelTitle": "右侧工作区",
+    "panelDescription": "在不离开编辑器的情况下，在分区编辑、AI 对话和评估报告之间快速切换。",
+    "editSection": "编辑区块",
+    "evaluationTabLabel": "评估报告",
+    "chatTitle": "AI 对话",
+    "chatDescription": "一边编辑，一边获取改写建议、更贴岗的表达和针对性反馈。",
+    "evaluationCardTitle": "评估报告",
+    "evaluationCardDescription": "在导出前查看这份简历在筛选通过率、表达清晰度和岗位匹配度上的表现。",
+    "formDescription": "按区块逐一编辑，让修改过程更聚焦、更清晰。",
+    "formEmptyTitle": "请选择要编辑的区块",
+    "formEmptyDescription": "点击左侧简历中的任一区块，即可在这里开始编辑。",
     "evaluateResume": "评估简历",
     "evaluationTitle": "暂无评估报告",
     "evaluationDescription": "请点击以下按钮生成报告",
