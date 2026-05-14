@@ -4,7 +4,7 @@ import type {
   SectionBlock,
   SortableSectionId
 } from "@/types/resume"
-import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
+import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 import { cn } from "@/lib/utils"
 
 type ExtractBlock<ID extends SortableSectionId> =
@@ -68,25 +68,24 @@ export function SectionBlocks<ID extends SortableSectionId>({
       )}
 
       {section.blocks.map((block, index) => (
-        <div
+        <ResumeSectionActionButtonGroup
           key={index}
           id={`section-${sectionId}-${index}`}
           className={cn(
-            "group/resume-section relative mb-4 rounded-lg p-2 transition-colors",
+            "mb-4 rounded-lg p-2 transition-colors",
             isInteractive && "hover:bg-muted/40 focus-within:bg-muted/40"
           )}
+          actionClassName="-right-26"
+          isInteractive={isInteractive}
+          onEdit={
+            onBlockClick ? () => onBlockClick(sectionId, index) : undefined
+          }
         >
-          {isInteractive && onBlockClick && (
-            <ResumeSectionEditAction
-              className="-right-26"
-              onClick={() => onBlockClick(sectionId, index)}
-            />
-          )}
           <div id={`${sectionId}-${index}-head`}>
             {headRender(block as ExtractBlock<ID>, index)}
           </div>
           {blockRender(block as ExtractBlock<ID>, index)}
-        </div>
+        </ResumeSectionActionButtonGroup>
       ))}
     </div>
   )

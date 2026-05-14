@@ -7,11 +7,13 @@ import { cn } from "@/lib/utils"
 
 interface ResumeSectionEditActionProps {
   className?: string
+  isVisible?: boolean
   onClick: () => void
 }
 
 export function ResumeSectionEditAction({
   className,
+  isVisible = false,
   onClick
 }: ResumeSectionEditActionProps) {
   const t = useTranslations("rightPanel")
@@ -22,7 +24,10 @@ export function ResumeSectionEditAction({
       variant="outline"
       size="sm"
       className={cn(
-        "pointer-events-none absolute top-2 z-50 h-8 rounded-full border-border/70 bg-background/95 px-3 text-xs font-medium shadow-sm opacity-0 transition-all duration-200 group-hover/resume-section:pointer-events-auto group-hover/resume-section:translate-x-0 group-hover/resume-section:opacity-100 group-focus-within/resume-section:pointer-events-auto group-focus-within/resume-section:translate-x-0 group-focus-within/resume-section:opacity-100 motion-safe:translate-x-2",
+        "absolute top-2 z-50 h-8 rounded-full border-border/70 bg-background/95 px-3 text-xs font-medium shadow-sm transition-all duration-200 motion-safe:translate-x-2",
+        isVisible
+          ? "pointer-events-auto translate-x-0 opacity-100"
+          : "pointer-events-none opacity-0",
         className
       )}
       onClick={(event) => {

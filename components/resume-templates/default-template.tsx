@@ -9,7 +9,7 @@ import "./default-template.css"
 import ResumeSkeleton from "../skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
-import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
+import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 
 interface Props {
   data: ResumeData | null
@@ -230,25 +230,24 @@ export const DefaultTemplate: React.FC<Props> = ({
   return (
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
       {/* Header */}
-      <div
+      <ResumeSectionActionButtonGroup
+        actionClassName="-right-26"
         className={
           isInteractive
-            ? "group/resume-section relative rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40"
-            : ""
+            ? "rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40"
+            : undefined
+        }
+        isInteractive={isInteractive}
+        onEdit={
+          onSectionClick ? () => onSectionClick("personalInfo") : undefined
         }
       >
-        {isInteractive && onSectionClick && (
-          <ResumeSectionEditAction
-            className="-right-26"
-            onClick={() => onSectionClick("personalInfo")}
-          />
-        )}
         <h1 className="text-2xl font-bold mb-1">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
         </h1>
         <p className="text-sm text-gray-600">{data.personalInfo.email}</p>
         <p className="text-sm text-gray-600">{data.personalInfo.phone}</p>
-      </div>
+      </ResumeSectionActionButtonGroup>
 
       {/* Dynamic Sections based on sectionOrder */}
       {data.sectionOrder.map((sectionId) =>
