@@ -14,31 +14,85 @@ import type { SectionId } from "@/types/resume"
 interface ResumeSectionFormProps {
   sectionId: SectionId | null
   blockIndex?: number | null
+  onCancel?: () => void
+  onSaveComplete?: () => void
 }
 
 export function ResumeSectionForm({
   sectionId,
-  blockIndex
+  blockIndex,
+  onCancel,
+  onSaveComplete
 }: ResumeSectionFormProps) {
   switch (sectionId) {
     case "personalInfo":
-      return <PersonalInfoForm />
+      return (
+        <PersonalInfoForm onCancel={onCancel} onSaveComplete={onSaveComplete} />
+      )
     case "education":
-      return <EducationForm focusIndex={blockIndex} />
+      return (
+        <EducationForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "employment":
-      return <EmploymentForm focusIndex={blockIndex} />
+      return (
+        <EmploymentForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "skills":
-      return <SkillsForm focusIndex={blockIndex} />
+      return (
+        <SkillsForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "projects":
-      return <ProjectsForm focusIndex={blockIndex} />
+      return (
+        <ProjectsForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "research":
-      return <ResearchForm focusIndex={blockIndex} />
+      return (
+        <ResearchForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "publications":
-      return <PublicationsForm focusIndex={blockIndex} />
+      return (
+        <PublicationsForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "awards":
-      return <AwardsForm focusIndex={blockIndex} />
+      return (
+        <AwardsForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     case "certifications":
-      return <CertificationsForm focusIndex={blockIndex} />
+      return (
+        <CertificationsForm
+          focusIndex={blockIndex}
+          onCancel={onCancel}
+          onSaveComplete={onSaveComplete}
+        />
+      )
     default:
       return null
   }

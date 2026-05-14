@@ -1,149 +1,89 @@
 "use client"
 
 import { useFieldArray, useFormContext } from "react-hook-form"
-import { nanoid } from "nanoid"
-import { Plus, Edit, Trash } from "lucide-react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Editor } from "@/components/editor/editor"
+import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
-import { MarkdownModal } from "@/components/ui/markdown-modal"
-import { ResumeData } from "@/types/resume"
+import { ProjectBlock, ResumeData } from "@/types/resume"
 
 interface ProjectsFormProps {
   focusIndex?: number | null
+  onCancel?: () => void
+  onSaveComplete?: () => void
 }
 
-export function ProjectsForm({ focusIndex = null }: ProjectsFormProps) {
-  const { control, register, setValue, getValues } =
-    useFormContext<ResumeData>()
-  const { fields, append, remove } = useFieldArray({
+export function ProjectsForm({
+  focusIndex = null,
+  onCancel,
+  onSaveComplete
+}: ProjectsFormProps) {
+  const { control, getValues } = useFormContext<ResumeData>()
+  const { update } = useFieldArray({
     control,
     name: "projects.blocks"
   })
-  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(
-    null
-  )
 
-  const handleAddBlock = () => {
-    append({
-      blockId: nanoid(),
-      title: "",
-      role: "",
-      content: "",
-      date: {
-        start: "",
-        end: ""
-      }
-    })
+  if (typeof focusIndex !== "number") {
+    return null
   }
 
-  const handleContentChange = (md: string) => {
-    if (editingBlockIndex !== null) {
-      setValue(`projects.blocks.${editingBlockIndex}.content`, md, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true
-      })
-    }
-  }
+  const currentBlock = getValues(`projects.blocks.${focusIndex}`)
 
-  const handleRemoveBlock = (index: number) => {
-    remove(index)
-    if (editingBlockIndex !== null) {
-      if (editingBlockIndex === index) {
-        setEditingBlockIndex(null)
-      } else if (editingBlockIndex > index) {
-        setEditingBlockIndex(editingBlockIndex - 1)
-      }
-    }
+  if (!currentBlock) {
+    return null
   }
-
-  const visibleFields =
-    typeof focusIndex === "number"
-      ? fields
-          .map((field, blockIndex) => ({ field, blockIndex }))
-          .filter(({ blockIndex }) => blockIndex === focusIndex)
-      : fields.map((field, blockIndex) => ({ field, blockIndex }))
 
   return (
-    <div
-      id="form-projects"
-      className={focusIndex === null ? "space-y-4 pb-[70vh]" : "space-y-4"}
-    >
-      {visibleFields.map(({ field, blockIndex }) => (
-        <div
-          id={`form-projects-${blockIndex}`}
-          key={field.id}
-          className="relative space-y-4 rounded-lg border border-border/60 p-4"
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 text-destructive hover:text-destructive/80"
-            onClick={() => handleRemoveBlock(blockIndex)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+    <div id="form-projects" className="space-y-4">
+      <FocusedBlockFormShell<ProjectBlock>
+        block={currentBlock}
+        formId={`form-projects-${focusIndex}`}
+        onCancel={onCancel}
+        onSaveComplete={onSaveComplete}
+        onSave={(values) => update(focusIndex, values)}
+      >
+        {({ register, watch, setValue }) => {
+          const content = watch("content") || ""
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Project Title</label>
-              <Input {...register(`projects.blocks.${blockIndex}.title`)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Role</label>
-              <Input {...register(`projects.blocks.${blockIndex}.role`)} />
-            </div>
-          </div>
+          return (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Project Title</label>
+                  <Input {...register("title")} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Role</label>
+                  <Input {...register("role")} />
+                </div>
+              </div>
 
-          <MonthRangePickerFormField
-            startName={`projects.blocks.${blockIndex}.date.start`}
-            endName={`projects.blocks.${blockIndex}.date.end`}
-            label="Start/End Date"
-          />
+              <MonthRangePickerFormField
+                startName="date.start"
+                endName="date.end"
+                label="Start/End Date"
+              />
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Content</label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setEditingBlockIndex(blockIndex)}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Content
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {focusIndex === null && (
-        <Button
-          type="button"
-          variant="ghost"
-          className="mt-4 w-full"
-          onClick={handleAddBlock}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Project
-        </Button>
-      )}
-
-      <MarkdownModal
-        isOpen={editingBlockIndex !== null}
-        onClose={() => setEditingBlockIndex(null)}
-        markdown={
-          editingBlockIndex !== null
-            ? getValues(`projects.blocks.${editingBlockIndex}.content`) || ""
-            : ""
-        }
-        onChange={handleContentChange}
-        title="Edit Project Content"
-      />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content</label>
+                <div className="h-[320px]">
+                  <Editor
+                    markdown={content}
+                    onChange={(markdown) => {
+                      setValue("content", markdown, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true
+                      })
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )
+        }}
+      </FocusedBlockFormShell>
     </div>
   )
 }

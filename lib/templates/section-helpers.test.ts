@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { ResumeData } from "@/types/resume"
 import {
   addSection,
+  ensureSectionHasEditableBlock,
   normalizeSectionOrder,
   removeSection
 } from "@/lib/templates/section-helpers"
@@ -52,5 +53,40 @@ describe("section-helpers", () => {
     expect(nextResume.skills).toBeDefined()
     expect(nextResume.skills.blocks).toHaveLength(0)
     expect(nextResume.sectionOrder).toContain("skills")
+  })
+
+  it("ensures block-based sections open with an editable block", () => {
+    const baseResume = buildEmptyResumeData("en")
+
+    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+      baseResume,
+      "education",
+      "en"
+    )
+
+    expect(blockIndex).toBe(0)
+    expect(resume.education.blocks).toHaveLength(1)
+    expect(resume.education.blocks[0]).toMatchObject({
+      school: "",
+      degree: "",
+      start: "",
+      end: "",
+      content: ""
+    })
+  })
+
+  it("adds missing optional sections with an editable block", () => {
+    const baseResume = buildEmptyResumeData("en")
+
+    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+      baseResume,
+      "employment",
+      "en"
+    )
+
+    expect(blockIndex).toBe(0)
+    expect(resume.employment).toBeDefined()
+    expect(resume.employment?.blocks).toHaveLength(1)
+    expect(resume.sectionOrder).toContain("employment")
   })
 })

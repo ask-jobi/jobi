@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
+import { useFormContext } from "react-hook-form"
 import { useAtom, useAtomValue } from "jotai"
 import { useTranslations } from "next-intl"
 import {
@@ -9,34 +10,60 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { ResumeSectionForm } from "@/components/resumes/resume-section-form"
+import type { ResumeData } from "@/types/resume"
 import {
   editModalOpenAtom,
+  editModalRollbackResumeAtom,
   selectedBlockIdAtom,
   selectedBlockIndexAtom,
-  selectedSectionIdAtom
+  selectedSectionIdAtom,
+  useResume
 } from "@/lib/store/resume"
-import { ResumeSectionForm } from "@/components/resumes/resume-section-form"
 
 export function ResumeSectionEditModal() {
   const t = useTranslations("rightPanel")
   const sectionT = useTranslations("chat.toolOutput.entity")
+  const { reset } = useFormContext<ResumeData>()
+  const { updateResumeDataWithSave } = useResume()
   const [isOpen, setIsOpen] = useAtom(editModalOpenAtom)
+  const [rollbackResume, setRollbackResume] = useAtom(
+    editModalRollbackResumeAtom
+  )
   const [selectedBlockId, setSelectedBlockId] = useAtom(selectedBlockIdAtom)
-  const [selectedSectionId, setSelectedSectionId] =
-    useAtom(selectedSectionIdAtom)
+  const [selectedSectionId, setSelectedSectionId] = useAtom(
+    selectedSectionIdAtom
+  )
   const selectedBlockIndex = useAtomValue(selectedBlockIndexAtom)
 
   const selectedSectionLabel = selectedSectionId
     ? sectionT(selectedSectionId as Parameters<typeof sectionT>[0])
     : null
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
+  const clearSelection = useCallback(() => {
+    setIsOpen(false)
+    setSelectedSectionId(null)
+    setSelectedBlockId(null)
+  }, [setIsOpen, setSelectedBlockId, setSelectedSectionId])
 
-    if (!open) {
-      setSelectedSectionId(null)
-      setSelectedBlockId(null)
+  const handleOpenChange = async (open: boolean) => {
+    if (open) {
+      setIsOpen(true)
+      return
     }
+
+    if (rollbackResume) {
+      reset(rollbackResume)
+      await updateResumeDataWithSave(rollbackResume)
+    }
+
+    setRollbackResume(null)
+    clearSelection()
+  }
+
+  const handleSaveComplete = () => {
+    setRollbackResume(null)
+    clearSelection()
   }
 
   useEffect(() => {
@@ -48,17 +75,15 @@ export function ResumeSectionEditModal() {
       return
     }
 
-    setIsOpen(false)
-    setSelectedSectionId(null)
-    setSelectedBlockId(null)
+    setRollbackResume(null)
+    clearSelection()
   }, [
+    clearSelection,
     isOpen,
     selectedBlockId,
     selectedBlockIndex,
     selectedSectionId,
-    setIsOpen,
-    setSelectedBlockId,
-    setSelectedSectionId
+    setRollbackResume
   ])
 
   useEffect(() => {
@@ -84,7 +109,7 @@ export function ResumeSectionEditModal() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => void handleOpenChange(open)}>
       <DialogContent className="flex max-h-[90vh] w-[min(960px,calc(100%-2rem))] max-w-none flex-col overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b px-6 py-5">
           <DialogTitle>{selectedSectionLabel ?? t("editSection")}</DialogTitle>
@@ -93,6 +118,8 @@ export function ResumeSectionEditModal() {
           <ResumeSectionForm
             sectionId={selectedSectionId}
             blockIndex={selectedBlockIndex}
+            onCancel={() => void handleOpenChange(false)}
+            onSaveComplete={handleSaveComplete}
           />
         </div>
       </DialogContent>

@@ -4,7 +4,10 @@ import {
   DEFAULT_SECTION_ORDER,
   isRequiredSection
 } from "@/lib/templates/section-definitions"
-import { createEmptySection } from "@/lib/templates/section-factories"
+import {
+  createEmptySection,
+  createEmptySectionBlock
+} from "@/lib/templates/section-factories"
 
 export function normalizeSectionOrder(
   sectionOrder: SortableSectionId[]
@@ -34,6 +37,39 @@ export function addSection(
     ...data,
     [sectionId]: createEmptySection(sectionId, language),
     sectionOrder: normalizeSectionOrder([...data.sectionOrder, sectionId])
+  }
+}
+
+export function ensureSectionHasEditableBlock(
+  data: ResumeData,
+  sectionId: SortableSectionId,
+  language: Locale
+): { resume: ResumeData; blockIndex: number } {
+  const nextResume = addSection(data, sectionId, language)
+  const section = nextResume[sectionId]
+
+  if (!section) {
+    throw new Error(`Section ${sectionId} was not created`)
+  }
+
+  if (section.blocks.length > 0) {
+    return {
+      resume: nextResume,
+      blockIndex: 0
+    }
+  }
+
+  const nextSection = {
+    ...section,
+    blocks: [...section.blocks, createEmptySectionBlock(sectionId)]
+  }
+
+  return {
+    resume: {
+      ...nextResume,
+      [sectionId]: nextSection
+    },
+    blockIndex: 0
   }
 }
 

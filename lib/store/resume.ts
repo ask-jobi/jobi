@@ -152,6 +152,7 @@ export const selectedBlockIndexAtom = atom((get) => {
 })
 export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
 export const editModalOpenAtom = atom(false)
+export const editModalRollbackResumeAtom = atom<ResumeData | null>(null)
 
 export const focusSectionAtom = atom(
   null,

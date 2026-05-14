@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/popover"
 import {
   editModalOpenAtom,
+  editModalRollbackResumeAtom,
   focusSectionAtom,
   useResume,
   useResumeLanguage
 } from "@/lib/store/resume"
 import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
-import { addSection } from "@/lib/templates/section-helpers"
+import { ensureSectionHasEditableBlock } from "@/lib/templates/section-helpers"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 
@@ -70,6 +71,7 @@ export function ResumeCanvasSectionEntry() {
   const resumeLanguage = useResumeLanguage()
   const openSectionEditor = useSetAtom(focusSectionAtom)
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
+  const setEditModalRollbackResume = useSetAtom(editModalRollbackResumeAtom)
   const [open, setOpen] = useState(false)
   const [pendingSectionId, setPendingSectionId] = useState<SectionId | null>(
     null
@@ -105,31 +107,49 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  const openEditModal = (sectionId: SectionId) => {
-    openSectionEditor(sectionId)
+  const openEditModal = (sectionId: SectionId, blockIndex?: number) => {
+    openSectionEditor(sectionId, blockIndex)
     setEditModalOpen(true)
   }
 
   const handleOpenSection = async (sectionId: SectionId) => {
     setPendingSectionId(sectionId)
 
-    if (sectionId !== "personalInfo" && !resumeData[sectionId]) {
-      const nextResume = addSection(getValues(), sectionId, resumeLanguage)
-      reset(nextResume)
-      await updateResumeDataWithSave(nextResume)
+    if (sectionId === "personalInfo") {
+      setEditModalRollbackResume(null)
+      openEditModal(sectionId)
+      setOpen(false)
+      setPendingSectionId(null)
+      return
     }
 
-    openEditModal(sectionId)
+    setEditModalRollbackResume(getValues())
+    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+      getValues(),
+      sectionId,
+      resumeLanguage
+    )
+
+    reset(resume)
+    await updateResumeDataWithSave(resume)
+    openEditModal(sectionId, blockIndex)
     setOpen(false)
     setPendingSectionId(null)
   }
 
   const handleAddSection = async (sectionId: SortableSectionId) => {
     setPendingSectionId(sectionId)
-    const nextResume = addSection(getValues(), sectionId, resumeLanguage)
-    reset(nextResume)
-    await updateResumeDataWithSave(nextResume)
-    openEditModal(sectionId)
+
+    setEditModalRollbackResume(getValues())
+    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+      getValues(),
+      sectionId,
+      resumeLanguage
+    )
+
+    reset(resume)
+    await updateResumeDataWithSave(resume)
+    openEditModal(sectionId, blockIndex)
     setOpen(false)
     setPendingSectionId(null)
   }
