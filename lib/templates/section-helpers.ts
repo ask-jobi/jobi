@@ -73,6 +73,34 @@ export function ensureSectionHasEditableBlock(
   }
 }
 
+export function insertDraftBlockBelow(
+  data: ResumeData,
+  sectionId: SortableSectionId,
+  index: number
+): { resume: ResumeData; blockIndex: number } {
+  const section = data[sectionId]
+
+  if (!section) {
+    throw new Error(`Section ${sectionId} does not exist`)
+  }
+
+  const nextBlocks = [...section.blocks]
+  const blockIndex = Math.min(Math.max(index + 1, 0), nextBlocks.length)
+
+  nextBlocks.splice(blockIndex, 0, createEmptySectionBlock(sectionId))
+
+  return {
+    resume: {
+      ...data,
+      [sectionId]: {
+        ...section,
+        blocks: nextBlocks
+      }
+    },
+    blockIndex
+  }
+}
+
 export function removeSection(
   data: ResumeData,
   sectionId: SortableSectionId

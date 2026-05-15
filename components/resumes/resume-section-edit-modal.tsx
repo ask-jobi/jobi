@@ -24,7 +24,7 @@ import {
 export function ResumeSectionEditModal() {
   const t = useTranslations("rightPanel")
   const sectionT = useTranslations("chat.toolOutput.entity")
-  const { reset } = useFormContext<ResumeData>()
+  const { getValues, reset } = useFormContext<ResumeData>()
   const { updateResumeDataWithSave } = useResume()
   const [isOpen, setIsOpen] = useAtom(editModalOpenAtom)
   const [rollbackResume, setRollbackResume] = useAtom(
@@ -62,8 +62,10 @@ export function ResumeSectionEditModal() {
   }
 
   const handleSaveComplete = () => {
+    const nextResume = getValues()
     setRollbackResume(null)
     clearSelection()
+    void updateResumeDataWithSave(nextResume)
   }
 
   useEffect(() => {

@@ -3,11 +3,12 @@
 import { useEffect, useRef, useCallback } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { ResumeData } from "@/types/resume"
-import { useResume } from "@/lib/store/resume"
+import { editModalRollbackResumeAtom, useResume } from "@/lib/store/resume"
 import ResumeEditor from "./resume-editor"
 import { useDebouncedCallback } from "@mantine/hooks"
 import { ResumeRightPanel } from "@/components/resumes/resume-right-panel"
 import { ResumeSectionEditModal } from "@/components/resumes/resume-section-edit-modal"
+import { store } from "@/components/resumes/resume-context"
 
 export default function ResumePage() {
   const { updateResumeDataWithSave, resumeData, application } = useResume()
@@ -40,6 +41,15 @@ export default function ResumePage() {
 
   useEffect(() => {
     const { unsubscribe } = watch((formData) => {
+      if (!formData || application?.resume.id !== previousResumeIdRef.current) {
+        return
+      }
+
+      if (store.get(editModalRollbackResumeAtom)) {
+        debouncedSave.cancel()
+        return
+      }
+
       if (formData && application?.resume.id === previousResumeIdRef.current) {
         debouncedSave(formData as ResumeData)
       }

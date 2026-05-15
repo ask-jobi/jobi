@@ -1,19 +1,19 @@
 "use client"
 
-import { PencilLine } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-interface ResumeSectionEditActionProps {
+interface ResumeSectionAddActionProps {
   className?: string
   onClick: () => void
 }
 
-export function ResumeSectionEditAction({
+export function ResumeSectionAddAction({
   className,
   onClick
-}: ResumeSectionEditActionProps) {
+}: ResumeSectionAddActionProps) {
   const t = useTranslations("rightPanel")
 
   return (
@@ -31,8 +31,8 @@ export function ResumeSectionEditAction({
         onClick()
       }}
     >
-      <PencilLine className="mr-1.5 h-3.5 w-3.5" />
-      {t("editSection")}
+      <Plus className="mr-1.5 h-3.5 w-3.5" />
+      {t("addBlock")}
     </Button>
   )
 }

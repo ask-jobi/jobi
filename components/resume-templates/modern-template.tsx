@@ -21,7 +21,8 @@ export const ModernTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, isInteractive } = options ?? {}
+  const { onSectionClick, onBlockAdd, onBlockDelete, isInteractive } =
+    options ?? {}
   if (!data) {
     return (
       <div className="w-full flex justify-center items-start py-4">
@@ -34,7 +35,7 @@ export const ModernTemplate: React.FC<Props> = ({
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
       {/* Header */}
       <ResumeSectionActionButtonGroup
-        actionClassName="-right-26"
+        actionClassName="top-full right-0 mt-2"
         className={`mb-6 border-b-2 border-gray-800 pb-4 ${
           isInteractive
             ? "rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40"
@@ -66,6 +67,8 @@ export const ModernTemplate: React.FC<Props> = ({
         section={data.education}
         sectionTitle={getSectionLabel("education", language)}
         isInteractive={isInteractive}
+        onBlockAdd={onBlockAdd}
+        onBlockDelete={onBlockDelete}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
         headRender={(block) => (
@@ -94,6 +97,8 @@ export const ModernTemplate: React.FC<Props> = ({
         section={data.employment}
         sectionTitle={getSectionLabel("employment", language)}
         isInteractive={isInteractive}
+        onBlockAdd={onBlockAdd}
+        onBlockDelete={onBlockDelete}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
         hideIfEmpty
@@ -130,6 +135,8 @@ export const ModernTemplate: React.FC<Props> = ({
         section={data.skills}
         sectionTitle={getSectionLabel("skills", language)}
         isInteractive={isInteractive}
+        onBlockAdd={onBlockAdd}
+        onBlockDelete={onBlockDelete}
         onBlockClick={onSectionClick}
         sectionClassName="modern-section"
         headRender={(block) => (

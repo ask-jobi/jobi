@@ -15,6 +15,8 @@ interface SectionBlocksProps<ID extends SortableSectionId> {
   section?: ResumeData[ID] | null
   sectionTitle?: string
   isInteractive?: boolean
+  onBlockAdd?: (id: ID, index: number) => void
+  onBlockDelete?: (id: ID, index: number) => void
   onBlockClick?: (id: ID, index?: number) => void
 
   headRender: (block: ExtractBlock<ID>, index: number) => React.ReactNode
@@ -36,6 +38,8 @@ export function SectionBlocks<ID extends SortableSectionId>({
   section,
   sectionTitle,
   isInteractive,
+  onBlockAdd,
+  onBlockDelete,
   onBlockClick,
   headRender,
   blockRender,
@@ -75,8 +79,12 @@ export function SectionBlocks<ID extends SortableSectionId>({
             "mb-4 rounded-lg p-2 transition-colors",
             isInteractive && "hover:bg-muted/40 focus-within:bg-muted/40"
           )}
-          actionClassName="-right-26"
+          actionClassName="top-full right-0 mt-2"
           isInteractive={isInteractive}
+          onAdd={onBlockAdd ? () => onBlockAdd(sectionId, index) : undefined}
+          onDelete={
+            onBlockDelete ? () => onBlockDelete(sectionId, index) : undefined
+          }
           onEdit={
             onBlockClick ? () => onBlockClick(sectionId, index) : undefined
           }

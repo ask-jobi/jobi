@@ -12,6 +12,20 @@
 - [docs/testing-and-i18n.md](docs/testing-and-i18n.md) - 测试规范与国际化要求
 - [docs/plans/README.md](docs/plans/README.md) - 项目计划文档与 current/archive 使用方式
 
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in this repository's GitHub Issues (`ask-jobi/jobi`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+This repo uses the default triage label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a single-context layout centered on a root `CONTEXT.md` and root `docs/adr/`. See `docs/agents/domain.md`.
+
 ## 使用约定
 
 - 修改开发流程或命令时，优先更新对应的 `docs/*.md`

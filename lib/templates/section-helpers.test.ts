@@ -3,6 +3,7 @@ import type { ResumeData } from "@/types/resume"
 import {
   addSection,
   ensureSectionHasEditableBlock,
+  insertDraftBlockBelow,
   normalizeSectionOrder,
   removeSection
 } from "@/lib/templates/section-helpers"
@@ -88,5 +89,45 @@ describe("section-helpers", () => {
     expect(resume.employment).toBeDefined()
     expect(resume.employment?.blocks).toHaveLength(1)
     expect(resume.sectionOrder).toContain("employment")
+  })
+
+  it("inserts a new draft block directly below the selected block", () => {
+    const baseResume = buildEmptyResumeData("en")
+    baseResume.education.blocks = [
+      {
+        blockId: "edu-1",
+        school: "School 1",
+        degree: "Degree 1",
+        start: "2020-01",
+        end: "2021-01",
+        content: "A"
+      },
+      {
+        blockId: "edu-2",
+        school: "School 2",
+        degree: "Degree 2",
+        start: "2021-01",
+        end: "2022-01",
+        content: "B"
+      }
+    ]
+
+    const { resume, blockIndex } = insertDraftBlockBelow(
+      baseResume,
+      "education",
+      0
+    )
+
+    expect(blockIndex).toBe(1)
+    expect(resume.education.blocks).toHaveLength(3)
+    expect(resume.education.blocks[0].blockId).toBe("edu-1")
+    expect(resume.education.blocks[1]).toMatchObject({
+      school: "",
+      degree: "",
+      start: "",
+      end: "",
+      content: ""
+    })
+    expect(resume.education.blocks[2].blockId).toBe("edu-2")
   })
 })

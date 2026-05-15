@@ -23,16 +23,27 @@ const renderers: Record<
     data: ResumeData,
     language: Locale,
     isInteractive?: boolean,
+    onBlockAdd?: (id: SortableSectionId, index: number) => void,
+    onBlockDelete?: (id: SortableSectionId, index: number) => void,
     onSectionClick?: (id: SectionId, index?: number) => void
   ) => React.ReactElement | null
 > = {
-  education: (data, language, isInteractive, onSectionClick) => (
+  education: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="education"
       sectionId="education"
       section={data.education}
       sectionTitle={getSectionLabel("education", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -48,13 +59,22 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  employment: (data, language, isInteractive, onSectionClick) => (
+  employment: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="employment"
       sectionId="employment"
       section={data.employment}
       sectionTitle={getSectionLabel("employment", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -70,13 +90,22 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  skills: (data, language, isInteractive, onSectionClick) => (
+  skills: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="skills"
       sectionId="skills"
       section={data.skills}
       sectionTitle={getSectionLabel("skills", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <h3 className="text-sm font-bold mb-1">{block.group}</h3>
@@ -95,13 +124,22 @@ const renderers: Record<
       )}
     />
   ),
-  research: (data, language, isInteractive, onSectionClick) => (
+  research: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="research"
       sectionId="research"
       section={data.research}
       sectionTitle={getSectionLabel("research", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -119,13 +157,22 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  projects: (data, language, isInteractive, onSectionClick) => (
+  projects: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="projects"
       sectionId="projects"
       section={data.projects}
       sectionTitle={getSectionLabel("projects", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -143,13 +190,22 @@ const renderers: Record<
       blockRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  publications: (data, language, isInteractive, onSectionClick) => (
+  publications: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="publications"
       sectionId="publications"
       section={data.publications}
       sectionTitle={getSectionLabel("publications", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -165,13 +221,22 @@ const renderers: Record<
       blockRender={() => null}
     />
   ),
-  awards: (data, language, isInteractive, onSectionClick) => (
+  awards: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="awards"
       sectionId="awards"
       section={data.awards}
       sectionTitle={getSectionLabel("awards", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -189,13 +254,22 @@ const renderers: Record<
       }
     />
   ),
-  certifications: (data, language, isInteractive, onSectionClick) => (
+  certifications: (
+    data,
+    language,
+    isInteractive,
+    onBlockAdd,
+    onBlockDelete,
+    onSectionClick
+  ) => (
     <SectionBlocks
       key="certifications"
       sectionId="certifications"
       section={data.certifications}
       sectionTitle={getSectionLabel("certifications", language)}
       isInteractive={isInteractive}
+      onBlockAdd={onBlockAdd}
+      onBlockDelete={onBlockDelete}
       onBlockClick={onSectionClick}
       headRender={(block) => (
         <>
@@ -218,7 +292,8 @@ export const DefaultTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, isInteractive } = options ?? {}
+  const { onSectionClick, onBlockAdd, onBlockDelete, isInteractive } =
+    options ?? {}
   if (!data) {
     return (
       <div className="w-full flex justify-center items-start py-4">
@@ -231,7 +306,7 @@ export const DefaultTemplate: React.FC<Props> = ({
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
       {/* Header */}
       <ResumeSectionActionButtonGroup
-        actionClassName="-right-26"
+        actionClassName="top-full right-0 mt-2"
         className={
           isInteractive
             ? "rounded-xl p-3 transition-colors hover:bg-muted/40 focus-within:bg-muted/40"
@@ -251,7 +326,14 @@ export const DefaultTemplate: React.FC<Props> = ({
 
       {/* Dynamic Sections based on sectionOrder */}
       {data.sectionOrder.map((sectionId) =>
-        renderers[sectionId]?.(data, language, isInteractive, onSectionClick)
+        renderers[sectionId]?.(
+          data,
+          language,
+          isInteractive,
+          onBlockAdd,
+          onBlockDelete,
+          onSectionClick
+        )
       )}
     </article>
   )

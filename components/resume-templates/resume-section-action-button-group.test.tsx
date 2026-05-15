@@ -5,11 +5,20 @@ import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/re
 describe("ResumeSectionActionButtonGroup", () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    vi.stubGlobal(
+      "ResizeObserver",
+      class ResizeObserver {
+        disconnect() {}
+        observe() {}
+        unobserve() {}
+      }
+    )
   })
 
   afterEach(() => {
     vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    vi.unstubAllGlobals()
   })
 
   it("keeps the edit action visible briefly after pointer leave", () => {
@@ -20,27 +29,29 @@ describe("ResumeSectionActionButtonGroup", () => {
     )
 
     const button = screen.getByRole("button", { name: "editSection" })
-    const surface = button.parentElement
+    const actions = button.parentElement
+    const surface = screen.getByText("Section body").parentElement
 
+    expect(actions).not.toBeNull()
     expect(surface).not.toBeNull()
-    expect(button).toHaveClass("opacity-0")
+    expect(actions).toHaveClass("opacity-0")
 
     fireEvent.mouseEnter(surface!)
 
-    expect(button).toHaveClass("opacity-100")
+    expect(actions).toHaveClass("opacity-100")
 
     fireEvent.mouseLeave(surface!)
     act(() => {
       vi.advanceTimersByTime(49)
     })
 
-    expect(button).toHaveClass("opacity-100")
+    expect(actions).toHaveClass("opacity-100")
 
     act(() => {
       vi.advanceTimersByTime(1)
     })
 
-    expect(button).toHaveClass("opacity-0")
+    expect(actions).toHaveClass("opacity-0")
   })
 
   it("cancels the pending hide when the pointer re-enters quickly", () => {
@@ -51,8 +62,10 @@ describe("ResumeSectionActionButtonGroup", () => {
     )
 
     const button = screen.getByRole("button", { name: "editSection" })
-    const surface = button.parentElement
+    const actions = button.parentElement
+    const surface = screen.getByText("Section body").parentElement
 
+    expect(actions).not.toBeNull()
     expect(surface).not.toBeNull()
 
     fireEvent.mouseEnter(surface!)
@@ -65,6 +78,57 @@ describe("ResumeSectionActionButtonGroup", () => {
       vi.advanceTimersByTime(60)
     })
 
-    expect(button).toHaveClass("opacity-100")
+    expect(actions).toHaveClass("opacity-100")
+  })
+
+  it("shows a tooltip confirmation before deleting a block", () => {
+    const onDelete = vi.fn()
+
+    render(
+      <ResumeSectionActionButtonGroup
+        isInteractive
+        onDelete={onDelete}
+        onEdit={() => undefined}
+      >
+        <div>Section body</div>
+      </ResumeSectionActionButtonGroup>
+    )
+
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(surface).not.toBeNull()
+
+    fireEvent.mouseEnter(surface!)
+
+    const deleteButton = screen.getByRole("button", { name: "deleteBlock" })
+
+    fireEvent.click(deleteButton)
+
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(screen.getByRole("tooltip")).toHaveTextContent("confirmDeleteBlock")
+
+    fireEvent.click(deleteButton)
+
+    expect(onDelete).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument()
+  })
+
+  it("renders an add action and triggers insertion", () => {
+    const onAdd = vi.fn()
+
+    render(
+      <ResumeSectionActionButtonGroup isInteractive onAdd={onAdd}>
+        <div>Section body</div>
+      </ResumeSectionActionButtonGroup>
+    )
+
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(surface).not.toBeNull()
+
+    fireEvent.mouseEnter(surface!)
+    fireEvent.click(screen.getByRole("button", { name: "addBlock" }))
+
+    expect(onAdd).toHaveBeenCalledTimes(1)
   })
 })
