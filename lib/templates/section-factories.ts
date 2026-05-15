@@ -12,9 +12,7 @@ import type {
   SkillBlock,
   SortableSectionId
 } from "@/types/resume"
-import {
-  REQUIRED_SECTION_IDS
-} from "@/lib/templates/section-definitions"
+import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 
 function createBaseSection<ID extends SortableSectionId>(

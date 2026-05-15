@@ -1,17 +1,18 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
+import { useAtomValue } from "jotai"
 import { FormProvider, useForm } from "react-hook-form"
 import { ResumeData } from "@/types/resume"
-import { editModalRollbackResumeAtom, useResume } from "@/lib/store/resume"
+import { resumeAutosaveSuspendedAtom, useResume } from "@/lib/store/resume"
 import ResumeEditor from "./resume-editor"
 import { useDebouncedCallback } from "@mantine/hooks"
 import { ResumeRightPanel } from "@/components/resumes/resume-right-panel"
 import { ResumeSectionEditModal } from "@/components/resumes/resume-section-edit-modal"
-import { store } from "@/components/resumes/resume-context"
 
 export default function ResumePage() {
   const { saveResume, persistedResume, application } = useResume()
+  const isAutosaveSuspended = useAtomValue(resumeAutosaveSuspendedAtom)
   const methods = useForm<ResumeData>({
     defaultValues: persistedResume || {},
     mode: "onChange"
@@ -45,7 +46,7 @@ export default function ResumePage() {
         return
       }
 
-      if (store.get(editModalRollbackResumeAtom)) {
+      if (isAutosaveSuspended) {
         debouncedSave.cancel()
         return
       }
@@ -55,7 +56,7 @@ export default function ResumePage() {
       }
     })
     return () => unsubscribe()
-  }, [watch, debouncedSave, application?.resume.id])
+  }, [watch, debouncedSave, application?.resume.id, isAutosaveSuspended])
 
   useEffect(() => {
     const currentResumeId = application?.resume.id

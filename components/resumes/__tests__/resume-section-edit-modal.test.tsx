@@ -52,10 +52,7 @@ vi.mock("../resume-section-form", () => ({
   )
 }))
 
-function renderWithForm(
-  store = createStore(),
-  defaultValues?: ResumeData
-) {
+function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
   function DraftObserver() {
     const { watch } = useFormContext<ResumeData>()
     const educationBlocks = watch("education.blocks")
@@ -261,9 +258,9 @@ describe("ResumeSectionEditModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel Form" }))
 
     await waitFor(() => {
-      expect(screen.getByTestId("draft-education-block-count")).toHaveTextContent(
-        "0"
-      )
+      expect(
+        screen.getByTestId("draft-education-block-count")
+      ).toHaveTextContent("0")
       expect(
         store.get(applicationAtom)?.resume.resume_json.education.blocks
       ).toHaveLength(0)

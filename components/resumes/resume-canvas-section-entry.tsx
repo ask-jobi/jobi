@@ -10,16 +10,12 @@ import {
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover"
-import {
-  editModalOpenAtom,
-  editModalRollbackResumeAtom,
-  focusSectionAtom,
-  useResumeLanguage
-} from "@/lib/store/resume"
+import { editModalOpenAtom, useResumeLanguage } from "@/lib/store/resume"
 import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
+import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
 import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 
 const QUICK_START_SECTIONS: SectionId[] = [
@@ -66,9 +62,9 @@ export function ResumeCanvasSectionEntry() {
   const locale = useLocale()
   const resumeLanguage = useResumeLanguage()
   const { draft, ensureEditableSection, getDraft } = useResumeDraft()
-  const openSectionEditor = useSetAtom(focusSectionAtom)
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
-  const setEditModalRollbackResume = useSetAtom(editModalRollbackResumeAtom)
+  const { clearRollbackResume, selectTarget, setRollbackResume } =
+    useResumeEditorState()
   const [open, setOpen] = useState(false)
   const [pendingSectionId, setPendingSectionId] = useState<SectionId | null>(
     null
@@ -105,7 +101,7 @@ export function ResumeCanvasSectionEntry() {
   }
 
   const openEditModal = (sectionId: SectionId, blockIndex?: number) => {
-    openSectionEditor(sectionId, blockIndex)
+    selectTarget(sectionId, blockIndex)
     setEditModalOpen(true)
   }
 
@@ -113,16 +109,16 @@ export function ResumeCanvasSectionEntry() {
     setPendingSectionId(sectionId)
 
     if (sectionId === "personalInfo") {
-      setEditModalRollbackResume(null)
+      clearRollbackResume()
       openEditModal(sectionId)
       setOpen(false)
       setPendingSectionId(null)
       return
     }
 
-    setEditModalRollbackResume(getDraft())
+    setRollbackResume(getDraft())
     const { blockIndex, blockId } = ensureEditableSection(sectionId)
-    openSectionEditor(sectionId, blockIndex ?? undefined, blockId)
+    selectTarget(sectionId, blockIndex ?? undefined, blockId)
     setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)
@@ -131,9 +127,9 @@ export function ResumeCanvasSectionEntry() {
   const handleAddSection = async (sectionId: SortableSectionId) => {
     setPendingSectionId(sectionId)
 
-    setEditModalRollbackResume(getDraft())
+    setRollbackResume(getDraft())
     const { blockIndex, blockId } = ensureEditableSection(sectionId)
-    openSectionEditor(sectionId, blockIndex ?? undefined, blockId)
+    selectTarget(sectionId, blockIndex ?? undefined, blockId)
     setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)

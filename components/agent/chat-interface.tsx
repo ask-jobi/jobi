@@ -52,7 +52,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   const { application } = useResume()
-  const { draft, applyToolOutput } = useResumeDraft()
+  const { draft, applyToolOutput, commitDraft } = useResumeDraft()
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()
   const setPendingChatAction = useSetPendingChatAction()
@@ -85,7 +85,8 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: modifyOutput
         })
 
-        await applyToolOutput(modifyOutput)
+        const nextResume = applyToolOutput(modifyOutput)
+        await commitDraft(nextResume)
       } else if (toolCall.toolName === "resumeEditorReorder") {
         const typedInput = input as ResumeEditorReorderInput
 
@@ -100,7 +101,8 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: reorderOutput
         })
 
-        await applyToolOutput(reorderOutput)
+        const nextResume = applyToolOutput(reorderOutput)
+        await commitDraft(nextResume)
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,

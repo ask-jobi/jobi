@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ChatInterface } from "../chat-interface"
 
 const mockApplyToolOutput = vi.fn()
+const mockCommitDraft = vi.fn()
 const mockExecuteResumeEditorModifyTool = vi.fn()
 const mockAddToolOutput = vi.fn()
 
@@ -69,7 +70,8 @@ vi.mock("@/lib/store/resume", () => ({
 vi.mock("@/lib/hooks/use-resume-draft", () => ({
   useResumeDraft: () => ({
     draft: draftResume,
-    applyToolOutput: mockApplyToolOutput
+    applyToolOutput: mockApplyToolOutput,
+    commitDraft: mockCommitDraft
   })
 }))
 
@@ -140,6 +142,8 @@ describe("ChatInterface", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     capturedOnToolCall = null
+    mockApplyToolOutput.mockReturnValue(draftResume)
+    mockCommitDraft.mockResolvedValue(undefined)
     mockExecuteResumeEditorModifyTool.mockResolvedValue({
       operation: "rewrite",
       entity: "education",
@@ -190,5 +194,6 @@ describe("ChatInterface", () => {
         id: "edu-draft"
       })
     )
+    expect(mockCommitDraft).toHaveBeenCalledWith(draftResume)
   })
 })

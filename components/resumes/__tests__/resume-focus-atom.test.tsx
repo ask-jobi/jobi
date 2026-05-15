@@ -14,11 +14,15 @@ import {
 describe("focusSectionAtom", () => {
   beforeEach(() => {
     document.body.innerHTML = ""
-    vi.useFakeTimers()
   })
 
-  it("should keep the left resume canvas still while scrolling the form", () => {
+  it("updates selection for a block target without touching DOM scrolling", () => {
     const store = createStore()
+    const scrollTarget = document.createElement("div")
+    scrollTarget.id = "form-education-1"
+    scrollTarget.scrollIntoView = vi.fn()
+    document.body.appendChild(scrollTarget)
+
     store.set(applicationAtom, {
       id: "app-1",
       resume: {
@@ -71,32 +75,16 @@ describe("focusSectionAtom", () => {
         description: ""
       }
     })
-    const sectionElement = document.createElement("div")
-    const formElement = document.createElement("div")
-    const sectionScrollIntoView = vi.fn()
-    const formScrollIntoView = vi.fn()
-
-    sectionElement.id = "section-education-1"
-    formElement.id = "form-education-1"
-    sectionElement.scrollIntoView = sectionScrollIntoView
-    formElement.scrollIntoView = formScrollIntoView
-
-    document.body.append(sectionElement, formElement)
 
     store.set(focusSectionAtom, "education", 1)
-    vi.runAllTimers()
 
     expect(store.get(selectedSectionIdAtom)).toBe("education")
     expect(store.get(selectedBlockIndexAtom)).toBe(1)
     expect(store.get(selectedBlockIdAtom)).toBe("edu-2")
-    expect(sectionScrollIntoView).not.toHaveBeenCalled()
-    expect(formScrollIntoView).toHaveBeenCalledWith({
-      behavior: "smooth",
-      block: "start"
-    })
+    expect(scrollTarget.scrollIntoView).not.toHaveBeenCalled()
   })
 
-  it("should scroll to the section form root when no block index is provided", () => {
+  it("updates section selection when no block index is provided", () => {
     const store = createStore()
     store.set(applicationAtom, {
       id: "app-1",
@@ -133,23 +121,11 @@ describe("focusSectionAtom", () => {
         description: ""
       }
     })
-    const formElement = document.createElement("div")
-    const formScrollIntoView = vi.fn()
-
-    formElement.id = "form-personalInfo"
-    formElement.scrollIntoView = formScrollIntoView
-
-    document.body.append(formElement)
 
     store.set(focusSectionAtom, "personalInfo")
-    vi.runAllTimers()
 
     expect(store.get(selectedSectionIdAtom)).toBe("personalInfo")
     expect(store.get(selectedBlockIdAtom)).toBeNull()
     expect(store.get(selectedBlockIndexAtom)).toBeNull()
-    expect(formScrollIntoView).toHaveBeenCalledWith({
-      behavior: "smooth",
-      block: "start"
-    })
   })
 })

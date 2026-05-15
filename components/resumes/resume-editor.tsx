@@ -4,13 +4,9 @@ import { useCallback } from "react"
 import { useSetAtom } from "jotai"
 import { useResumeTemplate } from "@/lib/hooks/use-resume-template"
 import { useSectionClickHandler } from "@/lib/hooks/use-section-click"
-import {
-  editModalOpenAtom,
-  editModalRollbackResumeAtom,
-  focusSectionAtom,
-  useResumeLanguage
-} from "@/lib/store/resume"
+import { editModalOpenAtom, useResumeLanguage } from "@/lib/store/resume"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
+import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
 import {
   isResumeCanvasEmpty,
   ResumeCanvasSectionEntry
@@ -19,29 +15,30 @@ import type { SortableSectionId } from "@/types/resume"
 
 export function ResumeEditor() {
   const resumeLanguage = useResumeLanguage()
-  const { draft, addBlockBelow, deleteBlock, getDraft } = useResumeDraft()
+  const { draft, addBlockBelow, commitDraft, deleteBlock, getDraft } =
+    useResumeDraft()
   const { Template } = useResumeTemplate()
   const handleSectionClick = useSectionClickHandler()
-  const openSectionEditor = useSetAtom(focusSectionAtom)
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
-  const setEditModalRollbackResume = useSetAtom(editModalRollbackResumeAtom)
+  const { selectTarget, setRollbackResume } = useResumeEditorState()
   const isEmptyCanvas = isResumeCanvasEmpty(draft)
   const handleBlockAdd = useCallback(
     (sectionId: SortableSectionId, index: number) => {
       const previousResume = getDraft()
       const { blockIndex, blockId } = addBlockBelow(sectionId, index)
 
-      setEditModalRollbackResume(previousResume)
-      openSectionEditor(sectionId, blockIndex, blockId)
+      setRollbackResume(previousResume)
+      selectTarget(sectionId, blockIndex ?? undefined, blockId)
       setEditModalOpen(true)
     },
-    [addBlockBelow, getDraft, openSectionEditor, setEditModalOpen, setEditModalRollbackResume]
+    [addBlockBelow, getDraft, selectTarget, setEditModalOpen, setRollbackResume]
   )
   const handleBlockDelete = useCallback(
     (sectionId: SortableSectionId, index: number) => {
-      deleteBlock(sectionId, index)
+      const nextResume = deleteBlock(sectionId, index)
+      void commitDraft(nextResume)
     },
-    [deleteBlock]
+    [commitDraft, deleteBlock]
   )
 
   return (

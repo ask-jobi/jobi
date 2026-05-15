@@ -13,6 +13,12 @@ import type {
 } from "@/types/chat"
 import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 
+type ResumeDraftSelection = {
+  resume: ResumeData
+  blockId: string | null
+  blockIndex: number | null
+}
+
 function applyToolOutputToResume(
   baseResume: ResumeData,
   output: ResumeEditorModifyOutput | ResumeEditorReorderOutput
@@ -103,7 +109,7 @@ export function useResumeDraft() {
       commitDraft: async (nextResume?: ResumeData) => {
         await saveResume(nextResume ?? getValues())
       },
-      ensureEditableSection: (sectionId: SectionId) => {
+      ensureEditableSection: (sectionId: SectionId): ResumeDraftSelection => {
         if (sectionId === "personalInfo") {
           return {
             resume: getValues(),
@@ -126,7 +132,10 @@ export function useResumeDraft() {
           blockId
         }
       },
-      addBlockBelow: (sectionId: SortableSectionId, index: number) => {
+      addBlockBelow: (
+        sectionId: SortableSectionId,
+        index: number
+      ): ResumeDraftSelection => {
         const { resume, blockIndex } = insertDraftBlockBelow(
           getValues(),
           sectionId,
@@ -141,7 +150,7 @@ export function useResumeDraft() {
           blockId
         }
       },
-      deleteBlock: async (sectionId: SortableSectionId, index: number) => {
+      deleteBlock: (sectionId: SortableSectionId, index: number) => {
         const nextResume = structuredClone(getValues()) as ResumeData
         const section = nextResume[sectionId]
 
@@ -154,17 +163,13 @@ export function useResumeDraft() {
         }) as typeof section.blocks
 
         reset(nextResume)
-        await saveResume(nextResume)
-
         return nextResume
       },
-      applyToolOutput: async (
+      applyToolOutput: (
         output: ResumeEditorModifyOutput | ResumeEditorReorderOutput
       ) => {
         const nextResume = applyToolOutputToResume(getValues(), output)
         reset(nextResume)
-        await saveResume(nextResume)
-
         return nextResume
       }
     }),

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect } from "react"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom } from "jotai"
 import { useTranslations } from "next-intl"
 import {
   Dialog,
@@ -10,40 +10,37 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { ResumeSectionForm } from "@/components/resumes/resume-section-form"
-import {
-  editModalOpenAtom,
-  editModalRollbackResumeAtom,
-  selectedBlockIdAtom,
-  selectedBlockIndexAtom,
-  selectedSectionIdAtom
-} from "@/lib/store/resume"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
+import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
+import { editModalOpenAtom } from "@/lib/store/resume"
 
 export function ResumeSectionEditModal() {
   const t = useTranslations("rightPanel")
   const sectionT = useTranslations("chat.toolOutput.entity")
   const { getDraft, commitDraft, resetDraft } = useResumeDraft()
   const [isOpen, setIsOpen] = useAtom(editModalOpenAtom)
-  const [rollbackResume, setRollbackResume] = useAtom(
-    editModalRollbackResumeAtom
-  )
-  const [selectedBlockId, setSelectedBlockId] = useAtom(selectedBlockIdAtom)
-  const [, setSelectedBlockIndex] = useAtom(selectedBlockIndexAtom)
-  const [selectedSectionId, setSelectedSectionId] = useAtom(
-    selectedSectionIdAtom
-  )
-  const selectedBlockIndex = useAtomValue(selectedBlockIndexAtom)
+  const {
+    selectedBlockId,
+    selectedBlockIndex,
+    selectedSectionId,
+    rollbackResume,
+    clearSelection,
+    clearRollbackResume
+  } = useResumeEditorState()
 
   const selectedSectionLabel = selectedSectionId
     ? sectionT(selectedSectionId as Parameters<typeof sectionT>[0])
     : null
 
-  const clearSelection = useCallback(() => {
+  const closeModal = useCallback(() => {
     setIsOpen(false)
-    setSelectedSectionId(null)
-    setSelectedBlockId(null)
-    setSelectedBlockIndex(null)
-  }, [setIsOpen, setSelectedBlockId, setSelectedBlockIndex, setSelectedSectionId])
+  }, [setIsOpen])
+
+  const dismissEditor = useCallback(() => {
+    clearRollbackResume()
+    clearSelection()
+    closeModal()
+  }, [clearRollbackResume, clearSelection, closeModal])
 
   const handleOpenChange = async (open: boolean) => {
     if (open) {
@@ -55,14 +52,12 @@ export function ResumeSectionEditModal() {
       resetDraft(rollbackResume)
     }
 
-    setRollbackResume(null)
-    clearSelection()
+    dismissEditor()
   }
 
   const handleSaveComplete = () => {
     const nextResume = getDraft()
-    setRollbackResume(null)
-    clearSelection()
+    dismissEditor()
     void commitDraft(nextResume)
   }
 
@@ -75,34 +70,14 @@ export function ResumeSectionEditModal() {
       return
     }
 
-    setRollbackResume(null)
-    clearSelection()
+    dismissEditor()
   }, [
-    clearSelection,
+    dismissEditor,
     isOpen,
     selectedBlockId,
     selectedBlockIndex,
-    selectedSectionId,
-    setRollbackResume
+    selectedSectionId
   ])
-
-  useEffect(() => {
-    if (!isOpen || !selectedSectionId) {
-      return
-    }
-
-    const targetId =
-      typeof selectedBlockIndex === "number"
-        ? `form-${selectedSectionId}-${selectedBlockIndex}`
-        : `form-${selectedSectionId}`
-
-    const timer = window.setTimeout(() => {
-      const formElement = document.getElementById(targetId)
-      formElement?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }, 0)
-
-    return () => window.clearTimeout(timer)
-  }, [isOpen, selectedBlockIndex, selectedSectionId])
 
   if (!selectedSectionId || (selectedBlockId && selectedBlockIndex === null)) {
     return null

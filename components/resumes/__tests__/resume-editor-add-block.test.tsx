@@ -150,9 +150,9 @@ describe("ResumeEditor add block", () => {
       expect(store.get(selectedBlockIndexAtom)).toBe(1)
       expect(store.get(selectedBlockIdAtom)).toBeTruthy()
       expect(store.get(editModalRollbackResumeAtom)).toEqual(originalResume)
-      expect(screen.getByTestId("draft-education-block-count")).toHaveTextContent(
-        "2"
-      )
+      expect(
+        screen.getByTestId("draft-education-block-count")
+      ).toHaveTextContent("2")
       expect(
         store.get(applicationAtom)?.resume.resume_json.education.blocks
       ).toHaveLength(1)
@@ -211,12 +211,14 @@ describe("ResumeEditor add block", () => {
 
     renderEditor(store)
 
-    fireEvent.click(screen.getByRole("button", { name: "Trigger Delete Block" }))
+    fireEvent.click(
+      screen.getByRole("button", { name: "Trigger Delete Block" })
+    )
 
     await waitFor(() => {
-      expect(screen.getByTestId("draft-education-block-count")).toHaveTextContent(
-        "0"
-      )
+      expect(
+        screen.getByTestId("draft-education-block-count")
+      ).toHaveTextContent("0")
       expect(
         store.get(applicationAtom)?.resume.resume_json.education.blocks
       ).toHaveLength(0)

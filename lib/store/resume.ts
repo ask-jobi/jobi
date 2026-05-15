@@ -160,7 +160,18 @@ export const selectedBlockIndexAtom = atom(
 )
 export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
 export const editModalOpenAtom = atom(false)
-export const editModalRollbackResumeAtom = atom<ResumeData | null>(null)
+export const draftRollbackResumeAtom = atom<ResumeData | null>(null)
+export const editModalRollbackResumeAtom = draftRollbackResumeAtom
+
+export const resumeAutosaveSuspendedAtom = atom(
+  (get) => get(editModalOpenAtom) && get(draftRollbackResumeAtom) !== null
+)
+
+export const clearEditorSelectionAtom = atom(null, (_get, set) => {
+  set(selectedSectionIdAtom, null)
+  set(selectedBlockIdAtom, null)
+  set(selectedBlockIndexAtom, null)
+})
 
 export const focusSectionAtom = atom(
   null,
@@ -181,14 +192,6 @@ export const focusSectionAtom = atom(
     } else {
       set(selectedBlockIdAtom, null)
     }
-    const formSectionId =
-      typeof index === "number" ? `form-${id}-${index}` : `form-${id}`
-    setTimeout(() => {
-      const formElement = document.getElementById(formSectionId)
-      if (formElement) {
-        formElement.scrollIntoView({ behavior: "smooth", block: "start" })
-      }
-    })
   }
 )
 
