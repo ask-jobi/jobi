@@ -2,8 +2,6 @@
 
 import { useCallback } from "react"
 import { useSetAtom } from "jotai"
-import { useFormContext } from "react-hook-form"
-import { useResume } from "@/lib/store/resume"
 import { useResumeTemplate } from "@/lib/hooks/use-resume-template"
 import { useSectionClickHandler } from "@/lib/hooks/use-section-click"
 import {
@@ -12,64 +10,38 @@ import {
   focusSectionAtom,
   useResumeLanguage
 } from "@/lib/store/resume"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import {
   isResumeCanvasEmpty,
   ResumeCanvasSectionEntry
 } from "@/components/resumes/resume-canvas-section-entry"
-import type { ResumeData, SortableSectionId } from "@/types/resume"
-import { insertDraftBlockBelow } from "@/lib/templates/section-helpers"
+import type { SortableSectionId } from "@/types/resume"
 
 export function ResumeEditor() {
-  const { getValues, reset } = useFormContext<ResumeData>()
-  const { resumeData, updateResumeData, updateResumeDataWithSave } = useResume()
   const resumeLanguage = useResumeLanguage()
+  const { draft, addBlockBelow, deleteBlock, getDraft } = useResumeDraft()
   const { Template } = useResumeTemplate()
   const handleSectionClick = useSectionClickHandler()
   const openSectionEditor = useSetAtom(focusSectionAtom)
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
   const setEditModalRollbackResume = useSetAtom(editModalRollbackResumeAtom)
-  const isEmptyCanvas = isResumeCanvasEmpty(resumeData)
+  const isEmptyCanvas = isResumeCanvasEmpty(draft)
   const handleBlockAdd = useCallback(
     (sectionId: SortableSectionId, index: number) => {
-      const previousResume = getValues()
-      const { resume, blockIndex } = insertDraftBlockBelow(
-        previousResume,
-        sectionId,
-        index
-      )
+      const previousResume = getDraft()
+      const { blockIndex, blockId } = addBlockBelow(sectionId, index)
 
       setEditModalRollbackResume(previousResume)
-      reset(resume)
-      updateResumeData(resume)
-      openSectionEditor(sectionId, blockIndex)
+      openSectionEditor(sectionId, blockIndex, blockId)
       setEditModalOpen(true)
     },
-    [
-      getValues,
-      openSectionEditor,
-      reset,
-      setEditModalOpen,
-      setEditModalRollbackResume,
-      updateResumeData
-    ]
+    [addBlockBelow, getDraft, openSectionEditor, setEditModalOpen, setEditModalRollbackResume]
   )
   const handleBlockDelete = useCallback(
     (sectionId: SortableSectionId, index: number) => {
-      const nextResume = structuredClone(getValues()) as ResumeData
-      const section = nextResume[sectionId]
-
-      if (!section || !("blocks" in section) || !section.blocks[index]) {
-        return
-      }
-
-      section.blocks = section.blocks.filter((_, blockIndex) => {
-        return blockIndex !== index
-      }) as typeof section.blocks
-
-      reset(nextResume)
-      void updateResumeDataWithSave(nextResume)
+      deleteBlock(sectionId, index)
     },
-    [getValues, reset, updateResumeDataWithSave]
+    [deleteBlock]
   )
 
   return (
@@ -83,7 +55,7 @@ export function ResumeEditor() {
           <div className="min-h-[297mm] bg-white" />
         ) : (
           <Template
-            data={resumeData}
+            data={draft}
             language={resumeLanguage}
             options={{
               isInteractive: true,

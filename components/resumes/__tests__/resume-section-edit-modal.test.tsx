@@ -4,13 +4,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { Provider, createStore } from "jotai"
 import { describe, expect, it, vi } from "vitest"
-import { FormProvider, useForm } from "react-hook-form"
+import { FormProvider, useForm, useFormContext } from "react-hook-form"
 import { ResumeSectionEditModal } from "../resume-section-edit-modal"
 import {
   applicationAtom,
   editModalOpenAtom,
   editModalRollbackResumeAtom,
   selectedBlockIdAtom,
+  selectedBlockIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
 import type { ResumeData } from "@/types/resume"
@@ -51,10 +52,25 @@ vi.mock("../resume-section-form", () => ({
   )
 }))
 
-function renderWithForm(store = createStore()) {
+function renderWithForm(
+  store = createStore(),
+  defaultValues?: ResumeData
+) {
+  function DraftObserver() {
+    const { watch } = useFormContext<ResumeData>()
+    const educationBlocks = watch("education.blocks")
+
+    return (
+      <div data-testid="draft-education-block-count">
+        {educationBlocks?.length ?? 0}
+      </div>
+    )
+  }
+
   function Wrapper() {
     const methods = useForm<ResumeData>({
       defaultValues:
+        defaultValues ??
         store.get(applicationAtom)?.resume.resume_json ??
         ({
           sectionOrder: ["education", "skills"],
@@ -81,6 +97,7 @@ function renderWithForm(store = createStore()) {
     return (
       <Provider store={store}>
         <FormProvider {...methods}>
+          <DraftObserver />
           <ResumeSectionEditModal />
         </FormProvider>
       </Provider>
@@ -177,7 +194,7 @@ describe("ResumeSectionEditModal", () => {
     expect(store.get(selectedBlockIdAtom)).toBeNull()
   })
 
-  it("rolls back a newly added draft block when the form is cancelled", async () => {
+  it("rolls back a newly added draft block when the form is cancelled without saving", async () => {
     const store = createStore()
     saveResumeChangeMock.mockResolvedValue(undefined)
     const originalResume: ResumeData = {
@@ -224,7 +241,7 @@ describe("ResumeSectionEditModal", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
-        resume_json: draftResume
+        resume_json: originalResume
       },
       job: {
         id: "job-1",
@@ -237,17 +254,96 @@ describe("ResumeSectionEditModal", () => {
     store.set(editModalRollbackResumeAtom, originalResume)
     store.set(selectedSectionIdAtom, "education")
     store.set(selectedBlockIdAtom, "edu-1")
+    store.set(selectedBlockIndexAtom, 0)
 
-    renderWithForm(store)
+    renderWithForm(store, draftResume)
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel Form" }))
 
     await waitFor(() => {
+      expect(screen.getByTestId("draft-education-block-count")).toHaveTextContent(
+        "0"
+      )
       expect(
         store.get(applicationAtom)?.resume.resume_json.education.blocks
       ).toHaveLength(0)
       expect(store.get(editModalRollbackResumeAtom)).toBeNull()
       expect(store.get(editModalOpenAtom)).toBe(false)
+      expect(saveResumeChangeMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("commits the draft when the form is saved", async () => {
+    const store = createStore()
+    saveResumeChangeMock.mockResolvedValue(undefined)
+    const originalResume: ResumeData = {
+      sectionOrder: ["education", "skills"],
+      personalInfo: {
+        blockId: "pi-1",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: ""
+      },
+      education: {
+        sectionId: "education",
+        title: "Education",
+        blocks: []
+      },
+      skills: {
+        sectionId: "skills",
+        title: "Skills",
+        blocks: []
+      }
+    }
+    const draftResume: ResumeData = {
+      ...originalResume,
+      education: {
+        ...originalResume.education,
+        blocks: [
+          {
+            blockId: "edu-1",
+            school: "School 1",
+            degree: "Degree 1",
+            start: "2020-01",
+            end: "2021-01",
+            content: "Saved"
+          }
+        ]
+      }
+    }
+
+    store.set(applicationAtom, {
+      id: "app-1",
+      resume: {
+        id: "resume-1",
+        language: "en",
+        evaluation_report: null,
+        evaluation_report_refresh_flag: false,
+        resume_json: originalResume
+      },
+      job: {
+        id: "job-1",
+        name: "",
+        company: "",
+        description: ""
+      }
+    })
+    store.set(editModalOpenAtom, true)
+    store.set(selectedSectionIdAtom, "education")
+    store.set(selectedBlockIdAtom, "edu-1")
+    store.set(selectedBlockIndexAtom, 0)
+
+    renderWithForm(store, draftResume)
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Form" }))
+
+    await waitFor(() => {
+      expect(
+        store.get(applicationAtom)?.resume.resume_json.education.blocks
+      ).toHaveLength(1)
+      expect(store.get(editModalOpenAtom)).toBe(false)
+      expect(saveResumeChangeMock).toHaveBeenCalledWith("resume-1", draftResume)
     })
   })
 })

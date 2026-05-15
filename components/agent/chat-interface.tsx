@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { useResume } from "@/lib/store/resume"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk"
@@ -50,7 +51,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 }
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
-  const { application, resumeData, updateResumeByToolOutput } = useResume()
+  const { application } = useResume()
+  const { draft, applyToolOutput } = useResumeDraft()
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()
   const setPendingChatAction = useSetPendingChatAction()
@@ -74,7 +76,7 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
 
         const modifyOutput = (await executeResumeEditorModifyTool(
           typedInput,
-          resumeData!!
+          draft!!
         )) as ResumeEditorModifyOutput
 
         addToolOutput({
@@ -83,13 +85,13 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: modifyOutput
         })
 
-        await updateResumeByToolOutput(modifyOutput)
+        await applyToolOutput(modifyOutput)
       } else if (toolCall.toolName === "resumeEditorReorder") {
         const typedInput = input as ResumeEditorReorderInput
 
         const reorderOutput = (await executeResumeEditorReorderTool(
           typedInput,
-          resumeData!!
+          draft!!
         )) as ResumeEditorReorderOutput
 
         addToolOutput({
@@ -98,7 +100,7 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: reorderOutput
         })
 
-        await updateResumeByToolOutput(reorderOutput)
+        await applyToolOutput(reorderOutput)
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,

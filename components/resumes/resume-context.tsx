@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect } from "react"
 import { createStore, useAtomValue, useSetAtom } from "jotai"
-import { resumeDataAtom, applicationAtom } from "@/lib/store/resume"
+import { persistedResumeAtom, applicationAtom } from "@/lib/store/resume"
 import { JobApplication } from "@/types/resume"
 
 interface ResumeInitializerProps {
@@ -16,14 +16,14 @@ export function ResumeInitializer({
   children,
   jobApplication
 }: ResumeInitializerProps) {
-  const resumeData = useAtomValue(resumeDataAtom)
+  const persistedResume = useAtomValue(persistedResumeAtom)
   const setJobApplication = useSetAtom(applicationAtom)
 
   useEffect(() => {
     setJobApplication(jobApplication)
   }, [jobApplication, setJobApplication])
 
-  if (!resumeData) {
+  if (!persistedResume) {
     return null
   }
 

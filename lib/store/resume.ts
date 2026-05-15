@@ -9,16 +9,12 @@ import {
   SectionId
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
-import type {
-  ResumeEditorModifyOutput,
-  ResumeEditorReorderOutput
-} from "@/types/chat"
 import { toast } from "sonner"
 import { saveResumeChange } from "@/server/resume"
 import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
 
 export const applicationAtom = atom<JobApplication | null>(null)
-export const resumeDataAtom = atom(
+export const persistedResumeAtom = atom(
   (get) => {
     const app = get(applicationAtom)
     return app ? app.resume.resume_json : null
@@ -42,7 +38,7 @@ export type ResumeIndex = {
   blockMap: Map<string, { sectionId: SortableSectionId; block: any }>
 }
 export const resumeIndexAtom = atom((get): ResumeIndex => {
-  const resume = get(resumeDataAtom)
+  const resume = get(persistedResumeAtom)
   const sectionMap = new Map<SortableSectionId, SectionBlock>()
   const blockMap = new Map<
     string,
@@ -129,42 +125,58 @@ export const evaluationRefreshFlagAtom = atom(
 export const isLoadingAtom = atom(false)
 export const selectedSectionIdAtom = atom<SectionId | null>(null)
 export const selectedBlockIdAtom = atom<string | null>(null)
-export const selectedBlockIndexAtom = atom((get) => {
-  const selectedSectionId = get(selectedSectionIdAtom)
-  const selectedBlockId = get(selectedBlockIdAtom)
-  const resumeData = get(resumeDataAtom)
+const selectedBlockIndexStateAtom = atom<number | null>(null)
+export const selectedBlockIndexAtom = atom(
+  (get) => {
+    const explicitIndex = get(selectedBlockIndexStateAtom)
 
-  if (!selectedSectionId || !selectedBlockId || !resumeData) {
-    return null
+    if (explicitIndex !== null) {
+      return explicitIndex
+    }
+
+    const selectedSectionId = get(selectedSectionIdAtom)
+    const selectedBlockId = get(selectedBlockIdAtom)
+    const resumeData = get(persistedResumeAtom)
+
+    if (!selectedSectionId || !selectedBlockId || !resumeData) {
+      return null
+    }
+
+    const section = resumeData[selectedSectionId]
+
+    if (!section || !("blocks" in section)) {
+      return null
+    }
+
+    const blockIndex = section.blocks.findIndex(
+      (block: { blockId: string }) => block.blockId === selectedBlockId
+    )
+
+    return blockIndex >= 0 ? blockIndex : null
+  },
+  (_get, set, index: number | null) => {
+    set(selectedBlockIndexStateAtom, index)
   }
-
-  const section = resumeData[selectedSectionId]
-
-  if (!section || !("blocks" in section)) {
-    return null
-  }
-
-  const blockIndex = section.blocks.findIndex(
-    (block: { blockId: string }) => block.blockId === selectedBlockId
-  )
-
-  return blockIndex >= 0 ? blockIndex : null
-})
+)
 export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
 export const editModalOpenAtom = atom(false)
 export const editModalRollbackResumeAtom = atom<ResumeData | null>(null)
 
 export const focusSectionAtom = atom(
   null,
-  (get, set, id: SectionId, index?: number) => {
-    const resumeData = get(resumeDataAtom)
+  (get, set, id: SectionId, index?: number, blockId?: string | null) => {
+    const resumeData = get(persistedResumeAtom)
     set(selectedSectionIdAtom, id)
+    set(selectedBlockIndexAtom, typeof index === "number" ? index : null)
     if (typeof index === "number" && resumeData) {
       const section = resumeData[id]
       if (section && "blocks" in section) {
-        set(selectedBlockIdAtom, section.blocks[index]?.blockId ?? null)
+        set(
+          selectedBlockIdAtom,
+          blockId ?? section.blocks[index]?.blockId ?? null
+        )
       } else {
-        set(selectedBlockIdAtom, null)
+        set(selectedBlockIdAtom, blockId ?? null)
       }
     } else {
       set(selectedBlockIdAtom, null)
@@ -187,7 +199,7 @@ export function useResumeLanguage() {
 }
 
 export function useResume() {
-  const [resumeData, setResumeData] = useAtom(resumeDataAtom)
+  const [persistedResume, setPersistedResume] = useAtom(persistedResumeAtom)
   const [application] = useAtom(applicationAtom)
   const [jobDescription, setJobDescription] = useAtom(jobAtom)
   const [isLoading, setLoading] = useAtom(isLoadingAtom)
@@ -196,95 +208,17 @@ export function useResume() {
     evaluationRefreshFlagAtom
   )
 
-  const updateResumeData = (data: ResumeData) => setResumeData(data)
+  const replacePersistedResume = (data: ResumeData) => setPersistedResume(data)
 
-  const updateResumeDataWithSave = async (data: ResumeData) => {
+  const saveResume = async (data: ResumeData) => {
     if (!application?.resume.id) return
-    setResumeData(data)
+    setPersistedResume(data)
     try {
       await saveResumeChange(application.resume.id, data)
     } catch (error) {
       console.error("Save failed:", error)
       toast.error("Auto save failed")
     }
-  }
-
-  const updateResumeByToolOutput = async (
-    output: ResumeEditorModifyOutput | ResumeEditorReorderOutput
-  ) => {
-    const copiedResume = structuredClone(resumeData) as ResumeData
-
-    if (
-      output.operation === "rewrite" ||
-      output.operation === "delete" ||
-      output.operation === "add"
-    ) {
-      const modifyOutput = output as ResumeEditorModifyOutput
-
-      if (modifyOutput.operation === "rewrite") {
-        const section = copiedResume[modifyOutput.entity]
-        if (!section || !("blocks" in section)) return resumeData as ResumeData
-
-        section.blocks.forEach((item) => {
-          if (item.blockId === modifyOutput.id && modifyOutput.field in item) {
-            // @ts-expect-error ignore
-            item[modifyOutput.field] = modifyOutput.value
-          }
-        })
-      }
-
-      if (modifyOutput.operation === "delete") {
-        const section = copiedResume[modifyOutput.entity]
-        if (!section || !("blocks" in section)) return resumeData as ResumeData
-
-        // @ts-expect-error - filtered by id
-        section.blocks = section.blocks.filter(
-          (item) => item.blockId !== modifyOutput.id
-        )
-      }
-
-      if (modifyOutput.operation === "add") {
-        const section = copiedResume[modifyOutput.entity]
-        if (!section || !("blocks" in section)) return resumeData as ResumeData
-
-        // @ts-expect-error - adding new block
-        section.blocks.push(modifyOutput.newBlock)
-      }
-    }
-
-    if (
-      output.operation === "reorderBlocks" ||
-      output.operation === "reorderSections"
-    ) {
-      const reorderOutput = output as ResumeEditorReorderOutput
-
-      if (reorderOutput.operation === "reorderBlocks") {
-        const entity = reorderOutput.entity
-        if (!entity) return resumeData as ResumeData
-
-        const section = copiedResume[entity]
-        if (!section || !("blocks" in section)) return resumeData as ResumeData
-
-        const orderedBlocks = reorderOutput.orderedBlockIds
-          ?.map((id: string) =>
-            section.blocks.find((b: { blockId: string }) => b.blockId === id)
-          )
-          .filter(Boolean)
-
-        if (orderedBlocks) {
-          // @ts-expect-error - reordering blocks
-          section.blocks = orderedBlocks
-        }
-      }
-
-      if (reorderOutput.operation === "reorderSections") {
-        if (reorderOutput.orderedSectionIds) {
-          copiedResume.sectionOrder = reorderOutput.orderedSectionIds
-        }
-      }
-    }
-
-    await updateResumeDataWithSave(copiedResume)
   }
 
   const refreshEvaluationReport = async () => {
@@ -295,7 +229,7 @@ export function useResume() {
       },
       body: JSON.stringify({
         resumeId: application?.resume.id,
-        resumeData: resumeData,
+        resumeData: persistedResume,
         jobDescription: jobDescription
       })
     })
@@ -310,13 +244,12 @@ export function useResume() {
   }
 
   return {
-    resumeData,
+    persistedResume,
     application: application as JobApplication,
     isLoading,
     setLoading,
-    updateResumeData,
-    updateResumeDataWithSave,
-    updateResumeByToolOutput,
+    replacePersistedResume,
+    saveResume,
     resumeEvaluation,
     setResumeEvaluation,
     jobDescription,

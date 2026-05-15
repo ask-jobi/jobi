@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useFormContext } from "react-hook-form"
 import { useSetAtom } from "jotai"
 import { Plus } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
@@ -15,13 +14,12 @@ import {
   editModalOpenAtom,
   editModalRollbackResumeAtom,
   focusSectionAtom,
-  useResume,
   useResumeLanguage
 } from "@/lib/store/resume"
 import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
-import { ensureSectionHasEditableBlock } from "@/lib/templates/section-helpers"
 import { getSectionLabel } from "@/lib/templates/section-labels"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
 
 const QUICK_START_SECTIONS: SectionId[] = [
@@ -66,9 +64,8 @@ export function isResumeCanvasEmpty(data: ResumeData | null) {
 export function ResumeCanvasSectionEntry() {
   const t = useTranslations("resumeCanvas")
   const locale = useLocale()
-  const { getValues, reset } = useFormContext<ResumeData>()
-  const { resumeData, updateResumeDataWithSave } = useResume()
   const resumeLanguage = useResumeLanguage()
+  const { draft, ensureEditableSection, getDraft } = useResumeDraft()
   const openSectionEditor = useSetAtom(focusSectionAtom)
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
   const setEditModalRollbackResume = useSetAtom(editModalRollbackResumeAtom)
@@ -78,11 +75,11 @@ export function ResumeCanvasSectionEntry() {
   )
 
   const sectionActions = useMemo(
-    () => getSectionEntryActions(resumeData ?? getValues()),
-    [getValues, resumeData]
+    () => (draft ? getSectionEntryActions(draft) : []),
+    [draft]
   )
 
-  const isEmpty = isResumeCanvasEmpty(resumeData)
+  const isEmpty = isResumeCanvasEmpty(draft)
   const emptyPopoverDescription = t.has("emptyPopoverDescription")
     ? t("emptyPopoverDescription")
     : locale === "zh"
@@ -99,7 +96,7 @@ export function ResumeCanvasSectionEntry() {
       ? "个人信息"
       : "Personal Info"
 
-  if (!resumeData) {
+  if (!draft) {
     return null
   }
 
@@ -123,16 +120,10 @@ export function ResumeCanvasSectionEntry() {
       return
     }
 
-    setEditModalRollbackResume(getValues())
-    const { resume, blockIndex } = ensureSectionHasEditableBlock(
-      getValues(),
-      sectionId,
-      resumeLanguage
-    )
-
-    reset(resume)
-    await updateResumeDataWithSave(resume)
-    openEditModal(sectionId, blockIndex)
+    setEditModalRollbackResume(getDraft())
+    const { blockIndex, blockId } = ensureEditableSection(sectionId)
+    openSectionEditor(sectionId, blockIndex ?? undefined, blockId)
+    setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)
   }
@@ -140,16 +131,10 @@ export function ResumeCanvasSectionEntry() {
   const handleAddSection = async (sectionId: SortableSectionId) => {
     setPendingSectionId(sectionId)
 
-    setEditModalRollbackResume(getValues())
-    const { resume, blockIndex } = ensureSectionHasEditableBlock(
-      getValues(),
-      sectionId,
-      resumeLanguage
-    )
-
-    reset(resume)
-    await updateResumeDataWithSave(resume)
-    openEditModal(sectionId, blockIndex)
+    setEditModalRollbackResume(getDraft())
+    const { blockIndex, blockId } = ensureEditableSection(sectionId)
+    openSectionEditor(sectionId, blockIndex ?? undefined, blockId)
+    setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)
   }

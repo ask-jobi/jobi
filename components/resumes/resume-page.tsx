@@ -11,9 +11,9 @@ import { ResumeSectionEditModal } from "@/components/resumes/resume-section-edit
 import { store } from "@/components/resumes/resume-context"
 
 export default function ResumePage() {
-  const { updateResumeDataWithSave, resumeData, application } = useResume()
+  const { saveResume, persistedResume, application } = useResume()
   const methods = useForm<ResumeData>({
-    defaultValues: resumeData || {},
+    defaultValues: persistedResume || {},
     mode: "onChange"
   })
   const { watch, reset, getValues } = methods
@@ -29,12 +29,12 @@ export default function ResumePage() {
 
       const mergedData = {
         ...formData,
-        sectionOrder: formData.sectionOrder || resumeData?.sectionOrder
+        sectionOrder: formData.sectionOrder || persistedResume?.sectionOrder
       }
 
-      await updateResumeDataWithSave(mergedData)
+      await saveResume(mergedData)
     },
-    [application?.resume.id, updateResumeDataWithSave, resumeData?.sectionOrder]
+    [application?.resume.id, saveResume, persistedResume?.sectionOrder]
   )
 
   const debouncedSave = useDebouncedCallback(handleFormChange, 1000)
@@ -60,18 +60,18 @@ export default function ResumePage() {
   useEffect(() => {
     const currentResumeId = application?.resume.id
 
-    if (!currentResumeId || !resumeData) return
+    if (!currentResumeId || !persistedResume) return
 
     if (currentResumeId !== previousResumeIdRef.current) {
       previousResumeIdRef.current = currentResumeId
-      reset(resumeData)
+      reset(persistedResume)
     } else {
       const currentFormData = getValues()
-      if (JSON.stringify(currentFormData) !== JSON.stringify(resumeData)) {
-        reset(resumeData)
+      if (JSON.stringify(currentFormData) !== JSON.stringify(persistedResume)) {
+        reset(persistedResume)
       }
     }
-  }, [application?.resume.id, resumeData, reset, getValues])
+  }, [application?.resume.id, persistedResume, reset, getValues])
 
   return (
     <FormProvider {...methods}>

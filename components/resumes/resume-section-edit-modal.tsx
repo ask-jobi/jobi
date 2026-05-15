@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect } from "react"
-import { useFormContext } from "react-hook-form"
 import { useAtom, useAtomValue } from "jotai"
 import { useTranslations } from "next-intl"
 import {
@@ -11,26 +10,25 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { ResumeSectionForm } from "@/components/resumes/resume-section-form"
-import type { ResumeData } from "@/types/resume"
 import {
   editModalOpenAtom,
   editModalRollbackResumeAtom,
   selectedBlockIdAtom,
   selectedBlockIndexAtom,
-  selectedSectionIdAtom,
-  useResume
+  selectedSectionIdAtom
 } from "@/lib/store/resume"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 
 export function ResumeSectionEditModal() {
   const t = useTranslations("rightPanel")
   const sectionT = useTranslations("chat.toolOutput.entity")
-  const { getValues, reset } = useFormContext<ResumeData>()
-  const { updateResumeDataWithSave } = useResume()
+  const { getDraft, commitDraft, resetDraft } = useResumeDraft()
   const [isOpen, setIsOpen] = useAtom(editModalOpenAtom)
   const [rollbackResume, setRollbackResume] = useAtom(
     editModalRollbackResumeAtom
   )
   const [selectedBlockId, setSelectedBlockId] = useAtom(selectedBlockIdAtom)
+  const [, setSelectedBlockIndex] = useAtom(selectedBlockIndexAtom)
   const [selectedSectionId, setSelectedSectionId] = useAtom(
     selectedSectionIdAtom
   )
@@ -44,7 +42,8 @@ export function ResumeSectionEditModal() {
     setIsOpen(false)
     setSelectedSectionId(null)
     setSelectedBlockId(null)
-  }, [setIsOpen, setSelectedBlockId, setSelectedSectionId])
+    setSelectedBlockIndex(null)
+  }, [setIsOpen, setSelectedBlockId, setSelectedBlockIndex, setSelectedSectionId])
 
   const handleOpenChange = async (open: boolean) => {
     if (open) {
@@ -53,8 +52,7 @@ export function ResumeSectionEditModal() {
     }
 
     if (rollbackResume) {
-      reset(rollbackResume)
-      await updateResumeDataWithSave(rollbackResume)
+      resetDraft(rollbackResume)
     }
 
     setRollbackResume(null)
@@ -62,10 +60,10 @@ export function ResumeSectionEditModal() {
   }
 
   const handleSaveComplete = () => {
-    const nextResume = getValues()
+    const nextResume = getDraft()
     setRollbackResume(null)
     clearSelection()
-    void updateResumeDataWithSave(nextResume)
+    void commitDraft(nextResume)
   }
 
   useEffect(() => {

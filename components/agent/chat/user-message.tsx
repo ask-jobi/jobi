@@ -9,6 +9,7 @@ import {
 } from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
 import { useResume } from "@/lib/store/resume"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 import { Undo2 } from "lucide-react"
@@ -36,7 +37,8 @@ export function UserActionBar() {
   const t = useTranslations("chat")
   const messageId = useAuiState((s) => s.message?.id)
   const messageParts = useAuiState((s) => s.message?.parts)
-  const { updateResumeData } = useResume()
+  const { replacePersistedResume } = useResume()
+  const { resetDraft } = useResumeDraft()
   const aui = useAui()
 
   const handleTruncate = useCallback(async () => {
@@ -59,7 +61,8 @@ export function UserActionBar() {
       const result = await response.json()
 
       if (result.resume) {
-        updateResumeData(result.resume)
+        replacePersistedResume(result.resume)
+        resetDraft(result.resume)
       }
 
       const currentState = aui.thread().export()
@@ -84,7 +87,7 @@ export function UserActionBar() {
       console.error("Truncate error:", error)
       toast.error(error instanceof Error ? error.message : t("truncateFailed"))
     }
-  }, [aui, updateResumeData, t, messageId, messageParts])
+  }, [aui, replacePersistedResume, resetDraft, t, messageId, messageParts])
 
   return (
     <ActionBarPrimitive.Root
