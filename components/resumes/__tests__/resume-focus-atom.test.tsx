@@ -40,7 +40,6 @@ describe("focusSectionAtom", () => {
             phone: ""
           },
           education: {
-            sectionId: "education",
             title: "Education",
             blocks: [
               {
@@ -62,7 +61,6 @@ describe("focusSectionAtom", () => {
             ]
           },
           skills: {
-            sectionId: "skills",
             title: "Skills",
             blocks: []
           }
@@ -103,12 +101,10 @@ describe("focusSectionAtom", () => {
             phone: ""
           },
           education: {
-            sectionId: "education",
             title: "Education",
             blocks: []
           },
           skills: {
-            sectionId: "skills",
             title: "Skills",
             blocks: []
           }

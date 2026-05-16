@@ -79,12 +79,10 @@ function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
             phone: ""
           },
           education: {
-            sectionId: "education",
             title: "Education",
             blocks: []
           },
           skills: {
-            sectionId: "skills",
             title: "Skills",
             blocks: []
           }
@@ -125,17 +123,14 @@ describe("ResumeSectionEditModal", () => {
             phone: ""
           },
           education: {
-            sectionId: "education",
             title: "Education",
             blocks: []
           },
           skills: {
-            sectionId: "skills",
             title: "Skills",
             blocks: []
           },
           employment: {
-            sectionId: "employment",
             title: "Employment",
             blocks: [
               {
@@ -204,12 +199,10 @@ describe("ResumeSectionEditModal", () => {
         phone: ""
       },
       education: {
-        sectionId: "education",
         title: "Education",
         blocks: []
       },
       skills: {
-        sectionId: "skills",
         title: "Skills",
         blocks: []
       }
@@ -283,12 +276,10 @@ describe("ResumeSectionEditModal", () => {
         phone: ""
       },
       education: {
-        sectionId: "education",
         title: "Education",
         blocks: []
       },
       skills: {
-        sectionId: "skills",
         title: "Skills",
         blocks: []
       }

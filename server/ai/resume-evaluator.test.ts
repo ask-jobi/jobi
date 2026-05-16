@@ -33,7 +33,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       phone: "123-456-7890"
     },
     education: {
-      sectionId: "e1",
       title: "Education",
       blocks: [
         {
@@ -47,7 +46,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     employment: {
-      sectionId: "emp1",
       title: "Work Experience",
       blocks: [
         {
@@ -61,7 +59,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     skills: {
-      sectionId: "s1",
       title: "Skills",
       blocks: [
         {
@@ -117,12 +114,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -178,7 +173,6 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: [
             {
@@ -192,7 +186,6 @@ describe("evaluateResume", () => {
           ]
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: [
             { blockId: "s-b1", group: "General", content: "Problem solving" }
@@ -246,12 +239,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -307,12 +298,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -367,12 +356,10 @@ describe("evaluateResume", () => {
           phone: "123"
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -436,12 +423,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -518,12 +503,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -591,12 +574,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -625,12 +606,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }
@@ -653,12 +632,10 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          sectionId: "e1",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "s1",
           title: "Skills",
           blocks: []
         }

@@ -8,7 +8,7 @@ import type {
   ResearchBlock,
   ResumeData,
   SkillBlock,
-  SortableSectionId
+  SortableSectionKey
 } from "@/types/resume"
 
 const MAX_SKILL_TAGS = 6
@@ -21,7 +21,7 @@ export type ThumbnailBlockSummary = {
 }
 
 export type ThumbnailSectionSummary = {
-  id: SortableSectionId
+  id: SortableSectionKey
   title: string
   blocks: ThumbnailBlockSummary[]
 }
@@ -120,7 +120,7 @@ function buildCertificationSummary(
 }
 
 function buildBlockSummary(
-  sectionId: SortableSectionId,
+  sectionId: SortableSectionKey,
   block:
     | EducationBlock
     | EmploymentBlock

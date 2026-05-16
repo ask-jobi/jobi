@@ -4,9 +4,9 @@ import {
   JobApplication,
   ResumeMetadata,
   ResumeJobDescription,
-  SortableSectionId,
-  SectionBlock,
-  SectionId
+  SortableSectionKey,
+  ResumeSection,
+  ResumeSectionKey
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
@@ -34,27 +34,27 @@ export const persistedResumeAtom = atom(
 )
 
 export type ResumeIndex = {
-  sectionMap: Map<SortableSectionId, SectionBlock>
-  blockMap: Map<string, { sectionId: SortableSectionId; block: any }>
+  sectionMap: Map<SortableSectionKey, ResumeSection>
+  blockMap: Map<string, { sectionKey: SortableSectionKey; block: any }>
 }
 export const resumeIndexAtom = atom((get): ResumeIndex => {
   const resume = get(persistedResumeAtom)
-  const sectionMap = new Map<SortableSectionId, SectionBlock>()
+  const sectionMap = new Map<SortableSectionKey, ResumeSection>()
   const blockMap = new Map<
     string,
-    { sectionId: SortableSectionId; block: any }
+    { sectionKey: SortableSectionKey; block: any }
   >()
 
   if (!resume) return { sectionMap, blockMap }
 
-  for (const sectionId of resume.sectionOrder) {
-    const section = resume[sectionId] as SectionBlock | undefined
+  for (const sectionKey of resume.sectionOrder) {
+    const section = resume[sectionKey] as ResumeSection | undefined
     if (!section) continue
 
-    sectionMap.set(sectionId, section)
+    sectionMap.set(sectionKey, section)
 
     for (const block of section.blocks) {
-      blockMap.set(block.id, { sectionId, block })
+      blockMap.set(block.id, { sectionKey, block })
     }
   }
 
@@ -63,8 +63,8 @@ export const resumeIndexAtom = atom((get): ResumeIndex => {
 
 export const resumeMetadataAtom = atom<ResumeMetadata>((get) => {
   const app = get(applicationAtom)
-  if (!app) return { language: "en" }
-  return { language: app.resume.language }
+  if (!app) return { resumeLanguage: "en" }
+  return { resumeLanguage: app.resume.language }
 })
 export const jobAtom = atom(
   (get) => {
@@ -123,7 +123,7 @@ export const evaluationRefreshFlagAtom = atom(
 )
 
 export const isLoadingAtom = atom(false)
-export const selectedSectionIdAtom = atom<SectionId | null>(null)
+export const selectedSectionIdAtom = atom<ResumeSectionKey | null>(null)
 export const selectedBlockIdAtom = atom<string | null>(null)
 const selectedBlockIndexStateAtom = atom<number | null>(null)
 export const selectedBlockIndexAtom = atom(
@@ -175,7 +175,13 @@ export const clearEditorSelectionAtom = atom(null, (_get, set) => {
 
 export const focusSectionAtom = atom(
   null,
-  (get, set, id: SectionId, index?: number, blockId?: string | null) => {
+  (
+    get,
+    set,
+    id: ResumeSectionKey,
+    index?: number,
+    blockId?: string | null
+  ) => {
     const resumeData = get(persistedResumeAtom)
     set(selectedSectionIdAtom, id)
     set(selectedBlockIndexAtom, typeof index === "number" ? index : null)
@@ -198,7 +204,7 @@ export const focusSectionAtom = atom(
 export function useResumeLanguage() {
   const [resumeMetadata] = useAtom(resumeMetadataAtom)
 
-  return resumeMetadata.language
+  return resumeMetadata.resumeLanguage
 }
 
 export function useResume() {

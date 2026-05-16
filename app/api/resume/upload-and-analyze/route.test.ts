@@ -121,9 +121,9 @@ describe("POST /api/resume/upload-and-analyze", () => {
       email: "test@example.com",
       phone: "1234567890"
     },
-    education: { sectionId: "e1", title: "Education", blocks: [] },
-    employment: { sectionId: "emp1", title: "Employments", blocks: [] },
-    skills: { sectionId: "s1", title: "Skills", blocks: [] }
+    education: { title: "Education", blocks: [] },
+    employment: { title: "Employments", blocks: [] },
+    skills: { title: "Skills", blocks: [] }
   } as unknown as ResumeData
 
   const mockJobInfo = {

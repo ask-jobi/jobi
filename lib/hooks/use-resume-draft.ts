@@ -11,7 +11,11 @@ import type {
   ResumeEditorModifyOutput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
-import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
+import type {
+  SortableSectionKey,
+  ResumeData,
+  ResumeSectionKey
+} from "@/types/resume"
 
 type ResumeDraftSelection = {
   resume: ResumeData
@@ -109,7 +113,9 @@ export function useResumeDraft() {
       commitDraft: async (nextResume?: ResumeData) => {
         await saveResume(nextResume ?? getValues())
       },
-      ensureEditableSection: (sectionId: SectionId): ResumeDraftSelection => {
+      ensureEditableSection: (
+        sectionId: ResumeSectionKey
+      ): ResumeDraftSelection => {
         if (sectionId === "personalInfo") {
           return {
             resume: getValues(),
@@ -133,7 +139,7 @@ export function useResumeDraft() {
         }
       },
       addBlockBelow: (
-        sectionId: SortableSectionId,
+        sectionId: SortableSectionKey,
         index: number
       ): ResumeDraftSelection => {
         const { resume, blockIndex } = insertDraftBlockBelow(
@@ -150,7 +156,7 @@ export function useResumeDraft() {
           blockId
         }
       },
-      deleteBlock: (sectionId: SortableSectionId, index: number) => {
+      deleteBlock: (sectionId: SortableSectionKey, index: number) => {
         const nextResume = structuredClone(getValues()) as ResumeData
         const section = nextResume[sectionId]
 

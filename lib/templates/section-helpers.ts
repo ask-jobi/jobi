@@ -1,8 +1,8 @@
 import type { Locale } from "@/lib/i18n/config"
-import type { ResumeData, SortableSectionId } from "@/types/resume"
+import type { SortableSectionKey, ResumeData } from "@/types/resume"
 import {
   DEFAULT_SECTION_ORDER,
-  isRequiredSection
+  isStarterSection
 } from "@/lib/templates/section-definitions"
 import {
   createEmptySection,
@@ -10,8 +10,8 @@ import {
 } from "@/lib/templates/section-factories"
 
 export function normalizeSectionOrder(
-  sectionOrder: SortableSectionId[]
-): SortableSectionId[] {
+  sectionOrder: SortableSectionKey[]
+): SortableSectionKey[] {
   const uniqueIds = Array.from(new Set(sectionOrder))
   return DEFAULT_SECTION_ORDER.filter((sectionId) =>
     uniqueIds.includes(sectionId)
@@ -20,7 +20,7 @@ export function normalizeSectionOrder(
 
 export function addSection(
   data: ResumeData,
-  sectionId: SortableSectionId,
+  sectionId: SortableSectionKey,
   language: Locale
 ): ResumeData {
   if (data[sectionId]) {
@@ -42,7 +42,7 @@ export function addSection(
 
 export function ensureSectionHasEditableBlock(
   data: ResumeData,
-  sectionId: SortableSectionId,
+  sectionId: SortableSectionKey,
   language: Locale
 ): { resume: ResumeData; blockIndex: number } {
   const nextResume = addSection(data, sectionId, language)
@@ -75,7 +75,7 @@ export function ensureSectionHasEditableBlock(
 
 export function insertDraftBlockBelow(
   data: ResumeData,
-  sectionId: SortableSectionId,
+  sectionId: SortableSectionKey,
   index: number
 ): { resume: ResumeData; blockIndex: number } {
   const section = data[sectionId]
@@ -103,9 +103,9 @@ export function insertDraftBlockBelow(
 
 export function removeSection(
   data: ResumeData,
-  sectionId: SortableSectionId
+  sectionId: SortableSectionKey
 ): ResumeData {
-  if (isRequiredSection(sectionId)) {
+  if (isStarterSection(sectionId)) {
     return {
       ...data,
       [sectionId]: {

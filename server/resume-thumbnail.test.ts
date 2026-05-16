@@ -15,7 +15,6 @@ describe("getResumeThumbnailSections", () => {
       content: "Computer Science"
     })
     resume.projects = {
-      sectionId: "projects-section",
       title: "Projects",
       blocks: [
         {

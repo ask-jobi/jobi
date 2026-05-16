@@ -70,7 +70,7 @@ describe("POST /api/chat/truncate", () => {
       resumes: {
         resume_json: {
           personalInfo: { blockId: "p1", firstName: "John", lastName: "Doe" },
-          education: { sectionId: "e1", blocks: [] }
+          education: { blocks: [] }
         }
       }
     } as any)

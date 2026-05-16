@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/config"
-import type { SortableSectionId } from "@/types/resume"
+import type { SortableSectionKey } from "@/types/resume"
 
-const SECTION_LABELS: Record<Locale, Record<SortableSectionId, string>> = {
+const SECTION_LABELS: Record<Locale, Record<SortableSectionKey, string>> = {
   en: {
     education: "Education History",
     employment: "Employment History",
@@ -25,7 +25,7 @@ const SECTION_LABELS: Record<Locale, Record<SortableSectionId, string>> = {
 }
 
 export function getSectionLabel(
-  sectionId: SortableSectionId,
+  sectionId: SortableSectionKey,
   language: Locale
 ): string {
   return SECTION_LABELS[language][sectionId]

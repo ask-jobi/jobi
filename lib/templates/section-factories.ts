@@ -10,23 +10,22 @@ import type {
   ResearchBlock,
   ResumeData,
   SkillBlock,
-  SortableSectionId
+  SortableSectionKey
 } from "@/types/resume"
-import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
+import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 
-function createBaseSection<ID extends SortableSectionId>(
+function createBaseSection<ID extends SortableSectionKey>(
   sectionId: ID,
   language: Locale
 ): NonNullable<ResumeData[ID]> {
   return {
-    sectionId: nanoid(),
     title: getSectionLabel(sectionId, language),
     blocks: []
   } as NonNullable<ResumeData[ID]>
 }
 
-export function createEmptySection<ID extends SortableSectionId>(
+export function createEmptySection<ID extends SortableSectionKey>(
   sectionId: ID,
   language: Locale
 ): NonNullable<ResumeData[ID]> {
@@ -44,7 +43,7 @@ type EmptyBlockMap = {
   certifications: CertificationBlock
 }
 
-export function createEmptySectionBlock<ID extends SortableSectionId>(
+export function createEmptySectionBlock<ID extends SortableSectionKey>(
   sectionId: ID
 ): EmptyBlockMap[ID] {
   switch (sectionId) {
@@ -125,7 +124,7 @@ export function createEmptySectionBlock<ID extends SortableSectionId>(
 
 export function buildEmptyResumeData(language: Locale): ResumeData {
   return {
-    sectionOrder: REQUIRED_SECTION_IDS,
+    sectionOrder: DEFAULT_STARTER_SECTION_IDS,
     personalInfo: {
       blockId: nanoid(),
       firstName: "",

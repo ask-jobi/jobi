@@ -4,12 +4,12 @@ import {
   ResumeEditorReorderInput,
   ResumeEditorReorderOutput
 } from "@/types/chat"
-import { ResumeData, SectionId } from "@/types/resume"
+import { ResumeData, ResumeSectionKey } from "@/types/resume"
 import { getBlockSchema } from "@/lib/agent/tools"
 
 export const extractValueFromResume = (
   resume: ResumeData,
-  entity: SectionId,
+  entity: ResumeSectionKey,
   id: string,
   field: string
 ) => {

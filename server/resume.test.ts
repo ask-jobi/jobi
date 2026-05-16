@@ -351,9 +351,9 @@ describe("createResumeRecord", () => {
         email: "john@example.com",
         phone: ""
       },
-      education: { sectionId: "e1", title: "Education", blocks: [] },
-      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
-      skills: { sectionId: "s1", title: "Skills", blocks: [] }
+      education: { title: "Education", blocks: [] },
+      employment: { title: "Employment", blocks: [] },
+      skills: { title: "Skills", blocks: [] }
     }
 
     const mockRollbackContext = {
@@ -420,9 +420,9 @@ describe("createResumeRecord", () => {
         email: "john@example.com",
         phone: ""
       },
-      education: { sectionId: "e1", title: "Education", blocks: [] },
-      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
-      skills: { sectionId: "s1", title: "Skills", blocks: [] }
+      education: { title: "Education", blocks: [] },
+      employment: { title: "Employment", blocks: [] },
+      skills: { title: "Skills", blocks: [] }
     }
 
     const mockRollbackContext = {
@@ -538,9 +538,9 @@ describe("saveResumeChange", () => {
         email: "jane@example.com",
         phone: ""
       },
-      education: { sectionId: "e1", title: "Education", blocks: [] },
-      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
-      skills: { sectionId: "s1", title: "Skills", blocks: [] }
+      education: { title: "Education", blocks: [] },
+      employment: { title: "Employment", blocks: [] },
+      skills: { title: "Skills", blocks: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({
@@ -571,9 +571,9 @@ describe("saveResumeChange", () => {
         email: "jane@example.com",
         phone: ""
       },
-      education: { sectionId: "e1", title: "Education", blocks: [] },
-      employment: { sectionId: "emp1", title: "Employment", blocks: [] },
-      skills: { sectionId: "s1", title: "Skills", blocks: [] }
+      education: { title: "Education", blocks: [] },
+      employment: { title: "Employment", blocks: [] },
+      skills: { title: "Skills", blocks: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({

@@ -2,7 +2,11 @@
 
 import React from "react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
+import type {
+  SortableSectionKey,
+  ResumeData,
+  ResumeSectionKey
+} from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
 import { SectionBlocks } from "@/components/resume-templates/section-blocks"
 import "./default-template.css"
@@ -18,14 +22,14 @@ interface Props {
 }
 
 const renderers: Record<
-  SortableSectionId,
+  SortableSectionKey,
   (
     data: ResumeData,
     language: Locale,
     isInteractive?: boolean,
-    onBlockAdd?: (id: SortableSectionId, index: number) => void,
-    onBlockDelete?: (id: SortableSectionId, index: number) => void,
-    onSectionClick?: (id: SectionId, index?: number) => void
+    onBlockAdd?: (id: SortableSectionKey, index: number) => void,
+    onBlockDelete?: (id: SortableSectionKey, index: number) => void,
+    onSectionClick?: (id: ResumeSectionKey, index?: number) => void
   ) => React.ReactElement | null
 > = {
   education: (

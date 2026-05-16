@@ -10,7 +10,7 @@ import {
   selectedBlockIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
-import type { ResumeData, SectionId } from "@/types/resume"
+import type { ResumeData, ResumeSectionKey } from "@/types/resume"
 
 export function useResumeEditorState() {
   const selectedSectionId = useAtomValue(selectedSectionIdAtom)
@@ -30,7 +30,7 @@ export function useResumeEditorState() {
     rollbackResume,
     isAutosaveSuspended,
     selectTarget: (
-      sectionId: SectionId,
+      sectionId: ResumeSectionKey,
       blockIndex?: number,
       blockId?: string | null
     ) => selectTarget(sectionId, blockIndex, blockId),

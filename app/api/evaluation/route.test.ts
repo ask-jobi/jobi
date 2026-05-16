@@ -21,9 +21,9 @@ const mockResumeData: ResumeData = {
     email: "ada@example.com",
     phone: "123"
   },
-  education: { sectionId: "e1", title: "Education", blocks: [] },
-  employment: { sectionId: "emp1", title: "Employment", blocks: [] },
-  skills: { sectionId: "s1", title: "Skills", blocks: [] }
+  education: { title: "Education", blocks: [] },
+  employment: { title: "Employment", blocks: [] },
+  skills: { title: "Skills", blocks: [] }
 }
 
 describe("POST /api/evaluation", () => {

@@ -18,7 +18,6 @@ const resumeSchema = z.object({
     phone: z.string().describe("Phone number of the candidate").prefault("")
   }),
   education: z.object({
-    sectionId: z.string().default(() => nanoid()),
     title: z
       .string()
       .describe("Title of the education section")
@@ -44,7 +43,6 @@ const resumeSchema = z.object({
     )
   }),
   skills: z.object({
-    sectionId: z.string().default(() => nanoid()),
     title: z
       .string()
       .describe("Title of the skills section")
@@ -62,7 +60,6 @@ const resumeSchema = z.object({
   // optional
   employment: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the work experience section")
@@ -94,7 +91,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   research: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the research section")
@@ -135,7 +131,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   projects: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the projects section")
@@ -178,7 +173,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   publications: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the publications section")
@@ -201,7 +195,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   awards: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the awards section")
@@ -223,7 +216,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
   certifications: z
     .object({
-      sectionId: z.string().default(() => nanoid()),
       title: z
         .string()
         .describe("Title of the certifications section")

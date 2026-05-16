@@ -103,7 +103,6 @@ describe("ResumeEditor add block", () => {
         phone: ""
       },
       education: {
-        sectionId: "education",
         title: "Education",
         blocks: [
           {
@@ -117,7 +116,6 @@ describe("ResumeEditor add block", () => {
         ]
       },
       skills: {
-        sectionId: "skills",
         title: "Skills",
         blocks: []
       }
@@ -172,7 +170,6 @@ describe("ResumeEditor add block", () => {
         phone: ""
       },
       education: {
-        sectionId: "education",
         title: "Education",
         blocks: [
           {
@@ -186,7 +183,6 @@ describe("ResumeEditor add block", () => {
         ]
       },
       skills: {
-        sectionId: "skills",
         title: "Skills",
         blocks: []
       }

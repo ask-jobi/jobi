@@ -6,7 +6,6 @@ describe("getSectionEntryActions", () => {
   it("keeps empty required sections available after the resume is no longer empty", () => {
     const resume = buildEmptyResumeData("en")
     resume.employment = {
-      sectionId: "employment-section",
       title: "Employment History",
       blocks: [
         {
@@ -34,7 +33,6 @@ describe("getSectionEntryActions", () => {
   it("returns add for missing optional sections and open for empty existing sections", () => {
     const resume = buildEmptyResumeData("en")
     resume.projects = {
-      sectionId: "projects-section",
       title: "Projects",
       blocks: []
     }

@@ -20,8 +20,7 @@ export type JobApplication = {
   job: ResumeJobDescription
 }
 
-export interface SectionBlock<T = any> {
-  sectionId: string
+export interface ResumeSection<T = any> {
   title: string
   blocks: Array<T>
 }
@@ -104,24 +103,24 @@ export interface CertificationBlock {
   date?: string
 }
 
-export type EducationHistory = SectionBlock<EducationBlock>
+export type EducationHistory = ResumeSection<EducationBlock>
 
-export type EmploymentHistory = SectionBlock<EmploymentBlock>
+export type EmploymentHistory = ResumeSection<EmploymentBlock>
 
-export type Skill = SectionBlock<SkillBlock>
+export type Skill = ResumeSection<SkillBlock>
 
-export type ResearchExperience = SectionBlock<ResearchBlock>
+export type ResearchExperience = ResumeSection<ResearchBlock>
 
-export type Project = SectionBlock<ProjectBlock>
+export type Project = ResumeSection<ProjectBlock>
 
-export type Publication = SectionBlock<PublicationBlock>
+export type Publication = ResumeSection<PublicationBlock>
 
-export type Award = SectionBlock<AwardBlock>
+export type Award = ResumeSection<AwardBlock>
 
-export type Certification = SectionBlock<CertificationBlock>
+export type Certification = ResumeSection<CertificationBlock>
 
 export interface ResumeData {
-  sectionOrder: SortableSectionId[]
+  sectionOrder: SortableSectionKey[]
   // required
   personalInfo: PersonalInfo
   education: EducationHistory
@@ -135,11 +134,11 @@ export interface ResumeData {
   certifications?: Certification
 }
 
-export type SectionId = Exclude<keyof ResumeData, "sectionOrder">
-export type SortableSectionId = Exclude<SectionId, "personalInfo">
+export type ResumeSectionKey = Exclude<keyof ResumeData, "sectionOrder">
+export type SortableSectionKey = Exclude<ResumeSectionKey, "personalInfo">
 
 export interface AISuggestion {
-  section: SortableSectionId
+  section: SortableSectionKey
   blockIndex: number
   suggestionType: string
   reason: string
@@ -151,5 +150,5 @@ export interface AISuggestion {
 export type AISuggestionQueue = AISuggestion[]
 
 export type ResumeMetadata = {
-  language: Locale
+  resumeLanguage: Locale
 }

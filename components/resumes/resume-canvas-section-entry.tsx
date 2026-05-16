@@ -11,14 +11,18 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover"
 import { editModalOpenAtom, useResumeLanguage } from "@/lib/store/resume"
-import { REQUIRED_SECTION_IDS } from "@/lib/templates/section-definitions"
+import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
-import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
+import type {
+  SortableSectionKey,
+  ResumeData,
+  ResumeSectionKey
+} from "@/types/resume"
 
-const QUICK_START_SECTIONS: SectionId[] = [
+const QUICK_START_SECTIONS: ResumeSectionKey[] = [
   "personalInfo",
   "education",
   "employment",
@@ -44,7 +48,7 @@ export function isResumeCanvasEmpty(data: ResumeData | null) {
   }
 
   const hasStartedOptionalSection = data.sectionOrder.some(
-    (sectionId) => !REQUIRED_SECTION_IDS.includes(sectionId)
+    (sectionId) => !DEFAULT_STARTER_SECTION_IDS.includes(sectionId)
   )
 
   if (hasStartedOptionalSection) {
@@ -59,16 +63,15 @@ export function isResumeCanvasEmpty(data: ResumeData | null) {
 
 export function ResumeCanvasSectionEntry() {
   const t = useTranslations("resumeCanvas")
-  const locale = useLocale()
+  const uiLocale = useLocale()
   const resumeLanguage = useResumeLanguage()
   const { draft, ensureEditableSection, getDraft } = useResumeDraft()
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
   const { clearRollbackResume, selectTarget, setRollbackResume } =
     useResumeEditorState()
   const [open, setOpen] = useState(false)
-  const [pendingSectionId, setPendingSectionId] = useState<SectionId | null>(
-    null
-  )
+  const [pendingSectionId, setPendingSectionId] =
+    useState<ResumeSectionKey | null>(null)
 
   const sectionActions = useMemo(
     () => (draft ? getSectionEntryActions(draft) : []),
@@ -78,17 +81,17 @@ export function ResumeCanvasSectionEntry() {
   const isEmpty = isResumeCanvasEmpty(draft)
   const emptyPopoverDescription = t.has("emptyPopoverDescription")
     ? t("emptyPopoverDescription")
-    : locale === "zh"
+    : uiLocale === "zh"
       ? "选择你想先开始填写的部分。"
       : "Choose where you want to start writing."
   const startWithLabel = t.has("startWith")
     ? t("startWith")
-    : locale === "zh"
+    : uiLocale === "zh"
       ? "从这里开始"
       : "Start With"
   const personalInfoLabel = t.has("personalInfoSection")
     ? t("personalInfoSection")
-    : locale === "zh"
+    : uiLocale === "zh"
       ? "个人信息"
       : "Personal Info"
 
@@ -100,12 +103,12 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  const openEditModal = (sectionId: SectionId, blockIndex?: number) => {
+  const openEditModal = (sectionId: ResumeSectionKey, blockIndex?: number) => {
     selectTarget(sectionId, blockIndex)
     setEditModalOpen(true)
   }
 
-  const handleOpenSection = async (sectionId: SectionId) => {
+  const handleOpenSection = async (sectionId: ResumeSectionKey) => {
     setPendingSectionId(sectionId)
 
     if (sectionId === "personalInfo") {
@@ -124,7 +127,7 @@ export function ResumeCanvasSectionEntry() {
     setPendingSectionId(null)
   }
 
-  const handleAddSection = async (sectionId: SortableSectionId) => {
+  const handleAddSection = async (sectionId: SortableSectionKey) => {
     setPendingSectionId(sectionId)
 
     setRollbackResume(getDraft())
@@ -203,7 +206,7 @@ export function ResumeCanvasSectionEntry() {
                     {sectionId === "personalInfo"
                       ? personalInfoLabel
                       : getSectionLabel(
-                          sectionId as SortableSectionId,
+                          sectionId as SortableSectionKey,
                           resumeLanguage
                         )}
                   </span>

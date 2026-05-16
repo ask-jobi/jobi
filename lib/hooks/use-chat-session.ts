@@ -4,13 +4,13 @@ import { useCallback, useEffect, useRef } from "react"
 import type { SessionSummary } from "@/lib/agent/chat-history"
 import { useResume } from "@/lib/store/resume"
 import {
+  useChatSessionErrorValue,
   useChatSessionValue,
   useChatSessionLoadingValue,
-  useChatSessionsErrorValue,
   useSetChatSession,
   useSetChatSessionId,
   useSetChatSessionLoading,
-  useSetChatSessionsError
+  useSetChatSessionError
 } from "@/lib/store/chat"
 
 export interface UseChatSessionReturn {
@@ -42,11 +42,11 @@ function useChatSessionStoreState(
 ): UseChatSessionReturn {
   const session = useChatSessionValue()
   const loading = useChatSessionLoadingValue()
-  const error = useChatSessionsErrorValue()
+  const error = useChatSessionErrorValue()
   const setSession = useSetChatSession()
   const setSessionId = useSetChatSessionId()
   const setLoading = useSetChatSessionLoading()
-  const setError = useSetChatSessionsError()
+  const setError = useSetChatSessionError()
 
   const resumeIdRef = useRef(resumeId)
   resumeIdRef.current = resumeId

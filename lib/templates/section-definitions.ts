@@ -1,6 +1,6 @@
-import type { SortableSectionId } from "@/types/resume"
+import type { SortableSectionKey } from "@/types/resume"
 
-export const DEFAULT_SECTION_ORDER: SortableSectionId[] = [
+export const DEFAULT_SECTION_ORDER: SortableSectionKey[] = [
   "education",
   "employment",
   "research",
@@ -11,19 +11,22 @@ export const DEFAULT_SECTION_ORDER: SortableSectionId[] = [
   "skills"
 ]
 
-export const REQUIRED_SECTION_IDS: SortableSectionId[] = ["education", "skills"]
+export const DEFAULT_STARTER_SECTION_IDS: SortableSectionKey[] = [
+  "education",
+  "skills"
+]
 
-export const OPTIONAL_SECTION_IDS: SortableSectionId[] =
+export const OPTIONAL_SECTION_IDS: SortableSectionKey[] =
   DEFAULT_SECTION_ORDER.filter(
-    (sectionId) => !REQUIRED_SECTION_IDS.includes(sectionId)
+    (sectionId) => !DEFAULT_STARTER_SECTION_IDS.includes(sectionId)
   )
 
 export const SECTION_INSERTION_ORDER = DEFAULT_SECTION_ORDER
 
-export function isRequiredSection(sectionId: SortableSectionId) {
-  return REQUIRED_SECTION_IDS.includes(sectionId)
+export function isStarterSection(sectionId: SortableSectionKey) {
+  return DEFAULT_STARTER_SECTION_IDS.includes(sectionId)
 }
 
-export function isOptionalSection(sectionId: SortableSectionId) {
+export function isOptionalSection(sectionId: SortableSectionKey) {
   return OPTIONAL_SECTION_IDS.includes(sectionId)
 }

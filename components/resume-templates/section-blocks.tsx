@@ -1,16 +1,16 @@
 import React from "react"
 import type {
   ResumeData,
-  SectionBlock,
-  SortableSectionId
+  SortableSectionKey,
+  ResumeSection
 } from "@/types/resume"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 import { cn } from "@/lib/utils"
 
-type ExtractBlock<ID extends SortableSectionId> =
-  NonNullable<ResumeData[ID]> extends SectionBlock<infer B> ? B : never
+type ExtractBlock<ID extends SortableSectionKey> =
+  NonNullable<ResumeData[ID]> extends ResumeSection<infer B> ? B : never
 
-interface SectionBlocksProps<ID extends SortableSectionId> {
+interface SectionBlocksProps<ID extends SortableSectionKey> {
   sectionId: ID
   section?: ResumeData[ID] | null
   sectionTitle?: string
@@ -33,7 +33,7 @@ interface SectionBlocksProps<ID extends SortableSectionId> {
   emptyFallback?: React.ReactNode
 }
 
-export function SectionBlocks<ID extends SortableSectionId>({
+export function SectionBlocks<ID extends SortableSectionKey>({
   sectionId,
   section,
   sectionTitle,

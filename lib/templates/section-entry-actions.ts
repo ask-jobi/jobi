@@ -1,8 +1,8 @@
 import { DEFAULT_SECTION_ORDER } from "@/lib/templates/section-definitions"
-import type { ResumeData, SortableSectionId } from "@/types/resume"
+import type { SortableSectionKey, ResumeData } from "@/types/resume"
 
 export type SectionEntryAction = {
-  sectionId: SortableSectionId
+  sectionId: SortableSectionKey
   action: "add" | "open"
 }
 

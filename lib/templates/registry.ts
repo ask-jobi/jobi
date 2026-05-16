@@ -1,19 +1,23 @@
 import React from "react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ResumeData, SectionId, SortableSectionId } from "@/types/resume"
+import type {
+  SortableSectionKey,
+  ResumeData,
+  ResumeSectionKey
+} from "@/types/resume"
 import { DefaultTemplate } from "@/components/resume-templates/default-template"
 import { ModernTemplate } from "@/components/resume-templates/modern-template"
 import {
   DEFAULT_SECTION_ORDER,
   OPTIONAL_SECTION_IDS,
-  REQUIRED_SECTION_IDS
+  DEFAULT_STARTER_SECTION_IDS
 } from "@/lib/templates/section-definitions"
 
 export interface TemplateOptions {
   isInteractive?: boolean
-  onBlockAdd?: (id: SortableSectionId, index: number) => void
-  onBlockDelete?: (id: SortableSectionId, index: number) => void
-  onSectionClick?: (id: SectionId, index?: number) => void
+  onBlockAdd?: (id: SortableSectionKey, index: number) => void
+  onBlockDelete?: (id: SortableSectionKey, index: number) => void
+  onSectionClick?: (id: ResumeSectionKey, index?: number) => void
 }
 
 export type ResumeTemplateComponent = React.ComponentType<{
@@ -26,9 +30,9 @@ export interface TemplateConfig {
   id: string
   name: string
   description?: string
-  supportedSections: SortableSectionId[]
-  requiredSections: SortableSectionId[]
-  optionalSections: SortableSectionId[]
+  supportedSections: SortableSectionKey[]
+  starterSections: SortableSectionKey[]
+  optionalSections: SortableSectionKey[]
 }
 
 export class TemplateRegistry {
@@ -65,7 +69,7 @@ registry.register("default", DefaultTemplate, {
   name: "Default",
   description: "Classic single-column resume layout",
   supportedSections: DEFAULT_SECTION_ORDER,
-  requiredSections: REQUIRED_SECTION_IDS,
+  starterSections: DEFAULT_STARTER_SECTION_IDS,
   optionalSections: OPTIONAL_SECTION_IDS
 })
 
@@ -74,6 +78,6 @@ registry.register("modern", ModernTemplate, {
   name: "Modern",
   description: "Modern single-column resume layout",
   supportedSections: DEFAULT_SECTION_ORDER,
-  requiredSections: REQUIRED_SECTION_IDS,
+  starterSections: DEFAULT_STARTER_SECTION_IDS,
   optionalSections: OPTIONAL_SECTION_IDS
 })

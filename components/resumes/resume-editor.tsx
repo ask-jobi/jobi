@@ -11,7 +11,7 @@ import {
   isResumeCanvasEmpty,
   ResumeCanvasSectionEntry
 } from "@/components/resumes/resume-canvas-section-entry"
-import type { SortableSectionId } from "@/types/resume"
+import type { SortableSectionKey } from "@/types/resume"
 
 export function ResumeEditor() {
   const resumeLanguage = useResumeLanguage()
@@ -23,7 +23,7 @@ export function ResumeEditor() {
   const { selectTarget, setRollbackResume } = useResumeEditorState()
   const isEmptyCanvas = isResumeCanvasEmpty(draft)
   const handleBlockAdd = useCallback(
-    (sectionId: SortableSectionId, index: number) => {
+    (sectionId: SortableSectionKey, index: number) => {
       const previousResume = getDraft()
       const { blockIndex, blockId } = addBlockBelow(sectionId, index)
 
@@ -34,7 +34,7 @@ export function ResumeEditor() {
     [addBlockBelow, getDraft, selectTarget, setEditModalOpen, setRollbackResume]
   )
   const handleBlockDelete = useCallback(
-    (sectionId: SortableSectionId, index: number) => {
+    (sectionId: SortableSectionKey, index: number) => {
       const nextResume = deleteBlock(sectionId, index)
       void commitDraft(nextResume)
     },

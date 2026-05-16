@@ -32,17 +32,14 @@ function renderFocusedAwardsForm({
           phone: ""
         },
         education: {
-          sectionId: "education",
           title: "Education",
           blocks: []
         },
         skills: {
-          sectionId: "skills",
           title: "Skills",
           blocks: []
         },
         awards: {
-          sectionId: "awards",
           title: "Awards",
           blocks: [
             {

@@ -31,7 +31,6 @@ const draftResume = {
     phone: ""
   },
   education: {
-    sectionId: "education",
     title: "Education",
     blocks: [
       {
@@ -45,7 +44,6 @@ const draftResume = {
     ]
   },
   skills: {
-    sectionId: "skills",
     title: "Skills",
     blocks: []
   }

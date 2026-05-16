@@ -9,10 +9,10 @@ import { ResearchForm } from "@/components/forms/research-form"
 import { PublicationsForm } from "@/components/forms/publications-form"
 import { AwardsForm } from "@/components/forms/awards-form"
 import { CertificationsForm } from "@/components/forms/certifications-form"
-import type { SectionId } from "@/types/resume"
+import type { ResumeSectionKey } from "@/types/resume"
 
 interface ResumeSectionFormProps {
-  sectionId: SectionId | null
+  sectionId: ResumeSectionKey | null
   blockIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
