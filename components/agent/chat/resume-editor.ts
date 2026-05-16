@@ -5,7 +5,7 @@ import {
   ResumeEditorReorderOutput
 } from "@/types/chat"
 import { ResumeData, ResumeSectionKey } from "@/types/resume"
-import { getBlockSchema } from "@/lib/agent/tools"
+import { getEntrySchema } from "@/lib/agent/tools"
 
 export const extractValueFromResume = (
   resume: ResumeData,
@@ -18,10 +18,10 @@ export const extractValueFromResume = (
   }
 
   const section = resume[entity]
-  if (!section?.blocks) return null
+  if (!section?.entries) return null
 
-  const block = section.blocks.find((b) => b.blockId === id)
-  return (block as any)?.[field]
+  const entry = section.entries.find((item) => item.entryId === id)
+  return (entry as any)?.[field]
 }
 
 export async function executeResumeEditorModifyTool(
@@ -48,16 +48,16 @@ export async function executeResumeEditorModifyTool(
     const { entity, id } = input
     const section = resumeData?.[entity]
 
-    if (!section?.blocks) {
-      throw new Error(`Section ${entity} not found or has no blocks`)
+    if (!section?.entries) {
+      throw new Error(`Section ${entity} not found or has no entries`)
     }
 
-    const blockIndex = section.blocks.findIndex((b) => b.blockId === id)
-    if (blockIndex === -1) {
-      throw new Error(`Block with id ${id} not found in section ${entity}`)
+    const entryIndex = section.entries.findIndex((item) => item.entryId === id)
+    if (entryIndex === -1) {
+      throw new Error(`Entry with id ${id} not found in section ${entity}`)
     }
 
-    const originalValue = { ...section.blocks[blockIndex] }
+    const originalValue = { ...section.entries[entryIndex] }
 
     return {
       operation: "delete",
@@ -69,18 +69,18 @@ export async function executeResumeEditorModifyTool(
 
   if (operation === "add") {
     const { entity } = input
-    const blockSchema = getBlockSchema(entity)
+    const entrySchema = getEntrySchema(entity)
 
-    if (!blockSchema) {
+    if (!entrySchema) {
       throw new Error(`Section schema parse failed: ${entity}`)
     }
 
-    const newBlock = blockSchema.parse({})
+    const newEntry = entrySchema.parse({})
 
     return {
       operation: "add",
       entity,
-      newBlock
+      newEntry
     }
   }
 
@@ -91,22 +91,22 @@ export async function executeResumeEditorReorderTool(
   input: ResumeEditorReorderInput,
   resumeData: ResumeData
 ): Promise<ResumeEditorReorderOutput> {
-  const { operation, entity, orderedBlockIds, orderedSectionIds } = input
+  const { operation, entity, orderedEntryIds, orderedSectionIds } = input
 
-  if (operation === "reorderBlocks" && entity && orderedBlockIds) {
+  if (operation === "reorderEntries" && entity && orderedEntryIds) {
     const section = resumeData?.[entity]
 
-    if (!section?.blocks) {
-      throw new Error(`Section ${entity} not found or has no blocks`)
+    if (!section?.entries) {
+      throw new Error(`Section ${entity} not found or has no entries`)
     }
 
-    const originalValue = section.blocks.map((b) => b.blockId)
+    const originalValue = section.entries.map((entry) => entry.entryId)
 
     return {
-      operation: "reorderBlocks",
+      operation: "reorderEntries",
       entity,
       originalValue,
-      orderedBlockIds
+      orderedEntryIds
     }
   }
 

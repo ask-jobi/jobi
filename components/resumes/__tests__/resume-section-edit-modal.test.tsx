@@ -10,8 +10,8 @@ import {
   applicationAtom,
   editModalOpenAtom,
   editModalRollbackResumeAtom,
-  selectedBlockIdAtom,
-  selectedBlockIndexAtom,
+  selectedEntryIdAtom,
+  selectedEntryIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
 import type { ResumeData } from "@/types/resume"
@@ -29,18 +29,18 @@ vi.mock("@/server/resume", () => ({
 vi.mock("../resume-section-form", () => ({
   ResumeSectionForm: ({
     sectionId,
-    blockIndex,
+    entryIndex,
     onCancel,
     onSaveComplete
   }: {
     sectionId: string | null
-    blockIndex?: number | null
+    entryIndex?: number | null
     onCancel?: () => void
     onSaveComplete?: () => void
   }) => (
     <div>
       <div>
-        section-form-{sectionId}-{String(blockIndex)}
+        section-form-{sectionId}-{String(entryIndex)}
       </div>
       <button type="button" onClick={() => onCancel?.()}>
         Cancel Form
@@ -55,7 +55,7 @@ vi.mock("../resume-section-form", () => ({
 function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
   function DraftObserver() {
     const { watch } = useFormContext<ResumeData>()
-    const educationBlocks = watch("education.blocks")
+    const educationBlocks = watch("education.entries")
 
     return (
       <div data-testid="draft-education-block-count">
@@ -80,11 +80,11 @@ function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
           },
           education: {
             title: "Education",
-            blocks: []
+            entries: []
           },
           skills: {
             title: "Skills",
-            blocks: []
+            entries: []
           }
         } satisfies ResumeData)
     })
@@ -124,17 +124,17 @@ describe("ResumeSectionEditModal", () => {
           },
           education: {
             title: "Education",
-            blocks: []
+            entries: []
           },
           skills: {
             title: "Skills",
-            blocks: []
+            entries: []
           },
           employment: {
             title: "Employment",
-            blocks: [
+            entries: [
               {
-                blockId: "emp-1",
+                entryId: "emp-1",
                 company: "A",
                 jobTitle: "A",
                 start: "2020-01",
@@ -142,7 +142,7 @@ describe("ResumeSectionEditModal", () => {
                 content: ""
               },
               {
-                blockId: "emp-2",
+                entryId: "emp-2",
                 company: "B",
                 jobTitle: "B",
                 start: "2021-01",
@@ -162,7 +162,7 @@ describe("ResumeSectionEditModal", () => {
     })
     store.set(editModalOpenAtom, true)
     store.set(selectedSectionIdAtom, "employment")
-    store.set(selectedBlockIdAtom, "emp-2")
+    store.set(selectedEntryIdAtom, "emp-2")
 
     renderWithForm(store)
 
@@ -175,7 +175,7 @@ describe("ResumeSectionEditModal", () => {
     saveResumeChangeMock.mockResolvedValue(undefined)
     store.set(editModalOpenAtom, true)
     store.set(selectedSectionIdAtom, "skills")
-    store.set(selectedBlockIdAtom, null)
+    store.set(selectedEntryIdAtom, null)
 
     renderWithForm(store)
 
@@ -183,7 +183,7 @@ describe("ResumeSectionEditModal", () => {
 
     expect(store.get(editModalOpenAtom)).toBe(false)
     expect(store.get(selectedSectionIdAtom)).toBeNull()
-    expect(store.get(selectedBlockIdAtom)).toBeNull()
+    expect(store.get(selectedEntryIdAtom)).toBeNull()
   })
 
   it("rolls back a newly added draft block when the form is cancelled without saving", async () => {
@@ -200,20 +200,20 @@ describe("ResumeSectionEditModal", () => {
       },
       education: {
         title: "Education",
-        blocks: []
+        entries: []
       },
       skills: {
         title: "Skills",
-        blocks: []
+        entries: []
       }
     }
     const draftResume: ResumeData = {
       ...originalResume,
       education: {
         ...originalResume.education,
-        blocks: [
+        entries: [
           {
-            blockId: "edu-1",
+            entryId: "edu-1",
             school: "",
             degree: "",
             start: "",
@@ -243,8 +243,8 @@ describe("ResumeSectionEditModal", () => {
     store.set(editModalOpenAtom, true)
     store.set(editModalRollbackResumeAtom, originalResume)
     store.set(selectedSectionIdAtom, "education")
-    store.set(selectedBlockIdAtom, "edu-1")
-    store.set(selectedBlockIndexAtom, 0)
+    store.set(selectedEntryIdAtom, "edu-1")
+    store.set(selectedEntryIndexAtom, 0)
 
     renderWithForm(store, draftResume)
 
@@ -255,7 +255,7 @@ describe("ResumeSectionEditModal", () => {
         screen.getByTestId("draft-education-block-count")
       ).toHaveTextContent("0")
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.blocks
+        store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(0)
       expect(store.get(editModalRollbackResumeAtom)).toBeNull()
       expect(store.get(editModalOpenAtom)).toBe(false)
@@ -277,20 +277,20 @@ describe("ResumeSectionEditModal", () => {
       },
       education: {
         title: "Education",
-        blocks: []
+        entries: []
       },
       skills: {
         title: "Skills",
-        blocks: []
+        entries: []
       }
     }
     const draftResume: ResumeData = {
       ...originalResume,
       education: {
         ...originalResume.education,
-        blocks: [
+        entries: [
           {
-            blockId: "edu-1",
+            entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
             start: "2020-01",
@@ -319,8 +319,8 @@ describe("ResumeSectionEditModal", () => {
     })
     store.set(editModalOpenAtom, true)
     store.set(selectedSectionIdAtom, "education")
-    store.set(selectedBlockIdAtom, "edu-1")
-    store.set(selectedBlockIndexAtom, 0)
+    store.set(selectedEntryIdAtom, "edu-1")
+    store.set(selectedEntryIndexAtom, 0)
 
     renderWithForm(store, draftResume)
 
@@ -328,7 +328,7 @@ describe("ResumeSectionEditModal", () => {
 
     await waitFor(() => {
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.blocks
+        store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(1)
       expect(store.get(editModalOpenAtom)).toBe(false)
       expect(saveResumeChangeMock).toHaveBeenCalledWith("resume-1", draftResume)

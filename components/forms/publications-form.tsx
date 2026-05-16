@@ -2,9 +2,9 @@
 
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Textarea } from "@/components/ui/textarea"
-import { PublicationBlock, ResumeData } from "@/types/resume"
+import { PublicationEntry, ResumeData } from "@/types/resume"
 
 interface PublicationsFormProps {
   focusIndex?: number | null
@@ -20,23 +20,23 @@ export function PublicationsForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "publications.blocks"
+    name: "publications.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`publications.blocks.${focusIndex}`)
+  const currentEntry = getValues(`publications.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-publications" className="space-y-4">
-      <FocusedBlockFormShell<PublicationBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<PublicationEntry>
+        entry={currentEntry}
         formId={`form-publications-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -60,7 +60,7 @@ export function PublicationsForm({
             </div>
           </>
         )}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

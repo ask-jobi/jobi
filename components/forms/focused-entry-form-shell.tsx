@@ -11,8 +11,8 @@ import {
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
-interface FocusedBlockFormShellProps<T extends FieldValues> {
-  block: T
+interface FocusedEntryFormShellProps<T extends FieldValues> {
+  entry: T
   formId: string
   onCancel?: () => void
   onSaveComplete?: () => void
@@ -20,27 +20,27 @@ interface FocusedBlockFormShellProps<T extends FieldValues> {
   children: (methods: UseFormReturn<T>) => ReactNode
 }
 
-export function FocusedBlockFormShell<T extends FieldValues>({
-  block,
+export function FocusedEntryFormShell<T extends FieldValues>({
+  entry,
   formId,
   onCancel,
   onSaveComplete,
   onSave,
   children
-}: FocusedBlockFormShellProps<T>) {
+}: FocusedEntryFormShellProps<T>) {
   const t = useTranslations()
   const methods = useForm<T>({
-    defaultValues: block as DefaultValues<T>,
+    defaultValues: entry as DefaultValues<T>,
     mode: "onChange"
   })
   const { handleSubmit, reset } = methods
 
   useEffect(() => {
-    reset(block as DefaultValues<T>)
-  }, [block, reset])
+    reset(entry as DefaultValues<T>)
+  }, [entry, reset])
 
   const handleCancel = () => {
-    reset(block as DefaultValues<T>)
+    reset(entry as DefaultValues<T>)
     onCancel?.()
   }
 

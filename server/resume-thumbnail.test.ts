@@ -6,8 +6,8 @@ describe("getResumeThumbnailSections", () => {
   it("returns every populated section in section order", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.education.blocks.push({
-      blockId: "edu-1",
+    resume.education.entries.push({
+      entryId: "edu-1",
       school: "ZJU",
       degree: "BS CS",
       start: "2018",
@@ -16,9 +16,9 @@ describe("getResumeThumbnailSections", () => {
     })
     resume.projects = {
       title: "Projects",
-      blocks: [
+      entries: [
         {
-          blockId: "project-1",
+          entryId: "project-1",
           title: "Jobi",
           role: "Founder",
           date: { start: "2024-01", end: "2025-01" },
@@ -26,8 +26,8 @@ describe("getResumeThumbnailSections", () => {
         }
       ]
     }
-    resume.skills.blocks.push({
-      blockId: "skill-1",
+    resume.skills.entries.push({
+      entryId: "skill-1",
       group: "Languages",
       content: "TypeScript, React, Node.js"
     })
@@ -41,19 +41,19 @@ describe("getResumeThumbnailSections", () => {
   it("omits empty sections and excludes content summaries", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.skills.blocks.push(
+    resume.skills.entries.push(
       {
-        blockId: "skill-1",
+        entryId: "skill-1",
         group: "Frontend",
         content: "TypeScript, React, Next.js, Tailwind CSS"
       },
       {
-        blockId: "skill-2",
+        entryId: "skill-2",
         group: "Backend",
         content: "Node.js, PostgreSQL"
       },
       {
-        blockId: "skill-3",
+        entryId: "skill-3",
         group: "Infra",
         content: "Docker, Vercel"
       }
@@ -63,13 +63,13 @@ describe("getResumeThumbnailSections", () => {
 
     expect(sections).toHaveLength(1)
     expect(sections[0].id).toBe("skills")
-    expect(sections[0].blocks).toHaveLength(3)
-    expect(sections[0].blocks[0].tags).toEqual([
+    expect(sections[0].entries).toHaveLength(3)
+    expect(sections[0].entries[0].tags).toEqual([
       "TypeScript",
       "React",
       "Next.js",
       "Tailwind CSS"
     ])
-    expect(sections[0].blocks[0]).not.toHaveProperty("summary")
+    expect(sections[0].entries[0]).not.toHaveProperty("summary")
   })
 })

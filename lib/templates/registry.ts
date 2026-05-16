@@ -15,8 +15,8 @@ import {
 
 export interface TemplateOptions {
   isInteractive?: boolean
-  onBlockAdd?: (id: SortableSectionKey, index: number) => void
-  onBlockDelete?: (id: SortableSectionKey, index: number) => void
+  onEntryAdd?: (id: SortableSectionKey, index: number) => void
+  onEntryDelete?: (id: SortableSectionKey, index: number) => void
   onSectionClick?: (id: ResumeSectionKey, index?: number) => void
 }
 

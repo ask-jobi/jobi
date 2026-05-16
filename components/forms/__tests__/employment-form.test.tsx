@@ -55,17 +55,17 @@ function renderFocusedEmploymentForm({
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         },
         employment: {
           title: "Employment",
-          blocks: [
+          entries: [
             {
-              blockId: "emp-1",
+              entryId: "emp-1",
               company: "Old Company",
               jobTitle: "Engineer",
               start: "2021-09",
@@ -126,10 +126,10 @@ describe("EmploymentForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "button.save" }))
 
     await waitFor(() => {
-      expect(methods.getValues("employment.blocks.0.company")).toBe(
+      expect(methods.getValues("employment.entries.0.company")).toBe(
         "New Company"
       )
-      expect(methods.getValues("employment.blocks.0.content")).toBe(
+      expect(methods.getValues("employment.entries.0.content")).toBe(
         "Updated content"
       )
       expect(onSaveComplete).toHaveBeenCalledOnce()
@@ -144,8 +144,8 @@ describe("EmploymentForm", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: "button.cancel" }))
 
-    expect(methods.getValues("employment.blocks.0.company")).toBe("Old Company")
-    expect(methods.getValues("employment.blocks.0.content")).toBe(
+    expect(methods.getValues("employment.entries.0.company")).toBe("Old Company")
+    expect(methods.getValues("employment.entries.0.content")).toBe(
       "Original content"
     )
     expect(onCancel).toHaveBeenCalledOnce()

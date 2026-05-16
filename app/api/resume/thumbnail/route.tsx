@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
               {section.title}
             </h2>
 
-            {section.blocks.map((block, index) => (
+            {section.entries.map((entry, index) => (
               <div
                 key={`${section.id}-${index}`}
                 style={{
@@ -114,28 +114,28 @@ export async function GET(request: NextRequest) {
                       margin: 0
                     }}
                   >
-                    {block.heading}
+                    {entry.heading}
                   </h3>
-                  {block.meta && (
+                  {entry.meta && (
                     <span style={{ fontSize: "12px", color: "#666" }}>
-                      {block.meta}
+                      {entry.meta}
                     </span>
                   )}
                 </div>
 
-                {block.subheading && (
+                {entry.subheading && (
                   <p
                     style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}
                   >
-                    {block.subheading}
+                    {entry.subheading}
                   </p>
                 )}
 
-                {block.tags && block.tags.length > 0 && (
+                {entry.tags && entry.tags.length > 0 && (
                   <div
                     style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
                   >
-                    {block.tags.map((tag) => (
+                    {entry.tags.map((tag) => (
                       <span
                         key={tag}
                         style={{

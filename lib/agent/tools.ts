@@ -2,8 +2,8 @@ import { tool, ToolCallRepairFunction } from "ai"
 import { z } from "zod"
 import { nanoid } from "nanoid"
 
-const EducationBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const EducationEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   content: z.string().default(""),
   school: z.string().default(""),
   degree: z.string().default(""),
@@ -11,8 +11,8 @@ const EducationBlockSchema = z.object({
   end: z.string().default("")
 })
 
-const EmploymentBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const EmploymentEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   content: z.string().default(""),
   company: z.string().default(""),
   jobTitle: z.string().default(""),
@@ -20,14 +20,14 @@ const EmploymentBlockSchema = z.object({
   end: z.string().default("")
 })
 
-const SkillBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const SkillEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   group: z.string().default(""),
   content: z.string().default("")
 })
 
-const ProjectBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const ProjectEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   title: z.string().default(""),
   content: z.string().default(""),
   role: z.string().optional(),
@@ -35,8 +35,8 @@ const ProjectBlockSchema = z.object({
   end: z.string().optional()
 })
 
-const ResearchBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const ResearchEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   title: z.string().default(""),
   content: z.string().default(""),
   role: z.string().optional(),
@@ -44,61 +44,61 @@ const ResearchBlockSchema = z.object({
   end: z.string().default("")
 })
 
-const PublicationBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const PublicationEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   title: z.string().default(""),
   date: z.string().default(""),
   description: z.string().optional()
 })
 
-const AwardBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const AwardEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   title: z.string().default(""),
   issuer: z.string().optional(),
   date: z.string().optional(),
   description: z.string().optional()
 })
 
-const CertificationBlockSchema = z.object({
-  blockId: z.string().default(() => nanoid()),
+const CertificationEntrySchema = z.object({
+  entryId: z.string().default(() => nanoid()),
   name: z.string().default(""),
   issuer: z.string().optional(),
   date: z.string().optional()
 })
 
-const AnyBlockSchema = z.union([
-  EducationBlockSchema,
-  EmploymentBlockSchema,
-  SkillBlockSchema,
-  ProjectBlockSchema,
-  ResearchBlockSchema,
-  PublicationBlockSchema,
-  AwardBlockSchema,
-  CertificationBlockSchema
+const AnyEntrySchema = z.union([
+  EducationEntrySchema,
+  EmploymentEntrySchema,
+  SkillEntrySchema,
+  ProjectEntrySchema,
+  ResearchEntrySchema,
+  PublicationEntrySchema,
+  AwardEntrySchema,
+  CertificationEntrySchema
 ])
 
-export const getBlockSchema = (entity: string) => {
+export const getEntrySchema = (entity: string) => {
   switch (entity) {
     case "education":
-      return EducationBlockSchema
+      return EducationEntrySchema
     case "employment":
-      return EmploymentBlockSchema
+      return EmploymentEntrySchema
     case "skills":
-      return SkillBlockSchema
+      return SkillEntrySchema
     case "projects":
-      return ProjectBlockSchema
+      return ProjectEntrySchema
     case "research":
-      return ResearchBlockSchema
+      return ResearchEntrySchema
     case "publications":
-      return PublicationBlockSchema
+      return PublicationEntrySchema
     case "awards":
-      return AwardBlockSchema
+      return AwardEntrySchema
     case "certifications":
-      return CertificationBlockSchema
+      return CertificationEntrySchema
   }
 }
 
-const BlockTypeEnum = z.enum([
+const SectionKeyEnum = z.enum([
   "personalInfo",
   "education",
   "employment",
@@ -110,7 +110,7 @@ const BlockTypeEnum = z.enum([
   "skills"
 ])
 
-export const BlockTypeWithoutPersonalInfoEnum = z.enum([
+export const SortableSectionKeyEnum = z.enum([
   "education",
   "employment",
   "research",
@@ -124,19 +124,19 @@ export const BlockTypeWithoutPersonalInfoEnum = z.enum([
 export const resumeEditorModifyInputSchema = z.discriminatedUnion("operation", [
   z.object({
     operation: z.literal("rewrite"),
-    entity: BlockTypeEnum,
-    id: z.string().describe("The block ID to be modified"),
+    entity: SectionKeyEnum,
+    id: z.string().describe("The entry ID to be modified"),
     field: z.string().describe("The field name to be modified"),
     value: z.string().describe("The new value for the field")
   }),
   z.object({
     operation: z.literal("delete"),
-    entity: BlockTypeWithoutPersonalInfoEnum,
-    id: z.string().describe("The block ID to be deleted")
+    entity: SortableSectionKeyEnum,
+    id: z.string().describe("The entry ID to be deleted")
   }),
   z.object({
     operation: z.literal("add"),
-    entity: BlockTypeWithoutPersonalInfoEnum
+    entity: SortableSectionKeyEnum
   })
 ])
 
@@ -145,79 +145,79 @@ export const resumeEditorModifyOutputSchema = z.discriminatedUnion(
   [
     z.object({
       operation: z.literal("rewrite"),
-      entity: BlockTypeEnum,
-      id: z.string().describe("The block ID to be modified"),
+      entity: SectionKeyEnum,
+      id: z.string().describe("The entry ID to be modified"),
       field: z.string().describe("The field name to be modified"),
       value: z.string().describe("The new value for the field"),
       originalValue: z.any()
     }),
     z.object({
       operation: z.literal("delete"),
-      entity: BlockTypeWithoutPersonalInfoEnum,
-      id: z.string().describe("The block ID to be deleted"),
-      originalValue: AnyBlockSchema
+      entity: SortableSectionKeyEnum,
+      id: z.string().describe("The entry ID to be deleted"),
+      originalValue: AnyEntrySchema
     }),
     z.object({
       operation: z.literal("add"),
-      entity: BlockTypeWithoutPersonalInfoEnum,
-      newBlock: AnyBlockSchema
+      entity: SortableSectionKeyEnum,
+      newEntry: AnyEntrySchema
     })
   ]
 )
 
 export const resumeEditorReorderInputSchema = z.object({
   operation: z
-    .enum(["reorderBlocks", "reorderSections"])
-    .describe("Operation type: reorderBlocks or reorderSections"),
-  entity: BlockTypeWithoutPersonalInfoEnum.nullable().describe(
-    "Section entity for reordering blocks"
+    .enum(["reorderEntries", "reorderSections"])
+    .describe("Operation type: reorderEntries or reorderSections"),
+  entity: SortableSectionKeyEnum.nullable().describe(
+    "Section entity for reordering entries"
   ),
-  orderedBlockIds: z
+  orderedEntryIds: z
     .array(z.string())
-    .describe("Array of block IDs in desired order (for reorderBlocks)")
+    .describe("Array of entry IDs in desired order (for reorderEntries)")
     .optional(),
   orderedSectionIds: z
-    .array(BlockTypeWithoutPersonalInfoEnum)
+    .array(SortableSectionKeyEnum)
     .describe("Array of section IDs in desired order (for reorderSections)")
     .optional()
 })
 
 export const resumeEditorReorderOutputSchema = z.object({
   operation: z
-    .enum(["reorderBlocks", "reorderSections"])
-    .describe("Operation type: reorderBlocks or reorderSections"),
-  entity: BlockTypeWithoutPersonalInfoEnum.nullable().describe(
-    "Section entity for reordering blocks"
+    .enum(["reorderEntries", "reorderSections"])
+    .describe("Operation type: reorderEntries or reorderSections"),
+  entity: SortableSectionKeyEnum.nullable().describe(
+    "Section entity for reordering entries"
   ),
-  orderedBlockIds: z
+  orderedEntryIds: z
     .array(z.string())
-    .describe("Array of block IDs in desired order (for reorderBlocks)")
+    .describe("Array of entry IDs in desired order (for reorderEntries)")
     .optional(),
   orderedSectionIds: z
-    .array(BlockTypeWithoutPersonalInfoEnum)
+    .array(SortableSectionKeyEnum)
     .describe("Array of section IDs in desired order (for reorderSections)")
     .optional(),
   originalValue: z
-    .union([z.array(z.string()), z.array(BlockTypeWithoutPersonalInfoEnum)])
+    .union([z.array(z.string()), z.array(SortableSectionKeyEnum)])
     .describe("Original order before reordering")
 })
 
 export const tools = {
   resumeEditorModify: tool({
     description:
-      "Tool to modify resume blocks: rewrite fields, delete blocks, or add new blocks. " +
+      "Tool to modify resume entries: rewrite fields, delete entries, or add new entries. " +
       "Supports: " +
-      "1) Rewrite block fields - modify any field in a block; " +
-      "2) Delete a block - remove a block from a section; " +
-      "3) Add a new block - insert a new block into a section. " +
+      "1) Rewrite entry fields - modify any field in an entry; " +
+      "2) Delete an entry - remove an entry from a section; " +
+      "3) Add a new entry - insert a new entry into a section. " +
       "The output language MUST remain consistent with the original resume language.",
     inputSchema: resumeEditorModifyInputSchema
   }),
   resumeEditorReorder: tool({
     description:
-      "Tool to reorder resume blocks and sections. " +
+      "Tool to reorder resume entries and sections. " +
       "Supports: " +
-      "1) Reorder blocks - change order of blocks within a section; " +
+      "1) Reorder entries - change order of entries within a section; " +
       "2) Reorder sections - change order of sections (personalInfo is always first). " +
       "The output language MUST remain consistent with the original resume language.",
     inputSchema: resumeEditorReorderInputSchema

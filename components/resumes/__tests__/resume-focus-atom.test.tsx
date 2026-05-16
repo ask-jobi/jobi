@@ -6,8 +6,8 @@ import { createStore } from "jotai"
 import {
   applicationAtom,
   focusSectionAtom,
-  selectedBlockIdAtom,
-  selectedBlockIndexAtom,
+  selectedEntryIdAtom,
+  selectedEntryIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
 
@@ -41,9 +41,9 @@ describe("focusSectionAtom", () => {
           },
           education: {
             title: "Education",
-            blocks: [
+            entries: [
               {
-                blockId: "edu-1",
+                entryId: "edu-1",
                 school: "School 1",
                 degree: "Degree 1",
                 start: "2020-01",
@@ -51,7 +51,7 @@ describe("focusSectionAtom", () => {
                 content: ""
               },
               {
-                blockId: "edu-2",
+                entryId: "edu-2",
                 school: "School 2",
                 degree: "Degree 2",
                 start: "2021-01",
@@ -62,7 +62,7 @@ describe("focusSectionAtom", () => {
           },
           skills: {
             title: "Skills",
-            blocks: []
+            entries: []
           }
         }
       },
@@ -77,8 +77,8 @@ describe("focusSectionAtom", () => {
     store.set(focusSectionAtom, "education", 1)
 
     expect(store.get(selectedSectionIdAtom)).toBe("education")
-    expect(store.get(selectedBlockIndexAtom)).toBe(1)
-    expect(store.get(selectedBlockIdAtom)).toBe("edu-2")
+    expect(store.get(selectedEntryIndexAtom)).toBe(1)
+    expect(store.get(selectedEntryIdAtom)).toBe("edu-2")
     expect(scrollTarget.scrollIntoView).not.toHaveBeenCalled()
   })
 
@@ -102,11 +102,11 @@ describe("focusSectionAtom", () => {
           },
           education: {
             title: "Education",
-            blocks: []
+            entries: []
           },
           skills: {
             title: "Skills",
-            blocks: []
+            entries: []
           }
         }
       },
@@ -121,7 +121,7 @@ describe("focusSectionAtom", () => {
     store.set(focusSectionAtom, "personalInfo")
 
     expect(store.get(selectedSectionIdAtom)).toBe("personalInfo")
-    expect(store.get(selectedBlockIdAtom)).toBeNull()
-    expect(store.get(selectedBlockIndexAtom)).toBeNull()
+    expect(store.get(selectedEntryIdAtom)).toBeNull()
+    expect(store.get(selectedEntryIndexAtom)).toBeNull()
   })
 })

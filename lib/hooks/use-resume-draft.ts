@@ -4,8 +4,8 @@ import { useMemo } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useResume, useResumeLanguage } from "@/lib/store/resume"
 import {
-  ensureSectionHasEditableBlock,
-  insertDraftBlockBelow
+  ensureSectionHasEditableEntry,
+  insertDraftEntryBelow
 } from "@/lib/templates/section-helpers"
 import type {
   ResumeEditorModifyOutput,
@@ -19,8 +19,8 @@ import type {
 
 type ResumeDraftSelection = {
   resume: ResumeData
-  blockId: string | null
-  blockIndex: number | null
+  entryId: string | null
+  entryIndex: number | null
 }
 
 function applyToolOutputToResume(
@@ -37,13 +37,13 @@ function applyToolOutputToResume(
     const modifyOutput = output as ResumeEditorModifyOutput
     const section = copiedResume[modifyOutput.entity]
 
-    if (!section || !("blocks" in section)) {
+    if (!section || !("entries" in section)) {
       return copiedResume
     }
 
     if (modifyOutput.operation === "rewrite") {
-      section.blocks.forEach((item) => {
-        if (item.blockId === modifyOutput.id && modifyOutput.field in item) {
+      section.entries.forEach((item) => {
+        if (item.entryId === modifyOutput.id && modifyOutput.field in item) {
           // @ts-expect-error field comes from tool schema
           item[modifyOutput.field] = modifyOutput.value
         }
@@ -52,14 +52,14 @@ function applyToolOutputToResume(
 
     if (modifyOutput.operation === "delete") {
       // @ts-expect-error filtered by id
-      section.blocks = section.blocks.filter(
-        (item) => item.blockId !== modifyOutput.id
+      section.entries = section.entries.filter(
+        (item) => item.entryId !== modifyOutput.id
       )
     }
 
     if (modifyOutput.operation === "add") {
-      // @ts-expect-error adding new block from validated tool payload
-      section.blocks.push(modifyOutput.newBlock)
+      // @ts-expect-error adding new entry from validated tool payload
+      section.entries.push(modifyOutput.newEntry)
     }
 
     return copiedResume
@@ -67,22 +67,22 @@ function applyToolOutputToResume(
 
   const reorderOutput = output as ResumeEditorReorderOutput
 
-  if (reorderOutput.operation === "reorderBlocks") {
+  if (reorderOutput.operation === "reorderEntries") {
     const entity = reorderOutput.entity
     if (!entity) return copiedResume
 
     const section = copiedResume[entity]
-    if (!section || !("blocks" in section)) return copiedResume
+    if (!section || !("entries" in section)) return copiedResume
 
-    const orderedBlocks = reorderOutput.orderedBlockIds
+    const orderedEntries = reorderOutput.orderedEntryIds
       ?.map((id: string) =>
-        section.blocks.find((b: { blockId: string }) => b.blockId === id)
+        section.entries.find((entry: { entryId: string }) => entry.entryId === id)
       )
       .filter(Boolean)
 
-    if (orderedBlocks) {
-      // @ts-expect-error reordering filtered existing blocks
-      section.blocks = orderedBlocks
+    if (orderedEntries) {
+      // @ts-expect-error reordering filtered existing entries
+      section.entries = orderedEntries
     }
 
     return copiedResume
@@ -119,54 +119,54 @@ export function useResumeDraft() {
         if (sectionId === "personalInfo") {
           return {
             resume: getValues(),
-            blockIndex: null,
-            blockId: null
+            entryIndex: null,
+            entryId: null
           }
         }
 
-        const { resume, blockIndex } = ensureSectionHasEditableBlock(
+        const { resume, entryIndex } = ensureSectionHasEditableEntry(
           getValues(),
           sectionId,
           resumeLanguage
         )
-        const blockId = resume[sectionId]?.blocks[blockIndex]?.blockId ?? null
+        const entryId = resume[sectionId]?.entries[entryIndex]?.entryId ?? null
         reset(resume)
 
         return {
           resume,
-          blockIndex,
-          blockId
+          entryIndex,
+          entryId
         }
       },
-      addBlockBelow: (
+      addEntryBelow: (
         sectionId: SortableSectionKey,
         index: number
       ): ResumeDraftSelection => {
-        const { resume, blockIndex } = insertDraftBlockBelow(
+        const { resume, entryIndex } = insertDraftEntryBelow(
           getValues(),
           sectionId,
           index
         )
-        const blockId = resume[sectionId]?.blocks[blockIndex]?.blockId ?? null
+        const entryId = resume[sectionId]?.entries[entryIndex]?.entryId ?? null
         reset(resume)
 
         return {
           resume,
-          blockIndex,
-          blockId
+          entryIndex,
+          entryId
         }
       },
-      deleteBlock: (sectionId: SortableSectionKey, index: number) => {
+      deleteEntry: (sectionId: SortableSectionKey, index: number) => {
         const nextResume = structuredClone(getValues()) as ResumeData
         const section = nextResume[sectionId]
 
-        if (!section || !("blocks" in section) || !section.blocks[index]) {
+        if (!section || !("entries" in section) || !section.entries[index]) {
           return nextResume
         }
 
-        section.blocks = section.blocks.filter((_, blockIndex) => {
-          return blockIndex !== index
-        }) as typeof section.blocks
+        section.entries = section.entries.filter((_, entryIndex) => {
+          return entryIndex !== index
+        }) as typeof section.entries
 
         reset(nextResume)
         return nextResume

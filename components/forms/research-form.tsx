@@ -3,9 +3,9 @@
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Editor } from "@/components/editor/editor"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
-import { ResearchBlock, ResumeData } from "@/types/resume"
+import { ResearchEntry, ResumeData } from "@/types/resume"
 
 interface ResearchFormProps {
   focusIndex?: number | null
@@ -21,23 +21,23 @@ export function ResearchForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "research.blocks"
+    name: "research.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`research.blocks.${focusIndex}`)
+  const currentEntry = getValues(`research.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-research" className="space-y-4">
-      <FocusedBlockFormShell<ResearchBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<ResearchEntry>
+        entry={currentEntry}
         formId={`form-research-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -83,7 +83,7 @@ export function ResearchForm({
             </>
           )
         }}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

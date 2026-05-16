@@ -81,7 +81,7 @@ describe("ResumeSectionActionButtonGroup", () => {
     expect(actions).toHaveClass("opacity-100")
   })
 
-  it("shows a tooltip confirmation before deleting a block", () => {
+  it("shows a tooltip confirmation before deleting an entry", () => {
     const onDelete = vi.fn()
 
     render(
@@ -100,12 +100,12 @@ describe("ResumeSectionActionButtonGroup", () => {
 
     fireEvent.mouseEnter(surface!)
 
-    const deleteButton = screen.getByRole("button", { name: "deleteBlock" })
+    const deleteButton = screen.getByRole("button", { name: "deleteEntry" })
 
     fireEvent.click(deleteButton)
 
     expect(onDelete).not.toHaveBeenCalled()
-    expect(screen.getByRole("tooltip")).toHaveTextContent("confirmDeleteBlock")
+    expect(screen.getByRole("tooltip")).toHaveTextContent("confirmDeleteEntry")
 
     fireEvent.click(deleteButton)
 
@@ -127,7 +127,7 @@ describe("ResumeSectionActionButtonGroup", () => {
     expect(surface).not.toBeNull()
 
     fireEvent.mouseEnter(surface!)
-    fireEvent.click(screen.getByRole("button", { name: "addBlock" }))
+    fireEvent.click(screen.getByRole("button", { name: "addEntry" }))
 
     expect(onAdd).toHaveBeenCalledTimes(1)
   })

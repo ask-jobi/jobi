@@ -22,9 +22,9 @@ const resumeSchema = z.object({
       .string()
       .describe("Title of the education section")
       .prefault("Education"),
-    blocks: z.array(
+    entries: z.array(
       z.object({
-        blockId: z.string().default(() => nanoid()),
+        entryId: z.string().default(() => nanoid()),
         content: z
           .string()
           .describe(
@@ -47,9 +47,9 @@ const resumeSchema = z.object({
       .string()
       .describe("Title of the skills section")
       .prefault("Skills"),
-    blocks: z.array(
+    entries: z.array(
       z.object({
-        blockId: z.string().default(() => nanoid()),
+        entryId: z.string().default(() => nanoid()),
         group: z.string().describe("Category of skills"),
         content: z
           .string()
@@ -64,9 +64,9 @@ const resumeSchema = z.object({
         .string()
         .describe("Title of the work experience section")
         .prefault("Work Experience"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           content: z
             .string()
             .describe(
@@ -88,16 +88,16 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   research: z
     .object({
       title: z
         .string()
         .describe("Title of the research section")
         .prefault("Research Experience"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this research experience"),
           content: z
             .string()
@@ -128,16 +128,16 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   projects: z
     .object({
       title: z
         .string()
         .describe("Title of the projects section")
         .prefault("Projects"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this project experience"),
           content: z
             .string()
@@ -170,16 +170,16 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   publications: z
     .object({
       title: z
         .string()
         .describe("Title of the publications section")
         .prefault("Publications"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this publication"),
           date: z
             .string()
@@ -192,16 +192,16 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   awards: z
     .object({
       title: z
         .string()
         .describe("Title of the awards section")
         .prefault("Awards"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           title: z.string().describe("Title of this award"),
           issuer: z.string().describe("Issuer of this award").optional(),
           date: z.string().describe("Date of this award").optional(),
@@ -213,16 +213,16 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   certifications: z
     .object({
       title: z
         .string()
         .describe("Title of the certifications section")
         .prefault("Certifications"),
-      blocks: z.array(
+      entries: z.array(
         z.object({
-          blockId: z.string().default(() => nanoid()),
+          entryId: z.string().default(() => nanoid()),
           name: z.string().describe("Name of this certification"),
           issuer: z
             .string()
@@ -233,7 +233,7 @@ const resumeSchema = z.object({
       )
     })
     .optional()
-    .transform((s) => (s && s.blocks.length > 0 ? s : undefined)),
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   _metadata: z.object({
     language: z
       .string()

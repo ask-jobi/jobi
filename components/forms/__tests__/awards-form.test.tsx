@@ -33,17 +33,17 @@ function renderFocusedAwardsForm({
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         },
         awards: {
           title: "Awards",
-          blocks: [
+          entries: [
             {
-              blockId: "award-1",
+              entryId: "award-1",
               title: "Original Award",
               issuer: "Original Issuer",
               date: "2024-01",
@@ -100,8 +100,8 @@ describe("AwardsForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "button.save" }))
 
     await waitFor(() => {
-      expect(methods.getValues("awards.blocks.0.title")).toBe("Updated Award")
-      expect(methods.getValues("awards.blocks.0.description")).toBe(
+      expect(methods.getValues("awards.entries.0.title")).toBe("Updated Award")
+      expect(methods.getValues("awards.entries.0.description")).toBe(
         "Updated description"
       )
       expect(onSaveComplete).toHaveBeenCalledOnce()
@@ -116,8 +116,8 @@ describe("AwardsForm", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: "button.cancel" }))
 
-    expect(methods.getValues("awards.blocks.0.title")).toBe("Original Award")
-    expect(methods.getValues("awards.blocks.0.description")).toBe(
+    expect(methods.getValues("awards.entries.0.title")).toBe("Original Award")
+    expect(methods.getValues("awards.entries.0.description")).toBe(
       "Original description"
     )
     expect(onCancel).toHaveBeenCalledOnce()

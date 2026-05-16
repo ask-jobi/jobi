@@ -10,8 +10,8 @@ import {
   applicationAtom,
   editModalOpenAtom,
   editModalRollbackResumeAtom,
-  selectedBlockIdAtom,
-  selectedBlockIndexAtom,
+  selectedEntryIdAtom,
+  selectedEntryIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
 import type { ResumeData } from "@/types/resume"
@@ -28,22 +28,22 @@ vi.mock("@/lib/hooks/use-resume-template", () => ({
       options
     }: {
       options?: {
-        onBlockAdd?: (id: "education", index: number) => void
-        onBlockDelete?: (id: "education", index: number) => void
+        onEntryAdd?: (id: "education", index: number) => void
+        onEntryDelete?: (id: "education", index: number) => void
       }
     }) => (
       <>
         <button
           type="button"
-          onClick={() => options?.onBlockAdd?.("education", 0)}
+          onClick={() => options?.onEntryAdd?.("education", 0)}
         >
-          Trigger Add Block
+          Trigger Add Entry
         </button>
         <button
           type="button"
-          onClick={() => options?.onBlockDelete?.("education", 0)}
+          onClick={() => options?.onEntryDelete?.("education", 0)}
         >
-          Trigger Delete Block
+          Trigger Delete Entry
         </button>
       </>
     )
@@ -62,7 +62,7 @@ vi.mock("@/components/resumes/resume-canvas-section-entry", () => ({
 function renderEditor(store = createStore()) {
   function DraftObserver() {
     const { watch } = useFormContext<ResumeData>()
-    const educationBlocks = watch("education.blocks")
+    const educationBlocks = watch("education.entries")
 
     return (
       <div data-testid="draft-education-block-count">
@@ -89,8 +89,8 @@ function renderEditor(store = createStore()) {
   return render(<Wrapper />)
 }
 
-describe("ResumeEditor add block", () => {
-  it("adds the block to the draft before opening the modal without mutating persisted resume", async () => {
+describe("ResumeEditor add entry", () => {
+  it("adds the entry to the draft before opening the modal without mutating persisted resume", async () => {
     saveResumeChangeMock.mockResolvedValue(undefined)
     const store = createStore()
     const originalResume: ResumeData = {
@@ -104,9 +104,9 @@ describe("ResumeEditor add block", () => {
       },
       education: {
         title: "Education",
-        blocks: [
+        entries: [
           {
-            blockId: "edu-1",
+            entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
             start: "2020-01",
@@ -117,7 +117,7 @@ describe("ResumeEditor add block", () => {
       },
       skills: {
         title: "Skills",
-        blocks: []
+        entries: []
       }
     }
 
@@ -140,24 +140,24 @@ describe("ResumeEditor add block", () => {
 
     renderEditor(store)
 
-    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Block" }))
+    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
 
     await waitFor(() => {
       expect(store.get(editModalOpenAtom)).toBe(true)
       expect(store.get(selectedSectionIdAtom)).toBe("education")
-      expect(store.get(selectedBlockIndexAtom)).toBe(1)
-      expect(store.get(selectedBlockIdAtom)).toBeTruthy()
+      expect(store.get(selectedEntryIndexAtom)).toBe(1)
+      expect(store.get(selectedEntryIdAtom)).toBeTruthy()
       expect(store.get(editModalRollbackResumeAtom)).toEqual(originalResume)
       expect(
         screen.getByTestId("draft-education-block-count")
       ).toHaveTextContent("2")
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.blocks
+        store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(1)
     })
   })
 
-  it("persists block deletion immediately after updating the draft", async () => {
+  it("persists entry deletion immediately after updating the draft", async () => {
     saveResumeChangeMock.mockResolvedValue(undefined)
     const store = createStore()
     const originalResume: ResumeData = {
@@ -171,9 +171,9 @@ describe("ResumeEditor add block", () => {
       },
       education: {
         title: "Education",
-        blocks: [
+        entries: [
           {
-            blockId: "edu-1",
+            entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
             start: "2020-01",
@@ -184,7 +184,7 @@ describe("ResumeEditor add block", () => {
       },
       skills: {
         title: "Skills",
-        blocks: []
+        entries: []
       }
     }
 
@@ -208,7 +208,7 @@ describe("ResumeEditor add block", () => {
     renderEditor(store)
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Trigger Delete Block" })
+      screen.getByRole("button", { name: "Trigger Delete Entry" })
     )
 
     await waitFor(() => {
@@ -216,13 +216,13 @@ describe("ResumeEditor add block", () => {
         screen.getByTestId("draft-education-block-count")
       ).toHaveTextContent("0")
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.blocks
+        store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(0)
       expect(saveResumeChangeMock).toHaveBeenCalledWith("resume-1", {
         ...originalResume,
         education: {
           ...originalResume.education,
-          blocks: []
+          entries: []
         }
       })
     })

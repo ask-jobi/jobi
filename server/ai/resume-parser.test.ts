@@ -36,7 +36,7 @@ describe("parseResume", () => {
         education: {
           title: "Education",
           order: 0,
-          blocks: [
+          entries: [
             {
               content: "Computer Science degree",
               school: "MIT",
@@ -49,7 +49,7 @@ describe("parseResume", () => {
         skills: {
           title: "Skills",
           order: 2,
-          blocks: [{ group: "Programming", content: "JavaScript, TypeScript" }]
+          entries: [{ group: "Programming", content: "JavaScript, TypeScript" }]
         },
         _metadata: {
           language: "en"
@@ -95,7 +95,7 @@ Programming: JavaScript, TypeScript
         education: {
           title: "教育经历",
           order: 0,
-          blocks: [
+          entries: [
             {
               content: "计算机科学专业",
               school: "清华大学",
@@ -108,7 +108,7 @@ Programming: JavaScript, TypeScript
         skills: {
           title: "技能",
           order: 2,
-          blocks: [{ group: "编程", content: "JavaScript, TypeScript, Python" }]
+          entries: [{ group: "编程", content: "JavaScript, TypeScript, Python" }]
         },
         _metadata: {
           language: "zh"
@@ -150,7 +150,7 @@ zhangsan@example.com
         education: {
           title: "Education",
           order: 0,
-          blocks: [
+          entries: [
             {
               content: "Master's degree",
               school: "Stanford",
@@ -163,7 +163,7 @@ zhangsan@example.com
         employment: {
           title: "Work Experience",
           order: 1,
-          blocks: [
+          entries: [
             {
               content: "Led backend development team",
               company: "Tech Corp",
@@ -176,12 +176,12 @@ zhangsan@example.com
         skills: {
           title: "Skills",
           order: 2,
-          blocks: [{ group: "Backend", content: "Node.js, Python, AWS" }]
+          entries: [{ group: "Backend", content: "Node.js, Python, AWS" }]
         },
         research: {
           title: "Research Experience",
           order: 3,
-          blocks: [
+          entries: [
             {
               title: "AI Research",
               content: "Published paper on ML",
@@ -193,7 +193,7 @@ zhangsan@example.com
         projects: {
           title: "Projects",
           order: 4,
-          blocks: [
+          entries: [
             {
               title: "E-commerce Platform",
               content: "Built full-stack application",
@@ -217,7 +217,7 @@ zhangsan@example.com
       const [resumeData] = result
 
       expect(resumeData.employment).toBeDefined()
-      expect(resumeData.employment?.blocks).toHaveLength(1)
+      expect(resumeData.employment?.entries).toHaveLength(1)
       expect(resumeData.research).toBeDefined()
       expect(resumeData.projects).toBeDefined()
     })
@@ -235,12 +235,12 @@ zhangsan@example.com
         education: {
           title: "Education",
           order: 0,
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
           order: 2,
-          blocks: []
+          entries: []
         },
         _metadata: {
           language: "en"
@@ -255,8 +255,8 @@ zhangsan@example.com
 
       expect(result).toHaveLength(2)
       const [resumeData] = result
-      expect(resumeData.education.blocks).toHaveLength(0)
-      expect(resumeData.skills.blocks).toHaveLength(0)
+      expect(resumeData.education.entries).toHaveLength(0)
+      expect(resumeData.skills.entries).toHaveLength(0)
     })
 
     it("should return empty arrays when no data provided", async () => {
@@ -270,12 +270,12 @@ zhangsan@example.com
         education: {
           title: "Education",
           order: 0,
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
           order: 2,
-          blocks: []
+          entries: []
         },
         _metadata: {
           language: "en"
@@ -289,7 +289,7 @@ zhangsan@example.com
       const result = await parseResume("No content")
 
       expect(result).toHaveLength(2)
-      expect(result[0].education.blocks).toEqual([])
+      expect(result[0].education.entries).toEqual([])
     })
   })
 
@@ -303,8 +303,8 @@ zhangsan@example.com
             email: "test@test.com",
             phone: ""
           },
-          education: { title: "Education", order: 0, blocks: [] },
-          skills: { title: "Skills", order: 2, blocks: [] },
+          education: { title: "Education", order: 0, entries: [] },
+          skills: { title: "Skills", order: 2, entries: [] },
           _metadata: { language: "en" }
         }
       })
@@ -328,8 +328,8 @@ zhangsan@example.com
             email: "test@test.com",
             phone: ""
           },
-          education: { title: "Education", order: 0, blocks: [] },
-          skills: { title: "Skills", order: 2, blocks: [] },
+          education: { title: "Education", order: 0, entries: [] },
+          skills: { title: "Skills", order: 2, entries: [] },
           _metadata: { language: "en" }
         }
       })
@@ -378,7 +378,7 @@ zhangsan@example.com
           education: {
             title: "Education",
             order: 0,
-            blocks: [
+            entries: [
               {
                 content: "Degree",
                 school: "University",
@@ -391,7 +391,7 @@ zhangsan@example.com
           skills: {
             title: "Skills",
             order: 2,
-            blocks: [{ group: "Tech", content: "React" }]
+            entries: [{ group: "Tech", content: "React" }]
           },
           _metadata: {
             language: "en"
@@ -422,7 +422,7 @@ zhangsan@example.com
           education: {
             title: "Education",
             order: 0,
-            blocks: [
+            entries: [
               {
                 content: "Content",
                 school: "School",
@@ -435,7 +435,7 @@ zhangsan@example.com
           skills: {
             title: "Skills",
             order: 2,
-            blocks: [{ group: "Group", content: "Skills" }]
+            entries: [{ group: "Group", content: "Skills" }]
           },
           _metadata: {
             language: "zh"

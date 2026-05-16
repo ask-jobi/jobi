@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import type { ResumeData } from "@/types/resume"
 import {
   addSection,
-  ensureSectionHasEditableBlock,
-  insertDraftBlockBelow,
+  ensureSectionHasEditableEntry,
+  insertDraftEntryBelow,
   normalizeSectionOrder,
   removeSection
 } from "@/lib/templates/section-helpers"
@@ -41,10 +41,10 @@ describe("section-helpers", () => {
     expect(nextResume.sectionOrder).not.toContain("projects")
   })
 
-  it("keeps required sections but clears blocks on remove", () => {
+  it("keeps required sections but clears entries on remove", () => {
     const baseResume = buildEmptyResumeData("en")
-    baseResume.skills.blocks.push({
-      blockId: "skill-1",
+    baseResume.skills.entries.push({
+      entryId: "skill-1",
       group: "Languages",
       content: "TypeScript"
     })
@@ -52,22 +52,22 @@ describe("section-helpers", () => {
     const nextResume = removeSection(baseResume, "skills")
 
     expect(nextResume.skills).toBeDefined()
-    expect(nextResume.skills.blocks).toHaveLength(0)
+    expect(nextResume.skills.entries).toHaveLength(0)
     expect(nextResume.sectionOrder).toContain("skills")
   })
 
-  it("ensures block-based sections open with an editable block", () => {
+  it("ensures entry-based sections open with an editable entry", () => {
     const baseResume = buildEmptyResumeData("en")
 
-    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+    const { resume, entryIndex } = ensureSectionHasEditableEntry(
       baseResume,
       "education",
       "en"
     )
 
-    expect(blockIndex).toBe(0)
-    expect(resume.education.blocks).toHaveLength(1)
-    expect(resume.education.blocks[0]).toMatchObject({
+    expect(entryIndex).toBe(0)
+    expect(resume.education.entries).toHaveLength(1)
+    expect(resume.education.entries[0]).toMatchObject({
       school: "",
       degree: "",
       start: "",
@@ -76,26 +76,26 @@ describe("section-helpers", () => {
     })
   })
 
-  it("adds missing optional sections with an editable block", () => {
+  it("adds missing optional sections with an editable entry", () => {
     const baseResume = buildEmptyResumeData("en")
 
-    const { resume, blockIndex } = ensureSectionHasEditableBlock(
+    const { resume, entryIndex } = ensureSectionHasEditableEntry(
       baseResume,
       "employment",
       "en"
     )
 
-    expect(blockIndex).toBe(0)
+    expect(entryIndex).toBe(0)
     expect(resume.employment).toBeDefined()
-    expect(resume.employment?.blocks).toHaveLength(1)
+    expect(resume.employment?.entries).toHaveLength(1)
     expect(resume.sectionOrder).toContain("employment")
   })
 
-  it("inserts a new draft block directly below the selected block", () => {
+  it("inserts a new draft entry directly below the selected entry", () => {
     const baseResume = buildEmptyResumeData("en")
-    baseResume.education.blocks = [
+    baseResume.education.entries = [
       {
-        blockId: "edu-1",
+        entryId: "edu-1",
         school: "School 1",
         degree: "Degree 1",
         start: "2020-01",
@@ -103,7 +103,7 @@ describe("section-helpers", () => {
         content: "A"
       },
       {
-        blockId: "edu-2",
+        entryId: "edu-2",
         school: "School 2",
         degree: "Degree 2",
         start: "2021-01",
@@ -112,22 +112,22 @@ describe("section-helpers", () => {
       }
     ]
 
-    const { resume, blockIndex } = insertDraftBlockBelow(
+    const { resume, entryIndex } = insertDraftEntryBelow(
       baseResume,
       "education",
       0
     )
 
-    expect(blockIndex).toBe(1)
-    expect(resume.education.blocks).toHaveLength(3)
-    expect(resume.education.blocks[0].blockId).toBe("edu-1")
-    expect(resume.education.blocks[1]).toMatchObject({
+    expect(entryIndex).toBe(1)
+    expect(resume.education.entries).toHaveLength(3)
+    expect(resume.education.entries[0].entryId).toBe("edu-1")
+    expect(resume.education.entries[1]).toMatchObject({
       school: "",
       degree: "",
       start: "",
       end: "",
       content: ""
     })
-    expect(resume.education.blocks[2].blockId).toBe("edu-2")
+    expect(resume.education.entries[2].entryId).toBe("edu-2")
   })
 })

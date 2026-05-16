@@ -123,7 +123,7 @@ function AddCard({
   )
 }
 
-function ReorderBlocksCard({
+function ReorderEntriesCard({
   output,
   t
 }: {
@@ -131,16 +131,16 @@ function ReorderBlocksCard({
   t: ReturnType<typeof useTranslations>
 }) {
   const original = output.originalValue as string[]
-  const ordered = output.orderedBlockIds
+  const ordered = output.orderedEntryIds
 
-  if (output.operation !== "reorderBlocks" || !ordered) return null
+  if (output.operation !== "reorderEntries" || !ordered) return null
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <ArrowUpDown className="w-4 h-4 text-purple-500" />
         <span className="text-sm font-medium">
-          {t("toolOutput.reorderBlocks")}{" "}
+          {t("toolOutput.reorderEntries")}{" "}
           {t(`toolOutput.entity.${output.entity}` as any)}
         </span>
       </div>
@@ -203,8 +203,8 @@ export function ResumeActionOutputCard({
         )}
         {output.operation === "delete" && <DeleteCard output={output} t={t} />}
         {output.operation === "add" && <AddCard output={output} t={t} />}
-        {output.operation === "reorderBlocks" && (
-          <ReorderBlocksCard output={output} t={t} />
+        {output.operation === "reorderEntries" && (
+          <ReorderEntriesCard output={output} t={t} />
         )}
         {output.operation === "reorderSections" && (
           <ReorderSectionsCard output={output} t={t} />

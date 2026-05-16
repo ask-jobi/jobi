@@ -4,7 +4,7 @@ import React from "react"
 import type { Locale } from "@/lib/i18n/config"
 import type { ResumeData } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
-import { SectionBlocks } from "@/components/resume-templates/section-blocks"
+import { SectionEntries } from "@/components/resume-templates/section-entries"
 import ResumeSkeleton from "@/components/skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
@@ -21,7 +21,7 @@ export const ModernTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, onBlockAdd, onBlockDelete, isInteractive } =
+  const { onSectionClick, onEntryAdd, onEntryDelete, isInteractive } =
     options ?? {}
   if (!data) {
     return (
@@ -62,14 +62,14 @@ export const ModernTemplate: React.FC<Props> = ({
       </ResumeSectionActionButtonGroup>
 
       {/* Education */}
-      <SectionBlocks
+      <SectionEntries
         sectionId="education"
         section={data.education}
         sectionTitle={getSectionLabel("education", language)}
         isInteractive={isInteractive}
-        onBlockAdd={onBlockAdd}
-        onBlockDelete={onBlockDelete}
-        onBlockClick={onSectionClick}
+        onEntryAdd={onEntryAdd}
+        onEntryDelete={onEntryDelete}
+        onEntryClick={onSectionClick}
         sectionClassName="modern-section"
         headRender={(block) => (
           <div className="flex justify-between items-baseline mb-1">
@@ -81,7 +81,7 @@ export const ModernTemplate: React.FC<Props> = ({
             </span>
           </div>
         )}
-        blockRender={(block) => (
+        entryRender={(block) => (
           <div>
             <p className="text-sm font-medium text-gray-700 mb-1">
               {block.degree}
@@ -92,14 +92,14 @@ export const ModernTemplate: React.FC<Props> = ({
       />
 
       {/* Employment（可能为空） */}
-      <SectionBlocks
+      <SectionEntries
         sectionId="employment"
         section={data.employment}
         sectionTitle={getSectionLabel("employment", language)}
         isInteractive={isInteractive}
-        onBlockAdd={onBlockAdd}
-        onBlockDelete={onBlockDelete}
-        onBlockClick={onSectionClick}
+        onEntryAdd={onEntryAdd}
+        onEntryDelete={onEntryDelete}
+        onEntryClick={onSectionClick}
         sectionClassName="modern-section"
         hideIfEmpty
         emptyFallback={
@@ -126,25 +126,25 @@ export const ModernTemplate: React.FC<Props> = ({
             </span>
           </div>
         )}
-        blockRender={(block) => <MarkdownRender markdown={block.content} />}
+        entryRender={(block) => <MarkdownRender markdown={block.content} />}
       />
 
       {/* Skills */}
-      <SectionBlocks
+      <SectionEntries
         sectionId="skills"
         section={data.skills}
         sectionTitle={getSectionLabel("skills", language)}
         isInteractive={isInteractive}
-        onBlockAdd={onBlockAdd}
-        onBlockDelete={onBlockDelete}
-        onBlockClick={onSectionClick}
+        onEntryAdd={onEntryAdd}
+        onEntryDelete={onEntryDelete}
+        onEntryClick={onSectionClick}
         sectionClassName="modern-section"
         headRender={(block) => (
           <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase tracking-wider">
             {block.group}
           </h3>
         )}
-        blockRender={(block) => (
+        entryRender={(block) => (
           <div className="flex flex-wrap gap-2">
             {block.content?.split(",").map((item, itemIndex) => (
               <span

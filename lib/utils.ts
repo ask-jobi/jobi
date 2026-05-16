@@ -1,10 +1,10 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import {
-  EducationBlock,
-  EmploymentBlock,
+  EducationEntry,
+  EmploymentEntry,
   ResumeData,
-  SkillBlock
+  SkillEntry
 } from "@/types/resume"
 
 export function cn(...inputs: ClassValue[]) {
@@ -30,30 +30,30 @@ LinkedIn: ${resumeData.personalInfo?.linkedin || "Not provided"}
 
 Education Experience:
 ${
-  resumeData.education?.blocks
+  resumeData.education?.entries
     ?.map(
-      (edu: EducationBlock, index: number) =>
-        `Education Block ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
+      (edu: EducationEntry, index: number) =>
+        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
     )
     .join("\n\n") || "None"
 }
 
 Employment Experience:
 ${
-  resumeData.employment?.blocks
+  resumeData.employment?.entries
     ?.map(
-      (emp: EmploymentBlock, index: number) =>
-        `Employment Block ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
+      (emp: EmploymentEntry, index: number) =>
+        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
     )
     .join("\n\n") || "None"
 }
 
 Skills:
 ${
-  resumeData.skills?.blocks
+  resumeData.skills?.entries
     ?.map(
-      (skill: SkillBlock, index: number) =>
-        `Skills Block ${index + 1}:\n${skill.group}: ${skill.content}`
+      (skill: SkillEntry, index: number) =>
+        `Skills Entry ${index + 1}:\n${skill.group}: ${skill.content}`
     )
     .join("\n\n") || "None"
 }

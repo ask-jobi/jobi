@@ -20,8 +20,8 @@ export function ResumeSectionEditModal() {
   const { getDraft, commitDraft, resetDraft } = useResumeDraft()
   const [isOpen, setIsOpen] = useAtom(editModalOpenAtom)
   const {
-    selectedBlockId,
-    selectedBlockIndex,
+    selectedEntryId,
+    selectedEntryIndex,
     selectedSectionId,
     rollbackResume,
     clearSelection,
@@ -62,11 +62,11 @@ export function ResumeSectionEditModal() {
   }
 
   useEffect(() => {
-    if (!isOpen || !selectedSectionId || !selectedBlockId) {
+    if (!isOpen || !selectedSectionId || !selectedEntryId) {
       return
     }
 
-    if (selectedBlockIndex !== null) {
+    if (selectedEntryIndex !== null) {
       return
     }
 
@@ -74,12 +74,12 @@ export function ResumeSectionEditModal() {
   }, [
     dismissEditor,
     isOpen,
-    selectedBlockId,
-    selectedBlockIndex,
+    selectedEntryId,
+    selectedEntryIndex,
     selectedSectionId
   ])
 
-  if (!selectedSectionId || (selectedBlockId && selectedBlockIndex === null)) {
+  if (!selectedSectionId || (selectedEntryId && selectedEntryIndex === null)) {
     return null
   }
 
@@ -92,7 +92,7 @@ export function ResumeSectionEditModal() {
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           <ResumeSectionForm
             sectionId={selectedSectionId}
-            blockIndex={selectedBlockIndex}
+            entryIndex={selectedEntryIndex}
             onCancel={() => void handleOpenChange(false)}
             onSaveComplete={handleSaveComplete}
           />

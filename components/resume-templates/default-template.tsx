@@ -8,7 +8,7 @@ import type {
   ResumeSectionKey
 } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
-import { SectionBlocks } from "@/components/resume-templates/section-blocks"
+import { SectionEntries } from "@/components/resume-templates/section-entries"
 import "./default-template.css"
 import ResumeSkeleton from "../skeletons/resume-skeleton"
 import { TemplateOptions } from "@/lib/templates/registry"
@@ -27,8 +27,8 @@ const renderers: Record<
     data: ResumeData,
     language: Locale,
     isInteractive?: boolean,
-    onBlockAdd?: (id: SortableSectionKey, index: number) => void,
-    onBlockDelete?: (id: SortableSectionKey, index: number) => void,
+    onEntryAdd?: (id: SortableSectionKey, index: number) => void,
+    onEntryDelete?: (id: SortableSectionKey, index: number) => void,
     onSectionClick?: (id: ResumeSectionKey, index?: number) => void
   ) => React.ReactElement | null
 > = {
@@ -36,19 +36,19 @@ const renderers: Record<
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="education"
       sectionId="education"
       section={data.education}
       sectionTitle={getSectionLabel("education", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -60,26 +60,26 @@ const renderers: Record<
           <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
         </>
       )}
-      blockRender={(block) => <MarkdownRender markdown={block.content} />}
+      entryRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
   employment: (
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="employment"
       sectionId="employment"
       section={data.employment}
       sectionTitle={getSectionLabel("employment", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -91,30 +91,30 @@ const renderers: Record<
           <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
         </>
       )}
-      blockRender={(block) => <MarkdownRender markdown={block.content} />}
+      entryRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
   skills: (
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="skills"
       sectionId="skills"
       section={data.skills}
       sectionTitle={getSectionLabel("skills", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <h3 className="text-sm font-bold mb-1">{block.group}</h3>
       )}
-      blockRender={(block) => (
+      entryRender={(block) => (
         <div className="flex flex-wrap">
           {block.content?.split(",").map((item, i) => (
             <span
@@ -132,19 +132,19 @@ const renderers: Record<
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="research"
       sectionId="research"
       section={data.research}
       sectionTitle={getSectionLabel("research", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -158,26 +158,26 @@ const renderers: Record<
           )}
         </>
       )}
-      blockRender={(block) => <MarkdownRender markdown={block.content} />}
+      entryRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
   projects: (
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="projects"
       sectionId="projects"
       section={data.projects}
       sectionTitle={getSectionLabel("projects", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -191,26 +191,26 @@ const renderers: Record<
           )}
         </>
       )}
-      blockRender={(block) => <MarkdownRender markdown={block.content} />}
+      entryRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
   publications: (
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="publications"
       sectionId="publications"
       section={data.publications}
       sectionTitle={getSectionLabel("publications", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -222,26 +222,26 @@ const renderers: Record<
           )}
         </>
       )}
-      blockRender={() => null}
+      entryRender={() => null}
     />
   ),
   awards: (
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="awards"
       sectionId="awards"
       section={data.awards}
       sectionTitle={getSectionLabel("awards", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -253,7 +253,7 @@ const renderers: Record<
           )}
         </>
       )}
-      blockRender={(block) =>
+      entryRender={(block) =>
         block.description && <MarkdownRender markdown={block.description} />
       }
     />
@@ -262,19 +262,19 @@ const renderers: Record<
     data,
     language,
     isInteractive,
-    onBlockAdd,
-    onBlockDelete,
+    onEntryAdd,
+    onEntryDelete,
     onSectionClick
   ) => (
-    <SectionBlocks
+    <SectionEntries
       key="certifications"
       sectionId="certifications"
       section={data.certifications}
       sectionTitle={getSectionLabel("certifications", language)}
       isInteractive={isInteractive}
-      onBlockAdd={onBlockAdd}
-      onBlockDelete={onBlockDelete}
-      onBlockClick={onSectionClick}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -286,7 +286,7 @@ const renderers: Record<
           )}
         </>
       )}
-      blockRender={() => null}
+      entryRender={() => null}
     />
   )
 }
@@ -296,7 +296,7 @@ export const DefaultTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, onBlockAdd, onBlockDelete, isInteractive } =
+  const { onSectionClick, onEntryAdd, onEntryDelete, isInteractive } =
     options ?? {}
   if (!data) {
     return (
@@ -334,8 +334,8 @@ export const DefaultTemplate: React.FC<Props> = ({
           data,
           language,
           isInteractive,
-          onBlockAdd,
-          onBlockDelete,
+          onEntryAdd,
+          onEntryDelete,
           onSectionClick
         )
       )}

@@ -3,9 +3,9 @@
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Editor } from "@/components/editor/editor"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
-import { EmploymentBlock, ResumeData } from "@/types/resume"
+import { EmploymentEntry, ResumeData } from "@/types/resume"
 
 interface EmploymentFormProps {
   focusIndex?: number | null
@@ -21,23 +21,23 @@ export function EmploymentForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "employment.blocks"
+    name: "employment.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`employment.blocks.${focusIndex}`)
+  const currentEntry = getValues(`employment.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-employment" className="space-y-4">
-      <FocusedBlockFormShell<EmploymentBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<EmploymentEntry>
+        entry={currentEntry}
         formId={`form-employment-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -83,7 +83,7 @@ export function EmploymentForm({
             </>
           )
         }}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import type { RewriteBlockRequest } from "@/types/api/requests"
-import { rewriteBlock } from "@/server/ai/resume-rewriter"
+import type { RewriteEntryRequest } from "@/types/api/requests"
+import { rewriteEntry } from "@/server/ai/resume-entry-rewriter"
 
 export async function POST(request: Request) {
   try {
-    const body: RewriteBlockRequest = await request.json()
+    const body: RewriteEntryRequest = await request.json()
 
     if (!body.originalContent || !body.jd || !body.instruction) {
       return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const response = await rewriteBlock({
+    const response = await rewriteEntry({
       resumeSection: body.resumeSection,
       originalContent: body.originalContent,
       jd: body.jd,

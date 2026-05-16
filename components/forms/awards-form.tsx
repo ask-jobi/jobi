@@ -2,9 +2,9 @@
 
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Textarea } from "@/components/ui/textarea"
-import { AwardBlock, ResumeData } from "@/types/resume"
+import { AwardEntry, ResumeData } from "@/types/resume"
 
 interface AwardsFormProps {
   focusIndex?: number | null
@@ -20,23 +20,23 @@ export function AwardsForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "awards.blocks"
+    name: "awards.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`awards.blocks.${focusIndex}`)
+  const currentEntry = getValues(`awards.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-awards" className="space-y-4">
-      <FocusedBlockFormShell<AwardBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<AwardEntry>
+        entry={currentEntry}
         formId={`form-awards-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -66,7 +66,7 @@ export function AwardsForm({
             </div>
           </>
         )}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

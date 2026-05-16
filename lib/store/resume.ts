@@ -35,17 +35,17 @@ export const persistedResumeAtom = atom(
 
 export type ResumeIndex = {
   sectionMap: Map<SortableSectionKey, ResumeSection>
-  blockMap: Map<string, { sectionKey: SortableSectionKey; block: any }>
+  entryMap: Map<string, { sectionKey: SortableSectionKey; entry: any }>
 }
 export const resumeIndexAtom = atom((get): ResumeIndex => {
   const resume = get(persistedResumeAtom)
   const sectionMap = new Map<SortableSectionKey, ResumeSection>()
-  const blockMap = new Map<
+  const entryMap = new Map<
     string,
-    { sectionKey: SortableSectionKey; block: any }
+    { sectionKey: SortableSectionKey; entry: any }
   >()
 
-  if (!resume) return { sectionMap, blockMap }
+  if (!resume) return { sectionMap, entryMap }
 
   for (const sectionKey of resume.sectionOrder) {
     const section = resume[sectionKey] as ResumeSection | undefined
@@ -53,12 +53,12 @@ export const resumeIndexAtom = atom((get): ResumeIndex => {
 
     sectionMap.set(sectionKey, section)
 
-    for (const block of section.blocks) {
-      blockMap.set(block.id, { sectionKey, block })
+    for (const entry of section.entries) {
+      entryMap.set(entry.entryId, { sectionKey, entry })
     }
   }
 
-  return { sectionMap, blockMap }
+  return { sectionMap, entryMap }
 })
 
 export const resumeMetadataAtom = atom<ResumeMetadata>((get) => {
@@ -124,38 +124,38 @@ export const evaluationRefreshFlagAtom = atom(
 
 export const isLoadingAtom = atom(false)
 export const selectedSectionIdAtom = atom<ResumeSectionKey | null>(null)
-export const selectedBlockIdAtom = atom<string | null>(null)
-const selectedBlockIndexStateAtom = atom<number | null>(null)
-export const selectedBlockIndexAtom = atom(
+export const selectedEntryIdAtom = atom<string | null>(null)
+const selectedEntryIndexStateAtom = atom<number | null>(null)
+export const selectedEntryIndexAtom = atom(
   (get) => {
-    const explicitIndex = get(selectedBlockIndexStateAtom)
+    const explicitIndex = get(selectedEntryIndexStateAtom)
 
     if (explicitIndex !== null) {
       return explicitIndex
     }
 
     const selectedSectionId = get(selectedSectionIdAtom)
-    const selectedBlockId = get(selectedBlockIdAtom)
+    const selectedEntryId = get(selectedEntryIdAtom)
     const resumeData = get(persistedResumeAtom)
 
-    if (!selectedSectionId || !selectedBlockId || !resumeData) {
+    if (!selectedSectionId || !selectedEntryId || !resumeData) {
       return null
     }
 
     const section = resumeData[selectedSectionId]
 
-    if (!section || !("blocks" in section)) {
+    if (!section || !("entries" in section)) {
       return null
     }
 
-    const blockIndex = section.blocks.findIndex(
-      (block: { blockId: string }) => block.blockId === selectedBlockId
+    const entryIndex = section.entries.findIndex(
+      (entry: { entryId: string }) => entry.entryId === selectedEntryId
     )
 
-    return blockIndex >= 0 ? blockIndex : null
+    return entryIndex >= 0 ? entryIndex : null
   },
   (_get, set, index: number | null) => {
-    set(selectedBlockIndexStateAtom, index)
+    set(selectedEntryIndexStateAtom, index)
   }
 )
 export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
@@ -169,8 +169,8 @@ export const resumeAutosaveSuspendedAtom = atom(
 
 export const clearEditorSelectionAtom = atom(null, (_get, set) => {
   set(selectedSectionIdAtom, null)
-  set(selectedBlockIdAtom, null)
-  set(selectedBlockIndexAtom, null)
+  set(selectedEntryIdAtom, null)
+  set(selectedEntryIndexAtom, null)
 })
 
 export const focusSectionAtom = atom(
@@ -179,24 +179,24 @@ export const focusSectionAtom = atom(
     get,
     set,
     id: ResumeSectionKey,
-    index?: number,
-    blockId?: string | null
+    entryIndex?: number,
+    entryId?: string | null
   ) => {
     const resumeData = get(persistedResumeAtom)
     set(selectedSectionIdAtom, id)
-    set(selectedBlockIndexAtom, typeof index === "number" ? index : null)
-    if (typeof index === "number" && resumeData) {
+    set(selectedEntryIndexAtom, typeof entryIndex === "number" ? entryIndex : null)
+    if (typeof entryIndex === "number" && resumeData) {
       const section = resumeData[id]
-      if (section && "blocks" in section) {
+      if (section && "entries" in section) {
         set(
-          selectedBlockIdAtom,
-          blockId ?? section.blocks[index]?.blockId ?? null
+          selectedEntryIdAtom,
+          entryId ?? section.entries[entryIndex]?.entryId ?? null
         )
       } else {
-        set(selectedBlockIdAtom, blockId ?? null)
+        set(selectedEntryIdAtom, entryId ?? null)
       }
     } else {
-      set(selectedBlockIdAtom, null)
+      set(selectedEntryIdAtom, null)
     }
   }
 )

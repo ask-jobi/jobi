@@ -8,7 +8,7 @@ describe("section-factories", () => {
   it("creates english sections with english titles", () => {
     const section = createEmptySection("education", "en")
     expect(section.title).toBe("Education History")
-    expect(section.blocks).toEqual([])
+    expect(section.entries).toEqual([])
   })
 
   it("creates chinese sections with chinese titles", () => {

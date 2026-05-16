@@ -1,19 +1,19 @@
 import type {
-  AwardBlock,
-  CertificationBlock,
-  EducationBlock,
-  EmploymentBlock,
-  ProjectBlock,
-  PublicationBlock,
-  ResearchBlock,
+  AwardEntry,
+  CertificationEntry,
+  EducationEntry,
+  EmploymentEntry,
+  ProjectEntry,
+  PublicationEntry,
+  ResearchEntry,
   ResumeData,
-  SkillBlock,
+  SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
 
 const MAX_SKILL_TAGS = 6
 
-export type ThumbnailBlockSummary = {
+export type ThumbnailEntrySummary = {
   heading: string
   meta?: string
   subheading?: string
@@ -23,7 +23,7 @@ export type ThumbnailBlockSummary = {
 export type ThumbnailSectionSummary = {
   id: SortableSectionKey
   title: string
-  blocks: ThumbnailBlockSummary[]
+  entries: ThumbnailEntrySummary[]
 }
 
 function formatDateRange(start?: string, end?: string, isCurrent?: boolean) {
@@ -45,109 +45,109 @@ function splitSkillTags(content: string) {
     .slice(0, MAX_SKILL_TAGS)
 }
 
-function buildEducationSummary(block: EducationBlock): ThumbnailBlockSummary {
+function buildEducationSummary(entry: EducationEntry): ThumbnailEntrySummary {
   return {
-    heading: block.school,
-    subheading: block.degree,
-    meta: formatDateRange(block.start, block.end)
+    heading: entry.school,
+    subheading: entry.degree,
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
-function buildEmploymentSummary(block: EmploymentBlock): ThumbnailBlockSummary {
+function buildEmploymentSummary(entry: EmploymentEntry): ThumbnailEntrySummary {
   return {
-    heading: block.company,
-    subheading: block.jobTitle,
-    meta: formatDateRange(block.start, block.end)
+    heading: entry.company,
+    subheading: entry.jobTitle,
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
-function buildSkillsSummary(block: SkillBlock): ThumbnailBlockSummary {
+function buildSkillsSummary(entry: SkillEntry): ThumbnailEntrySummary {
   return {
-    heading: block.group,
-    tags: splitSkillTags(block.content)
+    heading: entry.group,
+    tags: splitSkillTags(entry.content)
   }
 }
 
-function buildProjectSummary(block: ProjectBlock): ThumbnailBlockSummary {
+function buildProjectSummary(entry: ProjectEntry): ThumbnailEntrySummary {
   return {
-    heading: block.title,
-    subheading: block.role,
+    heading: entry.title,
+    subheading: entry.role,
     meta: formatDateRange(
-      block.date?.start,
-      block.date?.end,
-      block.date?.isCurrent
+      entry.date?.start,
+      entry.date?.end,
+      entry.date?.isCurrent
     )
   }
 }
 
-function buildResearchSummary(block: ResearchBlock): ThumbnailBlockSummary {
+function buildResearchSummary(entry: ResearchEntry): ThumbnailEntrySummary {
   return {
-    heading: block.title,
-    subheading: block.role,
+    heading: entry.title,
+    subheading: entry.role,
     meta: formatDateRange(
-      block.date?.start,
-      block.date?.end,
-      block.date?.isCurrent
+      entry.date?.start,
+      entry.date?.end,
+      entry.date?.isCurrent
     )
   }
 }
 
 function buildPublicationSummary(
-  block: PublicationBlock
-): ThumbnailBlockSummary {
+  entry: PublicationEntry
+): ThumbnailEntrySummary {
   return {
-    heading: block.title,
-    meta: block.date?.trim() || undefined
+    heading: entry.title,
+    meta: entry.date?.trim() || undefined
   }
 }
 
-function buildAwardSummary(block: AwardBlock): ThumbnailBlockSummary {
+function buildAwardSummary(entry: AwardEntry): ThumbnailEntrySummary {
   return {
-    heading: block.title,
-    subheading: block.issuer,
-    meta: block.date?.trim() || undefined
+    heading: entry.title,
+    subheading: entry.issuer,
+    meta: entry.date?.trim() || undefined
   }
 }
 
 function buildCertificationSummary(
-  block: CertificationBlock
-): ThumbnailBlockSummary {
+  entry: CertificationEntry
+): ThumbnailEntrySummary {
   return {
-    heading: block.name,
-    subheading: block.issuer,
-    meta: block.date?.trim() || undefined
+    heading: entry.name,
+    subheading: entry.issuer,
+    meta: entry.date?.trim() || undefined
   }
 }
 
-function buildBlockSummary(
+function buildEntrySummary(
   sectionId: SortableSectionKey,
-  block:
-    | EducationBlock
-    | EmploymentBlock
-    | SkillBlock
-    | ProjectBlock
-    | ResearchBlock
-    | PublicationBlock
-    | AwardBlock
-    | CertificationBlock
-): ThumbnailBlockSummary {
+  entry:
+    | EducationEntry
+    | EmploymentEntry
+    | SkillEntry
+    | ProjectEntry
+    | ResearchEntry
+    | PublicationEntry
+    | AwardEntry
+    | CertificationEntry
+): ThumbnailEntrySummary {
   switch (sectionId) {
     case "education":
-      return buildEducationSummary(block as EducationBlock)
+      return buildEducationSummary(entry as EducationEntry)
     case "employment":
-      return buildEmploymentSummary(block as EmploymentBlock)
+      return buildEmploymentSummary(entry as EmploymentEntry)
     case "skills":
-      return buildSkillsSummary(block as SkillBlock)
+      return buildSkillsSummary(entry as SkillEntry)
     case "projects":
-      return buildProjectSummary(block as ProjectBlock)
+      return buildProjectSummary(entry as ProjectEntry)
     case "research":
-      return buildResearchSummary(block as ResearchBlock)
+      return buildResearchSummary(entry as ResearchEntry)
     case "publications":
-      return buildPublicationSummary(block as PublicationBlock)
+      return buildPublicationSummary(entry as PublicationEntry)
     case "awards":
-      return buildAwardSummary(block as AwardBlock)
+      return buildAwardSummary(entry as AwardEntry)
     case "certifications":
-      return buildCertificationSummary(block as CertificationBlock)
+      return buildCertificationSummary(entry as CertificationEntry)
   }
 }
 
@@ -157,19 +157,19 @@ export function getResumeThumbnailSections(
   return resumeData.sectionOrder.flatMap((sectionId) => {
     const section = resumeData[sectionId]
 
-    if (!section || section.blocks.length === 0) {
+    if (!section || section.entries.length === 0) {
       return []
     }
 
-    const blocks = section.blocks.map((block) =>
-      buildBlockSummary(sectionId, block)
+    const entries = section.entries.map((entry) =>
+      buildEntrySummary(sectionId, entry)
     )
 
     return [
       {
         id: sectionId,
         title: section.title,
-        blocks
+        entries
       }
     ]
   })

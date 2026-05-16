@@ -7,20 +7,20 @@ import type {
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 import { cn } from "@/lib/utils"
 
-type ExtractBlock<ID extends SortableSectionKey> =
-  NonNullable<ResumeData[ID]> extends ResumeSection<infer B> ? B : never
+type ExtractEntry<ID extends SortableSectionKey> =
+  NonNullable<ResumeData[ID]> extends ResumeSection<infer Entry> ? Entry : never
 
-interface SectionBlocksProps<ID extends SortableSectionKey> {
+interface SectionEntriesProps<ID extends SortableSectionKey> {
   sectionId: ID
   section?: ResumeData[ID] | null
   sectionTitle?: string
   isInteractive?: boolean
-  onBlockAdd?: (id: ID, index: number) => void
-  onBlockDelete?: (id: ID, index: number) => void
-  onBlockClick?: (id: ID, index?: number) => void
+  onEntryAdd?: (id: ID, index: number) => void
+  onEntryDelete?: (id: ID, index: number) => void
+  onEntryClick?: (id: ID, index?: number) => void
 
-  headRender: (block: ExtractBlock<ID>, index: number) => React.ReactNode
-  blockRender: (block: ExtractBlock<ID>, index: number) => React.ReactNode
+  headRender: (entry: ExtractEntry<ID>, index: number) => React.ReactNode
+  entryRender: (entry: ExtractEntry<ID>, index: number) => React.ReactNode
 
   sectionClassName?: string
   sectionStyle?: React.CSSProperties
@@ -33,24 +33,24 @@ interface SectionBlocksProps<ID extends SortableSectionKey> {
   emptyFallback?: React.ReactNode
 }
 
-export function SectionBlocks<ID extends SortableSectionKey>({
+export function SectionEntries<ID extends SortableSectionKey>({
   sectionId,
   section,
   sectionTitle,
   isInteractive,
-  onBlockAdd,
-  onBlockDelete,
-  onBlockClick,
+  onEntryAdd,
+  onEntryDelete,
+  onEntryClick,
   headRender,
-  blockRender,
+  entryRender,
   sectionClassName = "",
   sectionStyle,
   sectionContainerRender,
   titleRender,
   hideIfEmpty = true,
   emptyFallback
-}: SectionBlocksProps<ID>) {
-  if (!section || section.blocks.length === 0) {
+}: SectionEntriesProps<ID>) {
+  if (!section || section.entries.length === 0) {
     if (hideIfEmpty) return null
     return emptyFallback ? (
       <div className="mb-5 p-2 text-sm text-gray-400">{emptyFallback}</div>
@@ -71,7 +71,7 @@ export function SectionBlocks<ID extends SortableSectionKey>({
         </h2>
       )}
 
-      {section.blocks.map((block, index) => (
+      {section.entries.map((entry, index) => (
         <ResumeSectionActionButtonGroup
           key={index}
           id={`section-${sectionId}-${index}`}
@@ -81,18 +81,18 @@ export function SectionBlocks<ID extends SortableSectionKey>({
           )}
           actionClassName="top-full right-0 mt-2"
           isInteractive={isInteractive}
-          onAdd={onBlockAdd ? () => onBlockAdd(sectionId, index) : undefined}
+          onAdd={onEntryAdd ? () => onEntryAdd(sectionId, index) : undefined}
           onDelete={
-            onBlockDelete ? () => onBlockDelete(sectionId, index) : undefined
+            onEntryDelete ? () => onEntryDelete(sectionId, index) : undefined
           }
           onEdit={
-            onBlockClick ? () => onBlockClick(sectionId, index) : undefined
+            onEntryClick ? () => onEntryClick(sectionId, index) : undefined
           }
         >
           <div id={`${sectionId}-${index}-head`}>
-            {headRender(block as ExtractBlock<ID>, index)}
+            {headRender(entry as ExtractEntry<ID>, index)}
           </div>
-          {blockRender(block as ExtractBlock<ID>, index)}
+          {entryRender(entry as ExtractEntry<ID>, index)}
         </ResumeSectionActionButtonGroup>
       ))}
     </div>

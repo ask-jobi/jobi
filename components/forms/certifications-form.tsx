@@ -2,8 +2,8 @@
 
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
-import { CertificationBlock, ResumeData } from "@/types/resume"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
+import { CertificationEntry, ResumeData } from "@/types/resume"
 
 interface CertificationsFormProps {
   focusIndex?: number | null
@@ -19,23 +19,23 @@ export function CertificationsForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "certifications.blocks"
+    name: "certifications.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`certifications.blocks.${focusIndex}`)
+  const currentEntry = getValues(`certifications.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-certifications" className="space-y-4">
-      <FocusedBlockFormShell<CertificationBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<CertificationEntry>
+        entry={currentEntry}
         formId={`form-certifications-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -60,7 +60,7 @@ export function CertificationsForm({
             </div>
           </>
         )}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

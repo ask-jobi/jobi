@@ -11,24 +11,24 @@ language: {{language}}
 ========================
 
 # Task
-- For each action, produce one or more edit operations that modify the resume blocks.
-- Use ONLY the provided sections and blocks; do not invent sections.
+- For each action, produce one or more edit operations that modify the resume entries.
+- Use ONLY the provided sections and entries; do not invent sections.
 - Operations must be minimal and focused on the instruction.
 
 # Operation Rules
-- op must be one of: addBlock, updateBlock, removeBlock
+- op must be one of: addEntry, updateEntry, removeEntry
 - section must be one of the resume sections in the inputs (e.g., education, employment, skills, research, projects, publications, awards, certifications)
-- blockIndex is required for updateBlock/removeBlock, optional for addBlock
-- payload is required for addBlock/updateBlock and must be an object
+- entryIndex is required for updateEntry/removeEntry, optional for addEntry
+- payload is required for addEntry/updateEntry and must be an object
 
 # Output Format (JSON)
 Return a JSON object with this shape:
 {
   "ops": [
     {
-      "op": "updateBlock",
+      "op": "updateEntry",
       "section": "employment",
-      "blockIndex": 0,
+      "entryIndex": 0,
       "payload": { "content": "..." }
     }
   ]

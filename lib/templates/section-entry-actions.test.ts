@@ -7,9 +7,9 @@ describe("getSectionEntryActions", () => {
     const resume = buildEmptyResumeData("en")
     resume.employment = {
       title: "Employment History",
-      blocks: [
+      entries: [
         {
-          blockId: "employment-1",
+          entryId: "employment-1",
           company: "Jobi",
           jobTitle: "Engineer",
           start: "2024-01",
@@ -34,7 +34,7 @@ describe("getSectionEntryActions", () => {
     const resume = buildEmptyResumeData("en")
     resume.projects = {
       title: "Projects",
-      blocks: []
+      entries: []
     }
     resume.sectionOrder = ["education", "projects", "skills"]
 

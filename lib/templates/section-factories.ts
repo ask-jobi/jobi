@@ -1,15 +1,15 @@
 import { nanoid } from "nanoid"
 import type { Locale } from "@/lib/i18n/config"
 import type {
-  AwardBlock,
-  CertificationBlock,
-  EducationBlock,
-  EmploymentBlock,
-  ProjectBlock,
-  PublicationBlock,
-  ResearchBlock,
+  AwardEntry,
+  CertificationEntry,
+  EducationEntry,
+  EmploymentEntry,
+  ProjectEntry,
+  PublicationEntry,
+  ResearchEntry,
   ResumeData,
-  SkillBlock,
+  SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
 import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
@@ -21,7 +21,7 @@ function createBaseSection<ID extends SortableSectionKey>(
 ): NonNullable<ResumeData[ID]> {
   return {
     title: getSectionLabel(sectionId, language),
-    blocks: []
+    entries: []
   } as NonNullable<ResumeData[ID]>
 }
 
@@ -32,48 +32,48 @@ export function createEmptySection<ID extends SortableSectionKey>(
   return createBaseSection(sectionId, language)
 }
 
-type EmptyBlockMap = {
-  education: EducationBlock
-  employment: EmploymentBlock
-  skills: SkillBlock
-  projects: ProjectBlock
-  research: ResearchBlock
-  publications: PublicationBlock
-  awards: AwardBlock
-  certifications: CertificationBlock
+type EmptyEntryMap = {
+  education: EducationEntry
+  employment: EmploymentEntry
+  skills: SkillEntry
+  projects: ProjectEntry
+  research: ResearchEntry
+  publications: PublicationEntry
+  awards: AwardEntry
+  certifications: CertificationEntry
 }
 
-export function createEmptySectionBlock<ID extends SortableSectionKey>(
+export function createEmptySectionEntry<ID extends SortableSectionKey>(
   sectionId: ID
-): EmptyBlockMap[ID] {
+): EmptyEntryMap[ID] {
   switch (sectionId) {
     case "education":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         school: "",
         degree: "",
         start: "",
         end: "",
         content: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "employment":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         company: "",
         jobTitle: "",
         start: "",
         end: "",
         content: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "skills":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         group: "",
         content: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "projects":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         title: "",
         role: "",
         content: "",
@@ -81,10 +81,10 @@ export function createEmptySectionBlock<ID extends SortableSectionKey>(
           start: "",
           end: ""
         }
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "research":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         title: "",
         role: "",
         content: "",
@@ -92,29 +92,29 @@ export function createEmptySectionBlock<ID extends SortableSectionKey>(
           start: "",
           end: ""
         }
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "publications":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         title: "",
         date: "",
         description: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "awards":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         title: "",
         issuer: "",
         date: "",
         description: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     case "certifications":
       return {
-        blockId: nanoid(),
+        entryId: nanoid(),
         name: "",
         issuer: "",
         date: ""
-      } as EmptyBlockMap[ID]
+      } as EmptyEntryMap[ID]
     default: {
       const exhaustiveCheck: never = sectionId
       throw new Error(`Unsupported section id: ${String(exhaustiveCheck)}`)

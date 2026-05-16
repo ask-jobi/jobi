@@ -40,50 +40,50 @@ async function revertToolOutput(
       if (!output.field) continue
 
       const section = updatedResume[output.entity]
-      if (section && "blocks" in section) {
-        const block = section.blocks.find((b: any) => b.blockId === output.id)
-        if (block && output.field in block) {
+      if (section && "entries" in section) {
+        const entry = section.entries.find((item: any) => item.entryId === output.id)
+        if (entry && output.field in entry) {
           // @ts-expect-error need fix
-          block[output.field] = output.originalValue
+          entry[output.field] = output.originalValue
         }
       }
     }
 
     if (output.operation === "delete") {
       const section = updatedResume[output.entity]
-      if (section && "blocks" in section) {
+      if (section && "entries" in section) {
         // @ts-expect-error need fix
-        section.blocks.push(output.originalValue)
+        section.entries.push(output.originalValue)
       }
     }
 
     if (output.operation === "add") {
       const section = updatedResume[output.entity]
-      if (section && "blocks" in section) {
-        const newBlock = (output as any).newBlock
-        const blockIndex = section.blocks.findIndex(
-          (b: any) => b.blockId === newBlock?.blockId
+      if (section && "entries" in section) {
+        const newEntry = output.newEntry
+        const entryIndex = section.entries.findIndex(
+          (item: any) => item.entryId === newEntry?.entryId
         )
-        if (blockIndex !== -1) {
-          section.blocks.splice(blockIndex, 1)
+        if (entryIndex !== -1) {
+          section.entries.splice(entryIndex, 1)
         }
       }
     }
 
-    if (output.operation === "reorderBlocks") {
+    if (output.operation === "reorderEntries") {
       const entity = output.entity
       if (entity) {
         const section = updatedResume[entity]
-        if (section && "blocks" in section) {
-          const currentBlocks = [...section.blocks]
+        if (section && "entries" in section) {
+          const currentEntries = [...section.entries]
           const originalValue = output.originalValue as string[]
-          const orderedBlocks = originalValue
+          const orderedEntries = originalValue
             .map((id: string) => {
-              return currentBlocks.find((b: any) => b.blockId === id)
+              return currentEntries.find((item: any) => item.entryId === id)
             })
             .filter(Boolean)
-          // @ts-expect-error - reordering blocks
-          section.blocks = orderedBlocks
+          // @ts-expect-error - reordering entries
+          section.entries = orderedEntries
         }
       }
     }

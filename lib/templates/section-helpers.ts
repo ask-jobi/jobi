@@ -6,7 +6,7 @@ import {
 } from "@/lib/templates/section-definitions"
 import {
   createEmptySection,
-  createEmptySectionBlock
+  createEmptySectionEntry
 } from "@/lib/templates/section-factories"
 
 export function normalizeSectionOrder(
@@ -40,11 +40,11 @@ export function addSection(
   }
 }
 
-export function ensureSectionHasEditableBlock(
+export function ensureSectionHasEditableEntry(
   data: ResumeData,
   sectionId: SortableSectionKey,
   language: Locale
-): { resume: ResumeData; blockIndex: number } {
+): { resume: ResumeData; entryIndex: number } {
   const nextResume = addSection(data, sectionId, language)
   const section = nextResume[sectionId]
 
@@ -52,16 +52,16 @@ export function ensureSectionHasEditableBlock(
     throw new Error(`Section ${sectionId} was not created`)
   }
 
-  if (section.blocks.length > 0) {
+  if (section.entries.length > 0) {
     return {
       resume: nextResume,
-      blockIndex: 0
+      entryIndex: 0
     }
   }
 
   const nextSection = {
     ...section,
-    blocks: [...section.blocks, createEmptySectionBlock(sectionId)]
+    entries: [...section.entries, createEmptySectionEntry(sectionId)]
   }
 
   return {
@@ -69,35 +69,35 @@ export function ensureSectionHasEditableBlock(
       ...nextResume,
       [sectionId]: nextSection
     },
-    blockIndex: 0
+    entryIndex: 0
   }
 }
 
-export function insertDraftBlockBelow(
+export function insertDraftEntryBelow(
   data: ResumeData,
   sectionId: SortableSectionKey,
   index: number
-): { resume: ResumeData; blockIndex: number } {
+): { resume: ResumeData; entryIndex: number } {
   const section = data[sectionId]
 
   if (!section) {
     throw new Error(`Section ${sectionId} does not exist`)
   }
 
-  const nextBlocks = [...section.blocks]
-  const blockIndex = Math.min(Math.max(index + 1, 0), nextBlocks.length)
+  const nextBlocks = [...section.entries]
+  const entryIndex = Math.min(Math.max(index + 1, 0), nextBlocks.length)
 
-  nextBlocks.splice(blockIndex, 0, createEmptySectionBlock(sectionId))
+  nextBlocks.splice(entryIndex, 0, createEmptySectionEntry(sectionId))
 
   return {
     resume: {
       ...data,
       [sectionId]: {
         ...section,
-        blocks: nextBlocks
+        entries: nextBlocks
       }
     },
-    blockIndex
+    entryIndex
   }
 }
 
@@ -110,7 +110,7 @@ export function removeSection(
       ...data,
       [sectionId]: {
         ...data[sectionId]!,
-        blocks: []
+        entries: []
       }
     }
   }

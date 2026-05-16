@@ -34,9 +34,9 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
     },
     education: {
       title: "Education",
-      blocks: [
+      entries: [
         {
-          blockId: "e-b1",
+          entryId: "e-b1",
           content: "Computer Science degree",
           school: "MIT",
           degree: "Bachelor",
@@ -47,9 +47,9 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
     },
     employment: {
       title: "Work Experience",
-      blocks: [
+      entries: [
         {
-          blockId: "emp-b1",
+          entryId: "emp-b1",
           content: "Software Engineer",
           company: "Tech Corp",
           jobTitle: "Senior Engineer",
@@ -60,9 +60,9 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
     },
     skills: {
       title: "Skills",
-      blocks: [
+      entries: [
         {
-          blockId: "s-b1",
+          entryId: "s-b1",
           group: "Programming",
           content: "JavaScript, TypeScript"
         }
@@ -115,11 +115,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -174,9 +174,9 @@ describe("evaluateResume", () => {
       const mockResume = createMockResumeData({
         education: {
           title: "Education",
-          blocks: [
+          entries: [
             {
-              blockId: "e-b1",
+              entryId: "e-b1",
               content: "Degree",
               school: "University",
               degree: "Master",
@@ -187,8 +187,8 @@ describe("evaluateResume", () => {
         },
         skills: {
           title: "Skills",
-          blocks: [
-            { blockId: "s-b1", group: "General", content: "Problem solving" }
+          entries: [
+            { entryId: "s-b1", group: "General", content: "Problem solving" }
           ]
         }
       })
@@ -240,11 +240,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -299,11 +299,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -357,11 +357,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -369,8 +369,8 @@ describe("evaluateResume", () => {
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
-          temperature: 0.3,
-          maxRetries: 0
+          maxRetries: 3,
+          model: expect.any(Function)
         })
       )
     })
@@ -424,11 +424,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -504,11 +504,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -575,11 +575,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -607,11 +607,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 
@@ -633,11 +633,11 @@ describe("evaluateResume", () => {
         },
         education: {
           title: "Education",
-          blocks: []
+          entries: []
         },
         skills: {
           title: "Skills",
-          blocks: []
+          entries: []
         }
       })
 

@@ -13,7 +13,7 @@ import { model } from "@/lib/agent/model"
 const LanguageEnum = z.enum(locales)
 type Language = z.infer<typeof LanguageEnum>
 
-export const rewriteBlock = async (params: {
+export const rewriteEntry = async (params: {
   resumeSection: string
   originalContent: string
   jd: string

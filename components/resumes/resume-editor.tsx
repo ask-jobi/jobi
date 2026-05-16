@@ -15,30 +15,30 @@ import type { SortableSectionKey } from "@/types/resume"
 
 export function ResumeEditor() {
   const resumeLanguage = useResumeLanguage()
-  const { draft, addBlockBelow, commitDraft, deleteBlock, getDraft } =
+  const { draft, addEntryBelow, commitDraft, deleteEntry, getDraft } =
     useResumeDraft()
   const { Template } = useResumeTemplate()
   const handleSectionClick = useSectionClickHandler()
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
   const { selectTarget, setRollbackResume } = useResumeEditorState()
   const isEmptyCanvas = isResumeCanvasEmpty(draft)
-  const handleBlockAdd = useCallback(
+  const handleEntryAdd = useCallback(
     (sectionId: SortableSectionKey, index: number) => {
       const previousResume = getDraft()
-      const { blockIndex, blockId } = addBlockBelow(sectionId, index)
+      const { entryIndex, entryId } = addEntryBelow(sectionId, index)
 
       setRollbackResume(previousResume)
-      selectTarget(sectionId, blockIndex ?? undefined, blockId)
+      selectTarget(sectionId, entryIndex ?? undefined, entryId)
       setEditModalOpen(true)
     },
-    [addBlockBelow, getDraft, selectTarget, setEditModalOpen, setRollbackResume]
+    [addEntryBelow, getDraft, selectTarget, setEditModalOpen, setRollbackResume]
   )
-  const handleBlockDelete = useCallback(
+  const handleEntryDelete = useCallback(
     (sectionId: SortableSectionKey, index: number) => {
-      const nextResume = deleteBlock(sectionId, index)
+      const nextResume = deleteEntry(sectionId, index)
       void commitDraft(nextResume)
     },
-    [commitDraft, deleteBlock]
+    [commitDraft, deleteEntry]
   )
 
   return (
@@ -56,8 +56,8 @@ export function ResumeEditor() {
             language={resumeLanguage}
             options={{
               isInteractive: true,
-              onBlockAdd: handleBlockAdd,
-              onBlockDelete: handleBlockDelete,
+              onEntryAdd: handleEntryAdd,
+              onEntryDelete: handleEntryDelete,
               onSectionClick: handleSectionClick
             }}
           />

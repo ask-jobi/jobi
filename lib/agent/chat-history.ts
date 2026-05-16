@@ -704,7 +704,7 @@ export function extractToolOriginalValues(
         output.operation === "rewrite" ||
         output.operation === "delete" ||
         output.operation === "add" ||
-        output.operation === "reorderBlocks" ||
+        output.operation === "reorderEntries" ||
         output.operation === "reorderSections"
       ) {
         results.push(output)

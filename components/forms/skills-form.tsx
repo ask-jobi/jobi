@@ -2,9 +2,9 @@
 
 import { Controller, useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { InputTags } from "@/components/ui/input-tags"
-import { ResumeData, SkillBlock } from "@/types/resume"
+import { ResumeData, SkillEntry } from "@/types/resume"
 
 interface SkillsFormProps {
   focusIndex?: number | null
@@ -20,23 +20,23 @@ export function SkillsForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "skills.blocks"
+    name: "skills.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`skills.blocks.${focusIndex}`)
+  const currentEntry = getValues(`skills.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-skills" className="space-y-4">
-      <FocusedBlockFormShell<SkillBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<SkillEntry>
+        entry={currentEntry}
         formId={`form-skills-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -70,7 +70,7 @@ export function SkillsForm({
             </div>
           </>
         )}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

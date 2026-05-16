@@ -1,7 +1,7 @@
 "use client"
 
 import { useFormContext } from "react-hook-form"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Input } from "@/components/ui/input"
 import { PersonalInfo, ResumeData } from "@/types/resume"
 
@@ -18,8 +18,8 @@ export function PersonalInfoForm({
   const personalInfo = getValues("personalInfo") as PersonalInfo
 
   return (
-    <FocusedBlockFormShell
-      block={personalInfo}
+    <FocusedEntryFormShell
+      entry={personalInfo}
       formId="form-personalInfo"
       onCancel={onCancel}
       onSaveComplete={onSaveComplete}
@@ -53,6 +53,6 @@ export function PersonalInfoForm({
           </div>
         </>
       )}
-    </FocusedBlockFormShell>
+    </FocusedEntryFormShell>
   )
 }

@@ -71,7 +71,7 @@ export function ResumeSectionDeleteAction({
           type="button"
           variant="outline"
           size="icon-sm"
-          aria-label={t("deleteBlock")}
+          aria-label={t("deleteEntry")}
           data-resume-delete-action={actionId}
           className={cn(
             "rounded-full border-destructive/30 bg-background/95 p-0 text-destructive shadow-sm hover:bg-destructive/5 hover:text-destructive",
@@ -98,7 +98,7 @@ export function ResumeSectionDeleteAction({
         side="left"
         sideOffset={8}
       >
-        {t("confirmDeleteBlock")}
+        {t("confirmDeleteEntry")}
       </TooltipContent>
     </Tooltip>
   )

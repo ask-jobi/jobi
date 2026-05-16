@@ -17,7 +17,7 @@ export function getSectionEntryActions(
       return [{ sectionId, action: "add" }]
     }
 
-    if (section.blocks.length === 0) {
+    if (section.entries.length === 0) {
       return [{ sectionId, action: "open" }]
     }
 

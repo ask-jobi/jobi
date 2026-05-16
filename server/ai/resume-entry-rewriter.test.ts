@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { rewriteBlock } from "./resume-rewriter"
+import { rewriteEntry } from "./resume-entry-rewriter"
 import { generateText } from "ai"
 import { model } from "@/lib/agent/model"
 
@@ -19,7 +19,7 @@ vi.mock("@/lib/agent/model", () => ({
   }
 }))
 
-describe("rewriteBlock", () => {
+describe("rewriteEntry", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -33,7 +33,7 @@ describe("rewriteBlock", () => {
         output: mockRewrittenContent
       })
 
-      const result = await rewriteBlock({
+      const result = await rewriteEntry({
         resumeSection:
           "Worked on frontend development using React and TypeScript",
         originalContent: "Improved website performance",
@@ -51,7 +51,7 @@ describe("rewriteBlock", () => {
         output: "Rewritten content"
       })
 
-      await rewriteBlock({
+      await rewriteEntry({
         resumeSection: "Education section content",
         originalContent: "Bachelor's degree in Computer Science",
         jd: "Software Engineer position",
@@ -76,7 +76,7 @@ describe("rewriteBlock", () => {
         output: "English content"
       })
 
-      await rewriteBlock({
+      await rewriteEntry({
         resumeSection: "Section content",
         originalContent: "Original content",
         jd: "Job description",
@@ -96,7 +96,7 @@ describe("rewriteBlock", () => {
         output: "中文内容"
       })
 
-      await rewriteBlock({
+      await rewriteEntry({
         resumeSection: "Section content",
         originalContent: "Original content",
         jd: "Job description",
@@ -118,7 +118,7 @@ describe("rewriteBlock", () => {
         output: "Result"
       })
 
-      await rewriteBlock({
+      await rewriteEntry({
         resumeSection: "My work experience includes...",
         originalContent: "Led a team of 5 developers",
         jd: "Senior Developer needed",
@@ -141,7 +141,7 @@ describe("rewriteBlock", () => {
       ;(generateText as any).mockRejectedValue(new Error("AI service error"))
 
       await expect(
-        rewriteBlock({
+        rewriteEntry({
           resumeSection: "Section",
           originalContent: "Content",
           jd: "JD",
@@ -158,7 +158,7 @@ describe("rewriteBlock", () => {
         output: "Rewritten"
       })
 
-      const result = await rewriteBlock({
+      const result = await rewriteEntry({
         resumeSection: "",
         originalContent: "Content",
         jd: "JD",
@@ -179,7 +179,7 @@ describe("rewriteBlock", () => {
         "5+ years of experience, proficiency in React, TypeScript, Node.js, " +
         "experience with cloud services, strong problem-solving skills..."
 
-      const result = await rewriteBlock({
+      const result = await rewriteEntry({
         resumeSection: "Section",
         originalContent: "Content",
         jd: longJd,

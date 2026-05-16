@@ -13,14 +13,14 @@ import type { ResumeSectionKey } from "@/types/resume"
 
 interface ResumeSectionFormProps {
   sectionId: ResumeSectionKey | null
-  blockIndex?: number | null
+  entryIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
 }
 
 export function ResumeSectionForm({
   sectionId,
-  blockIndex,
+  entryIndex,
   onCancel,
   onSaveComplete
 }: ResumeSectionFormProps) {
@@ -32,7 +32,7 @@ export function ResumeSectionForm({
     case "education":
       return (
         <EducationForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -40,7 +40,7 @@ export function ResumeSectionForm({
     case "employment":
       return (
         <EmploymentForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -48,7 +48,7 @@ export function ResumeSectionForm({
     case "skills":
       return (
         <SkillsForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -56,7 +56,7 @@ export function ResumeSectionForm({
     case "projects":
       return (
         <ProjectsForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -64,7 +64,7 @@ export function ResumeSectionForm({
     case "research":
       return (
         <ResearchForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -72,7 +72,7 @@ export function ResumeSectionForm({
     case "publications":
       return (
         <PublicationsForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -80,7 +80,7 @@ export function ResumeSectionForm({
     case "awards":
       return (
         <AwardsForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />
@@ -88,7 +88,7 @@ export function ResumeSectionForm({
     case "certifications":
       return (
         <CertificationsForm
-          focusIndex={blockIndex}
+          focusIndex={entryIndex}
           onCancel={onCancel}
           onSaveComplete={onSaveComplete}
         />

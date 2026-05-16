@@ -57,7 +57,7 @@ export function isResumeCanvasEmpty(data: ResumeData | null) {
 
   return data.sectionOrder.every((sectionId) => {
     const section = data[sectionId]
-    return !section || section.blocks.length === 0
+    return !section || section.entries.length === 0
   })
 }
 
@@ -103,8 +103,8 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  const openEditModal = (sectionId: ResumeSectionKey, blockIndex?: number) => {
-    selectTarget(sectionId, blockIndex)
+  const openEditModal = (sectionId: ResumeSectionKey, entryIndex?: number) => {
+    selectTarget(sectionId, entryIndex)
     setEditModalOpen(true)
   }
 
@@ -120,8 +120,8 @@ export function ResumeCanvasSectionEntry() {
     }
 
     setRollbackResume(getDraft())
-    const { blockIndex, blockId } = ensureEditableSection(sectionId)
-    selectTarget(sectionId, blockIndex ?? undefined, blockId)
+    const { entryIndex, entryId } = ensureEditableSection(sectionId)
+    selectTarget(sectionId, entryIndex ?? undefined, entryId)
     setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)
@@ -131,8 +131,8 @@ export function ResumeCanvasSectionEntry() {
     setPendingSectionId(sectionId)
 
     setRollbackResume(getDraft())
-    const { blockIndex, blockId } = ensureEditableSection(sectionId)
-    selectTarget(sectionId, blockIndex ?? undefined, blockId)
+    const { entryIndex, entryId } = ensureEditableSection(sectionId)
+    selectTarget(sectionId, entryIndex ?? undefined, entryId)
     setEditModalOpen(true)
     setOpen(false)
     setPendingSectionId(null)

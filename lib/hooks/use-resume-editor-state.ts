@@ -6,16 +6,16 @@ import {
   draftRollbackResumeAtom,
   focusSectionAtom,
   resumeAutosaveSuspendedAtom,
-  selectedBlockIdAtom,
-  selectedBlockIndexAtom,
+  selectedEntryIdAtom,
+  selectedEntryIndexAtom,
   selectedSectionIdAtom
 } from "@/lib/store/resume"
 import type { ResumeData, ResumeSectionKey } from "@/types/resume"
 
 export function useResumeEditorState() {
   const selectedSectionId = useAtomValue(selectedSectionIdAtom)
-  const selectedBlockId = useAtomValue(selectedBlockIdAtom)
-  const selectedBlockIndex = useAtomValue(selectedBlockIndexAtom)
+  const selectedEntryId = useAtomValue(selectedEntryIdAtom)
+  const selectedEntryIndex = useAtomValue(selectedEntryIndexAtom)
   const rollbackResume = useAtomValue(draftRollbackResumeAtom)
   const isAutosaveSuspended = useAtomValue(resumeAutosaveSuspendedAtom)
 
@@ -25,15 +25,15 @@ export function useResumeEditorState() {
 
   return {
     selectedSectionId,
-    selectedBlockId,
-    selectedBlockIndex,
+    selectedEntryId,
+    selectedEntryIndex,
     rollbackResume,
     isAutosaveSuspended,
     selectTarget: (
       sectionId: ResumeSectionKey,
-      blockIndex?: number,
-      blockId?: string | null
-    ) => selectTarget(sectionId, blockIndex, blockId),
+      entryIndex?: number,
+      entryId?: string | null
+    ) => selectTarget(sectionId, entryIndex, entryId),
     clearSelection: () => clearSelection(),
     setRollbackResume: (nextRollbackResume: ResumeData | null) =>
       setRollbackResume(nextRollbackResume),

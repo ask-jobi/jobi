@@ -11,8 +11,8 @@ import {
 import { useTranslations } from "next-intl"
 
 interface MonthRangePickerFormFieldProps {
-  startName: string // employment.blocks.0.start
-  endName: string // employment.blocks.0.end
+  startName: string // employment.entries.0.start
+  endName: string // employment.entries.0.end
   label?: string
   disabled?: boolean
 }

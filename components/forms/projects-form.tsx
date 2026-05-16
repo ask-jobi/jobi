@@ -3,9 +3,9 @@
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Editor } from "@/components/editor/editor"
-import { FocusedBlockFormShell } from "@/components/forms/focused-block-form-shell"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
-import { ProjectBlock, ResumeData } from "@/types/resume"
+import { ProjectEntry, ResumeData } from "@/types/resume"
 
 interface ProjectsFormProps {
   focusIndex?: number | null
@@ -21,23 +21,23 @@ export function ProjectsForm({
   const { control, getValues } = useFormContext<ResumeData>()
   const { update } = useFieldArray({
     control,
-    name: "projects.blocks"
+    name: "projects.entries"
   })
 
   if (typeof focusIndex !== "number") {
     return null
   }
 
-  const currentBlock = getValues(`projects.blocks.${focusIndex}`)
+  const currentEntry = getValues(`projects.entries.${focusIndex}`)
 
-  if (!currentBlock) {
+  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-projects" className="space-y-4">
-      <FocusedBlockFormShell<ProjectBlock>
-        block={currentBlock}
+      <FocusedEntryFormShell<ProjectEntry>
+        entry={currentEntry}
         formId={`form-projects-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
@@ -83,7 +83,7 @@ export function ProjectsForm({
             </>
           )
         }}
-      </FocusedBlockFormShell>
+      </FocusedEntryFormShell>
     </div>
   )
 }

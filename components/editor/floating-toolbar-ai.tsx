@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useResume, useResumeLanguage } from "@/lib/store/resume"
-import { RewriteBlockRequest } from "@/types/api/requests"
+import { RewriteEntryRequest } from "@/types/api/requests"
 import { Command, CommandItem, CommandList } from "@/components/ui/command"
 import { toast } from "sonner"
 import { calculateDiffJsonContent } from "./diff"
@@ -85,14 +85,14 @@ function FloatingToolbarAi({
     })
     const resumeSection = editor.getMarkdown()
 
-    const body: RewriteBlockRequest = {
+    const body: RewriteEntryRequest = {
       resumeSection: resumeSection,
       originalContent: originalContent,
       jd: jobDescription?.description ?? "Empty JD",
       instruction: instruction,
       language: resumeLanguage
     }
-    const resp = await fetch(`/api/resume/rewrite-block`, {
+    const resp = await fetch(`/api/resume/rewrite-entry`, {
       method: "POST",
       body: JSON.stringify(body)
     })

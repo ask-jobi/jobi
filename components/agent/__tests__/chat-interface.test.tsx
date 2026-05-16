@@ -32,9 +32,9 @@ const draftResume = {
   },
   education: {
     title: "Education",
-    blocks: [
+    entries: [
       {
-        blockId: "edu-draft",
+        entryId: "edu-draft",
         school: "Draft School",
         degree: "Draft Degree",
         start: "2020-01",
@@ -45,7 +45,7 @@ const draftResume = {
   },
   skills: {
     title: "Skills",
-    blocks: []
+    entries: []
   }
 }
 

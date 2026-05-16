@@ -22,7 +22,7 @@ export type JobApplication = {
 
 export interface ResumeSection<T = any> {
   title: string
-  blocks: Array<T>
+  entries: Array<T>
 }
 
 export interface PersonalInfo {
@@ -35,8 +35,8 @@ export interface PersonalInfo {
   linkedin?: string
 }
 
-export interface EducationBlock {
-  blockId: string
+export interface EducationEntry {
+  entryId: string
   content: string
   school: string
   degree: string
@@ -44,8 +44,8 @@ export interface EducationBlock {
   end: string
 }
 // TODO: 改为用 DateRange 类型
-export interface EmploymentBlock {
-  blockId: string
+export interface EmploymentEntry {
+  entryId: string
   content: string
   company: string
   jobTitle: string
@@ -53,8 +53,8 @@ export interface EmploymentBlock {
   end: string
 }
 
-export interface SkillBlock {
-  blockId: string
+export interface SkillEntry {
+  entryId: string
   group: string
   content: string
 }
@@ -65,73 +65,73 @@ export interface DateRange {
   isCurrent?: boolean
 }
 
-export interface ProjectBlock {
-  blockId: string
+export interface ProjectEntry {
+  entryId: string
   title: string
   content: string
   role?: string
   date?: DateRange
 }
 
-export interface ResearchBlock {
-  blockId: string
+export interface ResearchEntry {
+  entryId: string
   title: string
   content: string
   role?: string
   date: DateRange
 }
 
-export interface PublicationBlock {
-  blockId: string
+export interface PublicationEntry {
+  entryId: string
   title: string
   date: string
   description?: string
 }
 
-export interface AwardBlock {
-  blockId: string
+export interface AwardEntry {
+  entryId: string
   title: string
   issuer?: string
   date?: string
   description?: string
 }
 
-export interface CertificationBlock {
-  blockId: string
+export interface CertificationEntry {
+  entryId: string
   name: string
   issuer?: string
   date?: string
 }
 
-export type EducationHistory = ResumeSection<EducationBlock>
+export type EducationSection = ResumeSection<EducationEntry>
 
-export type EmploymentHistory = ResumeSection<EmploymentBlock>
+export type EmploymentSection = ResumeSection<EmploymentEntry>
 
-export type Skill = ResumeSection<SkillBlock>
+export type SkillsSection = ResumeSection<SkillEntry>
 
-export type ResearchExperience = ResumeSection<ResearchBlock>
+export type ResearchSection = ResumeSection<ResearchEntry>
 
-export type Project = ResumeSection<ProjectBlock>
+export type ProjectsSection = ResumeSection<ProjectEntry>
 
-export type Publication = ResumeSection<PublicationBlock>
+export type PublicationsSection = ResumeSection<PublicationEntry>
 
-export type Award = ResumeSection<AwardBlock>
+export type AwardsSection = ResumeSection<AwardEntry>
 
-export type Certification = ResumeSection<CertificationBlock>
+export type CertificationsSection = ResumeSection<CertificationEntry>
 
 export interface ResumeData {
   sectionOrder: SortableSectionKey[]
   // required
   personalInfo: PersonalInfo
-  education: EducationHistory
-  skills: Skill
+  education: EducationSection
+  skills: SkillsSection
   // optional
-  employment?: EmploymentHistory
-  research?: ResearchExperience
-  projects?: Project
-  publications?: Publication
-  awards?: Award
-  certifications?: Certification
+  employment?: EmploymentSection
+  research?: ResearchSection
+  projects?: ProjectsSection
+  publications?: PublicationsSection
+  awards?: AwardsSection
+  certifications?: CertificationsSection
 }
 
 export type ResumeSectionKey = Exclude<keyof ResumeData, "sectionOrder">
@@ -139,7 +139,7 @@ export type SortableSectionKey = Exclude<ResumeSectionKey, "personalInfo">
 
 export interface AISuggestion {
   section: SortableSectionKey
-  blockIndex: number
+  entryIndex: number
   suggestionType: string
   reason: string
   originalContent: string

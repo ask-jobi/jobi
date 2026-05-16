@@ -33,9 +33,9 @@ describe("evaluation", () => {
       email: "john@example.com",
       phone: ""
     },
-    education: { title: "Education", blocks: [] },
-    employment: { title: "Employment", blocks: [] },
-    skills: { title: "Skills", blocks: [] }
+    education: { title: "Education", entries: [] },
+    employment: { title: "Employment", entries: [] },
+    skills: { title: "Skills", entries: [] }
   }
 
   const mockReport: ResumeEvaluationOutput = {
