@@ -5,7 +5,7 @@ import { Download, Loader2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import { trackExportResume } from "@/lib/user-tracking/user-tracking"
 
 type ResumeExportButtonProps = {
@@ -22,7 +22,7 @@ export function ResumeExportButton({
   showLabel = true
 }: ResumeExportButtonProps) {
   const t = useTranslations()
-  const { application, isLoading } = useResume()
+  const { application, isLoading } = useApplicationResume()
   const [exportLoading, setExportLoading] = useState(false)
 
   const handleExport = async () => {

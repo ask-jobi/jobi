@@ -31,7 +31,7 @@ vi.mock("@/lib/store/resume", async () => {
   const actual = await vi.importActual("@/lib/store/resume")
   return {
     ...actual,
-    useResume: () => ({
+    useApplicationResume: () => ({
       application: {
         resume: {
           id: "resume-123"

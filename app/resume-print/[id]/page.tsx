@@ -1,5 +1,5 @@
 import "server-only"
-import { getResumeForPrint } from "@/server/resume"
+import { getApplicationResumeForPrint } from "@/server/resume"
 import { notFound } from "next/navigation"
 import ResumeViewer from "@/components/resumes/resume-viewer"
 import type { Locale } from "@/lib/i18n/config"
@@ -14,7 +14,7 @@ export default async function PrintResumePage({
   let language: Locale = "en"
 
   try {
-    const result = await getResumeForPrint(id)
+    const result = await getApplicationResumeForPrint(id)
     resumeData = result.resumeData
     language = result.language
   } catch (e) {

@@ -20,10 +20,10 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key
 }))
 
-const saveResumeChangeMock = vi.fn()
+const saveApplicationResumeChangeMock = vi.fn()
 
 vi.mock("@/server/resume", () => ({
-  saveResumeChange: (...args: unknown[]) => saveResumeChangeMock(...args)
+  saveApplicationResumeChange: (...args: unknown[]) => saveApplicationResumeChangeMock(...args)
 }))
 
 vi.mock("../resume-section-form", () => ({
@@ -105,7 +105,7 @@ function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
 describe("ResumeSectionEditModal", () => {
   it("renders the selected section form while open", () => {
     const store = createStore()
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     store.set(applicationAtom, {
       id: "app-1",
       resume: {
@@ -172,7 +172,7 @@ describe("ResumeSectionEditModal", () => {
 
   it("clears the selected section when the modal closes", () => {
     const store = createStore()
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     store.set(editModalOpenAtom, true)
     store.set(selectedSectionIdAtom, "skills")
     store.set(selectedEntryIdAtom, null)
@@ -188,7 +188,7 @@ describe("ResumeSectionEditModal", () => {
 
   it("rolls back a newly added draft block when the form is cancelled without saving", async () => {
     const store = createStore()
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
@@ -259,13 +259,13 @@ describe("ResumeSectionEditModal", () => {
       ).toHaveLength(0)
       expect(store.get(editModalRollbackResumeAtom)).toBeNull()
       expect(store.get(editModalOpenAtom)).toBe(false)
-      expect(saveResumeChangeMock).not.toHaveBeenCalled()
+      expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()
     })
   })
 
   it("commits the draft when the form is saved", async () => {
     const store = createStore()
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
@@ -331,7 +331,7 @@ describe("ResumeSectionEditModal", () => {
         store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(1)
       expect(store.get(editModalOpenAtom)).toBe(false)
-      expect(saveResumeChangeMock).toHaveBeenCalledWith("resume-1", draftResume)
+      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", draftResume)
     })
   })
 })

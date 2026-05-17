@@ -194,7 +194,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
           totalTokens: 0
         }
       })
-      vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
+      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
 
@@ -245,7 +245,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       expect(resumeParser.parseResumeWithTokenUsage).toHaveBeenCalledWith(
         "test content"
       )
-      expect(resumeModule.createResumeRecord).toHaveBeenCalledWith(
+      expect(resumeModule.createApplicationResumeRecord).toHaveBeenCalledWith(
         mockJobInfo,
         mockUploadResult,
         mockResumeData,
@@ -280,7 +280,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
           totalTokens: 0
         }
       })
-      vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
+      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
 
@@ -296,7 +296,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(sentData).toHaveLength(10)
 
-      expect(resumeModule.createResumeRecord).toHaveBeenCalledWith(
+      expect(resumeModule.createApplicationResumeRecord).toHaveBeenCalledWith(
         mockJobInfo,
         mockUploadResult,
         mockResumeData,
@@ -326,7 +326,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
           totalTokens: 200
         }
       })
-      vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
+      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
 
@@ -386,7 +386,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
 
       expect(resumeModule.uploadResumeFile).not.toHaveBeenCalled()
       expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
-      expect(resumeModule.createResumeRecord).not.toHaveBeenCalled()
+      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
     })
   })
 
@@ -446,7 +446,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       expect(lastMessage).toEqual({ error: "Upload failed" })
 
       expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
-      expect(resumeModule.createResumeRecord).not.toHaveBeenCalled()
+      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
     })
 
     it("should handle resume parsing error", async () => {
@@ -477,7 +477,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
       const lastMessage = sentData[sentData.length - 1]
       expect(lastMessage).toEqual({ error: "Parsing failed" })
 
-      expect(resumeModule.createResumeRecord).not.toHaveBeenCalled()
+      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
     })
 
     it("should handle create resume record error", async () => {
@@ -501,7 +501,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
           totalTokens: 0
         }
       })
-      vi.mocked(resumeModule.createResumeRecord).mockRejectedValue(
+      vi.mocked(resumeModule.createApplicationResumeRecord).mockRejectedValue(
         new Error("Database error")
       )
 
@@ -543,7 +543,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
           totalTokens: 0
         }
       })
-      vi.mocked(resumeModule.createResumeRecord).mockResolvedValue(
+      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
         mockCreateResumeRecordResult
       )
 

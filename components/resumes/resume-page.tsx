@@ -4,14 +4,14 @@ import { useEffect, useRef, useCallback } from "react"
 import { useAtomValue } from "jotai"
 import { FormProvider, useForm } from "react-hook-form"
 import { ResumeData } from "@/types/resume"
-import { resumeAutosaveSuspendedAtom, useResume } from "@/lib/store/resume"
+import { resumeAutosaveSuspendedAtom, useApplicationResume } from "@/lib/store/resume"
 import ResumeEditor from "./resume-editor"
 import { useDebouncedCallback } from "@mantine/hooks"
 import { ResumeRightPanel } from "@/components/resumes/resume-right-panel"
 import { ResumeSectionEditModal } from "@/components/resumes/resume-section-edit-modal"
 
 export default function ResumePage() {
-  const { saveResume, persistedResume, application } = useResume()
+  const { saveApplicationResume, applicationResumeData: persistedResume, application } = useApplicationResume()
   const isAutosaveSuspended = useAtomValue(resumeAutosaveSuspendedAtom)
   const methods = useForm<ResumeData>({
     defaultValues: persistedResume || {},
@@ -33,9 +33,9 @@ export default function ResumePage() {
         sectionOrder: formData.sectionOrder || persistedResume?.sectionOrder
       }
 
-      await saveResume(mergedData)
+      await saveApplicationResume(mergedData)
     },
-    [application?.resume.id, saveResume, persistedResume?.sectionOrder]
+    [application?.resume.id, saveApplicationResume, persistedResume?.sectionOrder]
   )
 
   const debouncedSave = useDebouncedCallback(handleFormChange, 1000)

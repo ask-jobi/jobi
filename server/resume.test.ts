@@ -8,12 +8,12 @@ global.AsyncLocalStorage = AsyncLocalStorage as any
 import {
   fetchJobApplication,
   getJobApplication,
-  getResumeData,
+  getApplicationResumeData,
   uploadResumeFile,
-  createResumeRecord,
+  createApplicationResumeRecord,
   updateResumeJobDescription,
-  saveResumeChange,
-  createEmptyResumeRecord,
+  saveApplicationResumeChange,
+  createEmptyApplicationResumeRecord,
   deleteJobApplication
 } from "./resume"
 import { createClient } from "@/lib/supabase/server"
@@ -164,7 +164,7 @@ describe("getJobApplication", () => {
   })
 })
 
-describe("getResumeData", () => {
+describe("getApplicationResumeData", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -186,7 +186,7 @@ describe("getResumeData", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    const result = await getResumeData("resume-1")
+    const result = await getApplicationResumeData("resume-1")
 
     expect(result).toEqual(mockResumeJson)
   })
@@ -203,7 +203,7 @@ describe("getResumeData", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(getResumeData("non-existent")).rejects.toThrow(
+    await expect(getApplicationResumeData("non-existent")).rejects.toThrow(
       "No resume found with id: non-existent"
     )
   })
@@ -223,7 +223,7 @@ describe("getResumeData", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(getResumeData("resume-1")).rejects.toThrow(
+    await expect(getApplicationResumeData("resume-1")).rejects.toThrow(
       "Multiple resume found with id: resume-1"
     )
   })
@@ -324,7 +324,7 @@ describe("uploadResumeFile", () => {
   })
 })
 
-describe("createResumeRecord", () => {
+describe("createApplicationResumeRecord", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -385,7 +385,7 @@ describe("createResumeRecord", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    const result = await createResumeRecord(
+    const result = await createApplicationResumeRecord(
       jobInfo,
       uploadResult,
       resumeData,
@@ -451,7 +451,7 @@ describe("createResumeRecord", () => {
     )
 
     await expect(
-      createResumeRecord(jobInfo, uploadResult, resumeData, "en")
+      createApplicationResumeRecord(jobInfo, uploadResult, resumeData, "en")
     ).rejects.toThrow("Failed to create resume record: Job insert failed")
   })
 })
@@ -523,7 +523,7 @@ describe("updateResumeJobDescription", () => {
   })
 })
 
-describe("saveResumeChange", () => {
+describe("saveApplicationResumeChange", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -556,7 +556,7 @@ describe("saveResumeChange", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await saveResumeChange("resume-123", resumeData)
+    await saveApplicationResumeChange("resume-123", resumeData)
 
     expect(mockFrom).toHaveBeenCalledWith("resumes")
   })
@@ -591,13 +591,13 @@ describe("saveResumeChange", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(saveResumeChange("resume-123", resumeData)).rejects.toEqual({
+    await expect(saveApplicationResumeChange("resume-123", resumeData)).rejects.toEqual({
       message: "Save failed"
     })
   })
 })
 
-describe("createEmptyResumeRecord", () => {
+describe("createEmptyApplicationResumeRecord", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -644,7 +644,7 @@ describe("createEmptyResumeRecord", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    const result = await createEmptyResumeRecord(jobInfo)
+    const result = await createEmptyApplicationResumeRecord(jobInfo)
 
     expect(result.jobData.id).toBe("job-123")
     expect(result.resumeData.id).toBe("resume-123")
@@ -670,7 +670,7 @@ describe("createEmptyResumeRecord", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(createEmptyResumeRecord(jobInfo)).rejects.toThrow(
+    await expect(createEmptyApplicationResumeRecord(jobInfo)).rejects.toThrow(
       "User not authenticated"
     )
   })

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
-import { useResume, useResumeLanguage } from "@/lib/store/resume"
+import { useApplicationResume, useResumeLanguage } from "@/lib/store/resume"
 import {
   ensureSectionHasEditableEntry,
   insertDraftEntryBelow
@@ -101,7 +101,7 @@ function applyToolOutputToResume(
 export function useResumeDraft() {
   const { control, getValues, reset } = useFormContext<ResumeData>()
   const draft = useWatch({ control }) as ResumeData
-  const { saveResume } = useResume()
+  const { saveApplicationResume } = useApplicationResume()
   const resumeLanguage = useResumeLanguage()
 
   const commands = useMemo(
@@ -111,7 +111,7 @@ export function useResumeDraft() {
         reset(nextResume)
       },
       commitDraft: async (nextResume?: ResumeData) => {
-        await saveResume(nextResume ?? getValues())
+        await saveApplicationResume(nextResume ?? getValues())
       },
       ensureEditableSection: (
         sectionId: ResumeSectionKey
@@ -179,7 +179,7 @@ export function useResumeDraft() {
         return nextResume
       }
     }),
-    [getValues, reset, resumeLanguage, saveResume]
+    [getValues, reset, resumeLanguage, saveApplicationResume]
   )
 
   return {

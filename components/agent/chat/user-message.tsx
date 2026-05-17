@@ -8,7 +8,7 @@ import {
   useAuiState
 } from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
@@ -37,7 +37,7 @@ export function UserActionBar() {
   const t = useTranslations("chat")
   const messageId = useAuiState((s) => s.message?.id)
   const messageParts = useAuiState((s) => s.message?.parts)
-  const { replacePersistedResume } = useResume()
+  const { replacePersistedResume } = useApplicationResume()
   const { resetDraft } = useResumeDraft()
   const aui = useAui()
 

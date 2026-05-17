@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ResumeExportButton } from "../resume-export-button"
 
-const mockUseResume = vi.fn()
+const mockUseApplicationResume = vi.fn()
 const mockTrackExportResume = vi.fn()
 const mockToastError = vi.fn()
 
@@ -15,7 +15,7 @@ vi.mock("next-intl", () => ({
 }))
 
 vi.mock("@/lib/store/resume", () => ({
-  useResume: () => mockUseResume()
+  useApplicationResume: () => mockUseApplicationResume()
 }))
 
 vi.mock("@/lib/user-tracking/user-tracking", () => ({
@@ -32,7 +32,7 @@ describe("ResumeExportButton", () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockUseResume.mockReturnValue({
+    mockUseApplicationResume.mockReturnValue({
       application: { resume: { id: "resume-123" } },
       isLoading: false
     })
@@ -69,7 +69,7 @@ describe("ResumeExportButton", () => {
   })
 
   it("is disabled while the resume is loading", () => {
-    mockUseResume.mockReturnValue({
+    mockUseApplicationResume.mockReturnValue({
       application: { resume: { id: "resume-123" } },
       isLoading: true
     })
@@ -82,7 +82,7 @@ describe("ResumeExportButton", () => {
   })
 
   it("shows an error when the resume id is missing", async () => {
-    mockUseResume.mockReturnValue({
+    mockUseApplicationResume.mockReturnValue({
       application: null,
       isLoading: false
     })

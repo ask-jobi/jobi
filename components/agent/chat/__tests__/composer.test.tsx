@@ -26,7 +26,7 @@ vi.mock("next-intl", () => ({
 }))
 
 vi.mock("@/lib/store/resume", () => ({
-  useResume: () => ({
+  useApplicationResume: () => ({
     application: {
       resume: {
         id: "resume-123"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createResumeRecord, uploadResumeFile } from "@/server/resume"
+import { createApplicationResumeRecord, uploadResumeFile } from "@/server/resume"
 import { parseResumeWithTokenUsage } from "@/server/ai/resume-parser"
 import {
   buildChatTokenQuota,
@@ -135,7 +135,7 @@ async function processFile(
         step: "prepare",
         status: "loading"
       })
-      const { resumeData, jobData, applicationData } = await createResumeRecord(
+      const { resumeData, jobData, applicationData } = await createApplicationResumeRecord(
         jobInfo,
         uploadResult,
         resumeTextData,

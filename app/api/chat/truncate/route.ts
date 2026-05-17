@@ -9,8 +9,8 @@ import {
 } from "@/lib/agent/chat-history"
 import {
   getJobApplicationByResumeId,
-  getResumeData,
-  saveResumeChange
+  getApplicationResumeData,
+  saveApplicationResumeChange
 } from "@/server/resume"
 import { logRollback } from "@/server/chat-events"
 import { z } from "zod"
@@ -112,7 +112,7 @@ async function applyToolReversions(
     jobApp.resumes.resume_json
   )
 
-  await saveResumeChange(resumeId, updatedResume)
+  await saveApplicationResumeChange(resumeId, updatedResume)
 }
 
 export async function POST(request: NextRequest) {
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
 
     await logRollback(targetMessage.session_id, messageId)
 
-    const resume = await getResumeData(session.resume_id)
+    const resume = await getApplicationResumeData(session.resume_id)
 
     return NextResponse.json({
       resume

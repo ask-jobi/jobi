@@ -2,12 +2,12 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { createEmptyResumeRecord } from "@/server/resume"
+import { createEmptyApplicationResumeRecord } from "@/server/resume"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
 vi.mock("@/server/resume", () => ({
-  createEmptyResumeRecord: vi.fn()
+  createEmptyApplicationResumeRecord: vi.fn()
 }))
 
 describe("POST /api/resume/create-empty", () => {
@@ -15,7 +15,7 @@ describe("POST /api/resume/create-empty", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCreateEmptyResumeRecord = vi.mocked(createEmptyResumeRecord)
+    mockCreateEmptyResumeRecord = vi.mocked(createEmptyApplicationResumeRecord)
   })
 
   afterEach(() => {
@@ -117,7 +117,7 @@ describe("POST /api/resume/create-empty", () => {
   })
 
   describe("Error scenarios", () => {
-    it("should return 500 when createEmptyResumeRecord throws an error", async () => {
+    it("should return 500 when createEmptyApplicationResumeRecord throws an error", async () => {
       const mockJobInfo = {
         name: "Developer",
         company: "Tech",

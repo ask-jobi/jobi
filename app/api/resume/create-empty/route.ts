@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createEmptyResumeRecord } from "@/server/resume"
+import { createEmptyApplicationResumeRecord } from "@/server/resume"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { defaultLocale, locales, type Locale } from "@/lib/i18n/config"
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await createEmptyResumeRecord(jobInfo, language as Locale)
+    const result = await createEmptyApplicationResumeRecord(jobInfo, language as Locale)
 
     return NextResponse.json({
       success: true,

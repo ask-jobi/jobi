@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ArrowUpIcon, SquareIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import {
   useSetPendingChatAction,
   type ChatThreadLifecycle
@@ -23,7 +23,7 @@ interface ComposerProps {
 export function Composer({ lifecycle }: ComposerProps) {
   const t = useTranslations("chat")
   const aui = useAui()
-  const { application } = useResume()
+  const { application } = useApplicationResume()
   const setPendingChatAction = useSetPendingChatAction()
   const isSendDisabled = useAuiState(
     (s) => s.thread.isRunning || !s.composer.isEditing || s.composer.isEmpty

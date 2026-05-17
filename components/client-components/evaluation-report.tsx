@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { rightPanelViewAtom, useResume } from "@/lib/store/resume"
+import { rightPanelViewAtom, useApplicationResume } from "@/lib/store/resume"
 import { useSetAtom } from "jotai"
 import { useSetPendingChatAction } from "@/lib/store/chat"
 import { trackClickAiFullSuggestion } from "@/lib/user-tracking/user-tracking"
@@ -24,7 +24,7 @@ interface EvaluationReportProps {
 export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   const t = useTranslations("evaluation")
   const tChat = useTranslations("chat")
-  const { application } = useResume()
+  const { application } = useApplicationResume()
   const setRightPanelView = useSetAtom(rightPanelViewAtom)
   const setPendingChatAction = useSetPendingChatAction()
 

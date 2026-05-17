@@ -16,10 +16,10 @@ import {
 } from "@/lib/store/resume"
 import type { ResumeData } from "@/types/resume"
 
-const saveResumeChangeMock = vi.fn()
+const saveApplicationResumeChangeMock = vi.fn()
 
 vi.mock("@/server/resume", () => ({
-  saveResumeChange: (...args: unknown[]) => saveResumeChangeMock(...args)
+  saveApplicationResumeChange: (...args: unknown[]) => saveApplicationResumeChangeMock(...args)
 }))
 
 vi.mock("@/lib/hooks/use-resume-template", () => ({
@@ -91,7 +91,7 @@ function renderEditor(store = createStore()) {
 
 describe("ResumeEditor add entry", () => {
   it("adds the entry to the draft before opening the modal without mutating persisted resume", async () => {
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     const store = createStore()
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
@@ -158,7 +158,7 @@ describe("ResumeEditor add entry", () => {
   })
 
   it("persists entry deletion immediately after updating the draft", async () => {
-    saveResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
     const store = createStore()
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
@@ -218,7 +218,7 @@ describe("ResumeEditor add entry", () => {
       expect(
         store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(0)
-      expect(saveResumeChangeMock).toHaveBeenCalledWith("resume-1", {
+      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", {
         ...originalResume,
         education: {
           ...originalResume.education,

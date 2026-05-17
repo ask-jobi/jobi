@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react"
 import type { SessionSummary } from "@/lib/agent/chat-history"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import {
   useChatSessionErrorValue,
   useChatSessionValue,
@@ -21,7 +21,7 @@ export interface UseChatSessionReturn {
 }
 
 export function useChatSession(): UseChatSessionReturn {
-  const { application } = useResume()
+  const { application } = useApplicationResume()
   const resumeId = application?.resume.id
   const { refreshSession, ...state } = useChatSessionStoreState(resumeId)
 
@@ -33,7 +33,7 @@ export function useChatSession(): UseChatSessionReturn {
 }
 
 export function useChatSessionState(): UseChatSessionReturn {
-  const { application } = useResume()
+  const { application } = useApplicationResume()
   return useChatSessionStoreState(application?.resume.id)
 }
 

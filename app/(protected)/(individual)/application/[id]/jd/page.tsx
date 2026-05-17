@@ -1,7 +1,7 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import { Button } from "@/components/ui/button"
 import { updateResumeJobDescription } from "@/server/resume"
 import { useEffect, useState } from "react"
@@ -15,7 +15,7 @@ import { toast } from "sonner"
 
 export default function Page() {
   const t = useTranslations()
-  const { jobDescription, setJobDescription } = useResume()
+  const { jobDescription, setJobDescription } = useApplicationResume()
   const [loading, setLoading] = useState(false)
   const form = useForm<JobInfoFormType>({
     resolver: zodResolver(formSchema),

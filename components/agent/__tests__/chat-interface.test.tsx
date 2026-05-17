@@ -56,7 +56,7 @@ vi.mock("@/lib/store/chat", () => ({
 }))
 
 vi.mock("@/lib/store/resume", () => ({
-  useResume: () => ({
+  useApplicationResume: () => ({
     application: {
       resume: {
         id: "resume-1"

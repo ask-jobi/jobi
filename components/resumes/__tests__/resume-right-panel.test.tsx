@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ResumeRightPanel } from "../resume-right-panel"
 
 const mockSetRightPanelView = vi.fn()
-const mockUseResume = vi.fn()
+const mockUseApplicationResume = vi.fn()
 const mockUseAtom = vi.fn()
 
 vi.mock("next-intl", () => ({
@@ -20,7 +20,7 @@ vi.mock("jotai/index", () => ({
 
 vi.mock("@/lib/store/resume", () => ({
   rightPanelViewAtom: {},
-  useResume: () => mockUseResume()
+  useApplicationResume: () => mockUseApplicationResume()
 }))
 
 vi.mock("@/lib/hooks/use-chat-session", () => ({
@@ -38,7 +38,7 @@ vi.mock("@/components/client-components/evaluation-report", () => ({
 describe("ResumeRightPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseResume.mockReturnValue({
+    mockUseApplicationResume.mockReturnValue({
       selectedSectionId: "personalInfo",
       resumeEvaluation: null,
       refreshEvaluationReport: vi.fn()

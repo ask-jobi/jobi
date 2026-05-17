@@ -10,11 +10,11 @@ import {
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
-import { saveResumeChange } from "@/server/resume"
+import { saveApplicationResumeChange } from "@/server/resume"
 import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
 
 export const applicationAtom = atom<JobApplication | null>(null)
-export const persistedResumeAtom = atom(
+export const applicationResumeDataAtom = atom(
   (get) => {
     const app = get(applicationAtom)
     return app ? app.resume.resume_json : null
@@ -38,7 +38,7 @@ export type ResumeIndex = {
   entryMap: Map<string, { sectionKey: SortableSectionKey; entry: any }>
 }
 export const resumeIndexAtom = atom((get): ResumeIndex => {
-  const resume = get(persistedResumeAtom)
+  const resume = get(applicationResumeDataAtom)
   const sectionMap = new Map<SortableSectionKey, ResumeSection>()
   const entryMap = new Map<
     string,
@@ -136,7 +136,7 @@ export const selectedEntryIndexAtom = atom(
 
     const selectedSectionId = get(selectedSectionIdAtom)
     const selectedEntryId = get(selectedEntryIdAtom)
-    const resumeData = get(persistedResumeAtom)
+    const resumeData = get(applicationResumeDataAtom)
 
     if (!selectedSectionId || !selectedEntryId || !resumeData) {
       return null
@@ -182,7 +182,7 @@ export const focusSectionAtom = atom(
     entryIndex?: number,
     entryId?: string | null
   ) => {
-    const resumeData = get(persistedResumeAtom)
+    const resumeData = get(applicationResumeDataAtom)
     set(selectedSectionIdAtom, id)
     set(selectedEntryIndexAtom, typeof entryIndex === "number" ? entryIndex : null)
     if (typeof entryIndex === "number" && resumeData) {
@@ -207,8 +207,8 @@ export function useResumeLanguage() {
   return resumeMetadata.resumeLanguage
 }
 
-export function useResume() {
-  const [persistedResume, setPersistedResume] = useAtom(persistedResumeAtom)
+export function useApplicationResume() {
+  const [persistedResume, setPersistedResume] = useAtom(applicationResumeDataAtom)
   const [application] = useAtom(applicationAtom)
   const [jobDescription, setJobDescription] = useAtom(jobAtom)
   const [isLoading, setLoading] = useAtom(isLoadingAtom)
@@ -219,11 +219,11 @@ export function useResume() {
 
   const replacePersistedResume = (data: ResumeData) => setPersistedResume(data)
 
-  const saveResume = async (data: ResumeData) => {
+  const saveApplicationResume = async (data: ResumeData) => {
     if (!application?.resume.id) return
     setPersistedResume(data)
     try {
-      await saveResumeChange(application.resume.id, data)
+      await saveApplicationResumeChange(application.resume.id, data)
     } catch (error) {
       console.error("Save failed:", error)
       toast.error("Auto save failed")
@@ -253,12 +253,12 @@ export function useResume() {
   }
 
   return {
-    persistedResume,
+    applicationResumeData: persistedResume,
     application: application as JobApplication,
     isLoading,
     setLoading,
     replacePersistedResume,
-    saveResume,
+    saveApplicationResume,
     resumeEvaluation,
     setResumeEvaluation,
     jobDescription,

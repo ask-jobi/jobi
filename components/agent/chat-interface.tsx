@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { useResume } from "@/lib/store/resume"
+import { useApplicationResume } from "@/lib/store/resume"
 import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
@@ -51,7 +51,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 }
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
-  const { application } = useResume()
+  const { application } = useApplicationResume()
   const { draft, applyToolOutput, commitDraft } = useResumeDraft()
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()

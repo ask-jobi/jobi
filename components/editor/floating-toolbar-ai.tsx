@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useResume, useResumeLanguage } from "@/lib/store/resume"
+import { useApplicationResume, useResumeLanguage } from "@/lib/store/resume"
 import { RewriteEntryRequest } from "@/types/api/requests"
 import { Command, CommandItem, CommandList } from "@/components/ui/command"
 import { toast } from "sonner"
@@ -26,7 +26,7 @@ function FloatingToolbarAi({
   mode: "default" | "ai" | "confirm"
   editor: Editor
 }) {
-  const { jobDescription } = useResume()
+  const { jobDescription } = useApplicationResume()
   const resumeLanguage = useResumeLanguage()
   const [loading, setLoading] = useState<boolean>(false)
   const [instruction, setInstruction] = useState<string>("")

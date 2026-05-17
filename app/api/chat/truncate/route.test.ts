@@ -74,10 +74,10 @@ describe("POST /api/chat/truncate", () => {
         }
       }
     } as any)
-    vi.mocked(resumeModule.getResumeData).mockResolvedValue({
+    vi.mocked(resumeModule.getApplicationResumeData).mockResolvedValue({
       personalInfo: { blockId: "p1", firstName: "John" }
     } as any)
-    vi.mocked(resumeModule.saveResumeChange).mockResolvedValue()
+    vi.mocked(resumeModule.saveApplicationResumeChange).mockResolvedValue()
 
     vi.spyOn(console, "error").mockImplementation(() => {})
   })

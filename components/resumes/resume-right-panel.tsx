@@ -1,5 +1,5 @@
 import { useAtom } from "jotai/index"
-import { rightPanelViewAtom, useResume } from "@/lib/store/resume"
+import { rightPanelViewAtom, useApplicationResume } from "@/lib/store/resume"
 import { EvaluationReport } from "@/components/client-components/evaluation-report"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 export function ResumeRightPanel() {
   const [rightPanelView, setRightPanelView] = useAtom(rightPanelViewAtom)
   const [loading, setLoading] = useState(false)
-  const { resumeEvaluation, refreshEvaluationReport } = useResume()
+  const { resumeEvaluation, refreshEvaluationReport } = useApplicationResume()
   const t = useTranslations("rightPanel")
   const commonT = useTranslations()
   const evaluationT = useTranslations("evaluation")

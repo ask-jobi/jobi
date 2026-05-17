@@ -38,7 +38,7 @@ export async function fetchJobApplication() {
   return jobApplications
 }
 
-export async function getJobApplicationByResumeId(resumeId: string) {
+export async function getJobApplicationByResumeId(applicationResumeId: string) {
   const supabase = await createClient()
 
   const { data: jobApplications, error } = await supabase
@@ -63,19 +63,19 @@ export async function getJobApplicationByResumeId(resumeId: string) {
           )
       `
     )
-    .eq("resume_id", resumeId)
+    .eq("resume_id", applicationResumeId)
 
   if (error) {
     throw new Error(`Failed to fetch job application: ${error.message}`)
   }
 
   if (!jobApplications || jobApplications.length === 0) {
-    throw new Error(`No job application found with resume id: ${resumeId}`)
+    throw new Error(`No job application found with resume id: ${applicationResumeId}`)
   }
 
   if (jobApplications.length > 1) {
     throw new Error(
-      `Multiple job applications found with resume id: ${resumeId}`
+      `Multiple job applications found with resume id: ${applicationResumeId}`
     )
   }
   return jobApplications[0]
@@ -124,7 +124,7 @@ export async function getJobApplication(jobApplicationId: string) {
   return jobApplications[0]
 }
 
-export async function getResumeData(id: string): Promise<ResumeData> {
+export async function getApplicationResumeData(id: string): Promise<ResumeData> {
   const supabase = await createClient()
 
   const { data: resume, error } = await supabase
@@ -152,7 +152,7 @@ export async function getResumeData(id: string): Promise<ResumeData> {
   return resume[0].resume_json as ResumeData
 }
 
-export async function getResumeForPrint(id: string): Promise<{
+export async function getApplicationResumeForPrint(id: string): Promise<{
   resumeData: ResumeData
   language: Locale
 }> {
@@ -227,7 +227,7 @@ export async function uploadResumeFile(resumeFile: File) {
   }
 }
 
-export async function createResumeRecord(
+export async function createApplicationResumeRecord(
   jobInfos: JobInfoFormType,
   uploadResult: {
     fileName: string
@@ -322,7 +322,7 @@ export async function updateResumeJobDescription(
   }
 }
 
-export async function saveResumeChange(resumeId: string, data: ResumeData) {
+export async function saveApplicationResumeChange(resumeId: string, data: ResumeData) {
   const supabase = await createClient()
   const { error } = await supabase
     .from("resumes")
@@ -332,7 +332,7 @@ export async function saveResumeChange(resumeId: string, data: ResumeData) {
   if (error) throw error
 }
 
-export async function createEmptyResumeRecord(
+export async function createEmptyApplicationResumeRecord(
   jobInfos: JobInfoFormType,
   language: Locale = "en"
 ) {

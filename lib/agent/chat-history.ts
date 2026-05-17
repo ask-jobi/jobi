@@ -15,7 +15,7 @@ type ChatSessionStatus =
   Database["public"]["Tables"]["resume_chat_sessions"]["Insert"]["status"]
 type ChatMessageRole = ChatMessage["role"]
 
-export interface CreateSessionParams {
+interface CreateSessionParams {
   userId: string
   resumeId: string
   title?: string
@@ -96,9 +96,10 @@ export interface SessionTokenUsage {
 }
 
 /**
- * Create a new chat session
+ * Create a new chat session (internal).
+ * External callers should use getOrCreateCanonicalSessionSummary.
  */
-export async function createSession({
+async function createSession({
   userId,
   resumeId,
   title
@@ -338,7 +339,7 @@ export async function updateConversationSummary(
   }
 }
 
-export async function listSessions(
+async function listSessions(
   resumeId: string,
   options?: {
     userId?: string
