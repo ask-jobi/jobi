@@ -130,7 +130,6 @@ function ReorderEntriesCard({
   output: ResumeEditorReorderOutput
   t: ReturnType<typeof useTranslations>
 }) {
-  const original = output.originalValue as string[]
   const ordered = output.orderedEntryIds
 
   if (output.operation !== "reorderEntries" || !ordered) return null

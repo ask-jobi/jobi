@@ -92,9 +92,6 @@ describe("GET /api/resume/print", () => {
       process.env.NEXT_PUBLIC_BASE_URL = "https://custom-domain.com"
 
       try {
-        const { searchParams } = new URL(
-          "http://localhost:3000/api/resume/print?id=test"
-        )
         const baseUrl =
           process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
         expect(baseUrl).toBe("https://custom-domain.com")
@@ -112,9 +109,6 @@ describe("GET /api/resume/print", () => {
       delete process.env.NEXT_PUBLIC_BASE_URL
 
       try {
-        const { searchParams } = new URL(
-          "http://localhost:3000/api/resume/print?id=test"
-        )
         const baseUrl =
           process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
         expect(baseUrl).toBe("http://localhost:3000")

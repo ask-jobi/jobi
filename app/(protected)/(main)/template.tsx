@@ -2,11 +2,9 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@radix-ui/react-separator"
-import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 function MainTemplate({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
   const t = useTranslations()
 
   const getPageTitle = () => {

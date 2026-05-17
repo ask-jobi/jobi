@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip"
-import { ArrowRight, Mail, Files, ShieldX, Info } from "lucide-react"
+import { ArrowRight, Mail, Files, ShieldX } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { LandingPageLayout } from "@/components/ui/landing-page-layout"
 import { useTranslations } from "next-intl"

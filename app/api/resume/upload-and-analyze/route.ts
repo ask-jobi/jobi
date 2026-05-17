@@ -151,7 +151,7 @@ async function processFile(
         step: "evaluate",
         status: "loading"
       })
-      const evaluationResult = await evaluateAndSaveResume(
+      await evaluateAndSaveResume(
         resumeData.id,
         resumeData.resume_json!!,
         jobData.description

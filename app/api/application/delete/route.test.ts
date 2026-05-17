@@ -48,7 +48,7 @@ describe("DELETE /api/application/delete", () => {
     it("should return 400 when id is null", async () => {
       const request = createMockRequest({ id: null })
       const response = await DELETE(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(400)
       expect(mockDeleteJobApplication).not.toHaveBeenCalled()
