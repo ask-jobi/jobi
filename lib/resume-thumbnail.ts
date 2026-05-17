@@ -10,6 +10,8 @@ import type {
   SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
+import type { Locale } from "@/lib/i18n/config"
+import { getSectionLabel } from "@/lib/templates/section-labels"
 
 const MAX_SKILL_TAGS = 6
 
@@ -152,7 +154,8 @@ function buildEntrySummary(
 }
 
 export function getResumeThumbnailSections(
-  resumeData: ResumeData
+  resumeData: ResumeData,
+  language: Locale
 ): ThumbnailSectionSummary[] {
   return resumeData.sectionOrder.flatMap((sectionId) => {
     const section = resumeData[sectionId]
@@ -168,7 +171,7 @@ export function getResumeThumbnailSections(
     return [
       {
         id: sectionId,
-        title: section.title,
+        title: getSectionLabel(sectionId, language),
         entries
       }
     ]

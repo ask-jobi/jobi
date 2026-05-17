@@ -5,20 +5,19 @@ import {
 } from "@/lib/templates/section-factories"
 
 describe("section-factories", () => {
-  it("creates english sections with english titles", () => {
+  it("creates empty sections", () => {
     const section = createEmptySection("education", "en")
-    expect(section.title).toBe("Education History")
     expect(section.entries).toEqual([])
   })
 
-  it("creates chinese sections with chinese titles", () => {
+  it("creates empty chinese sections", () => {
     const section = createEmptySection("skills", "zh")
-    expect(section.title).toBe("技能")
+    expect(section.entries).toEqual([])
   })
 
-  it("builds empty resume data with language-specific section titles", () => {
+  it("builds empty resume data", () => {
     const resume = buildEmptyResumeData("zh")
-    expect(resume.education.title).toBe("教育经历")
+    expect(resume.education.entries).toEqual([])
     expect(resume.employment).toBeUndefined()
     expect(resume.sectionOrder).toEqual(["education", "skills"])
     expect(resume.personalInfo.website).toBe("")

@@ -351,9 +351,9 @@ describe("createApplicationResumeRecord", () => {
         email: "john@example.com",
         phone: ""
       },
-      education: { title: "Education", entries: [] },
-      employment: { title: "Employment", entries: [] },
-      skills: { title: "Skills", entries: [] }
+      education: { entries: [] },
+      employment: { entries: [] },
+      skills: { entries: [] }
     }
 
     const mockRollbackContext = {
@@ -420,9 +420,9 @@ describe("createApplicationResumeRecord", () => {
         email: "john@example.com",
         phone: ""
       },
-      education: { title: "Education", entries: [] },
-      employment: { title: "Employment", entries: [] },
-      skills: { title: "Skills", entries: [] }
+      education: { entries: [] },
+      employment: { entries: [] },
+      skills: { entries: [] }
     }
 
     const mockRollbackContext = {
@@ -538,9 +538,9 @@ describe("saveApplicationResumeChange", () => {
         email: "jane@example.com",
         phone: ""
       },
-      education: { title: "Education", entries: [] },
-      employment: { title: "Employment", entries: [] },
-      skills: { title: "Skills", entries: [] }
+      education: { entries: [] },
+      employment: { entries: [] },
+      skills: { entries: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({
@@ -571,9 +571,9 @@ describe("saveApplicationResumeChange", () => {
         email: "jane@example.com",
         phone: ""
       },
-      education: { title: "Education", entries: [] },
-      employment: { title: "Employment", entries: [] },
-      skills: { title: "Skills", entries: [] }
+      education: { entries: [] },
+      employment: { entries: [] },
+      skills: { entries: [] }
     }
 
     const mockFrom = vi.fn().mockReturnValue({

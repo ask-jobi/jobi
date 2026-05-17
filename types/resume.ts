@@ -21,7 +21,6 @@ export type JobApplication = {
 }
 
 export interface ResumeSection<T = any> {
-  title: string
   entries: Array<T>
 }
 

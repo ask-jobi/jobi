@@ -15,7 +15,6 @@ describe("getResumeThumbnailSections", () => {
       content: "Computer Science"
     })
     resume.projects = {
-      title: "Projects",
       entries: [
         {
           entryId: "project-1",
@@ -34,7 +33,7 @@ describe("getResumeThumbnailSections", () => {
     resume.sectionOrder = ["education", "projects", "skills"]
 
     expect(
-      getResumeThumbnailSections(resume).map((section) => section.id)
+      getResumeThumbnailSections(resume, "en").map((section) => section.id)
     ).toEqual(["education", "projects", "skills"])
   })
 
@@ -59,7 +58,7 @@ describe("getResumeThumbnailSections", () => {
       }
     )
 
-    const sections = getResumeThumbnailSections(resume)
+    const sections = getResumeThumbnailSections(resume, "en")
 
     expect(sections).toHaveLength(1)
     expect(sections[0].id).toBe("skills")

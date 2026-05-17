@@ -13,23 +13,20 @@ import type {
   SortableSectionKey
 } from "@/types/resume"
 import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
-import { getSectionLabel } from "@/lib/templates/section-labels"
 
-function createBaseSection<ID extends SortableSectionKey>(
-  sectionId: ID,
-  language: Locale
-): NonNullable<ResumeData[ID]> {
+function createBaseSection<ID extends SortableSectionKey>(): NonNullable<
+  ResumeData[ID]
+> {
   return {
-    title: getSectionLabel(sectionId, language),
     entries: []
   } as NonNullable<ResumeData[ID]>
 }
 
 export function createEmptySection<ID extends SortableSectionKey>(
-  sectionId: ID,
-  language: Locale
+  _sectionId: ID,
+  _language: Locale
 ): NonNullable<ResumeData[ID]> {
-  return createBaseSection(sectionId, language)
+  return createBaseSection()
 }
 
 type EmptyEntryMap = {

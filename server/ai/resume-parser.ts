@@ -30,10 +30,6 @@ const resumeSchema = z.object({
     phone: z.string().describe("Phone number of the candidate").prefault("")
   }),
   education: z.object({
-    title: z
-      .string()
-      .describe("Title of the education section")
-      .prefault("Education"),
     entries: z.array(
       z.object({
         entryId: z.string().default(() => nanoid()),
@@ -55,10 +51,6 @@ const resumeSchema = z.object({
     )
   }),
   skills: z.object({
-    title: z
-      .string()
-      .describe("Title of the skills section")
-      .prefault("Skills"),
     entries: z.array(
       z.object({
         entryId: z.string().default(() => nanoid()),
@@ -72,10 +64,6 @@ const resumeSchema = z.object({
   // optional
   employment: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the work experience section")
-        .prefault("Work Experience"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),
@@ -103,10 +91,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   research: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the research section")
-        .prefault("Research Experience"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),
@@ -143,10 +127,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   projects: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the projects section")
-        .prefault("Projects"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),
@@ -185,10 +165,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   publications: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the publications section")
-        .prefault("Publications"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),
@@ -207,10 +183,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   awards: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the awards section")
-        .prefault("Awards"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),
@@ -228,10 +200,6 @@ const resumeSchema = z.object({
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   certifications: z
     .object({
-      title: z
-        .string()
-        .describe("Title of the certifications section")
-        .prefault("Certifications"),
       entries: z.array(
         z.object({
           entryId: z.string().default(() => nanoid()),

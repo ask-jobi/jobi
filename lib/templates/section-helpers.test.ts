@@ -24,7 +24,7 @@ describe("section-helpers", () => {
     }
 
     const nextResume = addSection(baseResume, "projects", "en")
-    expect(nextResume.projects?.title).toBe("Projects")
+    expect(nextResume.projects?.entries).toEqual([])
     expect(nextResume.sectionOrder).toContain("projects")
 
     const sameResume = addSection(nextResume, "projects", "en")

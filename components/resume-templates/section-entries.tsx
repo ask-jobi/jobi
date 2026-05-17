@@ -13,7 +13,7 @@ type ExtractEntry<ID extends SortableSectionKey> =
 interface SectionEntriesProps<ID extends SortableSectionKey> {
   sectionId: ID
   section?: ResumeData[ID] | null
-  sectionTitle?: string
+  sectionTitle: string
   isInteractive?: boolean
   onEntryAdd?: (id: ID, index: number) => void
   onEntryDelete?: (id: ID, index: number) => void
@@ -64,11 +64,9 @@ export function SectionEntries<ID extends SortableSectionKey>({
       style={sectionStyle}
     >
       {titleRender ? (
-        titleRender(sectionTitle ?? section.title)
+        titleRender(sectionTitle)
       ) : (
-        <h2 className="text-lg font-bold mb-2">
-          {sectionTitle ?? section.title}
-        </h2>
+        <h2 className="text-lg font-bold mb-2">{sectionTitle}</h2>
       )}
 
       {section.entries.map((entry, index) => (

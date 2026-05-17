@@ -33,7 +33,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       phone: "123-456-7890"
     },
     education: {
-      title: "Education",
       entries: [
         {
           entryId: "e-b1",
@@ -46,7 +45,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     employment: {
-      title: "Work Experience",
       entries: [
         {
           entryId: "emp-b1",
@@ -59,7 +57,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     skills: {
-      title: "Skills",
       entries: [
         {
           entryId: "s-b1",
@@ -114,11 +111,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -173,7 +168,6 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         education: {
-          title: "Education",
           entries: [
             {
               entryId: "e-b1",
@@ -186,7 +180,6 @@ describe("evaluateResume", () => {
           ]
         },
         skills: {
-          title: "Skills",
           entries: [
             { entryId: "s-b1", group: "General", content: "Problem solving" }
           ]
@@ -239,11 +232,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -298,11 +289,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -356,11 +345,9 @@ describe("evaluateResume", () => {
           phone: "123"
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -423,11 +410,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -503,11 +488,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -574,11 +557,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -606,11 +587,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -632,11 +611,9 @@ describe("evaluateResume", () => {
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })

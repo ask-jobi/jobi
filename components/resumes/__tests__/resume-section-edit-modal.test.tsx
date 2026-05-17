@@ -23,7 +23,8 @@ vi.mock("next-intl", () => ({
 const saveApplicationResumeChangeMock = vi.fn()
 
 vi.mock("@/server/resume", () => ({
-  saveApplicationResumeChange: (...args: unknown[]) => saveApplicationResumeChangeMock(...args)
+  saveApplicationResumeChange: (...args: unknown[]) =>
+    saveApplicationResumeChangeMock(...args)
 }))
 
 vi.mock("../resume-section-form", () => ({
@@ -79,11 +80,9 @@ function renderWithForm(store = createStore(), defaultValues?: ResumeData) {
             phone: ""
           },
           education: {
-            title: "Education",
             entries: []
           },
           skills: {
-            title: "Skills",
             entries: []
           }
         } satisfies ResumeData)
@@ -123,15 +122,12 @@ describe("ResumeSectionEditModal", () => {
             phone: ""
           },
           education: {
-            title: "Education",
             entries: []
           },
           skills: {
-            title: "Skills",
             entries: []
           },
           employment: {
-            title: "Employment",
             entries: [
               {
                 entryId: "emp-1",
@@ -199,11 +195,9 @@ describe("ResumeSectionEditModal", () => {
         phone: ""
       },
       education: {
-        title: "Education",
         entries: []
       },
       skills: {
-        title: "Skills",
         entries: []
       }
     }
@@ -276,11 +270,9 @@ describe("ResumeSectionEditModal", () => {
         phone: ""
       },
       education: {
-        title: "Education",
         entries: []
       },
       skills: {
-        title: "Skills",
         entries: []
       }
     }
@@ -331,7 +323,10 @@ describe("ResumeSectionEditModal", () => {
         store.get(applicationAtom)?.resume.resume_json.education.entries
       ).toHaveLength(1)
       expect(store.get(editModalOpenAtom)).toBe(false)
-      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", draftResume)
+      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
+        "resume-1",
+        draftResume
+      )
     })
   })
 })

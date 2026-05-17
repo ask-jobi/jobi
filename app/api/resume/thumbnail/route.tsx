@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og"
 import { NextRequest } from "next/server"
 import { ResumeData } from "@/types/resume"
+import { Locale } from "@/lib/i18n/config"
 import { createClient } from "@/lib/supabase/server"
 import { getResumeThumbnailSections } from "@/lib/resume-thumbnail"
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data: resumeData } = await supabase
       .from("resumes")
-      .select("resume_json")
+      .select("resume_json, language")
       .eq("id", resumeId)
       .single()
 
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest) {
     }
 
     const parsedData: ResumeData = resumeData.resume_json!!
-    const sections = getResumeThumbnailSections(parsedData)
+    const language = (resumeData.language as Locale) ?? "en"
+    const sections = getResumeThumbnailSections(parsedData, language)
 
     return new ImageResponse(
       <div
