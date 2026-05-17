@@ -9,7 +9,6 @@ import { toast } from "sonner"
 import { trackViewResume } from "@/lib/user-tracking/user-tracking"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
