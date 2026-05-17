@@ -5,40 +5,47 @@
   "home": "Home",
   "dashboard": "Dashboard",
   "jobs": "Job Search",
+  "resume": "Resume",
+  "jobDescription": "Job Description",
 
   "exportResumeError": "export resume failed.",
 
+  "jd": {
+    "saveSuccess": "Job description saved successfully",
+    "saveError": "Failed to save job description"
+  },
+
   "landingPage": {
     "hero": {
-      "slogan": "Make every resume hit the target.",
-      "valueProposition": "Enter job descriptions with one click, AI intelligently generates perfectly matched resumes for you, easily pass screening, and win interview opportunities.",
+      "slogan": "Make every resume hit the target",
+      "valueProposition": "Stop rewriting your resume from scratch for every job. Upload your current resume, paste the job description, and Jobi helps you turn it into a sharper, more targeted version in minutes.",
       "startFreeTrial": "Start Free Trial",
-      "learnMore": "Learn More"
+      "learnMore": "See How It Works"
     },
     "problem": {
-      "title": "Have you encountered these problems?",
-      "subtitle": "Resumes sent but no response, few interview opportunities",
-      "problem1": "Resumes sent but no response",
-      "problem1Desc": "Submitted dozens of resumes, but received no replies, don't know where the problem lies",
-      "problem2": "Resumes are all the same",
-      "problem2Desc": "Using the same resume for all positions, unable to highlight core advantages matching the position",
-      "problem3": "Filtered by ATS system",
-      "problem3Desc": "Resume format or keywords do not meet system requirements, HR cannot even see your resume",
+      "title": "Why are you applying so much and still hearing nothing back?",
+      "subtitle": "Most of the time, the problem is not effort. It is spending too much time on low-return resume edits.",
+      "problem1": "Your resume feels too generic",
+      "problem1Desc": "Recruiters cannot quickly see why you fit this specific role, so your resume gets skimmed and passed over.",
+      "problem2": "You burn energy on repetitive edits",
+      "problem2Desc": "Every new job means more deleting, rewriting, and reshuffling. It takes time, drains focus, and still may not improve your odds.",
+      "problem3": "You get filtered out before a human sees you",
+      "problem3Desc": "If your wording, keywords, or structure do not match the role, ATS and early screening can block you first.",
       "atsExplanation": "ATS (Applicant Tracking System) is used by HR to automatically screen resumes. If your resume format is incorrect or missing keywords, ATS will filter out your resume before HR even sees it."
     },
     "features": {
-      "title": "No worries, Jobi can help you solve it.",
-      "description": "We provide a seamless resume editing experience to help you create the most competitive customized resumes",
+      "title": "This is not about making your resume longer. It is about making it feel right for the job.",
+      "description": "Jobi helps you turn your existing experience into a version that feels more relevant, more focused, and easier to shortlist.",
       "feature1": "One-Click Import",
-      "feature1Desc": "No need to re-enter your resume, upload your existing PDF resume, and instantly generate professional resume templates familiar to HR.",
+      "feature1Desc": "Skip the manual re-entry. Upload your existing PDF resume and start editing a usable version right away.",
       "feature2": "Job Customization",
-      "feature2Desc": "Using AI models fine-tuned by job search experts, accurately rewrite resume content based on job descriptions, improving ATS and machine screening pass rates.",
+      "feature2Desc": "Rewrite key experience, keywords, and phrasing around the job description so your resume feels tailored instead of reused.",
       "feature3": "Authentic Expression",
-      "feature3Desc": "Fact-based content modifications and suggestions, avoiding template feel and AI traces, ensuring your resume is authentic and professional."
+      "feature3Desc": "Suggestions stay grounded in your real experience, so the final result sounds credible, specific, and still like you."
     },
-    "readyToStart": "Ready to Boost Your Career?",
-    "ctaDescription": "Join thousands of successful job seekers and let AI help you create the perfect resume",
-    "getStarted": "Get Started",
+    "readyToStart": "Less busywork. More interview chances.",
+    "ctaDescription": "Claim a one-time free token bundle and see if it helps you send stronger applications faster.",
+    "getStarted": "Claim Free Tokens",
     "copyright": "© 2025 Jobi. All rights reserved."
   },
 
@@ -53,39 +60,58 @@
   "overallOptimized": "Overall Optimized",
 
   "currentPlan": "Current Plan",
-  "validUntil": "Valid Until",
-  "remainingUsage": "Remaining Usage",
-  "renewPlan": "Renew Plan",
-  "upgradeToPro": "Upgrade to Pro",
-  "buyPlan": "Buy Plan",
+  "tokenHeader": "Token",
+  "tokenTotal": "Token Total",
+  "tokenUsed": "Token Used",
+  "tokenRemaining": "Token Remaining",
   "noPlan": "No Plan",
   "unknownPlan": "Unknown Plan",
-  "freeTrial": "Free Trial",
-  "lite14Days": "Lite 14 Days",
-  "pro30Days": "Pro 30 Days",
-  "detailedUsage": "Detailed Usage",
+  "planFree": "Free",
+  "planLite": "Lite",
+  "planPro": "Pro",
   "fullOptimization": "Full Optimization",
   "blockOptimization": "Block Optimization",
   "motivationLetter": "Motivation Letter",
   "planExpiry": "Plan Expiry",
-  "noActivePlan": "No active plan, please purchase a plan to use full features",
+  "noActivePlan": "No active plan",
   "usage": "Usage",
   "planDetails": "Plan Details",
-  "planType": "Plan Type",
-  "status": "Status",
-  "active": "Active",
-  "expired": "Expired",
   "subscriptionAndUsage": "Subscription & Usage",
+  "tokenBalance": "Token Balance",
   "loadingSubscriptionError": "Error loading subscription information",
   "failedToLoadSubscription": "Failed to load subscription information",
+  "loadingTokenBalanceError": "Error loading token balance",
+  "failedToLoadTokenBalance": "Failed to load token balance",
   "subscriptionAndUsageSettings": "Subscription & Usage Settings",
+  "tokenBalanceSettings": "Token Balance Settings",
+  "chatTokens": "Chat tokens",
 
   "createNewResume": "Create New Resume",
+  "paymentSuccess": {
+    "title": "Payment successful!",
+    "description": "Your token bundle has been added successfully and is ready to use.",
+    "checkingStatus": "Checking payment status...",
+    "processingDelay": "Payment was received, but token synchronization is taking longer than expected. Please refresh the dashboard shortly.",
+    "orderNumber": "Order ID",
+    "nextStepsTitle": "What you can do next:",
+    "nextStepUseTokens": "Continue spending tokens in chat and resume rewrite flows",
+    "nextStepViewBalance": "Check your current token balance and usage",
+    "nextStepBuyMore": "Buy another token bundle any time to add more balance",
+    "goToDashboard": "Go to Dashboard",
+    "backToHome": "Back to Home"
+  },
 
   "form": {
     "stepJobInfo": "Job Information",
-    "stepUpload": "UploadResume",
+    "stepUpload": "Upload Resume",
     "stepAnalyze": "Analyze Resume",
+    "progress": {
+      "upload": "Upload Resume File",
+      "load": "Read Resume File",
+      "parse": "Parse Your Resume",
+      "prepare": "Generate Resume Data",
+      "evaluate": "Evaluate Resume and Job Match"
+    },
     "job": {
       "name": "Job Name",
       "namePlaceholder": "Job name",
@@ -104,26 +130,25 @@
   },
 
   "monthPicker": {
-    "present": "Present",
     "selectStartEndDate": "Select Start/End Date"
   },
 
   "pricing": {
-    "choosePlan": "Choose the plan that best fits you",
-    "heroTitle": "Simple and transparent",
-    "heroTitleHighlight": "pricing plans",
-    "heroDescription": "Whether you're an individual job seeker or a business user, we have the right plan for you. We promise no auto-renewal - pay once and enjoy full features.",
+    "choosePlan": "Choose the token bundle that best fits your usage",
+    "heroTitle": "Simple, token-based",
+    "heroTitleHighlight": "pricing",
+    "heroDescription": "Each plan is defined only by token allowance and price. Pick the bundle that matches how much you build.",
     "faqTitle": "Frequently Asked Questions",
-    "faqCancelSubscription": "Can I cancel my subscription anytime?",
-    "faqCancelSubscriptionAnswer": "Yes, you can cancel your subscription at any time. After cancellation, you can still use the service until the end of your current billing cycle.",
+    "faqCancelSubscription": "Do tokens expire?",
+    "faqCancelSubscriptionAnswer": "No. Token bundles do not expire. Once granted, your tokens remain available until they are used up.",
     "faqPaymentMethods": "What payment methods do you support?",
     "faqPaymentMethodsAnswer": "We support various payment methods including Alipay, WeChat Pay, bank cards, and more.",
     "faqRefundPolicy": "Do you have a refund policy?",
     "faqRefundPolicyAnswer": "Yes, we offer a 7-day no-questions-asked refund guarantee if you're not satisfied with our service.",
-    "faqEnterpriseCustomization": "Can enterprise plans be customized?",
-    "faqEnterpriseCustomizationAnswer": "Yes, enterprise plans support customization. Please contact our sales team for your specific needs.",
-    "ctaTitle": "Ready to get started?",
-    "ctaDescription": "Choose the plan that best fits you and start building your perfect resume",
+    "faqEnterpriseCustomization": "Can I buy Lite or Pro more than once?",
+    "faqEnterpriseCustomizationAnswer": "Yes. If you buy Lite or Pro again, the new tokens are added to your existing balance.",
+    "ctaTitle": "Pick your token bundle",
+    "ctaDescription": "Free, Lite, and Pro differ only by token allowance and price.",
     "ctaButtonLoggedIn": "Go to Dashboard",
     "ctaButtonLoggedOut": "Get Started Now",
     "mostPopular": "Most Popular",
@@ -132,43 +157,28 @@
     "paymentError": "An error occurred during payment, please try again",
     "plans": {
       "free": {
-        "title": "Free Pass",
+        "title": "Free",
         "price": "Free",
-        "description": "Perfect for individual users to try, 3 days full features",
-        "features": [
-          "3 resume optimizations per month",
-          "Basic AI analysis",
-          "Motivation letter generation",
-          "Email support"
-        ],
-        "buttonText": "Start Free Trial"
+        "tokenAmount": "50,000 Tokens",
+        "description": "For trying the product with a small token bundle.",
+        "features": [],
+        "buttonText": "Choose Free"
       },
       "pro": {
-        "title": "Pro Pass",
+        "title": "Pro",
         "price": "€24.99",
-        "description": "Most popular! One-time payment, enjoy 30 days full features + resume optimization highlight suggestions",
-        "features": [
-          "50 resume optimizations per month",
-          "Advanced AI analysis",
-          "Resume optimization highlight suggestions",
-          "Priority customer support",
-          "Export to PDF format",
-          "30 days full features",
-          "24h email support"
-        ],
-        "buttonText": "Choose Pro Pass"
+        "tokenAmount": "1,000,000 Tokens",
+        "description": "For regular, high-volume usage.",
+        "features": [],
+        "buttonText": "Choose Pro"
       },
       "lite": {
-        "title": "Lite Pass",
+        "title": "Lite",
         "price": "€19.99",
-        "description": "Short-term sprint, one-time payment, enjoy 7 days full features",
-        "features": [
-          "3 resume optimizations per month",
-          "Basic AI analysis",
-          "Motivation letter generation",
-          "24h email support"
-        ],
-        "buttonText": "Choose Lite Pass"
+        "tokenAmount": "500,000 Tokens",
+        "description": "For lighter paid usage.",
+        "features": [],
+        "buttonText": "Choose Lite"
       }
     },
     "paymentCancelled": {
@@ -177,11 +187,11 @@
     },
     "loginRequired": {
       "title": "Login Required",
-      "description": "To purchase {planName}, you need to log in to your account first",
+      "description": "To purchase the {planName} token bundle, you need to log in to your account first",
       "benefitsTitle": "After logging in, you can:",
       "benefits": [
         "Complete payments securely",
-        "Manage your subscriptions",
+        "Manage your token balance",
         "View purchase history"
       ],
       "loginButton": "Login",
@@ -189,15 +199,26 @@
       "laterButton": "Maybe Later"
     },
     "freePass": {
-      "createSuccess": "Free pass created successfully",
-      "alreadyExists": "User already has an active pass",
-      "createFailed": "Failed to create free pass",
-      "createError": "Error occurred while creating free pass",
+      "createSuccess": "Free token grant created successfully",
+      "alreadyExists": "User already has token balance",
+      "createFailed": "Failed to create free token grant",
+      "createError": "Error occurred while creating free token grant",
       "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
     }
   },
 
   "rightPanel": {
+    "panelTitle": "Resume workspace",
+    "panelDescription": "Switch between focused editing, AI chat, and evaluation without leaving the editor.",
+    "editSection": "Edit Section",
+    "addEntry": "Add Entry",
+    "deleteEntry": "Delete Entry",
+    "confirmDeleteEntry": "Click again to delete this entry",
+    "evaluationTabLabel": "Evaluation Report",
+    "chatTitle": "AI chat",
+    "chatDescription": "Ask for rewrites, sharper phrasing, or targeted feedback while you edit.",
+    "evaluationCardTitle": "Evaluation report",
+    "evaluationCardDescription": "Review how this resume reads for screening, clarity, and fit before you export it.",
     "evaluateResume": "Evaluate Resume",
     "evaluationTitle": "No evaluation report available.",
     "evaluationDescription": "Please click the button below to generate a report.",
@@ -205,9 +226,29 @@
     "evaluationLoadingDescription": "Please wait while we process your request. Do not refresh the page."
   },
 
+  "resumeCanvas": {
+    "addSection": "Add Section",
+    "emptyHint": "Start building this resume by adding your first section.",
+    "popoverTitle": "Add a section",
+    "popoverDescription": "Choose a section to add or continue editing.",
+    "emptyPopoverDescription": "Choose where you want to start writing.",
+    "startWith": "Start With",
+    "personalInfoSection": "Personal Info"
+  },
+
   "evaluation": {
     "refreshEvaluation": "Refresh Evaluation",
-    "overallScore": "Overall Score",
+    "oneClickOptimize": "One-Click Optimize Resume",
+    "optimizing": "Optimizing...",
+    "screeningReadiness": "Screening Readiness",
+    "gates": {
+      "atsScreening": "ATS Screening",
+      "hrScan": "HR 30-Second Scan",
+      "hiringManagerFit": "Hiring Manager Fit",
+      "pass": "Pass",
+      "borderline": "Borderline",
+      "needsAttention": "Needs Attention"
+    },
     "recommendation": "Recommendation",
     "confidenceScore": "Confidence Score",
     "decision": {
@@ -224,9 +265,125 @@
     "keywordsMatched": "Keywords Matched",
     "keywordsMissing": "Keywords Missing",
     "risks": "Risks",
-
+    "gaps": "Gap Analysis",
+    "actions": "Improvement Actions",
+    "dimension": {
+      "experience": "Experience",
+      "skills": "Skills",
+      "structure": "Structure",
+      "metrics": "Metrics",
+      "keywords": "Keywords"
+    },
+    "severity": {
+      "critical": "Critical",
+      "important": "Important",
+      "minor": "Minor"
+    },
+    "targetSection": {
+      "work_experience": "Work Experience",
+      "projects": "Projects",
+      "skills": "Skills",
+      "education": "Education"
+    },
+    "priority": {
+      "1": "High Priority",
+      "2": "Medium Priority",
+      "3": "Low Priority"
+    },
+    "evidence": "Evidence",
+    "instruction": "Instruction",
     "high": "High",
     "medium": "Medium",
-    "low": "Low"
+    "low": "Low",
+    "aiSuggestionsTitle": "AI Optimization Suggestions",
+    "aiSuggestionsGuide": "Review each suggestion below. The highlighted item is the one you are currently deciding on.",
+    "aiSuggestionsPrev": "Previous",
+    "aiSuggestionsNext": "Next",
+    "aiSuggestionsApply": "Apply",
+    "aiSuggestionsSkip": "Skip",
+    "aiSuggestionsUndo": "Undo",
+    "aiSuggestionsNoChange": "No changes detected for this suggestion.",
+    "aiSuggestionsEmpty": "No suggestions available.",
+    "aiSuggestionsStatus": {
+      "pending": "Pending",
+      "applied": "Applied",
+      "skipped": "Skipped"
+    }
+  },
+  "modal": {
+    "or": "Or",
+    "deleteJobAppTitle": "Delete Job Application",
+    "deleteJobAppDesc": "Are you sure you want to delete this job application? This action cannot be undone."
+  },
+
+  "button": {
+    "createEmptyResume": "Create Empty Resume",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "viewEvaluationReport": "View Evaluation Report",
+    "exportResume": "Export Resume",
+    "aiOptimize": "AI Optimize",
+    "aiChat": "AI Chat"
+  },
+
+  "upload": {
+    "title": "Drag & drop files here",
+    "desc": "Or click to browse one file, up to 5MB",
+    "button": "Browse files"
+  },
+
+  "chat": {
+    "startConversation": "Start a conversation",
+    "askToOptimizeResume": "Ask me to help optimize your resume...",
+    "composerPlaceholder": "Send a message...",
+    "cancel": "Cancel",
+    "update": "Update",
+    "processing": "Processing...",
+    "truncate": "Truncate",
+    "stopGenerating": "Stop generating",
+    "tokenUsage": "Chat token usage",
+    "tokenUsageDetails": "Token usage details",
+    "tokenInput": "Input",
+    "tokenOutput": "Output",
+    "tokenCached": "Cached",
+    "tokenReasoning": "Reasoning",
+    "tokenTotal": "Total",
+    "tokenSessionTotal": "Chat total",
+    "tokenSharedUsed": "Plan used",
+    "tokenLimit": "Token limit",
+    "tokenSoftLimit": "Soft limit",
+    "tokenUsageUnavailable": "Token usage unavailable",
+    "tokenUsagePercentage": "Usage percentage",
+    "truncateSuccess": "Truncated to this message",
+    "truncateFailed": "Failed to truncate",
+    "toolOutput": {
+      "reason": "Reason",
+      "deleted": "Deleted",
+      "added": "Added",
+      "reorderEntries": "Reorder",
+      "reorderSections": "Reorder Sections",
+      "entity": {
+        "personalInfo": "Personal Info",
+        "education": "Education",
+        "employment": "Employment",
+        "research": "Research",
+        "projects": "Projects",
+        "publications": "Publications",
+        "awards": "Awards",
+        "certifications": "Certifications",
+        "skills": "Skills"
+      },
+      "section": {
+        "education": "Education",
+        "employment": "Work",
+        "research": "Research",
+        "projects": "Projects",
+        "publications": "Publications",
+        "awards": "Awards",
+        "certifications": "Certifications",
+        "skills": "Skills"
+      }
+    }
   }
 }

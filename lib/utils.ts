@@ -1,33 +1,61 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import {EducationBlock, EmploymentBlock, ResumeData, SkillBlock} from "@/types/resume";
+import {
+  EducationEntry,
+  EmploymentEntry,
+  ResumeData,
+  SkillEntry
+} from "@/types/resume"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function generateUUID(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export const resumeFormat = (resumeData: ResumeData) => {
   return `
 Personal Information:
-Name: ${resumeData.personalInfo?.firstName || ''} ${resumeData.personalInfo?.lastName || ''}
-Email: ${resumeData.personalInfo?.email || ''}
-Phone: ${resumeData.personalInfo?.phone || ''}
-Website: ${resumeData.personalInfo?.website || 'Not provided'}
-LinkedIn: ${resumeData.personalInfo?.linkedin || 'Not provided'}
+Name: ${resumeData.personalInfo?.firstName || ""} ${resumeData.personalInfo?.lastName || ""}
+Email: ${resumeData.personalInfo?.email || ""}
+Phone: ${resumeData.personalInfo?.phone || ""}
+Website: ${resumeData.personalInfo?.website || "Not provided"}
+LinkedIn: ${resumeData.personalInfo?.linkedin || "Not provided"}
 
 Education Experience:
-${resumeData.education?.blocks?.map((edu: EducationBlock, index: number) =>
-    `Education Block ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
-  ).join('\n\n') || 'None'}
+${
+  resumeData.education?.entries
+    ?.map(
+      (edu: EducationEntry, index: number) =>
+        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
+    )
+    .join("\n\n") || "None"
+}
 
 Employment Experience:
-${resumeData.employment?.blocks?.map((emp: EmploymentBlock, index: number) =>
-    `Employment Block ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
-  ).join('\n\n') || 'None'}
+${
+  resumeData.employment?.entries
+    ?.map(
+      (emp: EmploymentEntry, index: number) =>
+        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
+    )
+    .join("\n\n") || "None"
+}
 
 Skills:
-${resumeData.skills?.blocks?.map((skill: SkillBlock, index: number) =>
-    `Skills Block ${index + 1}:\n${skill.group}: ${skill.content}`
-  ).join('\n\n') || 'None'}
+${
+  resumeData.skills?.entries
+    ?.map(
+      (skill: SkillEntry, index: number) =>
+        `Skills Entry ${index + 1}:\n${skill.group}: ${skill.content}`
+    )
+    .join("\n\n") || "None"
+}
   `
 }

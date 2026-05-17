@@ -1,28 +1,31 @@
 "use client"
 
-import {ReactNode, useEffect} from "react";
-import {createStore, useAtomValue, useSetAtom} from "jotai";
-import {resumeDataAtom, applicationAtom} from "@/lib/store/resume";
-import { JobApplication } from "@/types/resume";
+import { ReactNode, useEffect } from "react"
+import { createStore, useAtomValue, useSetAtom } from "jotai"
+import { applicationResumeDataAtom, applicationAtom } from "@/lib/store/resume"
+import { JobApplication } from "@/types/resume"
 
 interface ResumeInitializerProps {
-  children: ReactNode;
-  jobApplication: JobApplication;
+  children: ReactNode
+  jobApplication: JobApplication
 }
 
-export const store = createStore();
+export const store = createStore()
 
-export function ResumeInitializer({ children, jobApplication }: ResumeInitializerProps) {
-  const resumeData = useAtomValue(resumeDataAtom)
+export function ResumeInitializer({
+  children,
+  jobApplication
+}: ResumeInitializerProps) {
+  const persistedResume = useAtomValue(applicationResumeDataAtom)
   const setJobApplication = useSetAtom(applicationAtom)
 
   useEffect(() => {
-    setJobApplication(jobApplication);
-  }, [jobApplication, setJobApplication]);
+    setJobApplication(jobApplication)
+  }, [jobApplication, setJobApplication])
 
-  if (!resumeData) {
+  if (!persistedResume) {
     return null
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }

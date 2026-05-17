@@ -6,6 +6,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
+      data-testid="ui-card"
       className={cn(
         "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
         className
@@ -19,6 +20,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
+      data-testid="ui-card-header"
       className={cn(
         "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
         className
@@ -65,6 +67,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
+      data-testid="ui-card-content"
       className={cn("px-6", className)}
       {...props}
     />
@@ -75,6 +78,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
+      data-testid="ui-card-footer"
       className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
       {...props}
     />
@@ -88,5 +92,5 @@ export {
   CardTitle,
   CardAction,
   CardDescription,
-  CardContent,
+  CardContent
 }

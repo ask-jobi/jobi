@@ -1,127 +1,89 @@
 "use client"
 
-import { useFormContext, useFieldArray } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash } from "lucide-react";
-import { ResumeData } from "@/types/resume";
-import { MarkdownModal } from "@/components/ui/markdown-modal";
-import { useState } from "react";
-import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field";
+import { useFieldArray, useFormContext } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { Editor } from "@/components/editor/editor"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
+import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
+import { EmploymentEntry, ResumeData } from "@/types/resume"
 
-export function EmploymentForm() {
-  const { control, register, setValue, getValues } = useFormContext<ResumeData>();
-  const { fields, append, remove } = useFieldArray({
+interface EmploymentFormProps {
+  focusIndex?: number | null
+  onCancel?: () => void
+  onSaveComplete?: () => void
+}
+
+export function EmploymentForm({
+  focusIndex = null,
+  onCancel,
+  onSaveComplete
+}: EmploymentFormProps) {
+  const { control, getValues } = useFormContext<ResumeData>()
+  const { update } = useFieldArray({
     control,
-    name: "employment.blocks",
-  });
-  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
+    name: "employment.entries"
+  })
 
-  const handleAddBlock = () => {
-    append({
-      company: "",
-      jobTitle: "",
-      start: "",
-      end: "",
-      content: "",
-    });
-  };
+  if (typeof focusIndex !== "number") {
+    return null
+  }
 
-  const handleContentChange = (md: string) => {
-    if (editingBlockIndex !== null) {
-      setValue(`employment.blocks.${editingBlockIndex}.content`, md, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true
-      });
-    }
-  };
+  const currentEntry = getValues(`employment.entries.${focusIndex}`)
 
-  const handleRemoveBlock = (index: number) => {
-    remove(index);
-    if (editingBlockIndex !== null) {
-      if (editingBlockIndex === index) {
-        setEditingBlockIndex(null);
-      } else if (editingBlockIndex > index) {
-        setEditingBlockIndex(editingBlockIndex - 1);
-      }
-    }
-  };
+  if (!currentEntry) {
+    return null
+  }
 
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => (
-        <div
-          id={`form-employment-${blockIndex}`}
-          key={field.id}
-          className="space-y-4 rounded-lg border border-border/60 p-4 relative"
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 text-destructive hover:text-destructive/80"
-            onClick={() => handleRemoveBlock(blockIndex)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+    <div id="form-employment" className="space-y-4">
+      <FocusedEntryFormShell<EmploymentEntry>
+        entry={currentEntry}
+        formId={`form-employment-${focusIndex}`}
+        onCancel={onCancel}
+        onSaveComplete={onSaveComplete}
+        onSave={(values) => update(focusIndex, values)}
+      >
+        {({ register, watch, setValue }) => {
+          const content = watch("content") || ""
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Company</label>
-              <Input
-                {...register(`employment.blocks.${blockIndex}.company`)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Job Title</label>
-              <Input
-                {...register(`employment.blocks.${blockIndex}.jobTitle`)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          return (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company</label>
+                  <Input {...register("company")} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Job Title</label>
+                  <Input {...register("jobTitle")} />
+                </div>
+              </div>
+
               <MonthRangePickerFormField
-                startName={`employment.blocks.${blockIndex}.start`}
-                endName={`employment.blocks.${blockIndex}.end`}
+                startName="start"
+                endName="end"
                 label="Start/End Date"
               />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Content</label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setEditingBlockIndex(blockIndex)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Content
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full mt-4"
-        onClick={handleAddBlock}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Experience
-      </Button>
 
-      <MarkdownModal
-        isOpen={editingBlockIndex !== null}
-        onClose={() => setEditingBlockIndex(null)}
-        markdown={editingBlockIndex !== null ? getValues(`employment.blocks.${editingBlockIndex}.content`) || "" : ""}
-        onChange={handleContentChange}
-        title="Edit Experience Content"
-      />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content</label>
+                <div className="h-[320px]">
+                  <Editor
+                    markdown={content}
+                    onChange={(markdown) => {
+                      setValue("content", markdown, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true
+                      })
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )
+        }}
+      </FocusedEntryFormShell>
     </div>
-  );
+  )
 }

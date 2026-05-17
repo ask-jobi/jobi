@@ -1,5 +1,5 @@
-import {Locale} from "@/lib/i18n/config";
-import type {ResumeEvaluationOutput} from "@/types/evaluation";
+import { Locale } from "@/lib/i18n/config"
+import type { ResumeEvaluationOutput } from "@/types/evaluation"
 
 export type ResumeJobDescription = {
   id: string
@@ -20,121 +20,135 @@ export type JobApplication = {
   job: ResumeJobDescription
 }
 
-export interface SectionBlock<T = any> {
+export interface ResumeSection<T = any> {
   title: string
-  order: number
-  blocks: T[]
+  entries: Array<T>
 }
 
 export interface PersonalInfo {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  website?: string;
-  linkedin?: string;
+  blockId: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  website?: string
+  linkedin?: string
 }
 
-export interface EducationBlock {
-  content: string;
-  school: string;
-  degree: string;
-  start: string;
-  end: string;
+export interface EducationEntry {
+  entryId: string
+  content: string
+  school: string
+  degree: string
+  start: string
+  end: string
 }
 // TODO: 改为用 DateRange 类型
-export interface EmploymentBlock {
-  content: string;
-  company: string;
-  jobTitle: string;
-  start: string;
-  end: string;
+export interface EmploymentEntry {
+  entryId: string
+  content: string
+  company: string
+  jobTitle: string
+  start: string
+  end: string
 }
 
-export interface SkillBlock {
-  group: string;
-  content: string;
+export interface SkillEntry {
+  entryId: string
+  group: string
+  content: string
 }
 
-export interface DateRange { start?: string; end?: string; isCurrent?: boolean }
-
-export interface ProjectBlock {
-  title: string;
-  content: string;
-  role?: string;
-  date?: DateRange;
+export interface DateRange {
+  start?: string
+  end?: string
+  isCurrent?: boolean
 }
 
-export interface ResearchBlock {
-  title: string;
-  content: string;
-  role?: string;
-  date: DateRange;
+export interface ProjectEntry {
+  entryId: string
+  title: string
+  content: string
+  role?: string
+  date?: DateRange
 }
 
-export interface PublicationBlock {
-  title: string;
-  date: string;
-  description?: string;
+export interface ResearchEntry {
+  entryId: string
+  title: string
+  content: string
+  role?: string
+  date: DateRange
 }
 
-export interface AwardBlock {
-  title: string;
-  issuer?: string;
-  date?: string;
-  description?: string;
+export interface PublicationEntry {
+  entryId: string
+  title: string
+  date: string
+  description?: string
 }
 
-export interface CertificationBlock {
-  name: string;
-  issuer?: string;
-  date?: string;
+export interface AwardEntry {
+  entryId: string
+  title: string
+  issuer?: string
+  date?: string
+  description?: string
 }
 
-export type EducationHistory = SectionBlock<EducationBlock>
+export interface CertificationEntry {
+  entryId: string
+  name: string
+  issuer?: string
+  date?: string
+}
 
-export type EmploymentHistory = SectionBlock<EmploymentBlock>
+export type EducationSection = ResumeSection<EducationEntry>
 
-export type Skill = SectionBlock<SkillBlock>
+export type EmploymentSection = ResumeSection<EmploymentEntry>
 
-export type ResearchExperience = SectionBlock<ResearchBlock>
+export type SkillsSection = ResumeSection<SkillEntry>
 
-export type Project = SectionBlock<ProjectBlock>
+export type ResearchSection = ResumeSection<ResearchEntry>
 
-export type Publication = SectionBlock<PublicationBlock>
+export type ProjectsSection = ResumeSection<ProjectEntry>
 
-export type Award = SectionBlock<AwardBlock>
+export type PublicationsSection = ResumeSection<PublicationEntry>
 
-export type Certification = SectionBlock<CertificationBlock>
+export type AwardsSection = ResumeSection<AwardEntry>
+
+export type CertificationsSection = ResumeSection<CertificationEntry>
 
 export interface ResumeData {
+  sectionOrder: SortableSectionKey[]
   // required
   personalInfo: PersonalInfo
-  education: EducationHistory
-  skills: Skill
+  education: EducationSection
+  skills: SkillsSection
   // optional
-  employment?: EmploymentHistory
-  research?: ResearchExperience
-  projects?: Project
-  publications?: Publication
-  awards?: Award
-  certifications?: Certification
+  employment?: EmploymentSection
+  research?: ResearchSection
+  projects?: ProjectsSection
+  publications?: PublicationsSection
+  awards?: AwardsSection
+  certifications?: CertificationsSection
 }
 
-export type SortableSectionId = Exclude<keyof ResumeData, "personalInfo">
+export type ResumeSectionKey = Exclude<keyof ResumeData, "sectionOrder">
+export type SortableSectionKey = Exclude<ResumeSectionKey, "personalInfo">
 
 export interface AISuggestion {
-  section: SortableSectionId;
-  blockIndex: number;
-  suggestionType: string;
-  reason: string;
-  originalContent: string;
-  optimizedContent: string | null; // 为空时，代表需要移除这段简历
-  highlight?: string[];
+  section: SortableSectionKey
+  entryIndex: number
+  suggestionType: string
+  reason: string
+  originalContent: string
+  optimizedContent: string | null // 为空时，代表需要移除这段简历
+  highlight?: string[]
 }
 
-export type AISuggestionQueue = AISuggestion[];
+export type AISuggestionQueue = AISuggestion[]
 
 export type ResumeMetadata = {
-  language: Locale
+  resumeLanguage: Locale
 }

@@ -1,11 +1,13 @@
-import Script from 'next/script';
+import Script from "next/script"
 
 export default function UmamiScript() {
-  const websiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+  const websiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID
 
   if (!websiteId) {
-    console.log('Umami tracking is disabled (NEXT_PUBLIC_UMAMI_WEBSITE_ID not set).');
-    return null;
+    console.log(
+      "Umami tracking is disabled (NEXT_PUBLIC_UMAMI_WEBSITE_ID not set)."
+    )
+    return null
   }
 
   return (
@@ -14,5 +16,5 @@ export default function UmamiScript() {
       data-website-id={websiteId}
       strategy="afterInteractive"
     />
-  );
+  )
 }

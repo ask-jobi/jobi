@@ -1,131 +1,98 @@
 "use client"
 
-import {useEffect, useRef} from "react";
-import {FormProvider, useForm} from "react-hook-form";
-import {toast} from "sonner";
-import {saveResumeChange} from "@/server/resume";
-import {ChevronLeft, ChevronRight} from "lucide-react";
-import {ResumeData} from "@/types/resume";
-import {isRightPanelCollapsedAtom, useResume} from "@/lib/store/resume";
-import ResumeEditor from "./resume-editor";
-import {useDebouncedCallback} from "@mantine/hooks";
-import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
-import {useAtom} from "jotai";
-import {ResumeRightPanel} from "@/components/resumes/resume-right-panel";
-
+import { useEffect, useRef, useCallback } from "react"
+import { useAtomValue } from "jotai"
+import { FormProvider, useForm } from "react-hook-form"
+import { ResumeData } from "@/types/resume"
+import { resumeAutosaveSuspendedAtom, useApplicationResume } from "@/lib/store/resume"
+import ResumeEditor from "./resume-editor"
+import { useDebouncedCallback } from "@mantine/hooks"
+import { ResumeRightPanel } from "@/components/resumes/resume-right-panel"
+import { ResumeSectionEditModal } from "@/components/resumes/resume-section-edit-modal"
 
 export default function ResumePage() {
-  const { updateResumeData, setLoading, resumeData, application } = useResume();
+  const { saveApplicationResume, applicationResumeData: persistedResume, application } = useApplicationResume()
+  const isAutosaveSuspended = useAtomValue(resumeAutosaveSuspendedAtom)
   const methods = useForm<ResumeData>({
-    defaultValues: resumeData,
+    defaultValues: persistedResume || {},
     mode: "onChange"
-  });
-  const { subscribe, getValues, reset } = methods;
+  })
+  const { watch, reset, getValues } = methods
 
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useAtom(isRightPanelCollapsedAtom);
+  const previousResumeIdRef = useRef<string | null>(
+    application?.resume.id ?? null
+  )
 
-  // 使用 ref 来跟踪上一次的简历 ID，只在切换简历时重置表单
-  const previousResumeIdRef = useRef<string | null>(application?.resume.id ?? null);
+  const handleFormChange = useCallback(
+    async (formData: ResumeData) => {
+      if (!application?.resume.id) return
+      if (application.resume.id !== previousResumeIdRef.current) return
 
-  // Reset form only when switching between resumes (resume ID changes)
-  useEffect(() => {
-    const currentResumeId = application?.resume.id;
-
-    // 如果是切换到了新的简历，需要重置表单
-    if (currentResumeId && currentResumeId !== previousResumeIdRef.current) {
-      previousResumeIdRef.current = currentResumeId;
-      if (resumeData) {
-        reset(resumeData);
+      const mergedData = {
+        ...formData,
+        sectionOrder: formData.sectionOrder || persistedResume?.sectionOrder
       }
-    } else if (previousResumeIdRef.current === null && currentResumeId && resumeData) {
-      // 初始化时，如果还没有设置过 previousResumeId，也需要重置表单
-      previousResumeIdRef.current = currentResumeId;
-      reset(resumeData);
-    }
-  }, [application?.resume.id, resumeData, reset]);
 
+      await saveApplicationResume(mergedData)
+    },
+    [application?.resume.id, saveApplicationResume, persistedResume?.sectionOrder]
+  )
 
-  const handleChange = async () => {
-    try {
-      const formData = getValues();
-      await saveResumeChange(application.resume.id, formData);
-      updateResumeData(formData);
-      setLoading(false);
-      toast.success("Auto saved");
-    } catch (error) {
-      console.error("Auto save failed:", error);
-      toast.error("Auto save failed");
-    }
-  };
-  const debouncedSave = useDebouncedCallback(handleChange, 2000);
+  const debouncedSave = useDebouncedCallback(handleFormChange, 1000)
 
   useEffect(() => {
-    const callback = subscribe({
-      formState: {
-        values: true,
-        isDirty: true
-      },
-      callback: (data) => {
-      if (data.values && data.isDirty) {
-        updateResumeData(data.values);
-        debouncedSave();
+    const { unsubscribe } = watch((formData) => {
+      if (!formData || application?.resume.id !== previousResumeIdRef.current) {
+        return
       }
-    }});
-    return () => callback();
-  }, [subscribe, debouncedSave, updateResumeData]);
 
-  // useEffect(() => {
-  //   if (rightPanelView !== 'form' && selectedSectionId) {
-  //     setRightPanelView('form');
-  //   }
-  // }, [selectedSectionId, rightPanelView]);
+      if (isAutosaveSuspended) {
+        debouncedSave.cancel()
+        return
+      }
 
-  const toggleRightPanel = () => {
-    setIsRightPanelCollapsed(!isRightPanelCollapsed);
-  }
+      if (formData && application?.resume.id === previousResumeIdRef.current) {
+        debouncedSave(formData as ResumeData)
+      }
+    })
+    return () => unsubscribe()
+  }, [watch, debouncedSave, application?.resume.id, isAutosaveSuspended])
 
+  useEffect(() => {
+    const currentResumeId = application?.resume.id
+
+    if (!currentResumeId || !persistedResume) return
+
+    if (currentResumeId !== previousResumeIdRef.current) {
+      previousResumeIdRef.current = currentResumeId
+      reset(persistedResume)
+    } else {
+      const currentFormData = getValues()
+      if (JSON.stringify(currentFormData) !== JSON.stringify(persistedResume)) {
+        reset(persistedResume)
+      }
+    }
+  }, [application?.resume.id, persistedResume, reset, getValues])
 
   return (
     <FormProvider {...methods}>
-      <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
-        <PanelGroup direction="horizontal" className="flex-1 h-full">
-          <Panel minSize={25} defaultSize={isRightPanelCollapsed ? 100 : 67} className="h-full overflow-y-auto">
-            <div className="flex flex-col gap-4 divide-y h-full overflow-y-auto">
-              <ResumeEditor/>
+      <>
+        <div className="relative flex h-[calc(100vh-3rem)] overflow-hidden">
+          <div className="flex h-full flex-1 flex-col lg:flex-row">
+            <div className="min-w-0 flex-1 overflow-y-auto">
+              <div className="flex h-full flex-col gap-4 divide-y overflow-y-auto">
+                <ResumeEditor />
+              </div>
             </div>
-          </Panel>
-          {!isRightPanelCollapsed && (
-            <>
-              <PanelResizeHandle
-                className="w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize relative group">
-                <button
-                  onClick={toggleRightPanel}
-                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-l flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  aria-label="Collapse right panel"
-                >
-                  <ChevronRight className="w-3 h-3"/>
-                </button>
-              </PanelResizeHandle>
-              <Panel minSize={20} defaultSize={33} className="h-full overflow-y-auto border-l">
-                <div className="right p-6 h-full overflow-y-auto">
-                  <ResumeRightPanel />
-                </div>
-              </Panel>
-            </>
-          )}
-          {isRightPanelCollapsed && (
-            <div className="w-1 bg-gray-200 hover:bg-gray-300 relative group">
-              <button
-                onClick={toggleRightPanel}
-                className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-gray-200 hover:bg-gray-300 border border-gray-300 rounded-r flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label="Expand right panel"
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-            </div>
-          )}
-        </PanelGroup>
-      </div>
+            <aside className="h-[360px] shrink-0 overflow-hidden bg-background lg:h-full lg:w-[600px]">
+              <div className="right h-full min-h-0">
+                <ResumeRightPanel />
+              </div>
+            </aside>
+          </div>
+        </div>
+        <ResumeSectionEditModal />
+      </>
     </FormProvider>
-  );
+  )
 }

@@ -1,26 +1,34 @@
 "use client"
-import React from 'react';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-import {Input} from "@/components/ui/input";
-import {z} from "zod";
-import {Textarea} from "@/components/ui/textarea";
-import {UseFormReturn} from "react-hook-form";
-import {useTranslations} from "next-intl";
+import React from "react"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { z } from "zod"
+import { Textarea } from "@/components/ui/textarea"
+import { UseFormReturn } from "react-hook-form"
+import { useTranslations } from "next-intl"
 
 export const formSchema = z.object({
   name: z.string().nonempty(),
   company: z.string().nonempty(),
-  description: z.string().nonempty(),
+  description: z.string().nonempty()
 })
 
 type JobInformationFormProps = {
-  form: UseFormReturn<JobInfoFormType>;
+  form: UseFormReturn<JobInfoFormType>
+  disabled?: boolean
 }
 
 export type JobInfoFormType = z.infer<typeof formSchema>
 
-function JobInformationForm({ form }: JobInformationFormProps) {
-  const t = useTranslations('form.job')
+function JobInformationForm({ form, disabled }: JobInformationFormProps) {
+  const t = useTranslations("form.job")
   return (
     <Form {...form}>
       <form className="space-y-8">
@@ -30,10 +38,14 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="after:content-['*'] after:text-destructive">
-                {t('name')}
+                {t("name")}
               </FormLabel>
               <FormControl>
-                <Input placeholder={t('namePlaceholder')} {...field} />
+                <Input
+                  placeholder={t("namePlaceholder")}
+                  disabled={disabled}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -45,10 +57,14 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="after:content-['*'] after:text-destructive">
-                {t('company')}
+                {t("company")}
               </FormLabel>
               <FormControl>
-                <Input placeholder={t('companyPlaceholder')} {...field} />
+                <Input
+                  placeholder={t("companyPlaceholder")}
+                  disabled={disabled}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -60,10 +76,15 @@ function JobInformationForm({ form }: JobInformationFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="after:content-['*'] after:text-destructive">
-                {t('desc')}
+                {t("desc")}
               </FormLabel>
               <FormControl>
-                <Textarea placeholder={t('descPlaceholder')} {...field} />
+                <Textarea
+                  className="max-h-48"
+                  placeholder={t("descPlaceholder")}
+                  disabled={disabled}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -71,7 +92,7 @@ function JobInformationForm({ form }: JobInformationFormProps) {
         />
       </form>
     </Form>
-  );
+  )
 }
 
-export default JobInformationForm;
+export default JobInformationForm

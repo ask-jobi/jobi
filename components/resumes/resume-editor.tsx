@@ -1,37 +1,70 @@
 "use client"
 
-import useResumeTemplate from "@/lib/hooks/use-resume-template";
-import { openRightPanelAtom, useResume } from "@/lib/store/resume";
-import { useSetAtom } from "jotai";
-import {FloatingButtonGroup} from "@/components/client-components/floating-button-group";
+import { useCallback } from "react"
+import { useSetAtom } from "jotai"
+import { useResumeTemplate } from "@/lib/hooks/use-resume-template"
+import { useSectionClickHandler } from "@/lib/hooks/use-section-click"
+import { editModalOpenAtom, useResumeLanguage } from "@/lib/store/resume"
+import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
+import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
+import {
+  isResumeCanvasEmpty,
+  ResumeCanvasSectionEntry
+} from "@/components/resumes/resume-canvas-section-entry"
+import type { SortableSectionKey } from "@/types/resume"
 
+export function ResumeEditor() {
+  const resumeLanguage = useResumeLanguage()
+  const { draft, addEntryBelow, commitDraft, deleteEntry, getDraft } =
+    useResumeDraft()
+  const { Template } = useResumeTemplate()
+  const handleSectionClick = useSectionClickHandler()
+  const setEditModalOpen = useSetAtom(editModalOpenAtom)
+  const { selectTarget, setRollbackResume } = useResumeEditorState()
+  const isEmptyCanvas = isResumeCanvasEmpty(draft)
+  const handleEntryAdd = useCallback(
+    (sectionId: SortableSectionKey, index: number) => {
+      const previousResume = getDraft()
+      const { entryIndex, entryId } = addEntryBelow(sectionId, index)
 
-export default function ResumeEditor() {
-  const template = useResumeTemplate()
-  const { resumeData } = useResume()
-  const openRightPanel = useSetAtom(openRightPanelAtom);
-
-  if (!template) return null;
-
-  // Override the template's onSectionClick to also expand the right panel
-  const originalOnSectionClick = template.onSectionClick;
-  template.onSectionClick = (id, index) => {
-    originalOnSectionClick(id, index);
-    if (openRightPanel) {
-      openRightPanel('form');
-    }
-  };
+      setRollbackResume(previousResume)
+      selectTarget(sectionId, entryIndex ?? undefined, entryId)
+      setEditModalOpen(true)
+    },
+    [addEntryBelow, getDraft, selectTarget, setEditModalOpen, setRollbackResume]
+  )
+  const handleEntryDelete = useCallback(
+    (sectionId: SortableSectionKey, index: number) => {
+      const nextResume = deleteEntry(sectionId, index)
+      void commitDraft(nextResume)
+    },
+    [commitDraft, deleteEntry]
+  )
 
   return (
-    <div className="w-full flex justify-center items-start relative py-4">
-      <div className="w-[210mm] bg-white shadow-lg border border-gray-200 overflow-y-auto overflow-x-hidden relative">
-        {template.renderDocument()}
+    <div className="relative flex w-full items-start justify-center overflow-x-visible px-4 py-4 xl:pr-28">
+      <div
+        data-testid="resume-canvas"
+        className="relative w-[210mm] overflow-visible border border-gray-200 bg-white shadow-lg"
+      >
+        <ResumeCanvasSectionEntry />
+        {isEmptyCanvas ? (
+          <div className="min-h-[297mm] bg-white" />
+        ) : (
+          <Template
+            data={draft}
+            language={resumeLanguage}
+            options={{
+              isInteractive: true,
+              onEntryAdd: handleEntryAdd,
+              onEntryDelete: handleEntryDelete,
+              onSectionClick: handleSectionClick
+            }}
+          />
+        )}
       </div>
-      {resumeData && (
-        <div className="sticky left-[calc(50%+205mm/2)] top-[20%] -translate-y-1/2">
-          <FloatingButtonGroup />
-        </div>
-      )}
     </div>
-  );
+  )
 }
+
+export default ResumeEditor

@@ -1,14 +1,21 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
-import { LandingPageLayout } from "@/components/ui/landing-page-layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { CheckCircle } from "lucide-react"
+import { PaymentSuccessActions } from "@/components/client-components/payment-success-actions"
+import { LandingPageLayout } from "@/components/ui/landing-page-layout"
+import { getTranslations } from "next-intl/server"
 
 export default async function SuccessPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<{ session_id?: string }>
 }) {
+  const t = await getTranslations()
   const params = await searchParams
   const sessionId = params.session_id
   return (
@@ -22,54 +29,50 @@ export default async function SuccessPage({
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <CardTitle className="text-3xl font-bold text-green-600">
-                支付成功！
+                {t("paymentSuccess.title")}
               </CardTitle>
               <CardDescription className="text-lg">
-                感谢您的订阅，您的账户已成功升级
+                {t("paymentSuccess.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-muted/50 rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">
-                  订单号: {sessionId || 'N/A'}
+                  {t("paymentSuccess.orderNumber")}: {sessionId || "N/A"}
                 </p>
               </div>
-              
+
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">接下来您可以：</h3>
+                <h3 className="text-lg font-semibold">
+                  {t("paymentSuccess.nextStepsTitle")}
+                </h3>
                 <div className="grid gap-3 text-left">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>开始使用高级简历优化功能</span>
+                    <span>{t("paymentSuccess.nextStepUseTokens")}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>探索更多专业模板</span>
+                    <span>{t("paymentSuccess.nextStepViewBalance")}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>享受优先客服支持</span>
+                    <span>{t("paymentSuccess.nextStepBuyMore")}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link href="/dashboard" className="flex-1">
-                  <Button className="w-full" size="lg">
-                    进入控制台
-                  </Button>
-                </Link>
-                <Link href="/" className="flex-1">
-                  <Button variant="outline" className="w-full" size="lg">
-                    返回首页
-                  </Button>
-                </Link>
-              </div>
+              <PaymentSuccessActions
+                sessionId={sessionId}
+                checkingLabel={t("paymentSuccess.checkingStatus")}
+                delayedLabel={t("paymentSuccess.processingDelay")}
+                dashboardLabel={t("paymentSuccess.goToDashboard")}
+                homeLabel={t("paymentSuccess.backToHome")}
+              />
             </CardContent>
           </Card>
         </div>
       </section>
-
-      </LandingPageLayout>
-  );
-} 
+    </LandingPageLayout>
+  )
+}

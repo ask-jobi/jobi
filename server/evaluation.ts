@@ -5,7 +5,6 @@ import { evaluateResume } from "@/server/ai/resume-evaluator"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
 
-
 export async function evaluateAndSaveResume(
   resumeId: string,
   resumeData: ResumeData,
@@ -14,12 +13,18 @@ export async function evaluateAndSaveResume(
   const supabase = await createClient()
 
   // Run LLM evaluation
-  const report: ResumeEvaluationOutput = await evaluateResume(resumeData, jobDescription)
+  const report: ResumeEvaluationOutput = await evaluateResume(
+    resumeData,
+    jobDescription
+  )
 
   // Update resumes table with evaluation report
   const { error } = await supabase
     .from("resumes")
-    .update({ evaluation_report: report, evaluation_report_refresh_flag: false } as any)
+    .update({
+      evaluation_report: report,
+      evaluation_report_refresh_flag: false
+    } as any)
     .eq("id", resumeId)
 
   if (error) {
@@ -37,7 +42,10 @@ export async function updateResumeEvaluationReport(
 
   const { error } = await supabase
     .from("resumes")
-    .update({ evaluation_report: report, evaluation_report_refresh_flag: false } as any)
+    .update({
+      evaluation_report: report,
+      evaluation_report_refresh_flag: false
+    } as any)
     .eq("id", resumeId)
 
   if (error) {

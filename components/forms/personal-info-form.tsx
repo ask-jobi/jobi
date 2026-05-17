@@ -1,32 +1,58 @@
 "use client"
 
-import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { ResumeData } from "@/types/resume";
+import { useFormContext } from "react-hook-form"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
+import { Input } from "@/components/ui/input"
+import { PersonalInfo, ResumeData } from "@/types/resume"
 
-export function PersonalInfoForm() {
-  const { register } = useFormContext<ResumeData>();
+interface PersonalInfoFormProps {
+  onCancel?: () => void
+  onSaveComplete?: () => void
+}
+
+export function PersonalInfoForm({
+  onCancel,
+  onSaveComplete
+}: PersonalInfoFormProps) {
+  const { getValues, setValue } = useFormContext<ResumeData>()
+  const personalInfo = getValues("personalInfo") as PersonalInfo
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">First Name</label>
-          <Input {...register("personalInfo.firstName")} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Last Name</label>
-          <Input {...register("personalInfo.lastName")} />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Email</label>
-        <Input {...register("personalInfo.email")} />
-      </div>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Phone</label>
-        <Input {...register("personalInfo.phone")} />
-      </div>
-    </div>
-  );
-} 
+    <FocusedEntryFormShell
+      entry={personalInfo}
+      formId="form-personalInfo"
+      onCancel={onCancel}
+      onSaveComplete={onSaveComplete}
+      onSave={(values) => {
+        setValue("personalInfo", values, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true
+        })
+      }}
+    >
+      {({ register }) => (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">First Name</label>
+              <Input {...register("firstName")} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Last Name</label>
+              <Input {...register("lastName")} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Email</label>
+            <Input {...register("email")} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Phone</label>
+            <Input {...register("phone")} />
+          </div>
+        </>
+      )}
+    </FocusedEntryFormShell>
+  )
+}

@@ -1,15 +1,22 @@
 import "server-only"
-import {getResumeData} from "@/server/resume";
-import {notFound} from "next/navigation";
-import ResumeViewer from "@/components/resumes/resume-viewer";
+import { getApplicationResumeForPrint } from "@/server/resume"
+import { notFound } from "next/navigation"
+import ResumeViewer from "@/components/resumes/resume-viewer"
+import type { Locale } from "@/lib/i18n/config"
 
-export default async function PrintResumePage({ params }: { params: Promise<{ id: string }> }) {
-  const {id} = await params
-
+export default async function PrintResumePage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
   let resumeData = null
+  let language: Locale = "en"
 
   try {
-    resumeData = await getResumeData(id)
+    const result = await getApplicationResumeForPrint(id)
+    resumeData = result.resumeData
+    language = result.language
   } catch (e) {
     console.error(e)
   }
@@ -19,8 +26,8 @@ export default async function PrintResumePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="w-full h-full p-8">
-      <ResumeViewer resumeData={resumeData}/>
+    <div className="w-full h-full p-8 print:p-0">
+      <ResumeViewer data={resumeData} language={language} />
     </div>
-  );
+  )
 }

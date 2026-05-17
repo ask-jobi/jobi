@@ -1,52 +1,63 @@
 "use client"
 
-import {useFormContext, useFieldArray, Controller} from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
-import { ResumeData } from "@/types/resume";
-import {InputTags} from "@/components/ui/input-tags";
-import React from "react";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
+import { InputTags } from "@/components/ui/input-tags"
+import { ResumeData, SkillEntry } from "@/types/resume"
 
-export function SkillsForm() {
-  const { control, register, setValue } = useFormContext<ResumeData>();
-  const { fields, append, remove } = useFieldArray({
+interface SkillsFormProps {
+  focusIndex?: number | null
+  onCancel?: () => void
+  onSaveComplete?: () => void
+}
+
+export function SkillsForm({
+  focusIndex = null,
+  onCancel,
+  onSaveComplete
+}: SkillsFormProps) {
+  const { control, getValues } = useFormContext<ResumeData>()
+  const { update } = useFieldArray({
     control,
-    name: "skills.blocks",
-  });
+    name: "skills.entries"
+  })
 
-  const handleAddBlock = () => {
-    append({
-      group: "",
-      content: "",
-    });
-  };
+  if (typeof focusIndex !== "number") {
+    return null
+  }
 
-  const handleRemoveSkills = (index: number) => {
-    remove(index)
+  const currentEntry = getValues(`skills.entries.${focusIndex}`)
+
+  if (!currentEntry) {
+    return null
   }
 
   return (
-    <div className="space-y-4 pb-[70vh]">
-      {fields.map((field, blockIndex) => {
-        return (
-          <div id={`form-skills-${blockIndex}`} key={field.id} className="space-y-4">
+    <div id="form-skills" className="space-y-4">
+      <FocusedEntryFormShell<SkillEntry>
+        entry={currentEntry}
+        formId={`form-skills-${focusIndex}`}
+        onCancel={onCancel}
+        onSaveComplete={onSaveComplete}
+        onSave={(values) => update(focusIndex, values)}
+      >
+        {({ register, control: blockControl, setValue }) => (
+          <>
             <div className="space-y-2">
               <label className="text-sm font-medium">Group</label>
-              <Input
-                {...register(`skills.blocks.${blockIndex}.group`)}
-              />
+              <Input {...register("group")} />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Skills</label>
               <Controller
-                control={control}
-                name={`skills.blocks.${blockIndex}.content`}
-                render={({field}) => {
-                  return <InputTags
+                control={blockControl}
+                name="content"
+                render={({ field }) => (
+                  <InputTags
                     {...field}
                     onChange={(value) => {
-                      setValue(`skills.blocks.${blockIndex}.content`, value, {
+                      setValue("content", value, {
                         shouldDirty: true,
                         shouldTouch: true,
                         shouldValidate: true
@@ -54,31 +65,12 @@ export function SkillsForm() {
                     }}
                     placeholder="Input skill and press Enter or comma to add"
                   />
-                }}
+                )}
               />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full mt-4 flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-              onClick={() => handleRemoveSkills(blockIndex)}
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              Remove Skill Group
-            </Button>
-          </div>
-        )
-      })}
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full mt-4"
-        onClick={handleAddBlock}
-      >
-        <Plus className="h-4 w-4 mr-2"/>
-        Add Skill Group
-      </Button>
+          </>
+        )}
+      </FocusedEntryFormShell>
     </div>
-  );
+  )
 }
