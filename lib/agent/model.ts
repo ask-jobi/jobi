@@ -3,7 +3,11 @@ import { devToolsMiddleware } from "@ai-sdk/devtools"
 
 // npx @ai-sdk/devtools 可以查看llm调用情况
 // 这里使用Minimax用于本地开发，如需要可以替换成openai/gemini
-export const model = wrapLanguageModel({
-  model: gateway("minimax/minimax-m2.7"),
-  middleware: devToolsMiddleware()
-})
+const baseModel = gateway("minimax/minimax-m2.7")
+
+export const model = process.env.NODE_ENV === "development"
+  ? wrapLanguageModel({
+      model: baseModel,
+      middleware: devToolsMiddleware()
+    })
+  : baseModel
