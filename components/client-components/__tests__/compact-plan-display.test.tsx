@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 
 // Mock UI components
 vi.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children, open, onOpenChange: _onOpenChange }: any) => (
+  Dialog: ({ children, open }: any) => (
     <div data-testid="dialog" data-open={open}>
       {children}
     </div>
@@ -38,7 +38,7 @@ vi.mock("@/components/ui/tooltip", () => ({
   TooltipProvider: ({ children }: any) => (
     <div data-testid="tooltip-provider">{children}</div>
   ),
-  Tooltip: ({ children, open: _open, defaultOpen: _defaultOpen }: any) => (
+  Tooltip: ({ children }: any) => (
     <div data-testid="tooltip">{children}</div>
   ),
   TooltipContent: ({ children }: any) => (
@@ -50,7 +50,7 @@ vi.mock("@/components/ui/tooltip", () => ({
 }))
 
 vi.mock("@/components/ui/badge", () => ({
-  Badge: ({ children, variant: _variant, className }: any) => (
+  Badge: ({ children, className }: any) => (
     <div data-testid="badge" className={className}>
       {children}
     </div>
@@ -58,7 +58,7 @@ vi.mock("@/components/ui/badge", () => ({
 }))
 
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, variant, className, type: _type }: any) => (
+  Button: ({ children, onClick, variant, className }: any) => (
     <button
       data-testid="button"
       onClick={onClick}

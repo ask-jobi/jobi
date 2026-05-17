@@ -225,9 +225,7 @@ export const tools = {
 }
 
 export const repairToolCall: ToolCallRepairFunction<typeof tools> = async ({
-  toolCall,
-  tools: _tools,
-  error: _error
+  toolCall
 }) => {
   console.log("toolCall: ", toolCall)
 
