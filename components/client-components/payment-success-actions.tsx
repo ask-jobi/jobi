@@ -96,17 +96,24 @@ export function PaymentSuccessActions({
       {isDelayed ? (
         <p className="text-sm text-muted-foreground">{delayedLabel}</p>
       ) : null}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        data-testid="payment-success-actions"
+      >
         <Button
-          className="w-full"
+          className="min-h-10 w-full min-w-0 shrink whitespace-normal px-4 text-center leading-snug"
           disabled={!isReady}
           onClick={() => router.push("/dashboard")}
           size="lg"
         >
           {isReady ? dashboardLabel : checkingLabel}
         </Button>
-        <Link href="/" className="flex-1">
-          <Button className="w-full" variant="outline" size="lg">
+        <Link href="/" className="min-w-0">
+          <Button
+            className="min-h-10 w-full min-w-0 shrink whitespace-normal px-4 text-center leading-snug"
+            variant="outline"
+            size="lg"
+          >
             {homeLabel}
           </Button>
         </Link>
