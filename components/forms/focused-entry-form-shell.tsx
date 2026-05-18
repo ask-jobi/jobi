@@ -16,7 +16,7 @@ interface FocusedEntryFormShellProps<T extends FieldValues> {
   formId: string
   onCancel?: () => void
   onSaveComplete?: () => void
-  onSave: (values: T) => void
+  onSave: (values: T) => void | Promise<void>
   children: (methods: UseFormReturn<T>) => ReactNode
 }
 
@@ -49,8 +49,8 @@ export function FocusedEntryFormShell<T extends FieldValues>({
       <form
         id={formId}
         className="space-y-6"
-        onSubmit={handleSubmit((values) => {
-          onSave(values)
+        onSubmit={handleSubmit(async (values) => {
+          await onSave(values)
           onSaveComplete?.()
         })}
       >

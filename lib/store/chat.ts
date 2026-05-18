@@ -113,6 +113,13 @@ export function usePendingChatActionValue() {
   return useAtomValue(pendingChatActionAtom)
 }
 
+export function useIsResumeAiActionActive() {
+  const lifecycle = useAtomValue(chatThreadLifecycleAtom)
+  const pendingChatAction = useAtomValue(pendingChatActionAtom)
+
+  return lifecycle === "running" || pendingChatAction !== null
+}
+
 export function useSetPendingChatAction() {
   return useSetAtom(pendingChatActionAtom)
 }

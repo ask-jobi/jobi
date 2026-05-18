@@ -2,10 +2,9 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { FormProvider, UseFormReturn, useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
 import { EmploymentForm } from "../employment-form"
-import { ResumeData } from "@/types/resume"
+import type { EmploymentEntry } from "@/types/resume"
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key
@@ -33,67 +32,38 @@ vi.mock("@/components/ui/monthrangepicker-form-field", () => ({
   )
 }))
 
+const originalEntry: EmploymentEntry = {
+  entryId: "emp-1",
+  company: "Old Company",
+  jobTitle: "Engineer",
+  start: "2021-09",
+  end: "2022-02",
+  content: "Original content"
+}
+
 function renderFocusedEmploymentForm({
   onCancel = vi.fn(),
-  onSaveComplete = vi.fn()
+  onSaveComplete = vi.fn(),
+  onSaveEntry = vi.fn()
 }: {
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry?: (values: EmploymentEntry) => void | Promise<void>
 } = {}) {
-  let methods: UseFormReturn<ResumeData> | null = null
-
-  function Wrapper() {
-    methods = useForm<ResumeData>({
-      defaultValues: {
-        sectionOrder: ["employment"],
-        personalInfo: {
-          blockId: "pi-1",
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: ""
-        },
-        education: {
-          title: "Education",
-          entries: []
-        },
-        skills: {
-          title: "Skills",
-          entries: []
-        },
-        employment: {
-          title: "Employment",
-          entries: [
-            {
-              entryId: "emp-1",
-              company: "Old Company",
-              jobTitle: "Engineer",
-              start: "2021-09",
-              end: "2022-02",
-              content: "Original content"
-            }
-          ]
-        }
-      }
-    })
-
-    return (
-      <FormProvider {...methods}>
-        <EmploymentForm
-          focusIndex={0}
-          onCancel={onCancel}
-          onSaveComplete={onSaveComplete}
-        />
-      </FormProvider>
-    )
-  }
-
-  render(<Wrapper />)
+  render(
+    <EmploymentForm
+      entry={originalEntry}
+      focusIndex={0}
+      onCancel={onCancel}
+      onSaveComplete={onSaveComplete}
+      onSaveEntry={onSaveEntry}
+    />
+  )
 
   return {
-    methods: methods as unknown as UseFormReturn<ResumeData>,
     onCancel,
-    onSaveComplete
+    onSaveComplete,
+    onSaveEntry
   }
 }
 
@@ -115,7 +85,7 @@ describe("EmploymentForm", () => {
   })
 
   it("commits focused edits only when save is clicked", async () => {
-    const { methods, onSaveComplete } = renderFocusedEmploymentForm()
+    const { onSaveEntry, onSaveComplete } = renderFocusedEmploymentForm()
 
     fireEvent.change(screen.getByDisplayValue("Old Company"), {
       target: { value: "New Company" }
@@ -126,28 +96,26 @@ describe("EmploymentForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "button.save" }))
 
     await waitFor(() => {
-      expect(methods.getValues("employment.entries.0.company")).toBe(
-        "New Company"
-      )
-      expect(methods.getValues("employment.entries.0.content")).toBe(
-        "Updated content"
-      )
+      expect(onSaveEntry).toHaveBeenCalledWith({
+        ...originalEntry,
+        company: "New Company",
+        content: "Updated content"
+      })
       expect(onSaveComplete).toHaveBeenCalledOnce()
     })
   })
 
   it("discards focused edits when cancel is clicked", () => {
-    const { methods, onCancel } = renderFocusedEmploymentForm()
+    const { onCancel, onSaveEntry } = renderFocusedEmploymentForm()
 
     fireEvent.change(screen.getByDisplayValue("Old Company"), {
       target: { value: "Discarded Company" }
     })
     fireEvent.click(screen.getByRole("button", { name: "button.cancel" }))
 
-    expect(methods.getValues("employment.entries.0.company")).toBe("Old Company")
-    expect(methods.getValues("employment.entries.0.content")).toBe(
-      "Original content"
-    )
+    expect(screen.getByDisplayValue("Old Company")).toBeInTheDocument()
+    expect(screen.getByLabelText("Content")).toHaveValue("Original content")
+    expect(onSaveEntry).not.toHaveBeenCalled()
     expect(onCancel).toHaveBeenCalledOnce()
   })
 })

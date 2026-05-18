@@ -1,8 +1,8 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { useApplicationResume } from "@/lib/store/resume"
-import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
+import { editModalOpenAtom, useApplicationResume } from "@/lib/store/resume"
+import { applyToolOutputToResume } from "@/lib/resume/mutations"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk"
@@ -27,6 +27,7 @@ import type {
   ResumeEditorReorderOutput
 } from "@/types/chat"
 import { useEffect, useRef } from "react"
+import { useAtomValue } from "jotai"
 import {
   useChatSessionIdValue,
   usePendingChatActionValue,
@@ -51,8 +52,9 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 }
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
-  const { application } = useApplicationResume()
-  const { draft, applyToolOutput, commitDraft } = useResumeDraft()
+  const { application, applicationResumeData, saveApplicationResume } =
+    useApplicationResume()
+  const isEditModalOpen = useAtomValue(editModalOpenAtom)
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()
   const setPendingChatAction = useSetPendingChatAction()
@@ -71,12 +73,16 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
     onToolCall: async ({ toolCall }) => {
       const { input } = toolCall
 
+      if (!applicationResumeData) {
+        return
+      }
+
       if (toolCall.toolName === "resumeEditorModify") {
         const typedInput = input as ResumeEditorModifyInput
 
         const modifyOutput = (await executeResumeEditorModifyTool(
           typedInput,
-          draft!!
+          applicationResumeData
         )) as ResumeEditorModifyOutput
 
         addToolOutput({
@@ -85,14 +91,17 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: modifyOutput
         })
 
-        const nextResume = applyToolOutput(modifyOutput)
-        await commitDraft(nextResume)
+        const nextResume = applyToolOutputToResume(
+          applicationResumeData,
+          modifyOutput
+        )
+        await saveApplicationResume(nextResume)
       } else if (toolCall.toolName === "resumeEditorReorder") {
         const typedInput = input as ResumeEditorReorderInput
 
         const reorderOutput = (await executeResumeEditorReorderTool(
           typedInput,
-          draft!!
+          applicationResumeData
         )) as ResumeEditorReorderOutput
 
         addToolOutput({
@@ -101,8 +110,11 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           output: reorderOutput
         })
 
-        const nextResume = applyToolOutput(reorderOutput)
-        await commitDraft(nextResume)
+        const nextResume = applyToolOutputToResume(
+          applicationResumeData,
+          reorderOutput
+        )
+        await saveApplicationResume(nextResume)
       }
     },
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
@@ -165,6 +177,10 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
   }, [chat.status, lifecycle, markFailed, markRunFinished, markRunStarted])
 
   const runtime = useAISDKRuntime(chat)
+
+  if (isEditModalOpen || !applicationResumeData) {
+    return null
+  }
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

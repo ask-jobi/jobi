@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
+import { Provider, createStore } from "jotai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
+import { chatThreadLifecycleAtom } from "@/lib/store/chat"
 
 describe("ResumeSectionActionButtonGroup", () => {
   beforeEach(() => {
@@ -130,5 +132,49 @@ describe("ResumeSectionActionButtonGroup", () => {
     fireEvent.click(screen.getByRole("button", { name: "addEntry" }))
 
     expect(onAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders add/edit/delete actions as disabled while an AI resume action is running", () => {
+    const store = createStore()
+    store.set(chatThreadLifecycleAtom, "running")
+    const onAdd = vi.fn()
+    const onEdit = vi.fn()
+    const onDelete = vi.fn()
+
+    render(
+      <Provider store={store}>
+        <ResumeSectionActionButtonGroup
+          isInteractive
+          onAdd={onAdd}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        >
+          <div>Section body</div>
+        </ResumeSectionActionButtonGroup>
+      </Provider>
+    )
+
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(surface).not.toBeNull()
+
+    fireEvent.mouseEnter(surface!)
+
+    const addButton = screen.getByRole("button", { name: "addEntry" })
+    const editButton = screen.getByRole("button", { name: "editSection" })
+    const deleteButton = screen.getByRole("button", { name: "deleteEntry" })
+
+    expect(addButton).toBeDisabled()
+    expect(editButton).toBeDisabled()
+    expect(deleteButton).toBeDisabled()
+
+    fireEvent.click(addButton)
+    fireEvent.click(editButton)
+    fireEvent.click(deleteButton)
+
+    expect(onAdd).not.toHaveBeenCalled()
+    expect(onEdit).not.toHaveBeenCalled()
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument()
   })
 })

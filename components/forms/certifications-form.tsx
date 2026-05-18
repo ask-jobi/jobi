@@ -1,45 +1,36 @@
 "use client"
 
-import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
-import { CertificationEntry, ResumeData } from "@/types/resume"
+import type { CertificationEntry } from "@/types/resume"
 
 interface CertificationsFormProps {
+  entry: CertificationEntry
   focusIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: CertificationEntry) => void | Promise<void>
 }
 
 export function CertificationsForm({
+  entry,
   focusIndex = null,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: CertificationsFormProps) {
-  const { control, getValues } = useFormContext<ResumeData>()
-  const { update } = useFieldArray({
-    control,
-    name: "certifications.entries"
-  })
-
   if (typeof focusIndex !== "number") {
-    return null
-  }
-
-  const currentEntry = getValues(`certifications.entries.${focusIndex}`)
-
-  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-certifications" className="space-y-4">
       <FocusedEntryFormShell<CertificationEntry>
-        entry={currentEntry}
+        entry={entry}
         formId={`form-certifications-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
-        onSave={(values) => update(focusIndex, values)}
+        onSave={onSaveEntry}
       >
         {({ register }) => (
           <>

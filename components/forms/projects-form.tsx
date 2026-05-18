@@ -1,47 +1,38 @@
 "use client"
 
-import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Editor } from "@/components/editor/editor"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { MonthRangePickerFormField } from "@/components/ui/monthrangepicker-form-field"
-import { ProjectEntry, ResumeData } from "@/types/resume"
+import type { ProjectEntry } from "@/types/resume"
 
 interface ProjectsFormProps {
+  entry: ProjectEntry
   focusIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: ProjectEntry) => void | Promise<void>
 }
 
 export function ProjectsForm({
+  entry,
   focusIndex = null,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: ProjectsFormProps) {
-  const { control, getValues } = useFormContext<ResumeData>()
-  const { update } = useFieldArray({
-    control,
-    name: "projects.entries"
-  })
-
   if (typeof focusIndex !== "number") {
-    return null
-  }
-
-  const currentEntry = getValues(`projects.entries.${focusIndex}`)
-
-  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-projects" className="space-y-4">
       <FocusedEntryFormShell<ProjectEntry>
-        entry={currentEntry}
+        entry={entry}
         formId={`form-projects-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
-        onSave={(values) => update(focusIndex, values)}
+        onSave={onSaveEntry}
       >
         {({ register, watch, setValue }) => {
           const content = watch("content") || ""

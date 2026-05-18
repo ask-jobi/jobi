@@ -4,12 +4,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ResumeSectionAddAction } from "@/components/resume-templates/resume-section-add-action"
 import { ResumeSectionDeleteAction } from "@/components/resume-templates/resume-section-delete-action"
 import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
+import { useIsResumeAiActionActive } from "@/lib/store/chat"
 import { cn } from "@/lib/utils"
 
 const EDIT_ACTION_HIDE_DELAY_MS = 50
 
 interface ResumeSectionActionButtonGroupProps {
   actionClassName?: string
+  actionsDisabled?: boolean
   children: ReactNode
   className?: string
   id?: string
@@ -21,6 +23,7 @@ interface ResumeSectionActionButtonGroupProps {
 
 export function ResumeSectionActionButtonGroup({
   actionClassName,
+  actionsDisabled = false,
   children,
   className,
   id,
@@ -31,6 +34,8 @@ export function ResumeSectionActionButtonGroup({
 }: ResumeSectionActionButtonGroupProps) {
   const [isActionVisible, setIsActionVisible] = useState(false)
   const hideTimerRef = useRef<number | null>(null)
+  const isResumeAiActionActive = useIsResumeAiActionActive()
+  const isActionDisabled = actionsDisabled || isResumeAiActionActive
   const isActionEnabled = isInteractive && (!!onEdit || !!onAdd || !!onDelete)
 
   const clearHideTimer = () => {
@@ -74,9 +79,24 @@ export function ResumeSectionActionButtonGroup({
             actionClassName
           )}
         >
-          {onEdit && <ResumeSectionEditAction onClick={onEdit} />}
-          {onAdd && <ResumeSectionAddAction onClick={onAdd} />}
-          {onDelete && <ResumeSectionDeleteAction onClick={onDelete} />}
+          {onEdit && (
+            <ResumeSectionEditAction
+              disabled={isActionDisabled}
+              onClick={onEdit}
+            />
+          )}
+          {onAdd && (
+            <ResumeSectionAddAction
+              disabled={isActionDisabled}
+              onClick={onAdd}
+            />
+          )}
+          {onDelete && (
+            <ResumeSectionDeleteAction
+              disabled={isActionDisabled}
+              onClick={onDelete}
+            />
+          )}
         </div>
       )}
       {children}

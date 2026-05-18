@@ -3,17 +3,17 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createStore } from "jotai"
+import { applicationAtom } from "@/lib/store/resume"
 import {
-  applicationAtom,
   focusSectionAtom,
   selectedEntryIdAtom,
   selectedEntryIndexAtom,
   selectedSectionIdAtom
-} from "@/lib/store/resume"
+} from "@/lib/store/resume-editor-state"
 
 describe("focusSectionAtom", () => {
   beforeEach(() => {
-    document.body.innerHTML = ""
+    document.body.replaceChildren()
   })
 
   it("updates selection for a block target without touching DOM scrolling", () => {

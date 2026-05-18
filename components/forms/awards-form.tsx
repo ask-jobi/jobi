@@ -1,46 +1,37 @@
 "use client"
 
-import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Textarea } from "@/components/ui/textarea"
-import { AwardEntry, ResumeData } from "@/types/resume"
+import type { AwardEntry } from "@/types/resume"
 
 interface AwardsFormProps {
+  entry: AwardEntry
   focusIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: AwardEntry) => void | Promise<void>
 }
 
 export function AwardsForm({
+  entry,
   focusIndex = null,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: AwardsFormProps) {
-  const { control, getValues } = useFormContext<ResumeData>()
-  const { update } = useFieldArray({
-    control,
-    name: "awards.entries"
-  })
-
   if (typeof focusIndex !== "number") {
-    return null
-  }
-
-  const currentEntry = getValues(`awards.entries.${focusIndex}`)
-
-  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-awards" className="space-y-4">
       <FocusedEntryFormShell<AwardEntry>
-        entry={currentEntry}
+        entry={entry}
         formId={`form-awards-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
-        onSave={(values) => update(focusIndex, values)}
+        onSave={onSaveEntry}
       >
         {({ register }) => (
           <>

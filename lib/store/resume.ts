@@ -5,8 +5,7 @@ import {
   ResumeMetadata,
   ResumeJobDescription,
   SortableSectionKey,
-  ResumeSection,
-  ResumeSectionKey
+  ResumeSection
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
@@ -123,83 +122,10 @@ export const evaluationRefreshFlagAtom = atom(
 )
 
 export const isLoadingAtom = atom(false)
-export const selectedSectionIdAtom = atom<ResumeSectionKey | null>(null)
-export const selectedEntryIdAtom = atom<string | null>(null)
-const selectedEntryIndexStateAtom = atom<number | null>(null)
-export const selectedEntryIndexAtom = atom(
-  (get) => {
-    const explicitIndex = get(selectedEntryIndexStateAtom)
-
-    if (explicitIndex !== null) {
-      return explicitIndex
-    }
-
-    const selectedSectionId = get(selectedSectionIdAtom)
-    const selectedEntryId = get(selectedEntryIdAtom)
-    const resumeData = get(applicationResumeDataAtom)
-
-    if (!selectedSectionId || !selectedEntryId || !resumeData) {
-      return null
-    }
-
-    const section = resumeData[selectedSectionId]
-
-    if (!section || !("entries" in section)) {
-      return null
-    }
-
-    const entryIndex = section.entries.findIndex(
-      (entry: { entryId: string }) => entry.entryId === selectedEntryId
-    )
-
-    return entryIndex >= 0 ? entryIndex : null
-  },
-  (_get, set, index: number | null) => {
-    set(selectedEntryIndexStateAtom, index)
-  }
-)
 export const rightPanelViewAtom = atom<"evaluation" | "chat">("evaluation")
+
+/** Modal open state — consumed by UI adapter (ResumeSectionEditModal) and workflow hook. */
 export const editModalOpenAtom = atom(false)
-export const draftRollbackResumeAtom = atom<ResumeData | null>(null)
-export const editModalRollbackResumeAtom = draftRollbackResumeAtom
-
-export const resumeAutosaveSuspendedAtom = atom(
-  (get) => get(editModalOpenAtom) && get(draftRollbackResumeAtom) !== null
-)
-
-export const clearEditorSelectionAtom = atom(null, (_get, set) => {
-  set(selectedSectionIdAtom, null)
-  set(selectedEntryIdAtom, null)
-  set(selectedEntryIndexAtom, null)
-})
-
-export const focusSectionAtom = atom(
-  null,
-  (
-    get,
-    set,
-    id: ResumeSectionKey,
-    entryIndex?: number,
-    entryId?: string | null
-  ) => {
-    const resumeData = get(applicationResumeDataAtom)
-    set(selectedSectionIdAtom, id)
-    set(selectedEntryIndexAtom, typeof entryIndex === "number" ? entryIndex : null)
-    if (typeof entryIndex === "number" && resumeData) {
-      const section = resumeData[id]
-      if (section && "entries" in section) {
-        set(
-          selectedEntryIdAtom,
-          entryId ?? section.entries[entryIndex]?.entryId ?? null
-        )
-      } else {
-        set(selectedEntryIdAtom, entryId ?? null)
-      }
-    } else {
-      set(selectedEntryIdAtom, null)
-    }
-  }
-)
 
 export function useResumeLanguage() {
   const [resumeMetadata] = useAtom(resumeMetadataAtom)
@@ -208,7 +134,9 @@ export function useResumeLanguage() {
 }
 
 export function useApplicationResume() {
-  const [persistedResume, setPersistedResume] = useAtom(applicationResumeDataAtom)
+  const [persistedResume, setPersistedResume] = useAtom(
+    applicationResumeDataAtom
+  )
   const [application] = useAtom(applicationAtom)
   const [jobDescription, setJobDescription] = useAtom(jobAtom)
   const [isLoading, setLoading] = useAtom(isLoadingAtom)
@@ -220,13 +148,15 @@ export function useApplicationResume() {
   const replacePersistedResume = (data: ResumeData) => setPersistedResume(data)
 
   const saveApplicationResume = async (data: ResumeData) => {
-    if (!application?.resume.id) return
-    setPersistedResume(data)
+    if (!application?.resume.id) return false
     try {
       await saveApplicationResumeChange(application.resume.id, data)
+      setPersistedResume(data)
+      return true
     } catch (error) {
       console.error("Save failed:", error)
       toast.error("Auto save failed")
+      return false
     }
   }
 

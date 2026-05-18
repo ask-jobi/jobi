@@ -7,11 +7,13 @@ import { cn } from "@/lib/utils"
 
 interface ResumeSectionAddActionProps {
   className?: string
+  disabled?: boolean
   onClick: () => void
 }
 
 export function ResumeSectionAddAction({
   className,
+  disabled = false,
   onClick
 }: ResumeSectionAddActionProps) {
   const t = useTranslations("rightPanel")
@@ -25,9 +27,13 @@ export function ResumeSectionAddAction({
         "h-8 rounded-full border-border/70 bg-background/95 px-3 text-xs font-medium shadow-sm",
         className
       )}
+      disabled={disabled}
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        if (disabled) {
+          return
+        }
         onClick()
       }}
     >

@@ -1,7 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { useSetAtom } from "jotai"
+import { useEffect, useMemo, useState } from "react"
 import { Plus } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -10,12 +9,12 @@ import {
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover"
-import { editModalOpenAtom, useResumeLanguage } from "@/lib/store/resume"
+import { useApplicationResume, useResumeLanguage } from "@/lib/store/resume"
+import { useIsResumeAiActionActive } from "@/lib/store/chat"
 import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
-import { useResumeDraft } from "@/lib/hooks/use-resume-draft"
-import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
+import { useEntryEditWorkflow } from "@/lib/hooks/use-entry-edit-workflow"
 import type {
   SortableSectionKey,
   ResumeData,
@@ -65,20 +64,22 @@ export function ResumeCanvasSectionEntry() {
   const t = useTranslations("resumeCanvas")
   const uiLocale = useLocale()
   const resumeLanguage = useResumeLanguage()
-  const { draft, ensureEditableSection, getDraft } = useResumeDraft()
-  const setEditModalOpen = useSetAtom(editModalOpenAtom)
-  const { clearRollbackResume, selectTarget, setRollbackResume } =
-    useResumeEditorState()
+  const { applicationResumeData } = useApplicationResume()
+  const isResumeAiActionActive = useIsResumeAiActionActive()
+  const { startSectionEdit } = useEntryEditWorkflow()
   const [open, setOpen] = useState(false)
   const [pendingSectionId, setPendingSectionId] =
     useState<ResumeSectionKey | null>(null)
 
   const sectionActions = useMemo(
-    () => (draft ? getSectionEntryActions(draft) : []),
-    [draft]
+    () =>
+      applicationResumeData
+        ? getSectionEntryActions(applicationResumeData)
+        : [],
+    [applicationResumeData]
   )
 
-  const isEmpty = isResumeCanvasEmpty(draft)
+  const isEmpty = isResumeCanvasEmpty(applicationResumeData)
   const emptyPopoverDescription = t.has("emptyPopoverDescription")
     ? t("emptyPopoverDescription")
     : uiLocale === "zh"
@@ -95,7 +96,13 @@ export function ResumeCanvasSectionEntry() {
       ? "个人信息"
       : "Personal Info"
 
-  if (!draft) {
+  useEffect(() => {
+    if (isResumeAiActionActive) {
+      setOpen(false)
+    }
+  }, [isResumeAiActionActive])
+
+  if (!applicationResumeData) {
     return null
   }
 
@@ -103,37 +110,13 @@ export function ResumeCanvasSectionEntry() {
     return null
   }
 
-  const openEditModal = (sectionId: ResumeSectionKey, entryIndex?: number) => {
-    selectTarget(sectionId, entryIndex)
-    setEditModalOpen(true)
-  }
-
-  const handleOpenSection = async (sectionId: ResumeSectionKey) => {
-    setPendingSectionId(sectionId)
-
-    if (sectionId === "personalInfo") {
-      clearRollbackResume()
-      openEditModal(sectionId)
-      setOpen(false)
-      setPendingSectionId(null)
+  const handleOpenSection = (sectionId: ResumeSectionKey) => {
+    if (isResumeAiActionActive) {
       return
     }
 
-    setRollbackResume(getDraft())
-    const { entryIndex, entryId } = ensureEditableSection(sectionId)
-    selectTarget(sectionId, entryIndex ?? undefined, entryId)
-    setEditModalOpen(true)
-    setOpen(false)
-    setPendingSectionId(null)
-  }
-
-  const handleAddSection = async (sectionId: SortableSectionKey) => {
     setPendingSectionId(sectionId)
-
-    setRollbackResume(getDraft())
-    const { entryIndex, entryId } = ensureEditableSection(sectionId)
-    selectTarget(sectionId, entryIndex ?? undefined, entryId)
-    setEditModalOpen(true)
+    startSectionEdit(sectionId)
     setOpen(false)
     setPendingSectionId(null)
   }
@@ -143,7 +126,8 @@ export function ResumeCanvasSectionEntry() {
       data-testid="resume-add-section-empty"
       type="button"
       size="lg"
-      className="h-auto min-w-[220px] flex-col gap-3 rounded-2xl px-8 py-8 shadow-lg"
+      className="pointer-events-auto h-auto min-w-[220px] flex-col gap-3 rounded-2xl px-8 py-8 shadow-lg"
+      disabled={isResumeAiActionActive}
     >
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
         <Plus className="h-7 w-7" />
@@ -159,7 +143,8 @@ export function ResumeCanvasSectionEntry() {
       type="button"
       variant="outline"
       size="sm"
-      className="shadow-sm"
+      className="pointer-events-auto shadow-sm"
+      disabled={isResumeAiActionActive}
     >
       <Plus className="h-4 w-4" />
       {t("addSection")}
@@ -174,10 +159,18 @@ export function ResumeCanvasSectionEntry() {
           : "pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center"
       }
     >
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <div className="pointer-events-auto">{trigger}</div>
-        </PopoverTrigger>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (isResumeAiActionActive) {
+            setOpen(false)
+            return
+          }
+
+          setOpen(nextOpen)
+        }}
+      >
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
         <PopoverContent
           align={isEmpty ? "center" : "end"}
           className="w-80 space-y-3"
@@ -199,7 +192,9 @@ export function ResumeCanvasSectionEntry() {
                   type="button"
                   variant="ghost"
                   className="h-auto w-full justify-between px-3 py-3"
-                  disabled={pendingSectionId === sectionId}
+                  disabled={
+                    pendingSectionId === sectionId || isResumeAiActionActive
+                  }
                   onClick={() => handleOpenSection(sectionId)}
                 >
                   <span>
@@ -223,12 +218,10 @@ export function ResumeCanvasSectionEntry() {
                   type="button"
                   variant="ghost"
                   className="h-auto w-full justify-between px-3 py-3"
-                  disabled={pendingSectionId === sectionId}
-                  onClick={() =>
-                    action === "open"
-                      ? handleOpenSection(sectionId)
-                      : handleAddSection(sectionId)
+                  disabled={
+                    pendingSectionId === sectionId || isResumeAiActionActive
                   }
+                  onClick={() => handleOpenSection(sectionId)}
                 >
                   <span>{getSectionLabel(sectionId, resumeLanguage)}</span>
                   <Plus className="h-4 w-4" />

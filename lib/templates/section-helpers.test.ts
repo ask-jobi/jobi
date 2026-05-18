@@ -3,7 +3,7 @@ import type { ResumeData } from "@/types/resume"
 import {
   addSection,
   ensureSectionHasEditableEntry,
-  insertDraftEntryBelow,
+  insertEntryBelow,
   normalizeSectionOrder,
   removeSection
 } from "@/lib/templates/section-helpers"
@@ -91,7 +91,7 @@ describe("section-helpers", () => {
     expect(resume.sectionOrder).toContain("employment")
   })
 
-  it("inserts a new draft entry directly below the selected entry", () => {
+  it("inserts a new entry directly below the selected entry", () => {
     const baseResume = buildEmptyResumeData("en")
     baseResume.education.entries = [
       {
@@ -112,11 +112,7 @@ describe("section-helpers", () => {
       }
     ]
 
-    const { resume, entryIndex } = insertDraftEntryBelow(
-      baseResume,
-      "education",
-      0
-    )
+    const { resume, entryIndex } = insertEntryBelow(baseResume, "education", 0)
 
     expect(entryIndex).toBe(1)
     expect(resume.education.entries).toHaveLength(3)

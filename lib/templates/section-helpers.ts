@@ -73,7 +73,7 @@ export function ensureSectionHasEditableEntry(
   }
 }
 
-export function insertDraftEntryBelow(
+export function insertEntryBelow(
   data: ResumeData,
   sectionId: SortableSectionKey,
   index: number
