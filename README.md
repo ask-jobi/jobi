@@ -253,7 +253,7 @@ E2E测试使用自动认证流程：
 ```bash
 # .env.test (用于真实认证测试)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
 ### 测试最佳实践
