@@ -7,6 +7,8 @@ import { loadPdfToDoc, Document } from "./tools"
 // Mock pdf-parse
 const mockPdfParse = vi.fn()
 
+vi.mock("pdf-parse/worker", () => ({}))
+
 vi.mock("pdf-parse", () => ({
   PDFParse: vi.fn().mockImplementation(function (this: any, data: any) {
     this.data = data
