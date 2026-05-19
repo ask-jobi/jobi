@@ -1,12 +1,24 @@
 import "server-only"
 import { z } from "zod"
-import { generateText, Output } from "ai"
+import { generateText, NoObjectGeneratedError, Output } from "ai"
 import { ResumeData } from "@/types/resume"
 import { resumeParsePrompt } from "./prompts/resume-parse.prompt"
 import { Locale } from "@/lib/i18n/config"
 import { model } from "@/lib/agent/model"
 import { nanoid } from "nanoid"
 import { parseTokenUsage, type TokenUsage } from "@/lib/agent/token-usage"
+import { parseJsonFromModelText } from "./parse-json-from-model-text"
+
+const EMPTY_RESUME_TEXT_ERROR =
+  "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
+
+function shouldFallbackToTextParsing(error: unknown): boolean {
+  return (
+    NoObjectGeneratedError.isInstance(error) ||
+    (error instanceof Error &&
+      error.message.toLowerCase().includes("could not parse"))
+  )
+}
 
 const resumeSchema = z.object({
   // required
@@ -257,22 +269,60 @@ export const parseResumeWithTokenUsage = async (
   language: Locale
   tokenUsage: TokenUsage
 }> => {
+  const normalizedResumeText = resumeText.trim()
+  if (!normalizedResumeText) {
+    throw new Error(EMPTY_RESUME_TEXT_ERROR)
+  }
+
   const prompt = resumeParsePrompt.format({
-    resumeText,
-    jsonSchema: resumeSchema.shape
+    resumeText: normalizedResumeText,
+    jsonSchema: JSON.stringify(resumeSchema.shape, null, 2)
   })
 
-  const { output: result, totalUsage } = await generateText({
-    model: model,
-    output: Output.object({
-      schema: resumeSchema
-    }),
-    prompt,
-    temperature: 0
-  })
+  let validatedData: z.infer<typeof resumeSchema>
+  let totalUsage: TokenUsage
 
-  // 验证并转换结果
-  const validatedData = resumeSchema.parse(result)
+  try {
+    const structured = await generateText({
+      model: model,
+      output: Output.object({
+        schema: resumeSchema
+      }),
+      prompt,
+      temperature: 0,
+      maxRetries: 3
+    })
+    validatedData = resumeSchema.parse(structured.output)
+    totalUsage = parseTokenUsage(structured.totalUsage)
+  } catch (error) {
+    if (!shouldFallbackToTextParsing(error)) {
+      throw error
+    }
+
+    console.warn(
+      "Structured resume parsing failed, falling back to text parsing:",
+      error
+    )
+
+    const fallback = await generateText({
+      model: model,
+      output: Output.text(),
+      prompt,
+      temperature: 0,
+      maxRetries: 2
+    })
+
+    if (!fallback.output?.trim()) {
+      throw new Error(
+        "Resume parsing failed: the model returned an empty response. Please try again."
+      )
+    }
+
+    validatedData = resumeSchema.parse(
+      parseJsonFromModelText(fallback.output)
+    )
+    totalUsage = parseTokenUsage(fallback.totalUsage)
+  }
 
   // 转换为 ResumeData 类型
   const resumeData: ResumeData = {
@@ -303,6 +353,6 @@ export const parseResumeWithTokenUsage = async (
   return {
     resumeData,
     language: validatedData._metadata.language as Locale,
-    tokenUsage: parseTokenUsage(totalUsage)
+    tokenUsage: totalUsage
   }
 }

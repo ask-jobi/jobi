@@ -101,6 +101,11 @@ async function processFile(
       const docs = await loadPdfToDoc(file, {
         splitPages: false
       })
+      if (!docs[0]?.pageContent?.trim()) {
+        throw new Error(
+          "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
+        )
+      }
       await new Promise((resolve) => setTimeout(resolve, 1000))
       await sendData(processId, {
         step: "load",

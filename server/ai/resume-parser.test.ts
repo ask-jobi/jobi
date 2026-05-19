@@ -2,14 +2,20 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { parseResume } from "./resume-parser"
-import { generateText } from "ai"
+import { parseResume, parseResumeWithTokenUsage } from "./resume-parser"
+import { generateText, NoObjectGeneratedError } from "ai"
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
   wrapLanguageModel: vi.fn((config: any) => config.model),
+  NoObjectGeneratedError: class NoObjectGeneratedError extends Error {
+    static isInstance(error: unknown) {
+      return error instanceof NoObjectGeneratedError
+    }
+  },
   Output: {
-    object: vi.fn()
+    object: vi.fn(),
+    text: vi.fn()
   }
 }))
 
@@ -18,6 +24,23 @@ vi.mock("@/lib/agent/model", () => ({
     "MiniMax-M2.1": {}
   }
 }))
+
+function mockTotalUsage(totalTokens: number) {
+  return {
+    inputTokens: Math.floor(totalTokens / 2),
+    inputTokenDetails: {
+      noCacheTokens: Math.floor(totalTokens / 2),
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0
+    },
+    outputTokens: Math.ceil(totalTokens / 2),
+    outputTokenDetails: {
+      textTokens: Math.ceil(totalTokens / 2),
+      reasoningTokens: 0
+    },
+    totalTokens
+  }
+}
 
 describe("parseResume", () => {
   beforeEach(() => {
@@ -57,7 +80,8 @@ describe("parseResume", () => {
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const resumeText = `
@@ -116,7 +140,8 @@ Programming: JavaScript, TypeScript
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const resumeText = `
@@ -208,7 +233,8 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const result = await parseResume("Resume content")
@@ -248,15 +274,14 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
-      const result = await parseResume("")
-
-      expect(result).toHaveLength(2)
-      const [resumeData] = result
-      expect(resumeData.education.entries).toHaveLength(0)
-      expect(resumeData.skills.entries).toHaveLength(0)
+      await expect(parseResume("")).rejects.toThrow(
+        "Could not extract text from the uploaded PDF"
+      )
+      expect(generateText).not.toHaveBeenCalled()
     })
 
     it("should return empty arrays when no data provided", async () => {
@@ -283,7 +308,8 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const result = await parseResume("No content")
@@ -314,6 +340,7 @@ zhangsan@example.com
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
           temperature: 0,
+          maxRetries: 3,
           model: expect.any(Object)
         })
       )
@@ -346,6 +373,45 @@ zhangsan@example.com
   })
 
   describe("error handling", () => {
+    it("should throw error when resume text is empty", async () => {
+      await expect(parseResume("   ")).rejects.toThrow(
+        "Could not extract text from the uploaded PDF"
+      )
+      expect(generateText).not.toHaveBeenCalled()
+    })
+
+    it("should fall back to text parsing when structured output fails", async () => {
+      const mockResumeData = {
+        personalInfo: {
+          firstName: "Jane",
+          lastName: "Doe",
+          email: "jane@example.com",
+          phone: ""
+        },
+        education: { title: "Education", entries: [] },
+        skills: { title: "Skills", entries: [] },
+        _metadata: { language: "en" }
+      }
+
+      ;(generateText as any)
+        .mockRejectedValueOnce(
+          new NoObjectGeneratedError({
+            message: "No object generated",
+            text: ""
+          } as any)
+        )
+        .mockResolvedValueOnce({
+          output: JSON.stringify(mockResumeData),
+          totalUsage: mockTotalUsage(5)
+        })
+
+      const result = await parseResumeWithTokenUsage("Jane Doe resume")
+
+      expect(generateText).toHaveBeenCalledTimes(2)
+      expect(result.resumeData.personalInfo.firstName).toBe("Jane")
+      expect(result.tokenUsage.totalTokens).toBe(5)
+    })
+
     it("should throw error when AI service fails", async () => {
       ;(generateText as any).mockRejectedValue(
         new Error("AI service unavailable")
