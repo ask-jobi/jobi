@@ -102,6 +102,7 @@ Programming: JavaScript, TypeScript
       const [resumeData, language] = result
 
       expect(language).toBe("en")
+      expect(resumeData.personalInfo.entryId).toEqual(expect.any(String))
       expect(resumeData.personalInfo.firstName).toBe("John")
       expect(resumeData.personalInfo.lastName).toBe("Doe")
       expect(resumeData.personalInfo.email).toBe("john@example.com")
@@ -132,7 +133,9 @@ Programming: JavaScript, TypeScript
         skills: {
           title: "技能",
           order: 2,
-          entries: [{ group: "编程", content: "JavaScript, TypeScript, Python" }]
+          entries: [
+            { group: "编程", content: "JavaScript, TypeScript, Python" }
+          ]
         },
         _metadata: {
           language: "zh"

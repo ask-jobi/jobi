@@ -112,7 +112,7 @@ describe("ResumeEditor delete entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "projects", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
@@ -216,7 +216,7 @@ describe("ResumeEditor delete entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",

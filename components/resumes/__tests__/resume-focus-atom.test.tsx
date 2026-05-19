@@ -33,7 +33,7 @@ describe("focusSectionAtom", () => {
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",
@@ -92,7 +92,7 @@ describe("focusSectionAtom", () => {
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",

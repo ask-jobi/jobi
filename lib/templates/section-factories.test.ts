@@ -20,6 +20,7 @@ describe("section-factories", () => {
     expect(resume.education.entries).toEqual([])
     expect(resume.employment).toBeUndefined()
     expect(resume.sectionOrder).toEqual(["education", "skills"])
+    expect(resume.personalInfo.entryId).toEqual(expect.any(String))
     expect(resume.personalInfo.website).toBe("")
     expect(resume.personalInfo.linkedin).toBe("")
   })

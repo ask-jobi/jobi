@@ -69,13 +69,13 @@ describe("POST /api/chat/truncate", () => {
       id: "app-1",
       resumes: {
         resume_json: {
-          personalInfo: { blockId: "p1", firstName: "John", lastName: "Doe" },
+          personalInfo: { entryId: "p1", firstName: "John", lastName: "Doe" },
           education: { entries: [] }
         }
       }
     } as any)
     vi.mocked(resumeModule.getApplicationResumeData).mockResolvedValue({
-      personalInfo: { blockId: "p1", firstName: "John" }
+      personalInfo: { entryId: "p1", firstName: "John" }
     } as any)
     vi.mocked(resumeModule.saveApplicationResumeChange).mockResolvedValue()
 

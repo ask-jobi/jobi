@@ -23,9 +23,12 @@ function createBaseSection<ID extends SortableSectionKey>(): NonNullable<
 }
 
 export function createEmptySection<ID extends SortableSectionKey>(
-  _sectionId: ID,
-  _language: Locale
+  sectionId: ID,
+  language: Locale
 ): NonNullable<ResumeData[ID]> {
+  void sectionId
+  void language
+
   return createBaseSection()
 }
 
@@ -123,7 +126,7 @@ export function buildEmptyResumeData(language: Locale): ResumeData {
   return {
     sectionOrder: DEFAULT_STARTER_SECTION_IDS,
     personalInfo: {
-      blockId: nanoid(),
+      entryId: nanoid(),
       firstName: "",
       lastName: "",
       email: "",

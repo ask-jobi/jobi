@@ -1,6 +1,5 @@
 "use server"
 
-import { nanoid } from "nanoid"
 import { createClient } from "@/lib/supabase/server"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
@@ -16,9 +15,8 @@ import {
 export async function fetchJobApplication() {
   const supabase = await createClient()
 
-  const { data: jobApplications, error } = await supabase.from(
-    "job_applications"
-  ).select(`
+  const { data: jobApplications } = await supabase.from("job_applications")
+    .select(`
             id,
             optimized_resume_url,
             created_at,
@@ -70,7 +68,9 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
   }
 
   if (!jobApplications || jobApplications.length === 0) {
-    throw new Error(`No job application found with resume id: ${applicationResumeId}`)
+    throw new Error(
+      `No job application found with resume id: ${applicationResumeId}`
+    )
   }
 
   if (jobApplications.length > 1) {
@@ -78,6 +78,7 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
       `Multiple job applications found with resume id: ${applicationResumeId}`
     )
   }
+
   return jobApplications[0]
 }
 
@@ -121,10 +122,13 @@ export async function getJobApplication(jobApplicationId: string) {
       `Multiple job applications found with id: ${jobApplicationId}`
     )
   }
+
   return jobApplications[0]
 }
 
-export async function getApplicationResumeData(id: string): Promise<ResumeData> {
+export async function getApplicationResumeData(
+  id: string
+): Promise<ResumeData> {
   const supabase = await createClient()
 
   const { data: resume, error } = await supabase
@@ -202,7 +206,7 @@ export async function uploadResumeFile(resumeFile: File) {
     resumeFile.name
   )
 
-  const { data: uploadData, error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(fileName, resumeFile)
 
@@ -322,11 +326,17 @@ export async function updateResumeJobDescription(
   }
 }
 
-export async function saveApplicationResumeChange(resumeId: string, data: ResumeData) {
+export async function saveApplicationResumeChange(
+  resumeId: string,
+  data: ResumeData
+) {
   const supabase = await createClient()
   const { error } = await supabase
     .from("resumes")
-    .update({ resume_json: data, evaluation_report_refresh_flag: true })
+    .update({
+      resume_json: data,
+      evaluation_report_refresh_flag: true
+    })
     .eq("id", resumeId)
 
   if (error) throw error

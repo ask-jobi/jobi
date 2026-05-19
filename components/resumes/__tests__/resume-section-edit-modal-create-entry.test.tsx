@@ -84,7 +84,7 @@ describe("ResumeSectionEditModal create entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",

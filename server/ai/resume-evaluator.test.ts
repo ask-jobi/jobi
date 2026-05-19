@@ -26,7 +26,7 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
   ({
     sectionOrder: ["education", "employment", "skills", "research", "projects"],
     personalInfo: {
-      blockId: "p1",
+      entryId: "p1",
       firstName: "John",
       lastName: "Doe",
       email: "john@example.com",
@@ -104,7 +104,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -225,7 +225,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -282,7 +282,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -338,7 +338,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "John",
           lastName: "Doe",
           email: "john@example.com",
@@ -403,7 +403,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -481,7 +481,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -550,7 +550,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -580,7 +580,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
@@ -604,7 +604,7 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",

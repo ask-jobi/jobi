@@ -115,7 +115,7 @@ describe("POST /api/resume/upload-and-analyze", () => {
   const mockResumeData = {
     sectionOrder: ["education", "employment", "skills"] as const,
     personalInfo: {
-      blockId: "p1",
+      entryId: "p1",
       firstName: "Test",
       lastName: "User",
       email: "test@example.com",

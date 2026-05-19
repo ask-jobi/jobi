@@ -81,7 +81,7 @@ describe("Resume add section flow", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "Ada",
         lastName: "Lovelace",
         email: "ada@example.com",

@@ -25,7 +25,7 @@ export interface ResumeSection<T = any> {
 }
 
 export interface PersonalInfo {
-  blockId: string
+  entryId: string
   firstName: string
   lastName: string
   email: string

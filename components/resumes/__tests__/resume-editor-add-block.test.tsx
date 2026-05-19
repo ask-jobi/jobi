@@ -73,7 +73,7 @@ describe("ResumeEditor add entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
@@ -134,7 +134,7 @@ describe("ResumeEditor add entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
@@ -200,7 +200,7 @@ describe("ResumeEditor add entry", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",

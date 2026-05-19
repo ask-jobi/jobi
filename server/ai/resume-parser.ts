@@ -23,7 +23,7 @@ function shouldFallbackToTextParsing(error: unknown): boolean {
 const resumeSchema = z.object({
   // required
   personalInfo: z.object({
-    blockId: z.string().default(() => nanoid()),
+    entryId: z.string().default(() => nanoid()),
     firstName: z.string().describe("First name of the candidate").prefault(""),
     lastName: z.string().describe("Last name of the candidate").prefault(""),
     email: z.string().describe("Email address of the candidate").prefault(""),

@@ -15,7 +15,7 @@ const mockEvaluateAndSave = evaluateAndSaveResume as unknown as ReturnType<
 const mockResumeData: ResumeData = {
   sectionOrder: ["education", "employment", "skills"],
   personalInfo: {
-    blockId: "p1",
+    entryId: "p1",
     firstName: "Ada",
     lastName: "Lovelace",
     email: "ada@example.com",

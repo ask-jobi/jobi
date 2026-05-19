@@ -54,7 +54,7 @@ describe("ResumeSectionEditModal local form mode", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["employment", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",

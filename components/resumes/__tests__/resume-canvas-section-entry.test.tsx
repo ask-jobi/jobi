@@ -65,7 +65,7 @@ describe("ResumeCanvasSectionEntry", () => {
     const persistedResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
@@ -88,7 +88,7 @@ describe("ResumeCanvasSectionEntry", () => {
     const persistedResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",

@@ -345,7 +345,7 @@ describe("createApplicationResumeRecord", () => {
     const resumeData: ResumeData = {
       sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
-        blockId: "p1",
+        entryId: "p1",
         firstName: "John",
         lastName: "Doe",
         email: "john@example.com",
@@ -414,7 +414,7 @@ describe("createApplicationResumeRecord", () => {
     const resumeData: ResumeData = {
       sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
-        blockId: "p1",
+        entryId: "p1",
         firstName: "John",
         lastName: "Doe",
         email: "john@example.com",
@@ -532,7 +532,7 @@ describe("saveApplicationResumeChange", () => {
     const resumeData: ResumeData = {
       sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
-        blockId: "p1",
+        entryId: "p1",
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
@@ -565,7 +565,7 @@ describe("saveApplicationResumeChange", () => {
     const resumeData: ResumeData = {
       sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
-        blockId: "p1",
+        entryId: "p1",
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
@@ -591,7 +591,9 @@ describe("saveApplicationResumeChange", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(saveApplicationResumeChange("resume-123", resumeData)).rejects.toEqual({
+    await expect(
+      saveApplicationResumeChange("resume-123", resumeData)
+    ).rejects.toEqual({
       message: "Save failed"
     })
   })

@@ -84,7 +84,7 @@ describe("ResumeSectionEditModal", () => {
         resume_json: {
           sectionOrder: ["employment", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",
@@ -148,7 +148,7 @@ describe("ResumeSectionEditModal", () => {
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",
@@ -189,7 +189,7 @@ describe("ResumeSectionEditModal", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
@@ -250,7 +250,7 @@ describe("ResumeSectionEditModal", () => {
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
