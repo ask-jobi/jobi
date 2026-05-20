@@ -14,7 +14,7 @@ export default function ResumePage() {
               <ResumeEditor />
             </div>
           </div>
-          <aside className="h-[360px] shrink-0 overflow-hidden bg-background lg:h-full lg:w-[600px]">
+          <aside className="h-[360px] overflow-hidden bg-background lg:h-full lg:min-w-[380px] lg:max-w-[600px] lg:w-[600px]">
             <div className="right h-full min-h-0">
               <ResumeRightPanel />
             </div>

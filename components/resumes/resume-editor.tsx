@@ -24,7 +24,7 @@ export function ResumeEditor() {
   const isEmptyCanvas = isResumeCanvasEmpty(applicationResumeData)
 
   return (
-    <div className="relative flex w-full items-start justify-center overflow-x-visible px-4 py-4 xl:pr-28">
+    <div className="relative flex w-full items-start justify-center overflow-x-visible px-4 py-4">
       <div
         data-testid="resume-canvas"
         className="relative w-[210mm] overflow-visible border border-gray-200 bg-white shadow-lg"
