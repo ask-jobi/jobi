@@ -188,7 +188,11 @@ export function CompactPlanDisplay() {
         ) : (
           <div className="space-y-6">
             {renderTokenSummary()}
-            <Button type="button" className="w-full" onClick={() => router.push("/pricing")}>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => router.push("/pricing")}
+            >
               {t("pricingPage")}
             </Button>
           </div>

@@ -185,7 +185,9 @@ export function ApplicationTokenUsage() {
       </TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="w-56 p-3">
         {error ? (
-          <p className="text-xs leading-relaxed">{t("failedToLoadTokenBalance")}</p>
+          <p className="text-xs leading-relaxed">
+            {t("failedToLoadTokenBalance")}
+          </p>
         ) : (
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between gap-3">
@@ -196,14 +198,20 @@ export function ApplicationTokenUsage() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">{t("tokenTotal")}</span>
-              <span className="tabular-nums">{formatTokenCount(tokenTotal)}</span>
+              <span className="tabular-nums">
+                {formatTokenCount(tokenTotal)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">{t("tokenUsed")}</span>
-              <span className="tabular-nums">{formatTokenCount(tokenUsed)}</span>
+              <span className="tabular-nums">
+                {formatTokenCount(tokenUsed)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">{t("tokenRemaining")}</span>
+              <span className="text-muted-foreground">
+                {t("tokenRemaining")}
+              </span>
               <span className="tabular-nums">
                 {formatTokenCount(tokenRemaining)}
               </span>

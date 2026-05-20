@@ -15,6 +15,7 @@
 - `pnpm lint` - 运行 Next/ESLint 检查
 - `pnpm format` - 使用 Prettier 格式化仓库文件
 - `pnpm format:check` - 仅检查格式，不写回
+- 提交代码前，先运行 `pnpm format:check`；若检查失败，再运行 `pnpm format` 修复后提交
 
 ## 单元测试 / 组件测试
 

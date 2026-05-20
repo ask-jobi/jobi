@@ -9,4 +9,3 @@ export function notifyTokenBalanceUpdated() {
 
   window.dispatchEvent(new Event(TOKEN_BALANCE_UPDATED_EVENT))
 }
-

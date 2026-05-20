@@ -91,7 +91,10 @@ export function QuotaDisplay({ tokenBalance }: QuotaDisplayProps) {
             </dd>
           </div>
         </dl>
-        <Button className="w-full sm:w-auto" onClick={() => router.push("/pricing")}>
+        <Button
+          className="w-full sm:w-auto"
+          onClick={() => router.push("/pricing")}
+        >
           {t("pricingPage")}
         </Button>
       </CardContent>

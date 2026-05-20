@@ -29,6 +29,7 @@ This repo uses a single-context layout centered on a root `CONTEXT.md` and root 
 ## 使用约定
 
 - 修改开发流程或命令时，优先更新对应的 `docs/*.md`
+- 提交代码前应先检查 Prettier：优先运行 `pnpm format:check`，如未通过则执行 `pnpm format` 修复后再提交
 - 如需新增规范，优先按主题补充到 `docs/` 下，避免继续膨胀本文件
 - 重大功能、破坏性调整或架构演进，优先在 `docs/plans/current/` 中维护对应 plan
 - 当修改影响 UI、交互、表单、弹窗、导航或主要页面流程时，完成代码后应参考 `Docs/playwright-session-testing-guide.md` 做一轮 UI 回归检查，确认关键页面和主流程没有受到影响

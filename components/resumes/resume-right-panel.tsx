@@ -97,9 +97,7 @@ export function ResumeRightPanel() {
           <div
             className={cn(
               "flex h-full min-h-0 flex-col overflow-hidden bg-background",
-              rightPanelView === "evaluation"
-                ? ""
-                : "rounded-xl p-4 sm:p-5"
+              rightPanelView === "evaluation" ? "" : "rounded-xl p-4 sm:p-5"
             )}
           >
             {rightPanelView === "chat" && (

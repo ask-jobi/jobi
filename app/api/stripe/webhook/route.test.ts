@@ -77,15 +77,11 @@ const createCheckoutSession = (
   ...overrides
 })
 
-const buildWebhookSupabaseClient = (
-  options: WebhookSupabaseOptions = {}
-) => {
+const buildWebhookSupabaseClient = (options: WebhookSupabaseOptions = {}) => {
   const checkoutEventInsertMock = vi
     .fn()
     .mockResolvedValue({ error: options.checkoutEventInsertError ?? null })
-  const checkoutEventDeleteEqMock = vi
-    .fn()
-    .mockResolvedValue({ error: null })
+  const checkoutEventDeleteEqMock = vi.fn().mockResolvedValue({ error: null })
   const checkoutEventDeleteMock = vi.fn().mockReturnValue({
     eq: checkoutEventDeleteEqMock
   })
@@ -173,7 +169,9 @@ const buildWebhookSupabaseClient = (
 }
 
 describe("POST /api/stripe/webhook", () => {
-  let mockConstructEvent: ReturnType<typeof vi.mocked<typeof stripe.webhooks.constructEvent>>
+  let mockConstructEvent: ReturnType<
+    typeof vi.mocked<typeof stripe.webhooks.constructEvent>
+  >
   let mockCreateServerRoleClient: ReturnType<
     typeof vi.mocked<typeof createServerRoleClient>
   >

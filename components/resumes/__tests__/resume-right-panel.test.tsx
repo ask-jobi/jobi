@@ -56,7 +56,9 @@ describe("ResumeRightPanel", () => {
     expect(
       screen.getByRole("button", { name: "evaluationTabLabel" })
     ).toBeInTheDocument()
-    expect(screen.getAllByRole("button", { name: "evaluateResume" })).toHaveLength(2)
+    expect(
+      screen.getAllByRole("button", { name: "evaluateResume" })
+    ).toHaveLength(2)
   })
 
   it("switches to chat from the header action", () => {

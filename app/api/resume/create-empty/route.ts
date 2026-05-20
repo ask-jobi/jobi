@@ -20,7 +20,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await createEmptyApplicationResumeRecord(jobInfo, language as Locale)
+    const result = await createEmptyApplicationResumeRecord(
+      jobInfo,
+      language as Locale
+    )
 
     return NextResponse.json({
       success: true,

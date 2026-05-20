@@ -144,7 +144,9 @@ describe("CompactPlanDisplay", () => {
     const dialogContent = screen.getByTestId("dialog-content")
     expect(within(dialogContent).getByText("tokenTotal")).toBeInTheDocument()
     expect(within(dialogContent).getByText("tokenUsed")).toBeInTheDocument()
-    expect(within(dialogContent).getByText("tokenRemaining")).toBeInTheDocument()
+    expect(
+      within(dialogContent).getByText("tokenRemaining")
+    ).toBeInTheDocument()
     expect(within(dialogContent).getByText("100,000,000")).toBeInTheDocument()
     expect(within(dialogContent).getByText("25,000,000")).toBeInTheDocument()
     expect(within(dialogContent).getByText("75,000,000")).toBeInTheDocument()

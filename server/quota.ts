@@ -26,7 +26,9 @@ const EMPTY_CHAT_TOKENS: ChatTokenQuota = {
 }
 
 const hasRemainingChatTokens = (accessPass: DBAccessPass) => {
-  return (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
+  return (
+    (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
+  )
 }
 
 const getAccessPassByUserId = async (
