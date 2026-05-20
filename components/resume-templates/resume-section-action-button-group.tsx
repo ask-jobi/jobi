@@ -66,7 +66,7 @@ export function ResumeSectionActionButtonGroup({
   return (
     <div
       id={id}
-      className={cn("relative", dragHandle && "-ml-10 pl-10", className)}
+      className={cn("relative overflow-visible", className)}
       onBlurCapture={isActionEnabled ? hideAction : undefined}
       onFocusCapture={isActionEnabled ? showAction : undefined}
       onMouseEnter={isActionEnabled ? showAction : undefined}
@@ -75,7 +75,7 @@ export function ResumeSectionActionButtonGroup({
       {dragHandle && (
         <div
           className={cn(
-            "absolute left-0 top-1/2 z-50 -translate-y-1/2 pr-2 transition-all duration-200",
+            "absolute right-full top-1/2 z-50 -translate-y-1/2 pr-2 transition-all duration-200",
             isActionVisible
               ? "pointer-events-auto translate-x-0 opacity-100"
               : "pointer-events-none -translate-x-2 opacity-0"

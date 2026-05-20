@@ -185,10 +185,7 @@ export function SectionEntries<ID extends SortableSectionKey>({
   )
 
   useEffect(() => {
-    orderedEntryIdsRef.current = orderedEntryIds
-  }, [orderedEntryIds])
-
-  useEffect(() => {
+    orderedEntryIdsRef.current = persistedEntryIds
     setOrderedEntryIds(persistedEntryIds)
   }, [persistedEntryIds, persistedEntryIdsKey])
 
@@ -232,11 +229,14 @@ export function SectionEntries<ID extends SortableSectionKey>({
         return currentIds
       }
 
-      return arrayMove(currentIds, fromIndex, toIndex)
+      const nextIds = arrayMove(currentIds, fromIndex, toIndex)
+      orderedEntryIdsRef.current = nextIds
+      return nextIds
     })
   }
 
   const resetOrderPreview = () => {
+    orderedEntryIdsRef.current = persistedEntryIds
     setOrderedEntryIds(persistedEntryIds)
   }
 
@@ -249,12 +249,7 @@ export function SectionEntries<ID extends SortableSectionKey>({
     const fromIndex = persistedEntryIds.indexOf(String(active.id))
     const toIndex = orderedEntryIdsRef.current.indexOf(String(active.id))
 
-    if (
-      active.id === over.id ||
-      fromIndex === -1 ||
-      toIndex === -1 ||
-      fromIndex === toIndex
-    ) {
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
       resetOrderPreview()
       return
     }

@@ -99,6 +99,8 @@ describe("ResumeSectionActionButtonGroup", () => {
 
     expect(handleContainer).not.toBeNull()
     expect(surface).not.toBeNull()
+    expect(surface).not.toHaveClass("-ml-10")
+    expect(surface).not.toHaveClass("pl-10")
     expect(handleContainer).toHaveClass("opacity-0")
 
     fireEvent.mouseEnter(surface!)

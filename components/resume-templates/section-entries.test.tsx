@@ -211,4 +211,25 @@ describe("SectionEntries drag reorder", () => {
 
     expect(onEntryReorder).toHaveBeenCalledWith("education", 0, 2)
   })
+
+  it("still persists the previewed order when drop reports the active entry as over target", () => {
+    const onEntryReorder = vi.fn()
+    renderSectionEntries(createEducationSection(), { onEntryReorder })
+
+    act(() => {
+      latestDndHandlers.onDragOver?.({
+        active: { id: "edu-1" },
+        over: { id: "edu-3" }
+      })
+    })
+
+    act(() => {
+      latestDndHandlers.onDragEnd?.({
+        active: { id: "edu-1" },
+        over: { id: "edu-1" }
+      })
+    })
+
+    expect(onEntryReorder).toHaveBeenCalledWith("education", 0, 2)
+  })
 })
