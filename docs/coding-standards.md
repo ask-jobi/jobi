@@ -78,6 +78,11 @@
 - 优先使用 `@/` 路径别名
 - 避免跨目录多层相对路径
 
+## 提交前检查
+
+- 提交代码前先运行 `pnpm lint` 与 `pnpm format:check`
+- 如果 `pnpm format:check` 未通过，先执行 `pnpm format` 修复，再提交代码
+
 ## 测试
 
 - 新增 server 逻辑优先补 `*.test.ts`
