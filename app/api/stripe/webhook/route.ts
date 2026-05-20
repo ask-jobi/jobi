@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { stripe } from "@/lib/payment/stripe"
+import { getStripe } from "@/lib/payment/stripe"
 import { QUOTA } from "@/lib/payment/quota"
 import { createServerRoleClient } from "@/lib/supabase/server-role-client"
 
@@ -18,6 +18,8 @@ export async function POST(req: Request) {
 
   let event
   try {
+    const stripe = getStripe()
+
     event = stripe.webhooks.constructEvent(
       Buffer.from(rawBody),
       sig!,

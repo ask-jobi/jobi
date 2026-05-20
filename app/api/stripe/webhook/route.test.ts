@@ -2,17 +2,17 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { stripe } from "@/lib/payment/stripe"
+import { getStripe } from "@/lib/payment/stripe"
 import { QUOTA } from "@/lib/payment/quota"
 import { createServerRoleClient } from "@/lib/supabase/server-role-client"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
 vi.mock("@/lib/payment/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn(() => ({
     webhooks: {
       constructEvent: vi.fn()
     }
-  }
+  }))
 }))
 
 vi.mock("@/lib/payment/quota", () => ({
@@ -169,16 +169,14 @@ const buildWebhookSupabaseClient = (options: WebhookSupabaseOptions = {}) => {
 }
 
 describe("POST /api/stripe/webhook", () => {
-  let mockConstructEvent: ReturnType<
-    typeof vi.mocked<typeof stripe.webhooks.constructEvent>
-  >
+  let mockConstructEvent: any
   let mockCreateServerRoleClient: ReturnType<
     typeof vi.mocked<typeof createServerRoleClient>
   >
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockConstructEvent = vi.mocked(stripe.webhooks.constructEvent)
+    mockConstructEvent = vi.mocked(getStripe().webhooks.constructEvent)
     mockCreateServerRoleClient = vi.mocked(createServerRoleClient)
   })
 

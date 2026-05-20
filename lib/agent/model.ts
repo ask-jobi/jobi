@@ -1,4 +1,5 @@
 import { gateway, wrapLanguageModel } from "ai"
+import { devToolsMiddleware } from "@ai-sdk/devtools"
 
 const baseModel = gateway("minimax/minimax-m2.7")
 
@@ -9,5 +10,5 @@ export const model =
     ? baseModel
     : wrapLanguageModel({
         model: baseModel,
-        middleware: (await import("@ai-sdk/devtools")).devToolsMiddleware()
+        middleware: devToolsMiddleware()
       })

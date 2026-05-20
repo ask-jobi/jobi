@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { stripe } from "@/lib/payment/stripe"
+import { getStripe } from "@/lib/payment/stripe"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
@@ -57,6 +57,8 @@ export async function POST(request: Request) {
         plan: plan
       }
     }
+
+    const stripe = getStripe()
 
     const session = await stripe.checkout.sessions.create(
       profile?.stripe_customer_id

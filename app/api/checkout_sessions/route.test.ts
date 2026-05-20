@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { stripe } from "@/lib/payment/stripe"
+import { getStripe } from "@/lib/payment/stripe"
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
@@ -14,13 +14,13 @@ vi.mock("next/headers", () => ({
 
 // Mock stripe
 vi.mock("@/lib/payment/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn(() => ({
     checkout: {
       sessions: {
         create: vi.fn()
       }
     }
-  }
+  }))
 }))
 
 // Mock supabase server client
@@ -37,7 +37,7 @@ describe("POST /api/checkout_sessions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockStripeCreate = vi.mocked(stripe.checkout.sessions.create)
+    mockStripeCreate = vi.mocked(getStripe().checkout.sessions.create)
     mockCreateClient = vi.mocked(createClient)
     mockHeaders = vi.mocked(headers)
 
