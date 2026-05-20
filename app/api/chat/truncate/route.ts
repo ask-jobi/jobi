@@ -23,11 +23,23 @@ import {
   verifyOwnership,
   handleApiError
 } from "@/server/auth-helpers"
-import { ResumeData } from "@/types/resume"
+import type {
+  ResumeData,
+  ResumeSectionKey,
+  SortableSectionKey
+} from "@/types/resume"
 
 const truncateSchema = z.object({
   messageId: z.uuid()
 })
+
+type EntryBasedResumeSection = NonNullable<ResumeData[SortableSectionKey]>
+
+function hasEntries(
+  section: ResumeData[ResumeSectionKey] | undefined
+): section is EntryBasedResumeSection {
+  return Boolean(section && "entries" in section)
+}
 
 async function revertToolOutput(
   toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
@@ -40,29 +52,39 @@ async function revertToolOutput(
       if (!output.field) continue
 
       const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
-        const entry = section.entries.find((item: any) => item.entryId === output.id)
-        if (entry && output.field in entry) {
-          // @ts-expect-error need fix
-          entry[output.field] = output.originalValue
+      if (hasEntries(section)) {
+        const entry = section.entries.find((item) => item.entryId === output.id)
+        const mutableEntry = entry as unknown as
+          | ({ entryId: string } & Record<string, unknown>)
+          | undefined
+
+        if (mutableEntry && output.field in mutableEntry) {
+          mutableEntry[output.field] = output.originalValue
         }
       }
     }
 
     if (output.operation === "delete") {
       const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
-        // @ts-expect-error need fix
-        section.entries.push(output.originalValue)
+      if (hasEntries(section)) {
+        ;(
+          section.entries as unknown as Array<
+            { entryId: string } & Record<string, unknown>
+          >
+        ).push(
+          output.originalValue as unknown as {
+            entryId: string
+          } & Record<string, unknown>
+        )
       }
     }
 
     if (output.operation === "add") {
       const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
+      if (hasEntries(section)) {
         const newEntry = output.newEntry
         const entryIndex = section.entries.findIndex(
-          (item: any) => item.entryId === newEntry?.entryId
+          (item) => item.entryId === newEntry?.entryId
         )
         if (entryIndex !== -1) {
           section.entries.splice(entryIndex, 1)
@@ -74,23 +96,23 @@ async function revertToolOutput(
       const entity = output.entity
       if (entity) {
         const section = updatedResume[entity]
-        if (section && "entries" in section) {
+        if (hasEntries(section)) {
           const currentEntries = [...section.entries]
           const originalValue = output.originalValue as string[]
           const orderedEntries = originalValue
-            .map((id: string) => {
-              return currentEntries.find((item: any) => item.entryId === id)
+            .map((id) => {
+              return currentEntries.find((item) => item.entryId === id)
             })
-            .filter(Boolean)
-          // @ts-expect-error - reordering entries
-          section.entries = orderedEntries
+            .filter((entry): entry is (typeof section.entries)[number] =>
+              Boolean(entry)
+            )
+          section.entries = orderedEntries as typeof section.entries
         }
       }
     }
 
     if (output.operation === "reorderSections") {
-      const originalValue = output.originalValue as string[]
-      updatedResume.sectionOrder = originalValue as any
+      updatedResume.sectionOrder = output.originalValue as SortableSectionKey[]
     }
   }
 

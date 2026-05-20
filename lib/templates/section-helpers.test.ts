@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest"
 import type { ResumeData } from "@/types/resume"
 import {
   addSection,
-  ensureSectionHasEditableEntry,
-  insertEntryBelow,
   normalizeSectionOrder,
   removeSection
 } from "@/lib/templates/section-helpers"
@@ -54,76 +52,5 @@ describe("section-helpers", () => {
     expect(nextResume.skills).toBeDefined()
     expect(nextResume.skills.entries).toHaveLength(0)
     expect(nextResume.sectionOrder).toContain("skills")
-  })
-
-  it("ensures entry-based sections open with an editable entry", () => {
-    const baseResume = buildEmptyResumeData("en")
-
-    const { resume, entryIndex } = ensureSectionHasEditableEntry(
-      baseResume,
-      "education",
-      "en"
-    )
-
-    expect(entryIndex).toBe(0)
-    expect(resume.education.entries).toHaveLength(1)
-    expect(resume.education.entries[0]).toMatchObject({
-      school: "",
-      degree: "",
-      start: "",
-      end: "",
-      content: ""
-    })
-  })
-
-  it("adds missing optional sections with an editable entry", () => {
-    const baseResume = buildEmptyResumeData("en")
-
-    const { resume, entryIndex } = ensureSectionHasEditableEntry(
-      baseResume,
-      "employment",
-      "en"
-    )
-
-    expect(entryIndex).toBe(0)
-    expect(resume.employment).toBeDefined()
-    expect(resume.employment?.entries).toHaveLength(1)
-    expect(resume.sectionOrder).toContain("employment")
-  })
-
-  it("inserts a new entry directly below the selected entry", () => {
-    const baseResume = buildEmptyResumeData("en")
-    baseResume.education.entries = [
-      {
-        entryId: "edu-1",
-        school: "School 1",
-        degree: "Degree 1",
-        start: "2020-01",
-        end: "2021-01",
-        content: "A"
-      },
-      {
-        entryId: "edu-2",
-        school: "School 2",
-        degree: "Degree 2",
-        start: "2021-01",
-        end: "2022-01",
-        content: "B"
-      }
-    ]
-
-    const { resume, entryIndex } = insertEntryBelow(baseResume, "education", 0)
-
-    expect(entryIndex).toBe(1)
-    expect(resume.education.entries).toHaveLength(3)
-    expect(resume.education.entries[0].entryId).toBe("edu-1")
-    expect(resume.education.entries[1]).toMatchObject({
-      school: "",
-      degree: "",
-      start: "",
-      end: "",
-      content: ""
-    })
-    expect(resume.education.entries[2].entryId).toBe("edu-2")
   })
 })

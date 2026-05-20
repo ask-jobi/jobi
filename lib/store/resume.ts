@@ -3,9 +3,7 @@ import {
   ResumeData,
   JobApplication,
   ResumeMetadata,
-  ResumeJobDescription,
-  SortableSectionKey,
-  ResumeSection
+  ResumeJobDescription
 } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
@@ -31,34 +29,6 @@ export const applicationResumeDataAtom = atom(
     })
   }
 )
-
-export type ResumeIndex = {
-  sectionMap: Map<SortableSectionKey, ResumeSection>
-  entryMap: Map<string, { sectionKey: SortableSectionKey; entry: any }>
-}
-export const resumeIndexAtom = atom((get): ResumeIndex => {
-  const resume = get(applicationResumeDataAtom)
-  const sectionMap = new Map<SortableSectionKey, ResumeSection>()
-  const entryMap = new Map<
-    string,
-    { sectionKey: SortableSectionKey; entry: any }
-  >()
-
-  if (!resume) return { sectionMap, entryMap }
-
-  for (const sectionKey of resume.sectionOrder) {
-    const section = resume[sectionKey] as ResumeSection | undefined
-    if (!section) continue
-
-    sectionMap.set(sectionKey, section)
-
-    for (const entry of section.entries) {
-      entryMap.set(entry.entryId, { sectionKey, entry })
-    }
-  }
-
-  return { sectionMap, entryMap }
-})
 
 export const resumeMetadataAtom = atom<ResumeMetadata>((get) => {
   const app = get(applicationAtom)
@@ -155,7 +125,7 @@ export function useApplicationResume() {
       return true
     } catch (error) {
       console.error("Save failed:", error)
-      toast.error("Auto save failed")
+      toast.error("Failed to save resume changes")
       return false
     }
   }

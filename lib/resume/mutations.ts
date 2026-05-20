@@ -4,6 +4,7 @@ import type {
   PersonalInfo,
   ResumeData,
   ResumeSection,
+  ResumeSectionKey,
   SortableSectionKey
 } from "@/types/resume"
 import type {
@@ -13,6 +14,14 @@ import type {
 
 type ResumeSectionEntry<ID extends SortableSectionKey> =
   NonNullable<ResumeData[ID]> extends ResumeSection<infer Entry> ? Entry : never
+
+type EntryBasedResumeSection = NonNullable<ResumeData[SortableSectionKey]>
+
+function hasEntries(
+  section: ResumeData[ResumeSectionKey] | undefined
+): section is EntryBasedResumeSection {
+  return Boolean(section && "entries" in section)
+}
 
 export function replacePersonalInfoInResume(
   resume: ResumeData,
@@ -98,15 +107,21 @@ export function applyToolOutputToResume(
     const modifyOutput = output as ResumeEditorModifyOutput
     const section = copiedResume[modifyOutput.entity]
 
-    if (!section || !("entries" in section)) {
+    if (!hasEntries(section)) {
       return copiedResume
     }
 
     if (modifyOutput.operation === "rewrite") {
       section.entries.forEach((item) => {
-        if (item.entryId === modifyOutput.id && modifyOutput.field in item) {
-          // @ts-expect-error field comes from tool schema
-          item[modifyOutput.field] = modifyOutput.value
+        const mutableItem = item as unknown as {
+          entryId: string
+        } & Record<string, unknown>
+
+        if (
+          mutableItem.entryId === modifyOutput.id &&
+          modifyOutput.field in mutableItem
+        ) {
+          mutableItem[modifyOutput.field] = modifyOutput.value
         }
       })
     }
@@ -122,7 +137,15 @@ export function applyToolOutputToResume(
     }
 
     if (modifyOutput.operation === "add") {
-      section.entries.push(modifyOutput.newEntry as never)
+      ;(
+        section.entries as unknown as Array<
+          { entryId: string } & Record<string, unknown>
+        >
+      ).push(
+        modifyOutput.newEntry as unknown as {
+          entryId: string
+        } & Record<string, unknown>
+      )
     }
 
     return copiedResume
@@ -137,7 +160,7 @@ export function applyToolOutputToResume(
     }
 
     const section = copiedResume[entity]
-    if (!section || !("entries" in section)) {
+    if (!hasEntries(section)) {
       return copiedResume
     }
 
@@ -147,7 +170,9 @@ export function applyToolOutputToResume(
           (entry: { entryId: string }) => entry.entryId === id
         )
       )
-      .filter(Boolean)
+      .filter((entry): entry is (typeof section.entries)[number] =>
+        Boolean(entry)
+      )
 
     if (orderedEntries) {
       section.entries = orderedEntries as typeof section.entries
