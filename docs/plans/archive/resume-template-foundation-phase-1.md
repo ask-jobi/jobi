@@ -1,5 +1,7 @@
 # Resume Template Foundation Phase 1
 
+> ⚠️ **已过期（superseded）** — 被 `resume-template-foundation.md` 和后续模板演进取代。`default` / `modern` 现已通过共享 `section-entries.tsx` 渲染层和 `sectionOrder` 统一语义对齐。本文件的 Phase 1 分步方案不再反映当前实现。
+
 ## 范围
 
 本阶段只处理模板底座的基础语义与数据入口，不做视觉改版。

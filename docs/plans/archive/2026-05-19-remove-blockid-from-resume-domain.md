@@ -1,5 +1,7 @@
 # Remove `blockId` from Resume Domain Model
 
+> ⚠️ **已过期（superseded）** — `blockId` → `entryId` 的迁移已随 `2026-05-18-remove-draft-resume-state.md` 一并完成，当前代码不再使用 `blockId`。本文件的迁移步骤已不再需要执行，仅保留作为领域命名的历史记录。
+
 ## 背景
 
 简历编辑器的领域语言已经在根目录 [CONTEXT.md](../../../CONTEXT.md) 中明确：

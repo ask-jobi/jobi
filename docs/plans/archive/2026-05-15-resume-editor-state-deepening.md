@@ -1,5 +1,7 @@
 # Resume Editor State Deepening
 
+> ⚠️ **已过期（superseded）** — 本计划基于 `draft + RHF` 旧模型编写。`2026-05-18-remove-draft-resume-state.md` 已将编辑器收口为 `persisted resume only` 模型，移除了页面级 `FormProvider<ResumeData>`、autosave 和 draft rollback。本文件的 deepening 方向不再适用于当前架构，不应作为后续参考。
+
 ## 背景
 
 当前简历编辑页已经具备可用功能，但编辑态状态分布在多处：
