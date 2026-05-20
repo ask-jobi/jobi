@@ -159,7 +159,7 @@ export function ResumeSectionEditModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => void handleOpenChange(open)}>
-      <DialogContent className="flex max-h-[90vh] w-[min(960px,calc(100%-2rem))] max-w-none flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] w-[min(960px,calc(100%-2rem))] max-w-none sm:max-w-none flex-col overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b px-6 py-5">
           <DialogTitle>{selectedSectionLabel ?? t("editSection")}</DialogTitle>
         </DialogHeader>
