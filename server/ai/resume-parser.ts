@@ -286,9 +286,7 @@ export const parseResumeWithTokenUsage = async (
       )
     }
 
-    validatedData = resumeSchema.parse(
-      parseJsonFromModelText(fallback.output)
-    )
+    validatedData = resumeSchema.parse(parseJsonFromModelText(fallback.output))
     totalUsage = parseTokenUsage(fallback.totalUsage)
   }
 

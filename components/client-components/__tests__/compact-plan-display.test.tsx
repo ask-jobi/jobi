@@ -38,9 +38,7 @@ vi.mock("@/components/ui/tooltip", () => ({
   TooltipProvider: ({ children }: any) => (
     <div data-testid="tooltip-provider">{children}</div>
   ),
-  Tooltip: ({ children }: any) => (
-    <div data-testid="tooltip">{children}</div>
-  ),
+  Tooltip: ({ children }: any) => <div data-testid="tooltip">{children}</div>,
   TooltipContent: ({ children }: any) => (
     <div data-testid="tooltip-content">{children}</div>
   ),
