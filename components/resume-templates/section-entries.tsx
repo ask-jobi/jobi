@@ -25,6 +25,7 @@ import type {
 } from "@/types/resume"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 import { ResumeSectionDragHandle } from "@/components/resume-templates/resume-section-drag-handle"
+import { ResumeSectionReorderControls } from "@/components/resume-templates/resume-section-reorder-controls"
 import { useIsMobile } from "@/lib/hooks/use-mobile"
 import { useIsResumeAiActionActive } from "@/lib/store/chat"
 import { cn } from "@/lib/utils"
@@ -48,6 +49,10 @@ interface SectionEntriesProps<ID extends SortableSectionKey> {
     fromIndex: number,
     toIndex: number
   ) => void | Promise<boolean>
+  onSectionMoveUp?: (id: ID) => void | Promise<boolean>
+  onSectionMoveDown?: (id: ID) => void | Promise<boolean>
+  canMoveSectionUp?: boolean
+  canMoveSectionDown?: boolean
 
   headRender: (entry: ExtractEntry<ID>, index: number) => React.ReactNode
   entryRender: (entry: ExtractEntry<ID>, index: number) => React.ReactNode
@@ -153,6 +158,10 @@ export function SectionEntries<ID extends SortableSectionKey>({
   onEntryDelete,
   onEntryClick,
   onEntryReorder,
+  onSectionMoveUp,
+  onSectionMoveDown,
+  canMoveSectionUp = false,
+  canMoveSectionDown = false,
   headRender,
   entryRender,
   sectionClassName = "",
@@ -273,17 +282,47 @@ export function SectionEntries<ID extends SortableSectionKey>({
     />
   ))
 
+  const sectionMoveDisabled = dragDisabled || isResumeAiActionActive
+  const titleNode = titleRender ? (
+    titleRender(sectionTitle)
+  ) : (
+    <h2 className="text-lg font-bold mb-2">{sectionTitle}</h2>
+  )
+
   const content = (
     <div
       id={`section-${sectionId}`}
       className={cn("mb-5 rounded-xl p-3", sectionClassName)}
       style={sectionStyle}
     >
-      {titleRender ? (
-        titleRender(sectionTitle)
-      ) : (
-        <h2 className="text-lg font-bold mb-2">{sectionTitle}</h2>
-      )}
+      <ResumeSectionActionButtonGroup
+        actionClassName="right-0 top-0"
+        className={cn(
+          "rounded-lg pr-20 transition-colors",
+          isInteractive && "hover:bg-muted/40 focus-within:bg-muted/40"
+        )}
+        customActions={
+          (onSectionMoveUp || onSectionMoveDown) && (
+            <ResumeSectionReorderControls
+              disableMoveUp={sectionMoveDisabled || !canMoveSectionUp}
+              disableMoveDown={sectionMoveDisabled || !canMoveSectionDown}
+              onMoveUp={
+                onSectionMoveUp
+                  ? () => void onSectionMoveUp(sectionId)
+                  : undefined
+              }
+              onMoveDown={
+                onSectionMoveDown
+                  ? () => void onSectionMoveDown(sectionId)
+                  : undefined
+              }
+            />
+          )
+        }
+        isInteractive={isInteractive}
+      >
+        {titleNode}
+      </ResumeSectionActionButtonGroup>
 
       {canReorderSection ? (
         <DndContext

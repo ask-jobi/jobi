@@ -11,15 +11,11 @@ export const DEFAULT_SECTION_ORDER: SortableSectionKey[] = [
   "skills"
 ]
 
-export const DEFAULT_STARTER_SECTION_IDS: SortableSectionKey[] = [
-  "education",
-  "skills"
-]
+export const DEFAULT_STARTER_SECTION_IDS: SortableSectionKey[] = []
 
-export const OPTIONAL_SECTION_IDS: SortableSectionKey[] =
-  DEFAULT_SECTION_ORDER.filter(
-    (sectionId) => !DEFAULT_STARTER_SECTION_IDS.includes(sectionId)
-  )
+export const OPTIONAL_SECTION_IDS: SortableSectionKey[] = [
+  ...DEFAULT_SECTION_ORDER
+]
 
 export const SECTION_INSERTION_ORDER = DEFAULT_SECTION_ORDER
 

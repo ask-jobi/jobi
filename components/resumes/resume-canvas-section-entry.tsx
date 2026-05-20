@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/popover"
 import { useApplicationResume, useResumeLanguage } from "@/lib/store/resume"
 import { useIsResumeAiActionActive } from "@/lib/store/chat"
-import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
 import { getSectionEntryActions } from "@/lib/templates/section-entry-actions"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { useEntryEditWorkflow } from "@/lib/hooks/use-entry-edit-workflow"
@@ -43,14 +42,6 @@ export function isResumeCanvasEmpty(data: ResumeData | null) {
   ].some((value) => value?.trim())
 
   if (hasPersonalInfo) {
-    return false
-  }
-
-  const hasStartedOptionalSection = data.sectionOrder.some(
-    (sectionId) => !DEFAULT_STARTER_SECTION_IDS.includes(sectionId)
-  )
-
-  if (hasStartedOptionalSection) {
     return false
   }
 

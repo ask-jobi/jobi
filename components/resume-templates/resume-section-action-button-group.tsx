@@ -14,6 +14,7 @@ interface ResumeSectionActionButtonGroupProps {
   actionsDisabled?: boolean
   children: ReactNode
   className?: string
+  customActions?: ReactNode
   dragHandle?: ReactNode
   id?: string
   isInteractive?: boolean
@@ -27,6 +28,7 @@ export function ResumeSectionActionButtonGroup({
   actionsDisabled = false,
   children,
   className,
+  customActions,
   dragHandle,
   id,
   isInteractive = false,
@@ -39,7 +41,9 @@ export function ResumeSectionActionButtonGroup({
   const isResumeAiActionActive = useIsResumeAiActionActive()
   const isActionDisabled = actionsDisabled || isResumeAiActionActive
   const hasActionButtons = !!onEdit || !!onAdd || !!onDelete
-  const isActionEnabled = isInteractive && (hasActionButtons || !!dragHandle)
+  const hasCustomActions = !!customActions
+  const isActionEnabled =
+    isInteractive && (hasActionButtons || hasCustomActions || !!dragHandle)
 
   const clearHideTimer = () => {
     if (hideTimerRef.current !== null) {
@@ -84,7 +88,7 @@ export function ResumeSectionActionButtonGroup({
           {dragHandle}
         </div>
       )}
-      {hasActionButtons && (
+      {(hasActionButtons || hasCustomActions) && (
         <div
           className={cn(
             "absolute z-50 flex items-center gap-2 transition-all duration-200 motion-safe:translate-x-2",
@@ -112,6 +116,7 @@ export function ResumeSectionActionButtonGroup({
               onClick={onDelete}
             />
           )}
+          {customActions}
         </div>
       )}
       {children}

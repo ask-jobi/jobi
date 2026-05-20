@@ -1,18 +1,23 @@
 import type { Locale } from "@/lib/i18n/config"
 import type { SortableSectionKey, ResumeData } from "@/types/resume"
-import {
-  DEFAULT_SECTION_ORDER,
-  isStarterSection
-} from "@/lib/templates/section-definitions"
+import { DEFAULT_SECTION_ORDER } from "@/lib/templates/section-definitions"
 import { createEmptySection } from "@/lib/templates/section-factories"
 
 export function normalizeSectionOrder(
   sectionOrder: SortableSectionKey[]
 ): SortableSectionKey[] {
-  const uniqueIds = Array.from(new Set(sectionOrder))
-  return DEFAULT_SECTION_ORDER.filter((sectionId) =>
-    uniqueIds.includes(sectionId)
-  )
+  const knownSections = new Set(DEFAULT_SECTION_ORDER)
+  const dedupedOrder: SortableSectionKey[] = []
+
+  for (const sectionId of sectionOrder) {
+    if (!knownSections.has(sectionId) || dedupedOrder.includes(sectionId)) {
+      continue
+    }
+
+    dedupedOrder.push(sectionId)
+  }
+
+  return dedupedOrder
 }
 
 export function addSection(
@@ -21,13 +26,12 @@ export function addSection(
   language: Locale
 ): ResumeData {
   if (data[sectionId]) {
-    const nextOrder = data.sectionOrder.includes(sectionId)
-      ? data.sectionOrder
-      : normalizeSectionOrder([...data.sectionOrder, sectionId])
-    return {
-      ...data,
-      sectionOrder: nextOrder
-    }
+    return data.sectionOrder.includes(sectionId)
+      ? data
+      : {
+          ...data,
+          sectionOrder: normalizeSectionOrder([...data.sectionOrder, sectionId])
+        }
   }
 
   return {
@@ -41,16 +45,6 @@ export function removeSection(
   data: ResumeData,
   sectionId: SortableSectionKey
 ): ResumeData {
-  if (isStarterSection(sectionId)) {
-    return {
-      ...data,
-      [sectionId]: {
-        ...data[sectionId]!,
-        entries: []
-      }
-    }
-  }
-
   const nextData = { ...data }
   delete nextData[sectionId]
 

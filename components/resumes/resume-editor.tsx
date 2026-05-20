@@ -17,7 +17,9 @@ export function ResumeEditor() {
     startNewEntryEdit,
     deleteAndPersistEntry,
     reorderAndPersistEntry,
-    isEntryReorderPending
+    moveSectionAndPersist,
+    isEntryReorderPending,
+    isSectionReorderPending
   } = useEntryEditWorkflow()
   const isEmptyCanvas = isResumeCanvasEmpty(applicationResumeData)
 
@@ -39,8 +41,13 @@ export function ResumeEditor() {
               onEntryAdd: startNewEntryEdit,
               onEntryDelete: deleteAndPersistEntry,
               onEntryReorder: reorderAndPersistEntry,
+              onSectionMoveUp: (sectionId) =>
+                moveSectionAndPersist(sectionId, "up"),
+              onSectionMoveDown: (sectionId) =>
+                moveSectionAndPersist(sectionId, "down"),
               onSectionClick: handleSectionClick,
-              entryDragDisabled: isEntryReorderPending
+              entryDragDisabled: isEntryReorderPending,
+              sectionMoveDisabled: isSectionReorderPending
             }}
           />
         )}

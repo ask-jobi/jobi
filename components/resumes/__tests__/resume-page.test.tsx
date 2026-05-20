@@ -21,7 +21,7 @@ vi.mock("../resume-editor", () => ({
     const { applicationResumeData } = useApplicationResume()
 
     return (
-      <div>{applicationResumeData?.education.entries[0]?.school ?? ""}</div>
+      <div>{applicationResumeData?.education?.entries[0]?.school ?? ""}</div>
     )
   }
 }))
@@ -92,10 +92,10 @@ describe("ResumePage", () => {
     const updatedResume: ResumeData = {
       ...resume,
       education: {
-        ...resume.education,
+        ...resume.education!,
         entries: [
           {
-            ...resume.education.entries[0],
+            ...resume.education!.entries[0],
             school: "Updated School"
           }
         ]

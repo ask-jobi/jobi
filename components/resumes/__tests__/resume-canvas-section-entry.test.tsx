@@ -61,21 +61,15 @@ function renderSectionEntry(
 }
 
 describe("ResumeCanvasSectionEntry", () => {
-  it("derives the empty state from the persisted resume without requiring a form provider", () => {
+  it("derives the empty state from a truly blank persisted resume", () => {
     const persistedResume: ResumeData = {
-      sectionOrder: ["education", "skills"],
+      sectionOrder: [],
       personalInfo: {
         entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
         phone: ""
-      },
-      education: {
-        entries: []
-      },
-      skills: {
-        entries: []
       }
     }
 
@@ -86,19 +80,13 @@ describe("ResumeCanvasSectionEntry", () => {
 
   it("disables the add-section trigger while an AI resume action is running", () => {
     const persistedResume: ResumeData = {
-      sectionOrder: ["education", "skills"],
+      sectionOrder: [],
       personalInfo: {
         entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
         phone: ""
-      },
-      education: {
-        entries: []
-      },
-      skills: {
-        entries: []
       }
     }
 

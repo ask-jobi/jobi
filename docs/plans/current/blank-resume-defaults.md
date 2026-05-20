@@ -58,8 +58,8 @@
 空白简历仍保持当前策略：
 
 - `personalInfo` 字段为空
-- required section 保留结构
-- optional section 按需创建
+- 不默认创建任何 sortable section，初始 `sectionOrder = []`
+- 所有 section 都按需创建
 - 不写默认 block
 
 如果后续需要更强引导，应优先通过 UI 提示解决，而不是数据预填。

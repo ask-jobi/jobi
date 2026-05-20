@@ -135,9 +135,9 @@ describe("ResumeSectionEditModal create entry", () => {
     const expectedResume: ResumeData = {
       ...originalResume,
       education: {
-        ...originalResume.education,
+        ...originalResume.education!,
         entries: [
-          originalResume.education.entries[0],
+          originalResume.education!.entries[0],
           {
             entryId: "edu-2",
             school: "School 2",

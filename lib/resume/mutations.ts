@@ -130,6 +130,59 @@ export function reorderSectionEntriesInResume<ID extends SortableSectionKey>(
   }
 }
 
+export function moveSectionInResume(
+  resume: ResumeData,
+  sectionId: SortableSectionKey,
+  direction: "up" | "down"
+): ResumeData {
+  const visibleSectionIds = resume.sectionOrder.filter((currentSectionId) => {
+    const section = resume[currentSectionId]
+    return !!section && section.entries.length > 0
+  })
+  const currentIndex = visibleSectionIds.indexOf(sectionId)
+
+  if (currentIndex === -1) {
+    return resume
+  }
+
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
+
+  if (targetIndex < 0 || targetIndex >= visibleSectionIds.length) {
+    return resume
+  }
+
+  const nextVisibleSectionIds = [...visibleSectionIds]
+  const [movedSectionId] = nextVisibleSectionIds.splice(currentIndex, 1)
+
+  if (!movedSectionId) {
+    return resume
+  }
+
+  nextVisibleSectionIds.splice(targetIndex, 0, movedSectionId)
+
+  let visibleIndex = 0
+  const nextSectionOrder = resume.sectionOrder.map((currentSectionId) => {
+    const section = resume[currentSectionId]
+
+    if (!section || section.entries.length === 0) {
+      return currentSectionId
+    }
+
+    const nextSectionId = nextVisibleSectionIds[visibleIndex]
+    visibleIndex += 1
+    return nextSectionId ?? currentSectionId
+  })
+
+  return nextSectionOrder.every(
+    (currentSectionId, index) => currentSectionId === resume.sectionOrder[index]
+  )
+    ? resume
+    : {
+        ...resume,
+        sectionOrder: nextSectionOrder
+      }
+}
+
 export function applyToolOutputToResume(
   baseResume: ResumeData,
   output: ResumeEditorModifyOutput | ResumeEditorReorderOutput

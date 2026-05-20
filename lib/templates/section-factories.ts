@@ -12,7 +12,6 @@ import type {
   SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
-import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
 
 function createBaseSection<ID extends SortableSectionKey>(): NonNullable<
   ResumeData[ID]
@@ -123,8 +122,10 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
 }
 
 export function buildEmptyResumeData(language: Locale): ResumeData {
+  void language
+
   return {
-    sectionOrder: DEFAULT_STARTER_SECTION_IDS,
+    sectionOrder: [],
     personalInfo: {
       entryId: nanoid(),
       firstName: "",
@@ -133,8 +134,6 @@ export function buildEmptyResumeData(language: Locale): ResumeData {
       phone: "",
       website: "",
       linkedin: ""
-    },
-    education: createEmptySection("education", language),
-    skills: createEmptySection("skills", language)
+    }
   }
 }

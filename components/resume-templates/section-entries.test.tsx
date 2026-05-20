@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { Provider, createStore } from "jotai"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SectionEntries } from "@/components/resume-templates/section-entries"
@@ -108,7 +108,7 @@ function createEducationSection() {
     }
   }
 
-  return resume.education
+  return resume.education!
 }
 
 type EducationEntryReorderHandler = (
@@ -117,14 +117,24 @@ type EducationEntryReorderHandler = (
   toIndex: number
 ) => void | Promise<boolean>
 
+type EducationSectionMoveHandler = (id: "education") => void | Promise<boolean>
+
 function renderSectionEntries(
   section = createEducationSection(),
   {
     aiRunning = false,
-    onEntryReorder = vi.fn<EducationEntryReorderHandler>()
+    onEntryReorder = vi.fn<EducationEntryReorderHandler>(),
+    onSectionMoveUp = vi.fn<EducationSectionMoveHandler>(),
+    onSectionMoveDown = vi.fn<EducationSectionMoveHandler>(),
+    canMoveSectionUp = true,
+    canMoveSectionDown = true
   }: {
     aiRunning?: boolean
     onEntryReorder?: EducationEntryReorderHandler
+    onSectionMoveUp?: EducationSectionMoveHandler
+    onSectionMoveDown?: EducationSectionMoveHandler
+    canMoveSectionUp?: boolean
+    canMoveSectionDown?: boolean
   } = {}
 ) {
   const store = createStore()
@@ -141,6 +151,10 @@ function renderSectionEntries(
         sectionTitle="Education"
         isInteractive
         onEntryReorder={onEntryReorder}
+        onSectionMoveUp={onSectionMoveUp}
+        onSectionMoveDown={onSectionMoveDown}
+        canMoveSectionUp={canMoveSectionUp}
+        canMoveSectionDown={canMoveSectionDown}
         headRender={(entry) => (
           <div data-testid="entry-label">{entry.school}</div>
         )}
@@ -167,7 +181,7 @@ describe("SectionEntries drag reorder", () => {
 
   it("hides drag handles when a section has only one entry", () => {
     renderSectionEntries({
-      entries: [createEducationSection().entries[0]]
+      entries: [createEducationSection().entries[0]!]
     })
 
     expect(
@@ -231,5 +245,39 @@ describe("SectionEntries drag reorder", () => {
     })
 
     expect(onEntryReorder).toHaveBeenCalledWith("education", 0, 2)
+  })
+
+  it("renders section move buttons with stable disabled states", () => {
+    const onSectionMoveDown = vi.fn()
+    renderSectionEntries(createEducationSection(), {
+      canMoveSectionUp: false,
+      canMoveSectionDown: true,
+      onSectionMoveDown
+    })
+
+    fireEvent.mouseEnter(screen.getByText("Education").parentElement!)
+
+    const moveUpButton = screen.getByRole("button", { name: "moveSectionUp" })
+    const moveDownButton = screen.getByRole("button", {
+      name: "moveSectionDown"
+    })
+
+    expect(moveUpButton).toBeDisabled()
+    expect(moveDownButton).not.toBeDisabled()
+
+    fireEvent.click(moveDownButton)
+
+    expect(onSectionMoveDown).toHaveBeenCalledWith("education")
+  })
+
+  it("disables section move buttons while an AI resume action is running", () => {
+    renderSectionEntries(createEducationSection(), { aiRunning: true })
+
+    fireEvent.mouseEnter(screen.getByText("Education").parentElement!)
+
+    expect(screen.getByRole("button", { name: "moveSectionUp" })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "moveSectionDown" })
+    ).toBeDisabled()
   })
 })

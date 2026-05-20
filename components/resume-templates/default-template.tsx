@@ -3,15 +3,15 @@
 import React from "react"
 import type { Locale } from "@/lib/i18n/config"
 import type {
-  SortableSectionKey,
   ResumeData,
-  ResumeSectionKey
+  ResumeSectionKey,
+  SortableSectionKey
 } from "@/types/resume"
 import MarkdownRender from "@/components/resume-templates/markdown/MarkdownRender"
 import { SectionEntries } from "@/components/resume-templates/section-entries"
 import "./default-template.css"
 import ResumeSkeleton from "../skeletons/resume-skeleton"
-import { TemplateOptions } from "@/lib/templates/registry"
+import { type TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
 
@@ -21,23 +21,26 @@ interface Props {
   options?: TemplateOptions
 }
 
-const renderers: Record<
-  SortableSectionKey,
-  (
-    data: ResumeData,
-    language: Locale,
-    isInteractive?: boolean,
-    onEntryAdd?: (id: SortableSectionKey, index: number) => void,
-    onEntryDelete?: (id: SortableSectionKey, index: number) => void,
-    onSectionClick?: (id: ResumeSectionKey, index?: number) => void,
-    onEntryReorder?: (
-      id: SortableSectionKey,
-      fromIndex: number,
-      toIndex: number
-    ) => void | Promise<boolean>,
-    entryDragDisabled?: boolean
-  ) => React.ReactElement | null
-> = {
+type SectionRenderer = (
+  data: ResumeData,
+  language: Locale,
+  isInteractive?: boolean,
+  onEntryAdd?: (id: SortableSectionKey, index: number) => void,
+  onEntryDelete?: (id: SortableSectionKey, index: number) => void,
+  onSectionClick?: (id: ResumeSectionKey, index?: number) => void,
+  onEntryReorder?: (
+    id: SortableSectionKey,
+    fromIndex: number,
+    toIndex: number
+  ) => void | Promise<boolean>,
+  onSectionMoveUp?: (id: SortableSectionKey) => void | Promise<boolean>,
+  onSectionMoveDown?: (id: SortableSectionKey) => void | Promise<boolean>,
+  canMoveSectionUp?: boolean,
+  canMoveSectionDown?: boolean,
+  interactionDisabled?: boolean
+) => React.ReactElement | null
+
+const renderers: Record<SortableSectionKey, SectionRenderer> = {
   education: (
     data,
     language,
@@ -46,7 +49,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="education"
@@ -58,7 +65,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -81,7 +92,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="employment"
@@ -93,7 +108,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -108,44 +127,6 @@ const renderers: Record<
       entryRender={(block) => <MarkdownRender markdown={block.content} />}
     />
   ),
-  skills: (
-    data,
-    language,
-    isInteractive,
-    onEntryAdd,
-    onEntryDelete,
-    onSectionClick,
-    onEntryReorder,
-    entryDragDisabled
-  ) => (
-    <SectionEntries
-      key="skills"
-      sectionId="skills"
-      section={data.skills}
-      sectionTitle={getSectionLabel("skills", language)}
-      isInteractive={isInteractive}
-      onEntryAdd={onEntryAdd}
-      onEntryDelete={onEntryDelete}
-      onEntryClick={onSectionClick}
-      onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
-      headRender={(block) => (
-        <h3 className="text-sm font-bold mb-1">{block.group}</h3>
-      )}
-      entryRender={(block) => (
-        <div className="flex flex-wrap">
-          {block.content?.split(",").map((item, i) => (
-            <span
-              key={i}
-              className="text-xs bg-gray-100 px-2 py-1 rounded-full mr-1 mb-1"
-            >
-              {item.trim()}
-            </span>
-          ))}
-        </div>
-      )}
-    />
-  ),
   research: (
     data,
     language,
@@ -154,7 +135,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="research"
@@ -166,7 +151,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -191,7 +180,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="projects"
@@ -203,7 +196,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -228,7 +225,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="publications"
@@ -240,7 +241,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -263,7 +268,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="awards"
@@ -275,7 +284,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -300,7 +313,11 @@ const renderers: Record<
     onEntryDelete,
     onSectionClick,
     onEntryReorder,
-    entryDragDisabled
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
   ) => (
     <SectionEntries
       key="certifications"
@@ -312,7 +329,11 @@ const renderers: Record<
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
       onEntryReorder={onEntryReorder}
-      dragDisabled={entryDragDisabled}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -325,6 +346,52 @@ const renderers: Record<
         </>
       )}
       entryRender={() => null}
+    />
+  ),
+  skills: (
+    data,
+    language,
+    isInteractive,
+    onEntryAdd,
+    onEntryDelete,
+    onSectionClick,
+    onEntryReorder,
+    onSectionMoveUp,
+    onSectionMoveDown,
+    canMoveSectionUp,
+    canMoveSectionDown,
+    interactionDisabled
+  ) => (
+    <SectionEntries
+      key="skills"
+      sectionId="skills"
+      section={data.skills}
+      sectionTitle={getSectionLabel("skills", language)}
+      isInteractive={isInteractive}
+      onEntryAdd={onEntryAdd}
+      onEntryDelete={onEntryDelete}
+      onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      onSectionMoveUp={onSectionMoveUp}
+      onSectionMoveDown={onSectionMoveDown}
+      canMoveSectionUp={canMoveSectionUp}
+      canMoveSectionDown={canMoveSectionDown}
+      dragDisabled={interactionDisabled}
+      headRender={(block) => (
+        <h3 className="text-sm font-bold mb-1">{block.group}</h3>
+      )}
+      entryRender={(block) => (
+        <div className="flex flex-wrap">
+          {block.content?.split(",").map((item, i) => (
+            <span
+              key={i}
+              className="text-xs bg-gray-100 px-2 py-1 rounded-full mr-1 mb-1"
+            >
+              {item.trim()}
+            </span>
+          ))}
+        </div>
+      )}
     />
   )
 }
@@ -339,9 +406,13 @@ export const DefaultTemplate: React.FC<Props> = ({
     onEntryAdd,
     onEntryDelete,
     onEntryReorder,
+    onSectionMoveUp,
+    onSectionMoveDown,
     entryDragDisabled,
+    sectionMoveDisabled,
     isInteractive
   } = options ?? {}
+
   if (!data) {
     return (
       <div className="w-full flex justify-center items-start py-4">
@@ -350,9 +421,14 @@ export const DefaultTemplate: React.FC<Props> = ({
     )
   }
 
+  const interactionDisabled = entryDragDisabled || sectionMoveDisabled
+  const visibleSectionIds = data.sectionOrder.filter((sectionId) => {
+    const section = data[sectionId]
+    return !!section && section.entries.length > 0
+  })
+
   return (
     <article id="resume" data-resume-ready="true" className="bg-white p-8 pdf">
-      {/* Header */}
       <ResumeSectionActionButtonGroup
         actionClassName="top-full right-0 mt-2"
         className={
@@ -372,9 +448,10 @@ export const DefaultTemplate: React.FC<Props> = ({
         <p className="text-sm text-gray-600">{data.personalInfo.phone}</p>
       </ResumeSectionActionButtonGroup>
 
-      {/* Dynamic Sections based on sectionOrder */}
-      {data.sectionOrder.map((sectionId) =>
-        renderers[sectionId]?.(
+      {data.sectionOrder.map((sectionId) => {
+        const visibleIndex = visibleSectionIds.indexOf(sectionId)
+
+        return renderers[sectionId]?.(
           data,
           language,
           isInteractive,
@@ -382,9 +459,13 @@ export const DefaultTemplate: React.FC<Props> = ({
           onEntryDelete,
           onSectionClick,
           onEntryReorder,
-          entryDragDisabled
+          onSectionMoveUp,
+          onSectionMoveDown,
+          visibleIndex > 0,
+          visibleIndex !== -1 && visibleIndex < visibleSectionIds.length - 1,
+          interactionDisabled
         )
-      )}
+      })}
     </article>
   )
 }

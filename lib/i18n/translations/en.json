@@ -214,6 +214,8 @@
     "addEntry": "Add Entry",
     "deleteEntry": "Delete Entry",
     "reorderEntry": "Reorder Entry",
+    "moveSectionUp": "Move Section Up",
+    "moveSectionDown": "Move Section Down",
     "confirmDeleteEntry": "Click again to delete this entry",
     "evaluationTabLabel": "Evaluation Report",
     "chatTitle": "AI chat",

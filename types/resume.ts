@@ -120,11 +120,9 @@ export type CertificationsSection = ResumeSection<CertificationEntry>
 
 export interface ResumeData {
   sectionOrder: SortableSectionKey[]
-  // required
   personalInfo: PersonalInfo
-  education: EducationSection
-  skills: SkillsSection
-  // optional
+  education?: EducationSection
+  skills?: SkillsSection
   employment?: EmploymentSection
   research?: ResearchSection
   projects?: ProjectsSection

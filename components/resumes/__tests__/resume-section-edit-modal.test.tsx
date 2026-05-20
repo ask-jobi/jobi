@@ -230,7 +230,7 @@ describe("ResumeSectionEditModal", () => {
 
     await waitFor(() => {
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.entries
+        store.get(applicationAtom)?.resume.resume_json.education?.entries
       ).toHaveLength(0)
       expect(store.get(editModalOpenAtom)).toBe(false)
       expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()

@@ -7,6 +7,7 @@ import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
 import { useIsResumeAiActionActive } from "@/lib/store/chat"
 import {
   deleteSectionEntryInResume,
+  moveSectionInResume,
   reorderSectionEntriesInResume
 } from "@/lib/resume/mutations"
 import type { ResumeSectionKey, SortableSectionKey } from "@/types/resume"
@@ -32,8 +33,10 @@ export function useEntryEditWorkflow() {
   const { selectTarget } = useResumeEditorState()
   const isResumeAiActionActive = useIsResumeAiActionActive()
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
-  const reorderInFlightRef = useRef(false)
+  const entryReorderInFlightRef = useRef(false)
+  const sectionReorderInFlightRef = useRef(false)
   const [isEntryReorderPending, setIsEntryReorderPending] = useState(false)
+  const [isSectionReorderPending, setIsSectionReorderPending] = useState(false)
 
   // ── Workflow: insert new entry below an existing one ──────────────────────
 
@@ -122,7 +125,7 @@ export function useEntryEditWorkflow() {
       if (
         !applicationResumeData ||
         isResumeAiActionActive ||
-        reorderInFlightRef.current
+        entryReorderInFlightRef.current
       ) {
         return false
       }
@@ -138,7 +141,7 @@ export function useEntryEditWorkflow() {
         return false
       }
 
-      reorderInFlightRef.current = true
+      entryReorderInFlightRef.current = true
       setIsEntryReorderPending(true)
       replacePersistedResume(nextResume)
 
@@ -151,8 +154,58 @@ export function useEntryEditWorkflow() {
 
         return didSave
       } finally {
-        reorderInFlightRef.current = false
+        entryReorderInFlightRef.current = false
         setIsEntryReorderPending(false)
+      }
+    },
+    [
+      applicationResumeData,
+      isResumeAiActionActive,
+      replacePersistedResume,
+      saveApplicationResume
+    ]
+  )
+
+  const moveSectionAndPersist = useCallback(
+    async (sectionId: SortableSectionKey, direction: "up" | "down") => {
+      if (
+        !applicationResumeData ||
+        isResumeAiActionActive ||
+        sectionReorderInFlightRef.current
+      ) {
+        return false
+      }
+
+      const nextResume = moveSectionInResume(
+        applicationResumeData,
+        sectionId,
+        direction
+      )
+
+      if (nextResume === applicationResumeData) {
+        return false
+      }
+
+      sectionReorderInFlightRef.current = true
+      setIsSectionReorderPending(true)
+      replacePersistedResume(nextResume)
+
+      try {
+        const didSave = await saveApplicationResume(nextResume)
+
+        if (!didSave) {
+          replacePersistedResume(applicationResumeData)
+          return didSave
+        }
+
+        document
+          .getElementById(`section-${sectionId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+
+        return didSave
+      } finally {
+        sectionReorderInFlightRef.current = false
+        setIsSectionReorderPending(false)
       }
     },
     [
@@ -174,7 +227,11 @@ export function useEntryEditWorkflow() {
     deleteAndPersistEntry,
     /** Optimistically reorder entries, persist on drop, and roll back on failure */
     reorderAndPersistEntry,
-    /** Disables additional drag saves while a reorder save is still pending */
-    isEntryReorderPending
+    /** Optimistically reorder sections, persist immediately, and roll back on failure */
+    moveSectionAndPersist,
+    /** Disables additional drag saves while an entry reorder save is still pending */
+    isEntryReorderPending,
+    /** Disables additional section move saves while a section reorder save is still pending */
+    isSectionReorderPending
   }
 }

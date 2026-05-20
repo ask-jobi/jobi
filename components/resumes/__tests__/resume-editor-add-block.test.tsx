@@ -123,7 +123,7 @@ describe("ResumeEditor add entry", () => {
       expect(store.get(selectedEntryIndexAtom)).toBe(1)
       expect(store.get(selectedEntryIdAtom)).toBeNull()
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.entries
+        store.get(applicationAtom)?.resume.resume_json.education?.entries
       ).toHaveLength(1)
     })
   })
@@ -248,10 +248,8 @@ describe("ResumeEditor add entry", () => {
 
     const expectedResume: ResumeData = {
       ...originalResume,
-      education: {
-        ...originalResume.education,
-        entries: []
-      }
+      education: undefined,
+      sectionOrder: ["skills"]
     }
 
     await waitFor(() => {
@@ -262,15 +260,18 @@ describe("ResumeEditor add entry", () => {
     })
 
     expect(
-      store.get(applicationAtom)?.resume.resume_json.education.entries
+      store.get(applicationAtom)?.resume.resume_json.education?.entries
     ).toHaveLength(1)
 
     resolveSave()
 
     await waitFor(() => {
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.entries
-      ).toHaveLength(0)
+        store.get(applicationAtom)?.resume.resume_json.education
+      ).toBeUndefined()
+      expect(
+        store.get(applicationAtom)?.resume.resume_json.sectionOrder
+      ).toEqual(["skills"])
     })
   })
 })

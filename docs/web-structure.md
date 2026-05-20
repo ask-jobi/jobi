@@ -184,7 +184,7 @@ Sidebar 当前稳定入口：
   - `parse`
   - `prepare`
   - `evaluate`
-- 空白简历分支会直接创建 starter sections（`education`、`skills`）并跳转到 application
+- 空白简历分支会创建仅含 `personalInfo + sectionOrder=[]` 的最小 resume，并跳转到 application
 - 关闭弹窗会 reset 表单和进度状态
 
 ### 6. Application `/application/[id]/resume`
@@ -215,14 +215,15 @@ Sidebar 当前稳定入口：
 
 规则：
 
-- `education`、`skills` 是 starter section，空白简历默认创建
-- 其他 section 会在需要时动态出现
-- 删除可选 section 的最后一个 entry，会把该 section 从 `sectionOrder` 中移除
-- 删除 starter section 的最后一个 entry，只会变为空 section，不会彻底移除
+- `personalInfo` 固定在顶部，单独渲染，不参与 section 排序
+- 其他 section 都按 `sectionOrder` 渲染；空白简历初始 `sectionOrder = []`
+- 任一 section 都是按需创建；新增后默认追加到 `sectionOrder` 末尾
+- 删除任一 section 的最后一个 entry，会把该 section 从 resume data 与 `sectionOrder` 一并移除
 
 交互：
 
-- hover section / entry 会出现 `Edit / Add / Delete` 操作按钮
+- hover section / entry 会出现操作按钮
+- section title 旁支持 `Move Up / Move Down`，桌面端可单步调整 section 顺序
 - 点击编辑会打开 modal，而不是直接在右侧表单里编辑
 - `personalInfo` 作为非 repeatable section 单独编辑
 - 画布根节点有稳定选择器：`[data-testid="resume-canvas"]`
@@ -356,9 +357,9 @@ Sidebar 当前稳定入口：
 重点覆盖：
 
 - `personalInfo`
-- starter section：`education`、`skills`
-- 可选 section 的新增、编辑、删除
-- 删除最后一个 entry 后的 section 行为
+- 从空白状态新增任意 section
+- section 的新增、编辑、删除、上移、下移
+- 删除最后一个 entry 后的 section 真正移除行为
 
 ### 路径五：查看或刷新评估
 

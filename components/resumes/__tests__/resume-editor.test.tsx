@@ -12,7 +12,7 @@ vi.mock("@/lib/hooks/use-resume-template", () => ({
   useResumeTemplate: () => ({
     Template: ({ data }: { data: ResumeData | null }) => (
       <div data-testid="education-entry-count">
-        {data?.education.entries.length ?? 0}
+        {data?.education?.entries.length ?? 0}
       </div>
     )
   })

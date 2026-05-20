@@ -15,11 +15,12 @@ describe("section-factories", () => {
     expect(section.entries).toEqual([])
   })
 
-  it("builds empty resume data", () => {
+  it("builds empty resume data with only personal info and no sortable sections", () => {
     const resume = buildEmptyResumeData("zh")
-    expect(resume.education.entries).toEqual([])
+    expect(resume.education).toBeUndefined()
+    expect(resume.skills).toBeUndefined()
     expect(resume.employment).toBeUndefined()
-    expect(resume.sectionOrder).toEqual(["education", "skills"])
+    expect(resume.sectionOrder).toEqual([])
     expect(resume.personalInfo.entryId).toEqual(expect.any(String))
     expect(resume.personalInfo.website).toBe("")
     expect(resume.personalInfo.linkedin).toBe("")

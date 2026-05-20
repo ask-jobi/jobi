@@ -6,14 +6,18 @@ describe("getResumeThumbnailSections", () => {
   it("returns every populated section in section order", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.education.entries.push({
-      entryId: "edu-1",
-      school: "ZJU",
-      degree: "BS CS",
-      start: "2018",
-      end: "2022",
-      content: "Computer Science"
-    })
+    resume.education = {
+      entries: [
+        {
+          entryId: "edu-1",
+          school: "ZJU",
+          degree: "BS CS",
+          start: "2018",
+          end: "2022",
+          content: "Computer Science"
+        }
+      ]
+    }
     resume.projects = {
       entries: [
         {
@@ -25,11 +29,15 @@ describe("getResumeThumbnailSections", () => {
         }
       ]
     }
-    resume.skills.entries.push({
-      entryId: "skill-1",
-      group: "Languages",
-      content: "TypeScript, React, Node.js"
-    })
+    resume.skills = {
+      entries: [
+        {
+          entryId: "skill-1",
+          group: "Languages",
+          content: "TypeScript, React, Node.js"
+        }
+      ]
+    }
     resume.sectionOrder = ["education", "projects", "skills"]
 
     expect(
@@ -40,23 +48,26 @@ describe("getResumeThumbnailSections", () => {
   it("omits empty sections and excludes content summaries", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.skills.entries.push(
-      {
-        entryId: "skill-1",
-        group: "Frontend",
-        content: "TypeScript, React, Next.js, Tailwind CSS"
-      },
-      {
-        entryId: "skill-2",
-        group: "Backend",
-        content: "Node.js, PostgreSQL"
-      },
-      {
-        entryId: "skill-3",
-        group: "Infra",
-        content: "Docker, Vercel"
-      }
-    )
+    resume.skills = {
+      entries: [
+        {
+          entryId: "skill-1",
+          group: "Frontend",
+          content: "TypeScript, React, Next.js, Tailwind CSS"
+        },
+        {
+          entryId: "skill-2",
+          group: "Backend",
+          content: "Node.js, PostgreSQL"
+        },
+        {
+          entryId: "skill-3",
+          group: "Infra",
+          content: "Docker, Vercel"
+        }
+      ]
+    }
+    resume.sectionOrder = ["skills"]
 
     const sections = getResumeThumbnailSections(resume, "en")
 
