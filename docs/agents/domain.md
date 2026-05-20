@@ -1,39 +1,53 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+How engineering skills should consume this repo's domain documentation when exploring the codebase.
 
 ## Before exploring, read these
 
 - **`CONTEXT.md`** at the repo root
-- **`docs/adr/`** at the repo root for architecture decisions that touch the area you're about to work in
+- **`docs/adr/`** at the repo root if it exists and the area you're touching has ADRs
 
-If either of these files or directories doesn't exist, proceed silently. Don't flag the absence and don't suggest creating them upfront.
+If `docs/adr/` is absent, proceed silently. Do not block on it.
 
 ## File structure
 
-This repository is configured as a single-context repo.
+This repository is currently a **single-context repo**.
 
-```
+```text
 /
 ├── CONTEXT.md
-├── docs/adr/
-│   ├── 0001-example.md
-│   └── 0002-example.md
-└── src/
+├── app/
+├── components/
+├── docs/
+│   ├── agents/
+│   └── plans/
+├── lib/
+├── server/
+└── types/
 ```
 
 ## Current repo status
 
-At the time this configuration was created:
+At the time of this update:
 
-- No root `CONTEXT.md` was present
-- No root `CONTEXT-MAP.md` was present
-- No confirmed root `docs/adr/` directory was present
+- Root `CONTEXT.md` **exists** and defines the canonical resume-editor vocabulary
+- No confirmed root `CONTEXT-MAP.md` is present
+- No confirmed root `docs/adr/` directory is present
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept, use the term as defined in `CONTEXT.md`. Avoid drifting to new synonyms if the project later documents a preferred term.
+When naming domain concepts, prefer the terms defined in `CONTEXT.md`:
+
+- Application Resume
+- Job Application
+- Job Description
+- Section
+- Entry
+- Evaluation Report
+- Chat Session
+
+Avoid reintroducing old synonyms such as `block`, `draft resume`, or `JD` as the primary term in summaries and plans.
 
 ## Scope rule
 
-This repo is not configured as a multi-context codebase. Unless a future root `CONTEXT-MAP.md` is added, skills should assume one shared project context.
+Unless a future root `CONTEXT-MAP.md` is added, skills should assume one shared project context across the repo.

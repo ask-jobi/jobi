@@ -2,20 +2,99 @@
 
 ## 测试
 
-- 为所有新组件创建单元测试
-- 始终为 `route.ts` 创建集成测试，测试应使用真实的 Supabase 数据库
-- 组件测试使用 `@testing-library/react`
-- 测试描述必须使用英文
-- 需要覆盖边界场景和边界条件
-- 使用 Vitest 作为测试框架，而不是 Jest
+### 当前测试栈
 
-## 国际化 (i18n)
+- 单元 / 服务端测试：Vitest（Node 环境）
+- 组件测试：Vitest + Testing Library（jsdom）
+- E2E：Playwright
 
-- 添加任何新组件时，必须优先考虑 i18n
-- 在编写组件代码之前，先在 `lib/i18n/translations/en.json` 和 `lib/i18n/translations/zh.json` 中添加所需的翻译 key
-- 所有用户可见文本都必须使用 i18n
-- 客户端组件使用 `next-intl/client` 的 `useTranslations`
-- 服务端组件使用 `next-intl/server` 的 `getTranslations`
-- 禁止在组件中硬编码显示文本，始终使用翻译 key
-- 翻译 key 应具有描述性，并遵循现有命名模式（如 `section.subsection.key`）
-- 需要测试两种语言下的文本都能正确显示
+### Vitest 约定
+
+当前 `vitest.config.ts` 拆成两个 project：
+
+- `server`
+  - `server/**/*.test.{ts,tsx}`
+  - `app/api/**/*.test.{ts,tsx}`
+  - `components/editor/**/*.test.{ts,tsx}`
+  - `lib/hooks/**/*.test.{ts,tsx}`
+  - `lib/templates/**/*.test.{ts,tsx}`
+- `components`
+  - `components/**/*.test.{ts,tsx}`（排除 `components/ui/**`）
+
+补充说明：
+
+- setup files：`vitest.env-setup.tsx`、`vitest.component-setup.tsx`
+- coverage provider：`v8`
+- 当前 coverage threshold：`50%`
+
+### Playwright 约定
+
+- 测试目录：`test/e2e/`
+- 默认 baseURL：`http://localhost:3001`
+- `setup` project 会先准备登录态
+- 主要浏览器项目：
+  - `chromium`（复用 `test/e2e/.auth/user.json`）
+  - `chromium-no-auth`（当前主要给未登录 chat 场景）
+
+### 新增测试时的建议
+
+- 新增 `server/` 业务逻辑时，优先补 `*.test.ts`
+- 新增复杂组件、交互组件时，优先补 `*.test.tsx`
+- 修改 `app/api/*` 时，至少覆盖：
+  - 参数校验
+  - 鉴权 / ownership
+  - success path
+  - error path
+- 当前 route test 并不默认要求连真实 Supabase；大多数测试允许 mock `createClient()`、fetch、Stripe 或 AI 依赖
+- 影响主流程 UI（dashboard、create resume、application、pricing、auth）时，应补一轮 Playwright 回归或 session 检查
+
+### 测试风格
+
+- 测试描述使用英文
+- 优先测可观察行为，不和实现细节过度耦合
+- 对 resume editor 这类复杂模块，优先围绕：
+  - 保存前后状态
+  - section/entry 变更结果
+  - chat tool 输出后的 resume 更新
+  - token / evaluation 联动
+
+## 国际化（i18n）
+
+### 当前实现
+
+- i18n 基于 `next-intl`
+- 支持语言：`en`、`zh`
+- locale 来源于 cookie：`NEXT_LOCALE`
+- 请求级配置在 `lib/i18n/request.ts`
+- 词条文件：
+  - `lib/i18n/translations/en.json`
+  - `lib/i18n/translations/zh.json`
+
+### 使用约定
+
+- 新增用户可见文本时，先补翻译 key，再接入组件
+- 客户端组件使用 `useTranslations()` / `useLocale()`（从 `next-intl` 导入）
+- 服务端组件使用 `getTranslations()`（从 `next-intl/server` 导入）
+- locale 切换通过 `setUserLocale()` 写 cookie
+- 翻译 key 保持语义化，延续现有层级命名
+
+### 文案约束
+
+- 新代码不要继续引入硬编码用户文案
+- 允许保留历史遗留硬编码作为存量，但新增改动尽量顺手清理同域文本
+- toast、empty state、button label、dialog title 都算用户可见文本
+
+### i18n 回归建议
+
+以下情况至少检查 `en` / `zh` 两套文案：
+
+- 新页面或新弹窗
+- 表单校验文案
+- 导航、CTA、空状态
+- 会影响布局长度的标题或按钮文本
+
+### 与业务语言的边界
+
+- `UI Language` 是界面文案语言
+- `Resume Language` 是简历内容语言
+- 二者不要混用；resume 内容字段、section label 和应用按钮文案不是同一个概念
