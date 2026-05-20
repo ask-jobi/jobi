@@ -211,6 +211,7 @@
     "editSection": "编辑区块",
     "addEntry": "新增条目",
     "deleteEntry": "删除条目",
+    "reorderEntry": "重新排序条目",
     "confirmDeleteEntry": "再次点击即可删除该条目",
     "evaluationTabLabel": "评估报告",
     "chatTitle": "AI 对话",

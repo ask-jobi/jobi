@@ -13,7 +13,12 @@ export function ResumeEditor() {
   const { applicationResumeData } = useApplicationResume()
   const { Template } = useResumeTemplate()
   const handleSectionClick = useSectionClickHandler()
-  const { startNewEntryEdit, deleteAndPersistEntry } = useEntryEditWorkflow()
+  const {
+    startNewEntryEdit,
+    deleteAndPersistEntry,
+    reorderAndPersistEntry,
+    isEntryReorderPending
+  } = useEntryEditWorkflow()
   const isEmptyCanvas = isResumeCanvasEmpty(applicationResumeData)
 
   return (
@@ -33,7 +38,9 @@ export function ResumeEditor() {
               isInteractive: true,
               onEntryAdd: startNewEntryEdit,
               onEntryDelete: deleteAndPersistEntry,
-              onSectionClick: handleSectionClick
+              onEntryReorder: reorderAndPersistEntry,
+              onSectionClick: handleSectionClick,
+              entryDragDisabled: isEntryReorderPending
             }}
           />
         )}

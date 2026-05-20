@@ -93,6 +93,43 @@ export function deleteSectionEntryInResume<ID extends SortableSectionKey>(
   }
 }
 
+export function reorderSectionEntriesInResume<ID extends SortableSectionKey>(
+  resume: ResumeData,
+  sectionId: ID,
+  fromIndex: number,
+  toIndex: number
+): ResumeData {
+  const section = resume[sectionId]
+
+  if (
+    !section ||
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= section.entries.length ||
+    toIndex >= section.entries.length
+  ) {
+    return resume
+  }
+
+  const nextEntries = [...section.entries] as Array<ResumeSectionEntry<ID>>
+  const [movedEntry] = nextEntries.splice(fromIndex, 1)
+
+  if (!movedEntry) {
+    return resume
+  }
+
+  nextEntries.splice(toIndex, 0, movedEntry)
+
+  return {
+    ...resume,
+    [sectionId]: {
+      ...section,
+      entries: nextEntries as typeof section.entries
+    }
+  }
+}
+
 export function applyToolOutputToResume(
   baseResume: ResumeData,
   output: ResumeEditorModifyOutput | ResumeEditorReorderOutput

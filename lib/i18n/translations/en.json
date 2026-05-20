@@ -213,6 +213,7 @@
     "editSection": "Edit Section",
     "addEntry": "Add Entry",
     "deleteEntry": "Delete Entry",
+    "reorderEntry": "Reorder Entry",
     "confirmDeleteEntry": "Click again to delete this entry",
     "evaluationTabLabel": "Evaluation Report",
     "chatTitle": "AI chat",

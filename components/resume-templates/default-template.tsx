@@ -29,7 +29,13 @@ const renderers: Record<
     isInteractive?: boolean,
     onEntryAdd?: (id: SortableSectionKey, index: number) => void,
     onEntryDelete?: (id: SortableSectionKey, index: number) => void,
-    onSectionClick?: (id: ResumeSectionKey, index?: number) => void
+    onSectionClick?: (id: ResumeSectionKey, index?: number) => void,
+    onEntryReorder?: (
+      id: SortableSectionKey,
+      fromIndex: number,
+      toIndex: number
+    ) => void | Promise<boolean>,
+    entryDragDisabled?: boolean
   ) => React.ReactElement | null
 > = {
   education: (
@@ -38,7 +44,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="education"
@@ -49,6 +57,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -69,7 +79,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="employment"
@@ -80,6 +92,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -100,7 +114,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="skills"
@@ -111,6 +127,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <h3 className="text-sm font-bold mb-1">{block.group}</h3>
       )}
@@ -134,7 +152,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="research"
@@ -145,6 +165,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -167,7 +189,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="projects"
@@ -178,6 +202,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -200,7 +226,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="publications"
@@ -211,6 +239,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -231,7 +261,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="awards"
@@ -242,6 +274,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -264,7 +298,9 @@ const renderers: Record<
     isInteractive,
     onEntryAdd,
     onEntryDelete,
-    onSectionClick
+    onSectionClick,
+    onEntryReorder,
+    entryDragDisabled
   ) => (
     <SectionEntries
       key="certifications"
@@ -275,6 +311,8 @@ const renderers: Record<
       onEntryAdd={onEntryAdd}
       onEntryDelete={onEntryDelete}
       onEntryClick={onSectionClick}
+      onEntryReorder={onEntryReorder}
+      dragDisabled={entryDragDisabled}
       headRender={(block) => (
         <>
           <div className="flex justify-between mb-0.5">
@@ -296,8 +334,14 @@ export const DefaultTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, onEntryAdd, onEntryDelete, isInteractive } =
-    options ?? {}
+  const {
+    onSectionClick,
+    onEntryAdd,
+    onEntryDelete,
+    onEntryReorder,
+    entryDragDisabled,
+    isInteractive
+  } = options ?? {}
   if (!data) {
     return (
       <div className="w-full flex justify-center items-start py-4">
@@ -336,7 +380,9 @@ export const DefaultTemplate: React.FC<Props> = ({
           isInteractive,
           onEntryAdd,
           onEntryDelete,
-          onSectionClick
+          onSectionClick,
+          onEntryReorder,
+          entryDragDisabled
         )
       )}
     </article>

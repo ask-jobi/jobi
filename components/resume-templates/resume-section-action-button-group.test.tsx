@@ -83,6 +83,40 @@ describe("ResumeSectionActionButtonGroup", () => {
     expect(actions).toHaveClass("opacity-100")
   })
 
+  it("keeps a drag handle visible when moving from the entry body toward the handle", () => {
+    render(
+      <ResumeSectionActionButtonGroup
+        isInteractive
+        dragHandle={<button aria-label="reorderEntry">Reorder</button>}
+      >
+        <div>Section body</div>
+      </ResumeSectionActionButtonGroup>
+    )
+
+    const handle = screen.getByRole("button", { name: "reorderEntry" })
+    const handleContainer = handle.parentElement
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(handleContainer).not.toBeNull()
+    expect(surface).not.toBeNull()
+    expect(handleContainer).toHaveClass("opacity-0")
+
+    fireEvent.mouseEnter(surface!)
+
+    expect(handleContainer).toHaveClass("opacity-100")
+
+    fireEvent.mouseLeave(surface!)
+    act(() => {
+      vi.advanceTimersByTime(25)
+    })
+    fireEvent.mouseEnter(handle)
+    act(() => {
+      vi.advanceTimersByTime(60)
+    })
+
+    expect(handleContainer).toHaveClass("opacity-100")
+  })
+
   it("shows a tooltip confirmation before deleting an entry", () => {
     const onDelete = vi.fn()
 

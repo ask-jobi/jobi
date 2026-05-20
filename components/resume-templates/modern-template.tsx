@@ -21,8 +21,14 @@ export const ModernTemplate: React.FC<Props> = ({
   language,
   options
 }) => {
-  const { onSectionClick, onEntryAdd, onEntryDelete, isInteractive } =
-    options ?? {}
+  const {
+    onSectionClick,
+    onEntryAdd,
+    onEntryDelete,
+    onEntryReorder,
+    entryDragDisabled,
+    isInteractive
+  } = options ?? {}
   if (!data) {
     return (
       <div className="w-full flex justify-center items-start py-4">
@@ -70,6 +76,8 @@ export const ModernTemplate: React.FC<Props> = ({
         onEntryAdd={onEntryAdd}
         onEntryDelete={onEntryDelete}
         onEntryClick={onSectionClick}
+        onEntryReorder={onEntryReorder}
+        dragDisabled={entryDragDisabled}
         sectionClassName="modern-section"
         headRender={(block) => (
           <div className="flex justify-between items-baseline mb-1">
@@ -100,6 +108,8 @@ export const ModernTemplate: React.FC<Props> = ({
         onEntryAdd={onEntryAdd}
         onEntryDelete={onEntryDelete}
         onEntryClick={onSectionClick}
+        onEntryReorder={onEntryReorder}
+        dragDisabled={entryDragDisabled}
         sectionClassName="modern-section"
         hideIfEmpty
         emptyFallback={
@@ -138,6 +148,8 @@ export const ModernTemplate: React.FC<Props> = ({
         onEntryAdd={onEntryAdd}
         onEntryDelete={onEntryDelete}
         onEntryClick={onSectionClick}
+        onEntryReorder={onEntryReorder}
+        dragDisabled={entryDragDisabled}
         sectionClassName="modern-section"
         headRender={(block) => (
           <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase tracking-wider">

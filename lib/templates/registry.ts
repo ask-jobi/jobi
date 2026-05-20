@@ -17,7 +17,13 @@ export interface TemplateOptions {
   isInteractive?: boolean
   onEntryAdd?: (id: SortableSectionKey, index: number) => void
   onEntryDelete?: (id: SortableSectionKey, index: number) => void
+  onEntryReorder?: (
+    id: SortableSectionKey,
+    fromIndex: number,
+    toIndex: number
+  ) => void | Promise<boolean>
   onSectionClick?: (id: ResumeSectionKey, index?: number) => void
+  entryDragDisabled?: boolean
 }
 
 export type ResumeTemplateComponent = React.ComponentType<{

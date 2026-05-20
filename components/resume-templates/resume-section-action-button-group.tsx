@@ -14,6 +14,7 @@ interface ResumeSectionActionButtonGroupProps {
   actionsDisabled?: boolean
   children: ReactNode
   className?: string
+  dragHandle?: ReactNode
   id?: string
   isInteractive?: boolean
   onAdd?: () => void
@@ -26,6 +27,7 @@ export function ResumeSectionActionButtonGroup({
   actionsDisabled = false,
   children,
   className,
+  dragHandle,
   id,
   isInteractive = false,
   onAdd,
@@ -36,7 +38,8 @@ export function ResumeSectionActionButtonGroup({
   const hideTimerRef = useRef<number | null>(null)
   const isResumeAiActionActive = useIsResumeAiActionActive()
   const isActionDisabled = actionsDisabled || isResumeAiActionActive
-  const isActionEnabled = isInteractive && (!!onEdit || !!onAdd || !!onDelete)
+  const hasActionButtons = !!onEdit || !!onAdd || !!onDelete
+  const isActionEnabled = isInteractive && (hasActionButtons || !!dragHandle)
 
   const clearHideTimer = () => {
     if (hideTimerRef.current !== null) {
@@ -63,13 +66,25 @@ export function ResumeSectionActionButtonGroup({
   return (
     <div
       id={id}
-      className={cn("relative", className)}
+      className={cn("relative", dragHandle && "-ml-10 pl-10", className)}
       onBlurCapture={isActionEnabled ? hideAction : undefined}
       onFocusCapture={isActionEnabled ? showAction : undefined}
       onMouseEnter={isActionEnabled ? showAction : undefined}
       onMouseLeave={isActionEnabled ? hideAction : undefined}
     >
-      {isActionEnabled && (
+      {dragHandle && (
+        <div
+          className={cn(
+            "absolute left-0 top-1/2 z-50 -translate-y-1/2 pr-2 transition-all duration-200",
+            isActionVisible
+              ? "pointer-events-auto translate-x-0 opacity-100"
+              : "pointer-events-none -translate-x-2 opacity-0"
+          )}
+        >
+          {dragHandle}
+        </div>
+      )}
+      {hasActionButtons && (
         <div
           className={cn(
             "absolute z-50 flex items-center gap-2 transition-all duration-200 motion-safe:translate-x-2",

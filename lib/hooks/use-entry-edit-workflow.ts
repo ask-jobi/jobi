@@ -1,11 +1,14 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useSetAtom } from "jotai"
 import { editModalOpenAtom, useApplicationResume } from "@/lib/store/resume"
 import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
 import { useIsResumeAiActionActive } from "@/lib/store/chat"
-import { deleteSectionEntryInResume } from "@/lib/resume/mutations"
+import {
+  deleteSectionEntryInResume,
+  reorderSectionEntriesInResume
+} from "@/lib/resume/mutations"
 import type { ResumeSectionKey, SortableSectionKey } from "@/types/resume"
 
 // ─── Entry Edit Workflow Hook ─────────────────────────────────────────────────
@@ -21,11 +24,16 @@ import type { ResumeSectionKey, SortableSectionKey } from "@/types/resume"
 // ──────────────────────────────────────────────────────────────────────────────
 
 export function useEntryEditWorkflow() {
-  const { applicationResumeData, saveApplicationResume } =
-    useApplicationResume()
+  const {
+    applicationResumeData,
+    replacePersistedResume,
+    saveApplicationResume
+  } = useApplicationResume()
   const { selectTarget } = useResumeEditorState()
   const isResumeAiActionActive = useIsResumeAiActionActive()
   const setEditModalOpen = useSetAtom(editModalOpenAtom)
+  const reorderInFlightRef = useRef(false)
+  const [isEntryReorderPending, setIsEntryReorderPending] = useState(false)
 
   // ── Workflow: insert new entry below an existing one ──────────────────────
 
@@ -105,6 +113,56 @@ export function useEntryEditWorkflow() {
     [applicationResumeData, saveApplicationResume]
   )
 
+  const reorderAndPersistEntry = useCallback(
+    async (
+      sectionId: SortableSectionKey,
+      fromIndex: number,
+      toIndex: number
+    ) => {
+      if (
+        !applicationResumeData ||
+        isResumeAiActionActive ||
+        reorderInFlightRef.current
+      ) {
+        return false
+      }
+
+      const nextResume = reorderSectionEntriesInResume(
+        applicationResumeData,
+        sectionId,
+        fromIndex,
+        toIndex
+      )
+
+      if (nextResume === applicationResumeData) {
+        return false
+      }
+
+      reorderInFlightRef.current = true
+      setIsEntryReorderPending(true)
+      replacePersistedResume(nextResume)
+
+      try {
+        const didSave = await saveApplicationResume(nextResume)
+
+        if (!didSave) {
+          replacePersistedResume(applicationResumeData)
+        }
+
+        return didSave
+      } finally {
+        reorderInFlightRef.current = false
+        setIsEntryReorderPending(false)
+      }
+    },
+    [
+      applicationResumeData,
+      isResumeAiActionActive,
+      replacePersistedResume,
+      saveApplicationResume
+    ]
+  )
+
   return {
     /** Insert a new entry after the given index → opens a local modal form */
     startNewEntryEdit,
@@ -113,6 +171,10 @@ export function useEntryEditWorkflow() {
     /** Select an existing entry → opens a local modal form */
     startExistingEntryEdit,
     /** Delete entry at index and persist immediately */
-    deleteAndPersistEntry
+    deleteAndPersistEntry,
+    /** Optimistically reorder entries, persist on drop, and roll back on failure */
+    reorderAndPersistEntry,
+    /** Disables additional drag saves while a reorder save is still pending */
+    isEntryReorderPending
   }
 }
