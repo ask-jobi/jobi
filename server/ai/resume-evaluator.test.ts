@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { evaluateResume } from "./resume-evaluator"
+import { evaluateResume, evaluationSchema } from "./resume-evaluator"
 import type { ResumeData } from "@/types/resume"
 import { generateText } from "ai"
 
@@ -124,7 +124,7 @@ describe("evaluateResume", () => {
       expect(result.actions).toHaveLength(1)
     })
 
-    it("should return exactly 3 actions as required by schema", async () => {
+    it("should return up to 3 actions as allowed by schema", async () => {
       const mockEvaluationResult = {
         gates: {
           ats: "pass",
@@ -569,6 +569,45 @@ describe("evaluateResume", () => {
       expect(result.gaps[0].severity).toBe("critical")
       expect(result.gaps[1].severity).toBe("important")
       expect(result.gaps[2].severity).toBe("minor")
+    })
+  })
+
+  describe("actions validation", () => {
+    it("should accept a single action", () => {
+      const result = evaluationSchema.parse({
+        gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+        gaps: [],
+        actions: [
+          {
+            priority: "1",
+            targetSection: "skills",
+            instruction: "Add Python skill"
+          }
+        ]
+      })
+
+      expect(result.actions).toHaveLength(1)
+    })
+
+    it("should accept two actions", () => {
+      const result = evaluationSchema.parse({
+        gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+        gaps: [],
+        actions: [
+          {
+            priority: "1",
+            targetSection: "skills",
+            instruction: "Add Python skill"
+          },
+          {
+            priority: "2",
+            targetSection: "work_experience",
+            instruction: "Add AWS experience"
+          }
+        ]
+      })
+
+      expect(result.actions).toHaveLength(2)
     })
   })
 

@@ -181,7 +181,11 @@ describe("chat token helpers", () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { used_chat_tokens: 500 },
+              data: {
+                plan: "PRO",
+                quota_chat_tokens: 1_000,
+                used_chat_tokens: 500
+              },
               error: null
             })
           })
@@ -202,6 +206,31 @@ describe("chat token helpers", () => {
     } as unknown as ReturnType<typeof createClient>)
 
     await expect(consumeChatTokens("pass-id", 100)).resolves.toBe(600)
+  })
+
+  it("does not consume tokens when the remaining quota is insufficient", async () => {
+    const update = vi.fn()
+
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                plan: "CUSTOM",
+                quota_chat_tokens: 550,
+                used_chat_tokens: 500
+              },
+              error: null
+            })
+          })
+        }),
+        update
+      })
+    } as unknown as ReturnType<typeof createClient>)
+
+    await expect(consumeChatTokens("pass-id", 100)).resolves.toBe(500)
+    expect(update).not.toHaveBeenCalled()
   })
 })
 

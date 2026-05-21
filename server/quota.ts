@@ -139,7 +139,7 @@ export async function consumeChatTokens(
   while (attempts < 3) {
     const { data: accessPass, error: selectError } = await supabase
       .from("access_passes")
-      .select("used_chat_tokens")
+      .select("plan, quota_chat_tokens, used_chat_tokens")
       .eq("id", accessPassId)
       .single()
 
@@ -147,7 +147,17 @@ export async function consumeChatTokens(
       throw selectError
     }
 
-    const currentUsedTokens = accessPass?.used_chat_tokens ?? 0
+    const chatTokenQuota = buildChatTokenQuota(accessPass as DBAccessPass)
+    const currentUsedTokens = chatTokenQuota.used
+    const remainingTokens = Math.max(
+      chatTokenQuota.limit - currentUsedTokens,
+      0
+    )
+
+    if (remainingTokens < tokenCount) {
+      return currentUsedTokens
+    }
+
     const nextUsedTokens = currentUsedTokens + tokenCount
 
     const { data: updatedPass, error: updateError } = await supabase

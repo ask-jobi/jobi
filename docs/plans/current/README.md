@@ -6,5 +6,6 @@
 - [2026-04-01-token-based-pricing-implementation-plan.md](./2026-04-01-token-based-pricing-implementation-plan.md) - token-only 定价实施步骤
 - [2026-05-15-resume-editor-domain-naming-alignment.md](./2026-05-15-resume-editor-domain-naming-alignment.md) - 简历编辑器领域词汇与代码命名冲突清单
 - [2026-05-20-resume-editor-post-refactor-audit-cleanup.md](./2026-05-20-resume-editor-post-refactor-audit-cleanup.md) - persisted-only 重构后的收尾审计与清理
+- [2026-05-20-ai-subsystem-defect-fixes.md](./2026-05-20-ai-subsystem-defect-fixes.md) - AI 子系统缺陷修复与改进
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。

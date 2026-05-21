@@ -45,7 +45,8 @@ export const evaluationSchema = z.object({
         instruction: z.string().min(1)
       })
     )
-    .length(3, "actions must contain exactly 3 items")
+    .min(1, "actions must contain at least 1 item")
+    .max(3, "actions must contain at most 3 items")
 })
 
 type EvaluationSchemaType = ResumeEvaluationOutput

@@ -282,12 +282,26 @@ export async function POST(request: NextRequest) {
           })
 
           if (activeAccessPass) {
-            void consumeChatTokens(
-              activeAccessPass.id,
-              responseUsage.totalTokens
-            ).catch((err) => {
+            try {
+              const latestAccessPass = await getActiveAccessPass(user.id)
+
+              if (latestAccessPass) {
+                const latestQuota = buildChatTokenQuota(latestAccessPass)
+                const remainingTokens = Math.max(
+                  latestQuota.limit - latestQuota.used,
+                  0
+                )
+
+                if (remainingTokens >= responseUsage.totalTokens) {
+                  await consumeChatTokens(
+                    latestAccessPass.id,
+                    responseUsage.totalTokens
+                  )
+                }
+              }
+            } catch (err) {
               console.error("Failed to update access pass token usage:", err)
-            })
+            }
           }
         }
         if (responseMessage) {
