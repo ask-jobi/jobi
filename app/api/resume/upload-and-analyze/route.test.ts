@@ -1,593 +1,446 @@
 /**
  * @vitest-environment node
+ *
+ * Route adapter tests for upload-and-analyze.
+ *
+ * Only covers adapter-level responsibilities:
+ * - Auth guard (401)
+ * - Input validation → 4xx JSON
+ * - SSE headers
+ * - Orchestrator event → SSE mapping
  */
 import { POST } from "./route"
 import { NextRequest } from "next/server"
-import path from "node:path"
-import fs from "node:fs"
-import { Locale } from "@/lib/i18n/config"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import * as resumeParser from "@/server/ai/resume-parser"
-import type { ResumeData } from "@/types/resume"
-import * as resumeModule from "@/server/resume"
-import * as quotaModule from "@/server/quota"
-import * as toolsModule from "@/server/ai/tools"
-import * as evaluationModule from "@/server/evaluation"
-import * as writerManager from "@/server/sse/writer-manager"
 
-vi.mock("@/server/ai/resume-parser")
-vi.mock("@/server/resume")
-vi.mock("@/server/quota")
-vi.mock("@/server/ai/tools")
-vi.mock("@/server/evaluation")
-vi.mock("@/server/sse/writer-manager")
+// ── Mocks ───────────────────────────────────────────────────────
 
-vi.mock("@/server/rollback", () => ({
-  rollbackStorage: {
-    run: async (_ctx: any, fn: any) => fn(),
-    getStore: () => ({ executeRollback: vi.fn() })
-  },
-  RollbackContext: class {}
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn()
 }))
 
-describe("POST /api/resume/upload-and-analyze", () => {
-  let sentData: any[] = []
+vi.mock("@/server/quota", () => ({
+  verifyJobApplicationLimit: vi.fn()
+}))
 
-  beforeEach(() => {
-    sentData = []
+vi.mock("@/server/intake/orchestrator", () => ({
+  runUploadedResumeIntake: vi.fn()
+}))
 
-    vi.clearAllMocks()
+const { createClient } = await import("@/lib/supabase/server")
+const { verifyJobApplicationLimit } = await import("@/server/quota")
+const { runUploadedResumeIntake } = await import("@/server/intake/orchestrator")
 
-    vi.mocked(quotaModule.verifyJobApplicationLimit).mockResolvedValue(
-      undefined
-    )
-    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
-    vi.mocked(quotaModule.buildChatTokenQuota).mockReturnValue({
-      used: 0,
-      limit: 0
-    })
-    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
-    vi.mocked(quotaModule.consumeChatTokens).mockResolvedValue(0)
-    vi.mocked(toolsModule.loadPdfToDoc).mockResolvedValue([
-      { pageContent: "test content", metadata: { totalPages: 1 } }
-    ])
-    vi.mocked(evaluationModule.evaluateAndSaveResume).mockResolvedValue({
-      gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
-      gaps: [],
-      actions: []
-    })
-    vi.mocked(writerManager.registerWriter).mockReturnValue(undefined)
+// ── Helpers ─────────────────────────────────────────────────────
 
-    vi.mocked(writerManager.sendData).mockImplementation(
-      async (processId: string, data: any) => {
-        sentData.push(data)
+function createFormRequest(file?: File, jobInfo?: unknown): NextRequest {
+  const formData = new FormData()
+  if (file) formData.append("file", file)
+  if (jobInfo) formData.append("jobInfo", JSON.stringify(jobInfo))
+  return new NextRequest(
+    "http://localhost:3000/api/resume/upload-and-analyze",
+    {
+      method: "POST",
+      body: formData
+    }
+  )
+}
+
+function createRawMultipartRequest(parts: string[], boundary: string) {
+  return new NextRequest(
+    "http://localhost:3000/api/resume/upload-and-analyze",
+    {
+      method: "POST",
+      headers: {
+        "content-type": `multipart/form-data; boundary=${boundary}`
+      },
+      body: parts.join("\r\n")
+    }
+  )
+}
+
+function mockAuth(userId = "test-user-id") {
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: userId } },
+        error: null
+      })
+    }
+  } as any)
+}
+
+function mockNoAuth() {
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: null
+      })
+    }
+  } as any)
+}
+
+const validJobInfo = {
+  name: "Software Engineer",
+  company: "Tech Corp",
+  description: "Build great products"
+}
+
+async function readSSEBody(
+  response: Response
+): Promise<{ events: unknown[]; raw: string }> {
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error("No response body")
+
+  const decoder = new TextDecoder()
+  const chunks: string[] = []
+
+  // Read for a limited time then cancel
+  const timeout = setTimeout(() => reader.cancel(), 500)
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(decoder.decode(value, { stream: true }))
+    }
+  } catch {
+    // reader cancelled
+  } finally {
+    clearTimeout(timeout)
+  }
+
+  const raw = chunks.join("")
+  const events: unknown[] = []
+  for (const line of raw.split("\n")) {
+    if (line.startsWith("data: ")) {
+      try {
+        events.push(JSON.parse(line.slice(6)))
+      } catch {
+        // skip unparseable
       }
-    )
+    }
+  }
+  return { events, raw }
+}
 
-    vi.mocked(writerManager.closeWriter).mockReturnValue(undefined)
+// ── Tests ───────────────────────────────────────────────────────
 
-    vi.spyOn(console, "log").mockImplementation(() => {})
-    vi.spyOn(console, "error").mockImplementation(() => {})
-
-    vi.useFakeTimers()
+describe("POST /api/resume/upload-and-analyze (adapter)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuth()
+    vi.mocked(verifyJobApplicationLimit).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
-    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
-  const flushAsyncWork = async () => {
-    await Promise.resolve()
-    await Promise.resolve()
-  }
+  // ── Auth ──────────────────────────────────────────────────────
 
-  const wait = async (ms: number) => {
-    const step = 100
-    let elapsed = 0
+  it("returns 401 when not authenticated", async () => {
+    mockNoAuth()
+    const request = createFormRequest(
+      new File(["test"], "resume.pdf", { type: "application/pdf" }),
+      validJobInfo
+    )
+    const response = await POST(request)
+    expect(response.status).toBe(401)
+  })
 
-    while (elapsed <= ms) {
-      await vi.advanceTimersByTimeAsync(step)
-      await flushAsyncWork()
+  // ── File validation ───────────────────────────────────────────
 
-      elapsed += step
-    }
-  }
+  it("returns 400 when file is missing", async () => {
+    const request = createFormRequest(undefined, validJobInfo)
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.error).toContain("No file")
+  })
 
-  const createMockRequest = (file?: File, jobInfo?: any): NextRequest => {
+  it("returns 400 when file is not PDF", async () => {
+    const request = createFormRequest(
+      new File(["test"], "resume.png", { type: "image/png" }),
+      validJobInfo
+    )
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.error).toContain("PDF")
+  })
+
+  it("accepts a .pdf file when the browser omits the MIME type", async () => {
+    vi.mocked(runUploadedResumeIntake).mockResolvedValue({
+      status: "cancelled",
+      intakeId: "test-intake-1",
+      reason: {
+        code: "INTAKE_CANCELLED",
+        userMessage: "cancelled"
+      }
+    })
+
+    const file = new File(["test"], "resume.pdf", { type: "" })
+    const request = createFormRequest(file, validJobInfo)
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+    expect(runUploadedResumeIntake).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: expect.objectContaining({ name: "resume.pdf" })
+      }),
+      expect.any(Object)
+    )
+  })
+
+  // ── jobInfo validation ────────────────────────────────────────
+
+  it("returns 400 when jobInfo is not valid JSON", async () => {
     const formData = new FormData()
-    if (file) {
-      formData.append("file", file)
-    }
-    if (jobInfo) {
-      formData.append("jobInfo", JSON.stringify(jobInfo))
-    }
-
-    return new NextRequest(
+    formData.append(
+      "file",
+      new File(["test"], "resume.pdf", { type: "application/pdf" })
+    )
+    formData.append("jobInfo", "not-json")
+    const request = new NextRequest(
       "http://localhost:3000/api/resume/upload-and-analyze",
+      { method: "POST", body: formData }
+    )
+    const response = await POST(request)
+    const body = await response.json()
+    expect(response.status).toBe(400)
+    expect(body.error).toBe("Invalid job info: malformed JSON")
+  })
+
+  it("returns 400 when jobInfo fails schema validation", async () => {
+    const request = createFormRequest(
+      new File(["test"], "resume.pdf", { type: "application/pdf" }),
+      { name: "", company: "", description: "" }
+    )
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.error).toContain("job info")
+    expect(body.details).toMatchObject({
+      name: expect.any(Array),
+      company: expect.any(Array),
+      description: expect.any(Array)
+    })
+  })
+
+  it("accepts raw multipart with a Chinese pdf filename and Unicode job info", async () => {
+    vi.mocked(runUploadedResumeIntake).mockResolvedValue({
+      status: "cancelled",
+      intakeId: "test-intake-1",
+      reason: {
+        code: "INTAKE_CANCELLED",
+        userMessage: "cancelled"
+      }
+    })
+
+    const boundary = "----WebKitFormBoundaryKiI3tPJW53ayeLIf"
+    const request = createRawMultipartRequest(
+      [
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="file"; filename="余涛_developer_简历.pdf"',
+        "Content-Type: application/pdf",
+        "",
+        "%PDF-1.4",
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="jobInfo"',
+        "",
+        '{"name":"BitSearch","company":"星云科技有限公司","description":"asdadasdasd"}',
+        `--${boundary}--`,
+        ""
+      ],
+      boundary
+    )
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+    expect(runUploadedResumeIntake).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: expect.objectContaining({ name: "余涛_developer_简历.pdf" }),
+        jobInfo: {
+          name: "BitSearch",
+          company: "星云科技有限公司",
+          description: "asdadasdasd"
+        }
+      }),
+      expect.any(Object)
+    )
+  })
+
+  // ── Application limit ─────────────────────────────────────────
+
+  it("returns 403 when application limit is exceeded", async () => {
+    vi.mocked(verifyJobApplicationLimit).mockRejectedValue(
+      new Error("limit reached")
+    )
+    const request = createFormRequest(
+      new File(["test"], "resume.pdf", { type: "application/pdf" }),
+      validJobInfo
+    )
+    const response = await POST(request)
+    expect(response.status).toBe(403)
+  })
+
+  // ── SSE response ──────────────────────────────────────────────
+
+  it("passes validated request input to the orchestrator", async () => {
+    vi.mocked(runUploadedResumeIntake).mockResolvedValue({
+      status: "cancelled",
+      intakeId: "test-intake-1",
+      reason: {
+        code: "INTAKE_CANCELLED",
+        userMessage: "cancelled"
+      }
+    })
+
+    const file = new File(["test"], "resume.pdf", { type: "application/pdf" })
+    const request = createFormRequest(file, validJobInfo)
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+    expect(runUploadedResumeIntake).toHaveBeenCalledWith(
       {
-        method: "POST",
-        body: formData
+        actor: { id: "test-user-id" },
+        jobInfo: validJobInfo,
+        file
+      },
+      expect.objectContaining({
+        actor: { id: "test-user-id" },
+        emit: expect.any(Function),
+        cancellation: expect.objectContaining({
+          isCancelled: expect.any(Function),
+          cancel: expect.any(Function)
+        }),
+        rollback: expect.any(Object)
+      })
+    )
+  })
+
+  it("records post-commit SSE transport failure without changing the domain result", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {})
+    let resumeAfterDisconnect!: () => void
+    const disconnected = new Promise<void>((resolve) => {
+      resumeAfterDisconnect = resolve
+    })
+
+    vi.mocked(runUploadedResumeIntake).mockImplementation(
+      async (_input, ctx) => {
+        await ctx.emit({ type: "intake.start", intakeId: "test-intake-1" })
+        await ctx.emit({
+          type: "intake.done",
+          intakeId: "test-intake-1",
+          applicationId: "app-1",
+          resumeId: "resume-1"
+        })
+        await disconnected
+        await ctx.emit({
+          type: "step.done",
+          intakeId: "test-intake-1",
+          step: "evaluate"
+        })
+        return {
+          status: "done",
+          intakeId: "test-intake-1",
+          applicationId: "app-1",
+          resumeId: "resume-1"
+        }
       }
     )
-  }
 
-  const mockResumeData = {
-    sectionOrder: ["education", "employment", "skills"] as const,
-    personalInfo: {
-      entryId: "p1",
-      firstName: "Test",
-      lastName: "User",
-      email: "test@example.com",
-      phone: "1234567890"
-    },
-    education: { title: "Education", entries: [] },
-    employment: { title: "Employments", entries: [] },
-    skills: { title: "Skills", entries: [] }
-  } as unknown as ResumeData
+    const request = createFormRequest(
+      new File(["test"], "resume.pdf", { type: "application/pdf" }),
+      validJobInfo
+    )
+    const response = await POST(request)
 
-  const mockJobInfo = {
-    name: "Frontend Developer",
-    company: "Tech Corp",
-    description: "We are looking for a skilled frontend developer..."
-  }
+    const reader = response.body?.getReader()
+    expect(reader).toBeTruthy()
 
-  const mockUploadResult = {
-    fileName: "test-resume.pdf",
-    publicUrl: "https://example.com/test-resume.pdf",
-    userId: "user-123"
-  }
+    const decoder = new TextDecoder()
+    let raw = ""
 
-  const mockCreateResumeRecordResult = {
-    jobData: {
-      id: "job-123",
-      name: "Frontend Developer",
-      company: "Tech Corp",
-      description: "We are looking for a skilled frontend developer...",
-      created_at: "2024-01-01T00:00:00Z"
-    },
-    resumeData: {
-      id: "resume-123",
-      user_id: "user-123",
-      job_id: "job-123",
-      upload_url: "https://example.com/test-resume.pdf",
-      evaluation_report: null,
-      evaluation_report_refresh_flag: false,
-      language: "en" as Locale,
-      resume_json: mockResumeData,
-      created_at: "2024-01-01T00:00:00Z"
-    },
-    applicationData: {
-      id: "application-123",
-      user_id: "user-123",
-      resume_id: "resume-123",
-      job_id: "job-123",
-      optimized_resume_url: null,
-      created_at: "2024-01-01T00:00:00Z"
+    while (reader) {
+      const { done, value } = await reader.read()
+      if (done) break
+      raw += decoder.decode(value, { stream: true })
+      if (raw.includes('"type":"intake.done"')) {
+        break
+      }
     }
-  }
 
-  describe("Success scenarios", () => {
-    it("should return 200 when valid PDF file is provided", async () => {
-      const pdfPath = path.resolve("test/test_pdf.pdf")
-      if (!fs.existsSync(pdfPath)) {
-        console.warn("test_pdf.pdf not found, skip this test")
-        return
-      }
+    await reader?.cancel()
+    resumeAfterDisconnect()
+    await Promise.resolve()
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
-      const buffer = fs.readFileSync(pdfPath)
-      const file = new File([buffer], "test_pdf.pdf", {
-        type: "application/pdf"
+    expect(raw).toContain('"type":"intake.done"')
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "resume_intake_sse_transport_failure",
+      expect.objectContaining({
+        phase: "post-commit",
+        intakeId: "test-intake-1",
+        eventType: "step.done"
       })
+    )
+  })
 
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
-        resumeData: mockResumeData,
-        language: "en",
-        tokenUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          cachedTokens: 0,
-          reasoningTokens: 0,
-          totalTokens: 0
-        }
-      })
-      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
-        mockCreateResumeRecordResult
-      )
-
-      const request = createMockRequest(file, mockJobInfo)
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(5000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData).toHaveLength(10)
-
-      expect(sentData[0]).toEqual({ step: "upload", status: "loading" })
-      expect(sentData[1]).toEqual({ step: "upload", status: "success" })
-      expect(sentData[2]).toEqual({ step: "load", status: "loading" })
-      expect(sentData[3]).toEqual({ step: "load", status: "success" })
-      expect(sentData[4]).toEqual({ step: "parse", status: "loading" })
-      expect(sentData[5]).toEqual({ step: "parse", status: "success" })
-      expect(sentData[6]).toEqual({ step: "prepare", status: "loading" })
-      expect(sentData[7]).toEqual({ step: "prepare", status: "success" })
-      expect(sentData[8]).toEqual({ step: "evaluate", status: "loading" })
-      expect(sentData[9]).toEqual({
-        step: "evaluate",
-        status: "success",
-        resumeId: "resume-123",
-        applicationId: "application-123"
-      })
-
-      expect(resumeModule.uploadResumeFile).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "test_pdf.pdf",
-          type: "application/pdf"
+  it("returns SSE content-type and streams events", async () => {
+    // Setup orchestrator to emit some events then resolve
+    vi.mocked(runUploadedResumeIntake).mockImplementation(
+      async (_input, ctx) => {
+        await ctx.emit({ type: "intake.start", intakeId: "test-intake-1" })
+        await ctx.emit({
+          type: "step.start",
+          intakeId: "test-intake-1",
+          step: "extract"
         })
-      )
-      expect(toolsModule.loadPdfToDoc).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "test_pdf.pdf",
-          type: "application/pdf"
-        }),
-        {
-          splitPages: false
+        await ctx.emit({
+          type: "step.done",
+          intakeId: "test-intake-1",
+          step: "extract"
+        })
+        await ctx.emit({
+          type: "intake.done",
+          intakeId: "test-intake-1",
+          applicationId: "app-1",
+          resumeId: "resume-1"
+        })
+        return {
+          status: "done",
+          intakeId: "test-intake-1",
+          applicationId: "app-1",
+          resumeId: "resume-1"
         }
-      )
-      expect(resumeParser.parseResumeWithTokenUsage).toHaveBeenCalledWith(
-        "test content"
-      )
-      expect(resumeModule.createApplicationResumeRecord).toHaveBeenCalledWith(
-        mockJobInfo,
-        mockUploadResult,
-        mockResumeData,
-        "en"
-      )
-      expect(evaluationModule.evaluateAndSaveResume).toHaveBeenCalled()
-    })
-
-    it("should handle different languages correctly", async () => {
-      const pdfPath = path.resolve("test/test_pdf.pdf")
-      if (!fs.existsSync(pdfPath)) {
-        console.warn("test_pdf.pdf not found, skip this test")
-        return
       }
-
-      const buffer = fs.readFileSync(pdfPath)
-      const file = new File([buffer], "test_pdf.pdf", {
-        type: "application/pdf"
-      })
-
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
-        resumeData: mockResumeData,
-        language: "zh",
-        tokenUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          cachedTokens: 0,
-          reasoningTokens: 0,
-          totalTokens: 0
-        }
-      })
-      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
-        mockCreateResumeRecordResult
-      )
-
-      const request = createMockRequest(file, mockJobInfo)
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(5000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-
-      expect(sentData).toHaveLength(10)
-
-      expect(resumeModule.createApplicationResumeRecord).toHaveBeenCalledWith(
-        mockJobInfo,
-        mockUploadResult,
-        mockResumeData,
-        "zh"
-      )
-    })
-
-    it("should consume chat tokens after resume parsing", async () => {
-      const file = new File([Buffer.from("test pdf content")], "test.pdf", {
-        type: "application/pdf"
-      })
-
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue({
-        id: "pass-123"
-      } as never)
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
-        resumeData: mockResumeData,
-        language: "en",
-        tokenUsage: {
-          inputTokens: 100,
-          outputTokens: 80,
-          cachedTokens: 20,
-          reasoningTokens: 0,
-          totalTokens: 200
-        }
-      })
-      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
-        mockCreateResumeRecordResult
-      )
-
-      const request = createMockRequest(file, mockJobInfo)
-      const responsePromise = POST(request)
-
-      await wait(5000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(quotaModule.getActiveAccessPass).toHaveBeenCalledWith("user-123")
-      expect(quotaModule.verifyChatTokenQuota).toHaveBeenCalledWith(0, 0)
-      expect(quotaModule.consumeChatTokens).toHaveBeenCalledWith(
-        "pass-123",
-        200
-      )
-    })
-  })
-
-  describe("Validation error scenarios", () => {
-    it("should return 400 error when no file is provided", async () => {
-      const request = createMockRequest(undefined, mockJobInfo)
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(100)
-
-      const response = await responsePromise
-      const data = await response.json()
-
-      expect(response.status).toBe(400)
-      expect(data.error).toBe("No file provided")
-      expect(quotaModule.verifyJobApplicationLimit).toHaveBeenCalled()
-    })
-
-    it("should send error response when file is not PDF format", async () => {
-      const file = new File([Buffer.from("not a pdf")], "test.txt", {
-        type: "text/plain"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(100)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      expect(sentData[0]).toEqual({
-        error: "Only support upload pdf file as resume"
-      })
-
-      expect(resumeModule.uploadResumeFile).not.toHaveBeenCalled()
-      expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
-      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
-    })
-  })
-
-  describe("Quota error scenarios", () => {
-    it("should handle quota exceeded error", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      vi.mocked(quotaModule.verifyJobApplicationLimit).mockImplementation(
-        () => {
-          throw new Error("Limit reached")
-        }
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(100)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      expect(sentData[0]).toEqual({ error: "Limit reached" })
-    })
-  })
-
-  describe("Server error scenarios", () => {
-    it("should handle upload file error", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      vi.mocked(resumeModule.uploadResumeFile).mockRejectedValue(
-        new Error("Upload failed")
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(2000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      const lastMessage = sentData[sentData.length - 1]
-      expect(lastMessage).toEqual({ error: "Upload failed" })
-
-      expect(resumeParser.parseResumeWithTokenUsage).not.toHaveBeenCalled()
-      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
-    })
-
-    it("should handle resume parsing error", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockRejectedValue(
-        new Error("Parsing failed")
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(4000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      const lastMessage = sentData[sentData.length - 1]
-      expect(lastMessage).toEqual({ error: "Parsing failed" })
-
-      expect(resumeModule.createApplicationResumeRecord).not.toHaveBeenCalled()
-    })
-
-    it("should handle create resume record error", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
-        resumeData: mockResumeData,
-        language: "en",
-        tokenUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          cachedTokens: 0,
-          reasoningTokens: 0,
-          totalTokens: 0
-        }
-      })
-      vi.mocked(resumeModule.createApplicationResumeRecord).mockRejectedValue(
-        new Error("Database error")
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(5000)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      const lastMessage = sentData[sentData.length - 1]
-      expect(lastMessage).toEqual({ error: "Database error" })
-    })
-  })
-
-  describe("Edge cases", () => {
-    it("should handle request abortion", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const request = createMockRequest(file, mockJobInfo)
-
-      vi.mocked(resumeModule.uploadResumeFile).mockResolvedValue(
-        mockUploadResult
-      )
-      vi.mocked(resumeParser.parseResumeWithTokenUsage).mockResolvedValue({
-        resumeData: mockResumeData,
-        language: "en",
-        tokenUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          cachedTokens: 0,
-          reasoningTokens: 0,
-          totalTokens: 0
-        }
-      })
-      vi.mocked(resumeModule.createApplicationResumeRecord).mockResolvedValue(
-        mockCreateResumeRecordResult
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(5000)
-
-      const response = await responsePromise
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(writerManager.closeWriter).toHaveBeenCalled()
-    })
-
-    it("should handle malformed job info JSON", async () => {
-      const buffer = Buffer.from("test pdf content")
-      const file = new File([buffer], "test.pdf", {
-        type: "application/pdf"
-      })
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("jobInfo", "invalid json")
-
-      const request = new NextRequest(
-        "http://localhost:3000/api/resume/upload-and-analyze",
-        {
-          method: "POST",
-          body: formData
-        }
-      )
-
-      const responsePromise = POST(request)
-
-      // Advance timers to let async operations complete
-      await wait(100)
-
-      const response = await responsePromise
-
-      expect(response.status).toBe(200)
-      expect(response.headers.get("Content-Type")).toBe("text/event-stream")
-
-      expect(sentData.length).toBeGreaterThanOrEqual(1)
-      expect(sentData[0].error).toContain("not valid JSON")
-    })
+    )
+
+    const request = createFormRequest(
+      new File(["test"], "resume.pdf", { type: "application/pdf" }),
+      validJobInfo
+    )
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("Content-Type")).toBe("text/event-stream")
+    expect(response.headers.get("Cache-Control")).toContain("no-cache")
+
+    const { events } = await readSSEBody(response)
+
+    expect(events.length).toBeGreaterThanOrEqual(4)
+    expect(events[0]).toMatchObject({ type: "intake.start" })
+    expect(events[1]).toMatchObject({ type: "step.start", step: "extract" })
+    expect(events[2]).toMatchObject({ type: "step.done", step: "extract" })
+    const lastEvent = events[events.length - 1] as Record<string, unknown>
+    expect(lastEvent.type).toBe("intake.done")
+    expect(lastEvent.applicationId).toBe("app-1")
+    expect(lastEvent.resumeId).toBe("resume-1")
   })
 })

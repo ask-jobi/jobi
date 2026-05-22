@@ -8,7 +8,6 @@
 - [2026-05-20-resume-editor-post-refactor-audit-cleanup.md](./2026-05-20-resume-editor-post-refactor-audit-cleanup.md) - persisted-only 重构后的收尾审计与清理
 - [2026-05-20-ai-subsystem-defect-fixes.md](./2026-05-20-ai-subsystem-defect-fixes.md) - AI 子系统缺陷修复与改进
 - [2026-05-21-chat-session-application-resume-edit-deepening.md](./2026-05-21-chat-session-application-resume-edit-deepening.md) - Chat Session 到 Application Resume AI edit 链路 deepening
-- [2026-05-21-uploaded-resume-intake-deepening.md](./2026-05-21-uploaded-resume-intake-deepening.md) - Uploaded Resume intake 主链路 deepening
 - [2026-05-21-evaluation-report-lifecycle-deepening.md](./2026-05-21-evaluation-report-lifecycle-deepening.md) - Evaluation Report lifecycle deepening
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。

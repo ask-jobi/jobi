@@ -107,10 +107,10 @@
     "stepAnalyze": "分析简历",
 
     "progress": {
-      "upload": "上传简历文件",
-      "load": "读取简历文件",
+      "extract": "提取PDF文本",
       "parse": "解析你的简历",
-      "prepare": "生成简历数据",
+      "upload": "上传简历文件",
+      "persist": "保存申请数据",
       "evaluate": "评估简历与岗位的匹配度"
     },
 

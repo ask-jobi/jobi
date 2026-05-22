@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createEmptyApplicationResumeRecord } from "@/server/resume"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { defaultLocale, locales, type Locale } from "@/lib/i18n/config"
+import { createEmptyResume } from "@/server/intake/empty-orchestrator"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Auth ──
+    const supabase = await createClient()
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
     const jobInfo = body.jobInfo as JobInfoFormType
     const language = locales.includes(body.language)
@@ -20,10 +31,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await createEmptyApplicationResumeRecord(
+    const result = await createEmptyResume({
+      actorId: user.id,
       jobInfo,
-      language as Locale
-    )
+      language: language as Locale
+    })
 
     return NextResponse.json({
       success: true,

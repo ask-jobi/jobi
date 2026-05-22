@@ -71,6 +71,26 @@ describe("ResumeRightPanel", () => {
     expect(mockSetRightPanelView).toHaveBeenCalledWith("chat")
   })
 
+  it("shows the current evaluation report on first render when one already exists", () => {
+    mockUseAtom.mockReturnValue(["evaluation", mockSetRightPanelView])
+    mockUseApplicationResume.mockReturnValue({
+      selectedSectionId: "personalInfo",
+      resumeEvaluation: {
+        gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+        gaps: [],
+        actions: []
+      },
+      refreshEvaluationReport: vi.fn()
+    })
+
+    render(<ResumeRightPanel />)
+
+    expect(screen.getByText("evaluation-report")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "refreshEvaluation" })
+    ).toBeInTheDocument()
+  })
+
   it("shows chat content when the chat view is active", () => {
     mockUseAtom.mockReturnValue(["chat", mockSetRightPanelView])
 

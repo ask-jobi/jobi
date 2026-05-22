@@ -9,23 +9,21 @@ import {
   FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { z } from "zod"
 import { Textarea } from "@/components/ui/textarea"
 import { UseFormReturn } from "react-hook-form"
 import { useTranslations } from "next-intl"
+import {
+  jobInfoFormSchema,
+  type JobInfoFormType
+} from "@/lib/job-info-form-schema"
 
-export const formSchema = z.object({
-  name: z.string().nonempty(),
-  company: z.string().nonempty(),
-  description: z.string().nonempty()
-})
+export { jobInfoFormSchema as formSchema }
+export type { JobInfoFormType }
 
 type JobInformationFormProps = {
   form: UseFormReturn<JobInfoFormType>
   disabled?: boolean
 }
-
-export type JobInfoFormType = z.infer<typeof formSchema>
 
 function JobInformationForm({ form, disabled }: JobInformationFormProps) {
   const t = useTranslations("form.job")

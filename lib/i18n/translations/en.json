@@ -106,10 +106,10 @@
     "stepUpload": "Upload Resume",
     "stepAnalyze": "Analyze Resume",
     "progress": {
-      "upload": "Upload Resume File",
-      "load": "Read Resume File",
+      "extract": "Extract PDF Text",
       "parse": "Parse Your Resume",
-      "prepare": "Generate Resume Data",
+      "upload": "Upload Resume File",
+      "persist": "Save Application Data",
       "evaluate": "Evaluate Resume and Job Match"
     },
     "job": {

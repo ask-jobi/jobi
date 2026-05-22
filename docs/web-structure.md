@@ -323,8 +323,8 @@ Sidebar 当前稳定入口：
 4. Step 2 选择：
    - 上传 PDF
    - `Create Empty Resume`
-5. 上传 PDF 分支进入 Step 3，观察 SSE 进度
-6. 成功后跳转 `/application/[applicationId]`
+5. 上传 PDF 分支进入 Step 3，观察 SSE 进度（新事件协议：`intake.start` → `step.*` → `intake.done` / `intake.failed` / `intake.cancelled`）
+6. 成功后（收到 `intake.done`）跳转 `/application/[applicationId]`
 7. 空白简历分支直接跳转 `/application/[applicationId]`
 
 校验点：

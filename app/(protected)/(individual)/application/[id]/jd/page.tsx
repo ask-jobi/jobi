@@ -5,10 +5,11 @@ import { useApplicationResume } from "@/lib/store/resume"
 import { Button } from "@/components/ui/button"
 import { updateResumeJobDescription } from "@/server/resume"
 import { useEffect, useState } from "react"
-import JobInformationForm, {
-  formSchema,
-  JobInfoFormType
-} from "@/components/forms/job-information-form"
+import JobInformationForm from "@/components/forms/job-information-form"
+import {
+  jobInfoFormSchema,
+  type JobInfoFormType
+} from "@/lib/job-info-form-schema"
 import { useTranslations } from "next-intl"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -18,7 +19,7 @@ export default function Page() {
   const { jobDescription, setJobDescription } = useApplicationResume()
   const [loading, setLoading] = useState(false)
   const form = useForm<JobInfoFormType>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(jobInfoFormSchema),
     defaultValues: {
       name: "",
       company: "",
