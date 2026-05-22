@@ -30,50 +30,17 @@ const resumeSchema = z.object({
     phone: z.string().describe("Phone number of the candidate").prefault("")
   }),
   education: z.object({
-    entries: z.array(
-      z.object({
-        entryId: z.string().default(() => nanoid()),
-        content: z
-          .string()
-          .describe(
-            "Description of the education experience, return markdown formatted"
-          ),
-        school: z.string().describe("Name of the school"),
-        degree: z.string().describe("Degree obtained"),
-        start: z.string().describe("Start date in YYYY-MM format").prefault(""),
-        end: z
-          .string()
-          .describe(
-            "End date in YYYY-MM format, if contains current/present/now, format as 'present'"
-          )
-          .prefault("")
-      })
-    )
-  }),
-  skills: z.object({
-    entries: z.array(
-      z.object({
-        entryId: z.string().default(() => nanoid()),
-        group: z.string().describe("Category of skills"),
-        content: z
-          .string()
-          .describe("List of skills in this category, split by comma")
-      })
-    )
-  }),
-  // optional
-  employment: z
-    .object({
-      entries: z.array(
+    entries: z
+      .array(
         z.object({
           entryId: z.string().default(() => nanoid()),
           content: z
             .string()
             .describe(
-              "Description of the work experience, return markdown formatted"
+              "Description of the education experience, return markdown formatted"
             ),
-          company: z.string().describe("Name of the company"),
-          jobTitle: z.string().describe("Job title"),
+          school: z.string().describe("Name of the school"),
+          degree: z.string().describe("Degree obtained"),
           start: z
             .string()
             .describe("Start date in YYYY-MM format")
@@ -81,30 +48,40 @@ const resumeSchema = z.object({
           end: z
             .string()
             .describe(
-              "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
+              "End date in YYYY-MM format, if contains current/present/now, format as 'present'"
             )
             .prefault("")
         })
       )
-    })
-    .optional()
-    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
-  research: z
-    .object({
-      entries: z.array(
+      .default(() => [])
+  }),
+  skills: z.object({
+    entries: z
+      .array(
         z.object({
           entryId: z.string().default(() => nanoid()),
-          title: z.string().describe("Title of this research experience"),
+          group: z.string().describe("Category of skills"),
           content: z
             .string()
-            .describe(
-              "Description of this research experience, return markdown formatted"
-            ),
-          role: z
-            .string()
-            .describe("Role of the research experience")
-            .optional(),
-          date: z.object({
+            .describe("List of skills in this category, split by comma")
+        })
+      )
+      .default(() => [])
+  }),
+  // optional
+  employment: z
+    .object({
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            content: z
+              .string()
+              .describe(
+                "Description of the work experience, return markdown formatted"
+              ),
+            company: z.string().describe("Name of the company"),
+            jobTitle: z.string().describe("Job title"),
             start: z
               .string()
               .describe("Start date in YYYY-MM format")
@@ -114,34 +91,30 @@ const resumeSchema = z.object({
               .describe(
                 "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
               )
-              .prefault(""),
-            isCurrent: z
-              .boolean()
-              .describe("Whether the research experience is ongoing")
-              .prefault(false)
+              .prefault("")
           })
-        })
-      )
+        )
+        .default(() => [])
     })
     .optional()
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
-  projects: z
+  research: z
     .object({
-      entries: z.array(
-        z.object({
-          entryId: z.string().default(() => nanoid()),
-          title: z.string().describe("Title of this project experience"),
-          content: z
-            .string()
-            .describe(
-              "Description of this project experience, return markdown formatted"
-            ),
-          role: z
-            .string()
-            .describe("Role of this project experience")
-            .optional(),
-          date: z
-            .object({
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            title: z.string().describe("Title of this research experience"),
+            content: z
+              .string()
+              .describe(
+                "Description of this research experience, return markdown formatted"
+              ),
+            role: z
+              .string()
+              .describe("Role of the research experience")
+              .optional(),
+            date: z.object({
               start: z
                 .string()
                 .describe("Start date in YYYY-MM format")
@@ -154,63 +127,109 @@ const resumeSchema = z.object({
                 .prefault(""),
               isCurrent: z
                 .boolean()
-                .describe("Whether the project experience is ongoing")
+                .describe("Whether the research experience is ongoing")
                 .prefault(false)
             })
-            .optional()
-        })
-      )
+          })
+        )
+        .default(() => [])
+    })
+    .optional()
+    .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
+  projects: z
+    .object({
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            title: z.string().describe("Title of this project experience"),
+            content: z
+              .string()
+              .describe(
+                "Description of this project experience, return markdown formatted"
+              ),
+            role: z
+              .string()
+              .describe("Role of this project experience")
+              .optional(),
+            date: z
+              .object({
+                start: z
+                  .string()
+                  .describe("Start date in YYYY-MM format")
+                  .prefault(""),
+                end: z
+                  .string()
+                  .describe(
+                    "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
+                  )
+                  .prefault(""),
+                isCurrent: z
+                  .boolean()
+                  .describe("Whether the project experience is ongoing")
+                  .prefault(false)
+              })
+              .optional()
+          })
+        )
+        .default(() => [])
     })
     .optional()
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   publications: z
     .object({
-      entries: z.array(
-        z.object({
-          entryId: z.string().default(() => nanoid()),
-          title: z.string().describe("Title of this publication"),
-          date: z
-            .string()
-            .describe("Date of this publication, in YYYY-MM format"),
-          description: z
-            .string()
-            .describe("Description of this publication")
-            .optional()
-        })
-      )
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            title: z.string().describe("Title of this publication"),
+            date: z
+              .string()
+              .describe("Date of this publication, in YYYY-MM format"),
+            description: z
+              .string()
+              .describe("Description of this publication")
+              .optional()
+          })
+        )
+        .default(() => [])
     })
     .optional()
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   awards: z
     .object({
-      entries: z.array(
-        z.object({
-          entryId: z.string().default(() => nanoid()),
-          title: z.string().describe("Title of this award"),
-          issuer: z.string().describe("Issuer of this award").optional(),
-          date: z.string().describe("Date of this award").optional(),
-          description: z
-            .string()
-            .describe("Description of this award")
-            .optional()
-        })
-      )
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            title: z.string().describe("Title of this award"),
+            issuer: z.string().describe("Issuer of this award").optional(),
+            date: z.string().describe("Date of this award").optional(),
+            description: z
+              .string()
+              .describe("Description of this award")
+              .optional()
+          })
+        )
+        .default(() => [])
     })
     .optional()
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),
   certifications: z
     .object({
-      entries: z.array(
-        z.object({
-          entryId: z.string().default(() => nanoid()),
-          name: z.string().describe("Name of this certification"),
-          issuer: z
-            .string()
-            .describe("Issuer of this certification")
-            .optional(),
-          date: z.string().describe("Date of this certification").optional()
-        })
-      )
+      entries: z
+        .array(
+          z.object({
+            entryId: z.string().default(() => nanoid()),
+            name: z.string().describe("Name of this certification"),
+            issuer: z
+              .string()
+              .describe("Issuer of this certification")
+              .optional(),
+            date: z.string().describe("Date of this certification").optional()
+          })
+        )
+        .default(() => [])
     })
     .optional()
     .transform((s) => (s && s.entries.length > 0 ? s : undefined)),

@@ -15,6 +15,9 @@ import { ResumeData } from "@/types/resume"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 vi.mock("@/lib/supabase/server")
+vi.mock("nanoid", () => ({
+  nanoid: vi.fn(() => "mock-nanoid")
+}))
 
 const mockCreateClient = createClient as unknown as ReturnType<typeof vi.fn>
 
@@ -232,13 +235,14 @@ describe("uploadResumeFile", () => {
       },
       storage: {
         from: vi.fn().mockReturnValue({
-          list: vi.fn().mockResolvedValue({ data: [], error: null }),
           upload: vi.fn().mockResolvedValue({
-            data: { path: "user-123/resume.pdf" },
+            data: { path: "user-123/resume_mock-nanoid.pdf" },
             error: null
           }),
           getPublicUrl: vi.fn().mockReturnValue({
-            data: { publicUrl: "https://example.com/user-123/resume.pdf" }
+            data: {
+              publicUrl: "https://example.com/user-123/resume_mock-nanoid.pdf"
+            }
           })
         })
       }
@@ -249,8 +253,10 @@ describe("uploadResumeFile", () => {
 
     const result = await uploadResumeFile(mockFile)
 
-    expect(result.fileName).toContain("resume.pdf")
-    expect(result.publicUrl).toBe("https://example.com/user-123/resume.pdf")
+    expect(result.fileName).toBe("user-123/resume_mock-nanoid.pdf")
+    expect(result.publicUrl).toBe(
+      "https://example.com/user-123/resume_mock-nanoid.pdf"
+    )
     expect(result.userId).toBe("user-123")
   })
 
@@ -290,7 +296,6 @@ describe("uploadResumeFile", () => {
       },
       storage: {
         from: vi.fn().mockReturnValue({
-          list: vi.fn().mockResolvedValue({ data: [], error: null }),
           upload: vi.fn().mockResolvedValue({
             data: null,
             error: { message: "Upload failed" }

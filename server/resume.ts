@@ -7,7 +7,7 @@ import type { RollbackRegistry } from "@/server/intake/types"
 import {
   BUCKET_NAME,
   extractFilePathFromPublicUrl,
-  getUniqueFileName
+  generateUploadedResumeFileName
 } from "./utils"
 
 export async function fetchJobApplication() {
@@ -200,9 +200,7 @@ export async function uploadResumeFile(
     throw new Error("User not authenticated")
   }
 
-  // 获取唯一的文件名
-  const fileName = await getUniqueFileName(
-    supabase,
+  const fileName = generateUploadedResumeFileName(
     user.data.user.id,
     resumeFile.name
   )

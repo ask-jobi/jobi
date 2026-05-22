@@ -1,107 +1,43 @@
 import {
-  getUniqueFileName,
-  extractFilePathFromPublicUrl,
-  BUCKET_NAME
+  generateUploadedResumeFileName,
+  extractFilePathFromPublicUrl
 } from "./utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
-describe("getUniqueFileName", () => {
-  let mockSupabase: any
+vi.mock("nanoid", () => ({
+  nanoid: vi.fn(() => "mock-nanoid")
+}))
 
+describe("generateUploadedResumeFileName", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockSupabase = {
-      storage: {
-        from: vi.fn().mockReturnValue({
-          list: vi.fn()
-        })
-      }
-    }
   })
 
-  it("should return original filename when file does not exist", async () => {
-    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
+  it("should generate a nanoid-based filename with extension", () => {
+    const result = generateUploadedResumeFileName("user-123", "resume.pdf")
 
-    const result = await getUniqueFileName(
-      mockSupabase,
-      "user-123",
-      "resume.pdf"
-    )
-
-    expect(result).toBe("user-123/resume.pdf")
-    expect(listMock).toHaveBeenCalledWith("user-123", {
-      search: "resume.pdf"
-    })
+    expect(result).toBe("user-123/resume_mock-nanoid.pdf")
   })
 
-  it("should append counter when file exists", async () => {
-    const listMock = vi
-      .fn()
-      .mockResolvedValueOnce({ data: [{ name: "resume.pdf" }], error: null })
-      .mockResolvedValueOnce({ data: [], error: null })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
-
-    const result = await getUniqueFileName(
-      mockSupabase,
-      "user-123",
-      "resume.pdf"
-    )
-
-    expect(result).toBe("user-123/resume-1.pdf")
-    expect(listMock).toHaveBeenCalledTimes(2)
-  })
-
-  it("should increment counter for multiple duplicates", async () => {
-    const listMock = vi
-      .fn()
-      .mockResolvedValueOnce({ data: [{ name: "resume.pdf" }], error: null })
-      .mockResolvedValueOnce({ data: [{ name: "resume-1.pdf" }], error: null })
-      .mockResolvedValueOnce({ data: [], error: null })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
-
-    const result = await getUniqueFileName(
-      mockSupabase,
-      "user-123",
-      "resume.pdf"
-    )
-
-    expect(result).toBe("user-123/resume-2.pdf")
-    expect(listMock).toHaveBeenCalledTimes(3)
-  })
-
-  it("should throw error when storage list fails", async () => {
-    const listMock = vi.fn().mockResolvedValue({
-      data: null,
-      error: { message: "Permission denied" }
-    })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
-
-    await expect(
-      getUniqueFileName(mockSupabase, "user-123", "resume.pdf")
-    ).rejects.toThrow("Failed to check file existence: Permission denied")
-  })
-
-  it("should handle filenames with multiple dots", async () => {
-    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
-
-    const result = await getUniqueFileName(
-      mockSupabase,
+  it("should handle filenames with multiple dots", () => {
+    const result = generateUploadedResumeFileName(
       "user-123",
       "my.resume.file.pdf"
     )
 
-    expect(result).toBe("user-123/my.resume.file.pdf")
+    expect(result).toBe("user-123/resume_mock-nanoid.pdf")
   })
 
-  it("should handle empty file extension edge case", async () => {
-    const listMock = vi.fn().mockResolvedValue({ data: [], error: null })
-    mockSupabase.storage.from(BUCKET_NAME).list = listMock
+  it("should handle files without extension", () => {
+    const result = generateUploadedResumeFileName("user-123", "resume")
 
-    const result = await getUniqueFileName(mockSupabase, "user-123", "resume")
+    expect(result).toBe("user-123/resume_mock-nanoid")
+  })
 
-    expect(result).toBe("user-123/resume")
+  it("should handle dotfiles without treating them as extensions", () => {
+    const result = generateUploadedResumeFileName("user-123", ".resume")
+
+    expect(result).toBe("user-123/resume_mock-nanoid")
   })
 })
 

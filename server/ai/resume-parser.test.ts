@@ -432,6 +432,41 @@ zhangsan@example.com
 
       await expect(parseResume("Resume content")).rejects.toThrow()
     })
+
+    it("should treat empty optional sections as absent", async () => {
+      ;(generateText as any).mockResolvedValue({
+        output: {
+          personalInfo: {
+            firstName: "Jane",
+            lastName: "Doe",
+            email: "jane@example.com",
+            phone: ""
+          },
+          education: {
+            entries: []
+          },
+          skills: {
+            entries: []
+          },
+          research: {},
+          projects: {},
+          publications: {},
+          awards: {},
+          certifications: {},
+          _metadata: {
+            language: "en"
+          }
+        }
+      })
+
+      const result = await parseResume("Resume content")
+
+      expect(result[0].research).toBeUndefined()
+      expect(result[0].projects).toBeUndefined()
+      expect(result[0].publications).toBeUndefined()
+      expect(result[0].awards).toBeUndefined()
+      expect(result[0].certifications).toBeUndefined()
+    })
   })
 
   describe("output structure", () => {
