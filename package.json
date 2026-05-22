@@ -12,7 +12,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "vitest",
-    "e2e-test": "NODE_ENV=test pnpm exec playwright test --ui"
+    "e2e-test": "NODE_ENV=test pnpm exec playwright test --ui",
+    "e2e-test-headless": "NODE_ENV=test pnpm exec playwright test"
   },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,json,css}": [

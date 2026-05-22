@@ -1,7 +1,7 @@
 import { gateway, wrapLanguageModel } from "ai"
 import { devToolsMiddleware } from "@ai-sdk/devtools"
 
-const baseModel = gateway("minimax/minimax-m2.7")
+const baseModel = gateway("deepseek/deepseek-v4-flash")
 
 // npx @ai-sdk/devtools 可以查看llm调用情况
 // 这里使用Minimax用于本地开发，如需要可以替换成openai/gemini

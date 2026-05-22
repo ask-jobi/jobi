@@ -146,7 +146,7 @@ describe("Resume add section flow", () => {
 
     const expectedResume: ResumeData = {
       ...originalResume,
-      sectionOrder: ["education", "employment", "skills"],
+      sectionOrder: ["education", "skills", "employment"],
       employment: {
         entries: [
           {

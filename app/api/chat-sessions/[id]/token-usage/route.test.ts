@@ -6,9 +6,11 @@ import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as chatHistoryModule from "@/lib/agent/chat-history"
 import * as supabaseModule from "@/lib/supabase/server"
+import * as quotaModule from "@/server/quota"
 
 vi.mock("@/lib/supabase/server")
 vi.mock("@/lib/agent/chat-history")
+vi.mock("@/server/quota")
 
 describe("GET /api/chat-sessions/[id]/token-usage", () => {
   beforeEach(() => {
@@ -72,6 +74,12 @@ describe("GET /api/chat-sessions/[id]/token-usage", () => {
           reasoningTokens: 5
         }
       ]
+    })
+
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null)
+    vi.mocked(quotaModule.buildChatTokenQuota).mockReturnValue({
+      limit: 0,
+      used: 0
     })
 
     vi.spyOn(console, "error").mockImplementation(() => {})

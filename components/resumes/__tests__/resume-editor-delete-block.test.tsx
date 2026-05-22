@@ -203,7 +203,7 @@ describe("ResumeEditor delete entry", () => {
     })
   })
 
-  it("keeps a starter section present after deleting its last entry", async () => {
+  it("removes the section after deleting its last entry", async () => {
     let resolveSave!: () => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
@@ -269,9 +269,8 @@ describe("ResumeEditor delete entry", () => {
 
     const expectedResume: ResumeData = {
       ...originalResume,
-      education: {
-        entries: []
-      }
+      education: undefined,
+      sectionOrder: ["skills"]
     }
 
     await waitFor(() => {
@@ -289,7 +288,7 @@ describe("ResumeEditor delete entry", () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId("section-education")).toBeInTheDocument()
+      expect(screen.queryByTestId("section-education")).not.toBeInTheDocument()
       expect(screen.queryByText("education-edu-1")).not.toBeInTheDocument()
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
         expectedResume

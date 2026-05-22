@@ -2,10 +2,13 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { getStripe } from "@/lib/payment/stripe"
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+
+const { mockStripeCreate } = vi.hoisted(() => ({
+  mockStripeCreate: vi.fn()
+}))
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -17,7 +20,7 @@ vi.mock("@/lib/payment/stripe", () => ({
   getStripe: vi.fn(() => ({
     checkout: {
       sessions: {
-        create: vi.fn()
+        create: mockStripeCreate
       }
     }
   }))
@@ -31,13 +34,11 @@ vi.mock("@/lib/supabase/server", () => ({
 import { headers } from "next/headers"
 
 describe("POST /api/checkout_sessions", () => {
-  let mockStripeCreate: any
   let mockCreateClient: any
   let mockHeaders: any
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockStripeCreate = vi.mocked(getStripe().checkout.sessions.create)
     mockCreateClient = vi.mocked(createClient)
     mockHeaders = vi.mocked(headers)
 
