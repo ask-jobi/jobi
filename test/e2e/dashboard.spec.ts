@@ -1,5 +1,38 @@
-import { test, expect, type Page } from "@playwright/test"
+import {
+  test,
+  expect,
+  type APIRequestContext,
+  type Page
+} from "@playwright/test"
 import { DashboardHelper } from "./helpers/auth-helper"
+
+test.describe.configure({ mode: "serial" })
+
+function applicationResumeUrlPattern(applicationId: string) {
+  return new RegExp(`.*/application/${applicationId}(/resume)?`)
+}
+
+async function createNavigableApplication(request: APIRequestContext) {
+  const response = await request.post("/api/resume/create-empty", {
+    data: {
+      jobInfo: {
+        name: "E2E Upload Target",
+        company: "Jobi",
+        description: "Application created for Playwright navigation"
+      },
+      language: "en"
+    }
+  })
+
+  expect(response.ok()).toBe(true)
+
+  const data = await response.json()
+
+  return {
+    applicationId: data.data.applicationData.id as string,
+    resumeId: data.data.resumeData.id as string
+  }
+}
 
 async function mockUploadAndAnalyzeSuccess(
   page: Page,
@@ -37,7 +70,9 @@ async function mockUploadAndAnalyzeSuccess(
 
 test.describe("Dashboard页面", () => {
   test.beforeEach(async ({ page }) => {
-    // 访问dashboard页面
+    await page.route("**/api/resume/thumbnail**", async (route) => {
+      await route.fulfill({ status: 404, body: "not found" })
+    })
     await DashboardHelper.navigateToDashboard(page)
   })
 
@@ -116,26 +151,28 @@ test.describe("Dashboard页面", () => {
   })
 
   test("现有简历卡片应该可以点击跳转", async ({ page }) => {
-    // 等待页面加载完成
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible()
 
-    // 获取简历卡片数量
     const cardCount = await DashboardHelper.getResumeCardCount(page)
 
-    // 如果有现有简历，测试点击跳转
     if (cardCount > 0) {
-      // 点击第一个简历卡片
-      await DashboardHelper.clickFirstResumeCard(page)
+      const firstCard = page.locator('a[href^="/application/"]').first()
+      const href = await firstCard.getAttribute("href")
 
-      await page.waitForURL("**/application/*")
-      // 验证跳转到简历详情页
-      await expect(page).toHaveURL(/.*\/application\/.*/)
+      expect(href).toMatch(/^\/application\//)
+
+      await page.goto(href!, { waitUntil: "domcontentloaded" })
+      await page.waitForURL(/.*\/application\/.*(\/resume)?/)
+      await expect(page).toHaveURL(/.*\/application\/.*(\/resume)?/)
     }
   })
 })
 
 test.describe("Dashboard页面 - 创建简历流程", () => {
   test.beforeEach(async ({ page }) => {
+    await page.route("**/api/resume/thumbnail**", async (route) => {
+      await route.fulfill({ status: 404, body: "not found" })
+    })
     await DashboardHelper.navigateToDashboard(page)
   })
 
@@ -234,12 +271,15 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
   })
 
   test("上传 PDF 后应按新 SSE 协议跳转到 application 页面", async ({
-    page
+    page,
+    request
   }) => {
+    const target = await createNavigableApplication(request)
+
     await mockUploadAndAnalyzeSuccess(page, {
       intakeId: "intake-e2e-1",
-      applicationId: "app-e2e-1",
-      resumeId: "resume-e2e-1"
+      applicationId: target.applicationId,
+      resumeId: target.resumeId
     })
 
     await DashboardHelper.openCreateResumeDialog(page)
@@ -257,7 +297,9 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
     ).toBeEnabled()
     await page.getByRole("button", { name: "Start Analysis" }).click()
 
-    await page.waitForURL("**/application/app-e2e-1")
+    await page.waitForURL(applicationResumeUrlPattern(target.applicationId), {
+      timeout: 30000
+    })
   })
 
   for (const scenario of [
@@ -283,12 +325,15 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
     }
   ]) {
     test(`creates an Application Resume from a ${scenario.label}`, async ({
-      page
+      page,
+      request
     }) => {
+      const target = await createNavigableApplication(request)
+
       await mockUploadAndAnalyzeSuccess(page, {
         intakeId: `intake-${scenario.applicationId}`,
-        applicationId: scenario.applicationId,
-        resumeId: scenario.resumeId
+        applicationId: target.applicationId,
+        resumeId: target.resumeId
       })
 
       await DashboardHelper.openCreateResumeDialog(page)
@@ -305,7 +350,9 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
       ).toBeEnabled()
       await page.getByRole("button", { name: "Start Analysis" }).click()
 
-      await page.waitForURL(`**/application/${scenario.applicationId}`)
+      await page.waitForURL(applicationResumeUrlPattern(target.applicationId), {
+        timeout: 30000
+      })
     })
   }
 

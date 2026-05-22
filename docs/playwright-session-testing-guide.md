@@ -69,8 +69,8 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 
 当前测试账号：
 
-- Email: `testtest1@gmail.com`
-- Password: `password`
+- Email: `mock_normal@mail.com`
+- Password: `mock_normal`
 
 ### 3. 定价页 `/pricing`
 

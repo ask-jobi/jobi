@@ -32,6 +32,8 @@
 - `pnpm exec playwright test` - 无 UI 运行全部 Playwright 测试
 - `pnpm exec playwright test test/e2e/dashboard.spec.ts` - 运行指定 E2E 文件
 - `pnpm exec playwright test --ui` - 直接打开 Playwright UI
+- Playwright 启动前会先检查 `NEXT_PUBLIC_SUPABASE_URL/auth/v1/health`；若本地 Supabase 未运行，会直接失败并提示先执行 `supabase start`
+- E2E 默认以单 worker 运行，优先保证本地 Next dev + Supabase 环境稳定；如需提速，可临时设置 `PW_E2E_WORKERS=<n>`
 
 ## Supabase
 
@@ -49,3 +51,5 @@
 - Playwright 配置默认使用 `http://localhost:3001`
 - `pnpm e2e-test` 会自动起一个 `next dev -p 3001 --turbopack` webServer
 - Vitest 配置拆成 `server` 和 `components` 两个 project，改动范围明确时优先按 project 跑
+- 如果 `supabase start` 卡在健康检查并报 `Error status 502: An invalid response was received from the upstream server`，先执行 `supabase start --ignore-health-check`，再运行 `./scripts/fix-supabase-kong-dns.sh`
+- 上述 502 通常是宿主机 DNS search domain 被注入 Docker 容器，导致 Kong 把 `supabase_*` 主机名错误解析到自身。脚本会把 Kong upstream 改写成容器 IP 并 reload；这是临时修复，重启 Supabase 后需要重新执行。长期修复应移除宿主机的 DNS search domain，或切换到不注入该 search domain 的网络

@@ -9,5 +9,6 @@
 - [2026-05-20-ai-subsystem-defect-fixes.md](./2026-05-20-ai-subsystem-defect-fixes.md) - AI 子系统缺陷修复与改进
 - [2026-05-21-chat-session-application-resume-edit-deepening.md](./2026-05-21-chat-session-application-resume-edit-deepening.md) - Chat Session 到 Application Resume AI edit 链路 deepening
 - [2026-05-21-evaluation-report-lifecycle-deepening.md](./2026-05-21-evaluation-report-lifecycle-deepening.md) - Evaluation Report lifecycle deepening
+- [2026-05-23-playwright-e2e-coverage-expansion.md](./2026-05-23-playwright-e2e-coverage-expansion.md) - Playwright E2E 覆盖扩展计划
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。
