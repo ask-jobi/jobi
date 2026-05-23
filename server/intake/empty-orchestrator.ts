@@ -30,7 +30,7 @@ export async function createEmptyResume(
   try {
     const result = await persistApplicationResume(
       {
-        actorId: input.actorId,
+        userId: input.actorId,
         jobInfo: input.jobInfo,
         resumeData: emptyResumeData as unknown as Record<string, unknown>,
         resumeLanguage: language,

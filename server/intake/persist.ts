@@ -37,7 +37,7 @@ export async function persistApplicationResume(
   const { data: resumeData, error: resumeError } = await supabase
     .from("resumes")
     .insert({
-      user_id: input.actorId,
+      user_id: input.userId,
       job_id: jobData.id,
       upload_url: input.uploadedResumePublicUrl,
       language: input.resumeLanguage,
@@ -58,7 +58,7 @@ export async function persistApplicationResume(
   const { data: applicationData, error: applicationError } = await supabase
     .from("job_applications")
     .insert({
-      user_id: input.actorId,
+      user_id: input.userId,
       resume_id: resumeData.id,
       job_id: jobData.id,
       optimized_resume_url: null

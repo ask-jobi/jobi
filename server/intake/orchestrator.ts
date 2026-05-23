@@ -157,34 +157,24 @@ export async function runUploadedResumeIntake(
     )
 
     // ── Step 3: upload ──
-    const uploadResult = await runStep(
-      ctx,
-      intakeId,
-      "upload",
-      async () => {
-        const result = await uploadResumeFile(input.file, ctx.rollback)
-        return result
-      }
-    )
+    const uploadResult = await runStep(ctx, intakeId, "upload", async () => {
+      const result = await uploadResumeFile(input.file, ctx.rollback)
+      return result
+    })
 
     // ── Step 4: persist ──
-    const persistResult = await runStep(
-      ctx,
-      intakeId,
-      "persist",
-      async () => {
-        return persistApplicationResume(
-          {
-            userId: ctx.userId,
-            jobInfo: input.jobInfo,
-            resumeData: parsedResume as unknown as Record<string, unknown>,
-            resumeLanguage: language,
-            uploadedResumePublicUrl: uploadResult.publicUrl
-          },
-          ctx.rollback
-        )
-      }
-    )
+    const persistResult = await runStep(ctx, intakeId, "persist", async () => {
+      return persistApplicationResume(
+        {
+          userId: ctx.userId,
+          jobInfo: input.jobInfo,
+          resumeData: parsedResume as unknown as Record<string, unknown>,
+          resumeLanguage: language,
+          uploadedResumePublicUrl: uploadResult.publicUrl
+        },
+        ctx.rollback
+      )
+    })
 
     // ── Step 5: evaluate (commit point) ──
     await runStep(ctx, intakeId, "evaluate", async () => {
