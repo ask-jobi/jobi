@@ -6,7 +6,7 @@ import {
 import { verifyJobApplicationLimit } from "@/server/quota"
 import { runUploadedResumeIntake } from "@/server/intake/orchestrator"
 import { RollbackRegistryImpl } from "@/server/intake/rollback"
-import type { IntakeEvent, CancellationSource } from "@/server/intake/types"
+import type { IntakeEvent } from "@/server/intake/types"
 import { getCurrentUser } from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
@@ -165,19 +165,26 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // ── Cancellation source ──
-  let cancelled = false
-  const cancellation: CancellationSource = {
-    isCancelled: () => cancelled,
-    cancel: () => {
-      cancelled = true
+  // ── Cancellation signal ──
+  const cancellationController = new AbortController()
+  const abortCancellation = () => {
+    if (!cancellationController.signal.aborted) {
+      cancellationController.abort()
     }
   }
 
-  // Abort from client (refresh, close, disconnect)
-  request.signal.onabort = () => {
-    cancellation.cancel()
-    closeWriterSafely()
+  cancellationController.signal.addEventListener(
+    "abort",
+    () => {
+      void closeWriterSafely()
+    },
+    { once: true }
+  )
+
+  if (request.signal.aborted) {
+    abortCancellation()
+  } else {
+    request.signal.addEventListener("abort", abortCancellation, { once: true })
   }
 
   // ── Emit function ──
@@ -195,7 +202,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       emitFailed = true
-      cancellation.cancel()
+      abortCancellation()
       recordSseTransportFailure({
         phase,
         intakeId: event.intakeId,
@@ -214,7 +221,12 @@ export async function POST(request: NextRequest) {
       jobInfo,
       file
     },
-    { userId: user.id, emit, cancellation, rollback }
+    {
+      userId: user.id,
+      emit,
+      signal: cancellationController.signal,
+      rollback
+    }
   )
     .catch((err) => {
       console.error("Unhandled intake error:", err)

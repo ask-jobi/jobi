@@ -31,14 +31,14 @@ async function runStep<T>(
 ): Promise<T> {
   await ctx.emit({ type: "step.start", intakeId, step })
 
-  if (ctx.cancellation.isCancelled()) {
+  if (ctx.signal.aborted) {
     throw IntakeErrors.cancelled()
   }
 
   try {
     const result = await handler()
 
-    if (ctx.cancellation.isCancelled()) {
+    if (ctx.signal.aborted) {
       throw IntakeErrors.cancelled()
     }
 
@@ -111,35 +111,23 @@ export async function runUploadedResumeIntake(
   ctx: IntakeContext
 ): Promise<IntakeResult> {
   const intakeId = nanoid()
-  const actorId = ctx.userId
-
-  // Wrap emit so intakeId is always set correctly on events
-  const emitWithId = (event: IntakeEvent): Promise<void> => {
-    return ctx.emit({ ...event, intakeId } as IntakeEvent)
-  }
-
-  const localCtx: IntakeContext = {
-    ...ctx,
-    emit: emitWithId
-  }
-
   let committed = false
 
   try {
-    await localCtx.emit({ type: "intake.start", intakeId })
+    await ctx.emit({ type: "intake.start", intakeId })
 
-    const authorization = await authorizeUsage(actorId, "resume-parse")
+    const authorization = await authorizeUsage(ctx.userId, "resume-parse")
     if (authorization && !authorization.authorized) {
       const error = IntakeErrors.quotaExceeded({
         used: authorization.used,
         limit: authorization.limit
       })
-      await localCtx.emit({ type: "intake.failed", intakeId, error })
+      await ctx.emit({ type: "intake.failed", intakeId, error })
       return { status: "failed", intakeId, error }
     }
 
     // ── Step 1: extract ──
-    const docs = await runStep(localCtx, intakeId, "extract", async () => {
+    const docs = await runStep(ctx, intakeId, "extract", async () => {
       const result = await loadPdfToDoc(input.file, { splitPages: false })
       if (!result[0]?.pageContent?.trim()) {
         throw IntakeErrors.emptyPdfText()
@@ -149,7 +137,7 @@ export async function runUploadedResumeIntake(
 
     // ── Step 2: parse ──
     const { parsedResume, language } = await runStep(
-      localCtx,
+      ctx,
       intakeId,
       "parse",
       async () => {
@@ -170,36 +158,36 @@ export async function runUploadedResumeIntake(
 
     // ── Step 3: upload ──
     const uploadResult = await runStep(
-      localCtx,
+      ctx,
       intakeId,
       "upload",
       async () => {
-        const result = await uploadResumeFile(input.file, localCtx.rollback)
+        const result = await uploadResumeFile(input.file, ctx.rollback)
         return result
       }
     )
 
     // ── Step 4: persist ──
     const persistResult = await runStep(
-      localCtx,
+      ctx,
       intakeId,
       "persist",
       async () => {
         return persistApplicationResume(
           {
-            actorId,
+            userId: ctx.userId,
             jobInfo: input.jobInfo,
             resumeData: parsedResume as unknown as Record<string, unknown>,
             resumeLanguage: language,
             uploadedResumePublicUrl: uploadResult.publicUrl
           },
-          localCtx.rollback
+          ctx.rollback
         )
       }
     )
 
     // ── Step 5: evaluate (commit point) ──
-    await runStep(localCtx, intakeId, "evaluate", async () => {
+    await runStep(ctx, intakeId, "evaluate", async () => {
       await evaluateAndSaveResume(
         persistResult.resumeData.id,
         parsedResume,
@@ -210,7 +198,7 @@ export async function runUploadedResumeIntake(
     // ── Commit: mark done, no rollback beyond this point ──
     committed = true
 
-    await localCtx.emit({
+    await ctx.emit({
       type: "intake.done",
       intakeId,
       applicationId: persistResult.applicationData.id,
@@ -227,24 +215,24 @@ export async function runUploadedResumeIntake(
     if (isCancellationError(err)) {
       // Rollback before commit
       if (!committed) {
-        await localCtx.rollback.executeAll(localCtx.emit)
+        await ctx.rollback.executeAll(ctx.emit)
       }
 
       const reason = IntakeErrors.cancelled()
-      await localCtx.emit({ type: "intake.cancelled", intakeId, reason })
+      await ctx.emit({ type: "intake.cancelled", intakeId, reason })
       return { status: "cancelled", intakeId, reason }
     }
 
     // Failure before commit: rollback
     if (!committed) {
-      await localCtx.rollback.executeAll(localCtx.emit)
+      await ctx.rollback.executeAll(ctx.emit)
     }
 
     const error: IntakeError = isIntakeError(err)
       ? err
       : IntakeErrors.internal(err instanceof Error ? err.message : err)
 
-    await localCtx.emit({ type: "intake.failed", intakeId, error })
+    await ctx.emit({ type: "intake.failed", intakeId, error })
     return { status: "failed", intakeId, error }
   }
 }

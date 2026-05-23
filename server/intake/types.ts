@@ -36,13 +36,6 @@ export type IntakeEvent =
   | { type: "intake.failed"; intakeId: string; error: IntakeError }
   | { type: "intake.cancelled"; intakeId: string; reason: IntakeError }
 
-// ── Cancellation ────────────────────────────────────────────────
-
-export interface CancellationSource {
-  isCancelled(): boolean
-  cancel(): void
-}
-
 // ── Rollback ────────────────────────────────────────────────────
 
 export type RollbackAction = {
@@ -68,7 +61,7 @@ export interface RollbackRegistry {
 export interface IntakeContext {
   userId: string
   emit: (event: IntakeEvent) => Promise<void>
-  cancellation: CancellationSource
+  signal: AbortSignal
   rollback: RollbackRegistry
 }
 
@@ -96,7 +89,7 @@ export type IntakeResult =
 // ── Persist input / output ──────────────────────────────────────
 
 export type PersistInput = {
-  actorId: string
+  userId: string
   jobInfo: {
     name: string
     company: string

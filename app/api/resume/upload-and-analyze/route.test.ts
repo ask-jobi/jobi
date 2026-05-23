@@ -312,10 +312,7 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
       expect.objectContaining({
         userId: "test-user-id",
         emit: expect.any(Function),
-        cancellation: expect.objectContaining({
-          isCancelled: expect.any(Function),
-          cancel: expect.any(Function)
-        }),
+        signal: expect.any(AbortSignal),
         rollback: expect.any(Object)
       })
     )

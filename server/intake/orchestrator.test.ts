@@ -54,23 +54,18 @@ const input = {
 }
 
 function createContext(options?: {
-  onEmit?: (event: IntakeEvent, ctx: IntakeContext) => void
+  onEmit?: (event: IntakeEvent, abort: () => void) => void
 }): { ctx: IntakeContext; events: IntakeEvent[] } {
   const events: IntakeEvent[] = []
-  let cancelled = false
+  const controller = new AbortController()
 
   const ctx: IntakeContext = {
     userId: actorId,
     emit: async (event) => {
       events.push(event)
-      options?.onEmit?.(event, ctx)
+      options?.onEmit?.(event, () => controller.abort())
     },
-    cancellation: {
-      isCancelled: () => cancelled,
-      cancel: () => {
-        cancelled = true
-      }
-    },
+    signal: controller.signal,
     rollback: new RollbackRegistryImpl({ maxRetries: 0, retryDelayMs: 0 })
   }
 
@@ -247,9 +242,9 @@ describe("runUploadedResumeIntake", () => {
 
   it("does not emit step.failed when cancellation is detected", async () => {
     const { ctx, events } = createContext({
-      onEmit: (event, currentCtx) => {
+      onEmit: (event, abort) => {
         if (event.type === "step.start" && event.step === "persist") {
-          currentCtx.cancellation.cancel()
+          abort()
         }
       }
     })
@@ -285,9 +280,9 @@ describe("runUploadedResumeIntake", () => {
 
   it("keeps usage recorded when cancellation happens after parse", async () => {
     const { ctx, events } = createContext({
-      onEmit: (event, currentCtx) => {
+      onEmit: (event, abort) => {
         if (event.type === "step.done" && event.step === "parse") {
-          currentCtx.cancellation.cancel()
+          abort()
         }
       }
     })
