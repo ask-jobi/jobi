@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { parseResume, parseResumeWithTokenUsage } from "./resume-parser"
-import { generateText, NoObjectGeneratedError } from "ai"
+import { generateText } from "ai"
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
@@ -383,36 +383,81 @@ zhangsan@example.com
       expect(generateText).not.toHaveBeenCalled()
     })
 
-    it("should fall back to text parsing when structured output fails", async () => {
-      const mockResumeData = {
-        personalInfo: {
-          firstName: "Jane",
-          lastName: "Doe",
-          email: "jane@example.com",
-          phone: ""
-        },
-        education: { title: "Education", entries: [] },
-        skills: { title: "Skills", entries: [] },
-        _metadata: { language: "en" }
-      }
+    it("should rethrow structured parsing errors without fallback", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
-      ;(generateText as any)
-        .mockRejectedValueOnce(
-          new NoObjectGeneratedError({
-            message: "No object generated",
-            text: ""
-          } as any)
-        )
-        .mockResolvedValueOnce({
-          output: JSON.stringify(mockResumeData),
-          totalUsage: mockTotalUsage(5)
-        })
+      ;(generateText as any).mockRejectedValueOnce(
+        new Error("No object generated")
+      )
 
-      const result = await parseResumeWithTokenUsage("Jane Doe resume")
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("No object generated")
 
-      expect(generateText).toHaveBeenCalledTimes(2)
-      expect(result.resumeData.personalInfo.firstName).toBe("Jane")
-      expect(result.tokenUsage.totalTokens).toBe(5)
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed, falling back to text parsing",
+        {
+          messages: ["no object generated"]
+        }
+      )
+
+      warnSpy.mockRestore()
+    })
+
+    it("should rethrow gateway response format errors without fallback", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      ;(generateText as any).mockRejectedValueOnce(
+        new Error("Invalid error response format: Gateway request failed")
+      )
+
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed, falling back to text parsing",
+        {
+          messages: ["invalid error response format: gateway request failed"]
+        }
+      )
+
+      warnSpy.mockRestore()
+    })
+
+    it("should include nested transport error messages in warning logs", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      const socketError = new Error("other side closed")
+      const apiError = new Error("Cannot connect to API: other side closed", {
+        cause: socketError
+      })
+      const gatewayError = new Error(
+        "Invalid error response format: Gateway request failed",
+        { cause: apiError }
+      )
+
+      ;(generateText as any).mockRejectedValueOnce(gatewayError)
+
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed, falling back to text parsing",
+        {
+          messages: [
+            "invalid error response format: gateway request failed",
+            "cannot connect to api: other side closed",
+            "other side closed"
+          ]
+        }
+      )
+
+      warnSpy.mockRestore()
     })
 
     it("should throw error when AI service fails", async () => {
@@ -448,11 +493,21 @@ zhangsan@example.com
           skills: {
             entries: []
           },
-          research: {},
-          projects: {},
-          publications: {},
-          awards: {},
-          certifications: {},
+          research: {
+            entries: []
+          },
+          projects: {
+            entries: []
+          },
+          publications: {
+            entries: []
+          },
+          awards: {
+            entries: []
+          },
+          certifications: {
+            entries: []
+          },
           _metadata: {
             language: "en"
           }

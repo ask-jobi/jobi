@@ -1,7 +1,7 @@
 import "server-only"
 import { z } from "zod"
 import { generateText, NoObjectGeneratedError, Output } from "ai"
-import { ResumeData } from "@/types/resume"
+import { ResumeData, ResumeSection } from "@/types/resume"
 import { resumeParsePrompt } from "./prompts/resume-parse.prompt"
 import { Locale } from "@/lib/i18n/config"
 import { model } from "@/lib/agent/model"
@@ -12,12 +12,35 @@ import { parseJsonFromModelText } from "./parse-json-from-model-text"
 const EMPTY_RESUME_TEXT_ERROR =
   "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
 
-function shouldFallbackToTextParsing(error: unknown): boolean {
-  return (
-    NoObjectGeneratedError.isInstance(error) ||
-    (error instanceof Error &&
-      error.message.toLowerCase().includes("could not parse"))
-  )
+function collectErrorMessages(error: unknown): string[] {
+  const messages: string[] = []
+  const seen = new Set<unknown>()
+
+  let current: unknown = error
+  while (current && !seen.has(current)) {
+    seen.add(current)
+
+    if (current instanceof Error) {
+      messages.push(current.message)
+      current = current.cause
+      continue
+    }
+
+    if (
+      typeof current === "object" &&
+      current !== null &&
+      "message" in current &&
+      typeof current.message === "string"
+    ) {
+      messages.push(current.message)
+      current = "cause" in current ? current.cause : undefined
+      continue
+    }
+
+    break
+  }
+
+  return messages.map((message) => message.toLowerCase())
 }
 
 const resumeSchema = z.object({
@@ -33,7 +56,6 @@ const resumeSchema = z.object({
     entries: z
       .array(
         z.object({
-          entryId: z.string().default(() => nanoid()),
           content: z
             .string()
             .describe(
@@ -59,7 +81,6 @@ const resumeSchema = z.object({
     entries: z
       .array(
         z.object({
-          entryId: z.string().default(() => nanoid()),
           group: z.string().describe("Category of skills"),
           content: z
             .string()
@@ -74,7 +95,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             content: z
               .string()
               .describe(
@@ -103,7 +123,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             title: z.string().describe("Title of this research experience"),
             content: z
               .string()
@@ -141,7 +160,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             title: z.string().describe("Title of this project experience"),
             content: z
               .string()
@@ -181,7 +199,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             title: z.string().describe("Title of this publication"),
             date: z
               .string()
@@ -201,7 +218,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             title: z.string().describe("Title of this award"),
             issuer: z.string().describe("Issuer of this award").optional(),
             date: z.string().describe("Date of this award").optional(),
@@ -220,7 +236,6 @@ const resumeSchema = z.object({
       entries: z
         .array(
           z.object({
-            entryId: z.string().default(() => nanoid()),
             name: z.string().describe("Name of this certification"),
             issuer: z
               .string()
@@ -262,8 +277,7 @@ export const parseResumeWithTokenUsage = async (
   }
 
   const prompt = resumeParsePrompt.format({
-    resumeText: normalizedResumeText,
-    jsonSchema: JSON.stringify(resumeSchema.shape, null, 2)
+    resumeText: normalizedResumeText
   })
 
   let validatedData: z.infer<typeof resumeSchema>
@@ -282,31 +296,14 @@ export const parseResumeWithTokenUsage = async (
     validatedData = resumeSchema.parse(structured.output)
     totalUsage = parseTokenUsage(structured.totalUsage)
   } catch (error) {
-    if (!shouldFallbackToTextParsing(error)) {
-      throw error
-    }
-
     console.warn(
-      "Structured resume parsing failed, falling back to text parsing:",
-      error
+      "Structured resume parsing failed, falling back to text parsing",
+      {
+        messages: collectErrorMessages(error)
+      }
     )
 
-    const fallback = await generateText({
-      model: model,
-      output: Output.text(),
-      prompt,
-      temperature: 0,
-      maxRetries: 2
-    })
-
-    if (!fallback.output?.trim()) {
-      throw new Error(
-        "Resume parsing failed: the model returned an empty response. Please try again."
-      )
-    }
-
-    validatedData = resumeSchema.parse(parseJsonFromModelText(fallback.output))
-    totalUsage = parseTokenUsage(fallback.totalUsage)
+    throw error
   }
 
   // 转换为 ResumeData 类型
@@ -323,15 +320,15 @@ export const parseResumeWithTokenUsage = async (
     ],
     // required
     personalInfo: validatedData.personalInfo,
-    education: validatedData.education,
-    skills: validatedData.skills,
+    education: applyEntryId(validatedData.education),
+    skills: applyEntryId(validatedData.skills),
     // optional
-    employment: validatedData.employment,
-    research: validatedData.research,
-    projects: validatedData.projects,
-    publications: validatedData.publications,
-    awards: validatedData.awards,
-    certifications: validatedData.certifications
+    employment: applyEntryId(validatedData.employment),
+    research: applyEntryId(validatedData.research),
+    projects: applyEntryId(validatedData.projects),
+    publications: applyEntryId(validatedData.publications),
+    awards: applyEntryId(validatedData.awards),
+    certifications: applyEntryId(validatedData.certifications)
   }
 
   // TODO 当存在别的metadata时，优化这里的返回值
@@ -340,4 +337,13 @@ export const parseResumeWithTokenUsage = async (
     language: validatedData._metadata.language as Locale,
     tokenUsage: totalUsage
   }
+}
+
+const applyEntryId = (section: ResumeSection<any> | undefined) => {
+  if (!section) return undefined
+  section.entries = section.entries.map((e: any) => ({
+    ...e,
+    entryId: nanoid()
+  }))
+  return section
 }

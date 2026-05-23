@@ -13,10 +13,6 @@ Resume content:
 
 {{resumeText}}
 
-Strictly follow this JSON schema:
-
-{{jsonSchema}}
-
 Please analyze the resume content carefully and extract the following information:
 
 1. Personal information: name, email, phone number
