@@ -106,7 +106,7 @@ describe("POST /api/checkout_sessions", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("请先登录后再进行购买")
+      expect(data.error).toBe("Unauthorized")
       expect(mockStripeCreate).not.toHaveBeenCalled()
     })
 
@@ -125,7 +125,7 @@ describe("POST /api/checkout_sessions", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("请先登录后再进行购买")
+      expect(data.error).toBe("Unauthorized")
     })
   })
 

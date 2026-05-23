@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { getStripe } from "@/lib/payment/stripe"
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthContext } from "@/server/auth-helper"
 
 export async function POST(request: Request) {
   try {
@@ -18,18 +18,7 @@ export async function POST(request: Request) {
     }
 
     // 检查用户是否已登录（中间件已经处理了会话更新）
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "请先登录后再进行购买" },
-        { status: 401 }
-      )
-    }
+    const { supabase, user } = await requireAuthContext()
 
     const { data: profile, error: profileError } = await supabase
       .from("user_profiles")

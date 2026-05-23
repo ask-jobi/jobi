@@ -7,7 +7,7 @@ import { verifyJobApplicationLimit } from "@/server/quota"
 import { runUploadedResumeIntake } from "@/server/intake/orchestrator"
 import { RollbackRegistryImpl } from "@/server/intake/rollback"
 import type { IntakeEvent, CancellationSource } from "@/server/intake/types"
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -90,10 +90,7 @@ function recordSseTransportFailure(input: {
 
 export async function POST(request: NextRequest) {
   // ── Auth ──
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -214,11 +211,10 @@ export async function POST(request: NextRequest) {
   // ── Fire-and-forget orchestration ──
   runUploadedResumeIntake(
     {
-      actor: { id: user.id },
       jobInfo,
       file
     },
-    { actor: { id: user.id }, emit, cancellation, rollback }
+    { userId: user.id, emit, cancellation, rollback }
   )
     .catch((err) => {
       console.error("Unhandled intake error:", err)

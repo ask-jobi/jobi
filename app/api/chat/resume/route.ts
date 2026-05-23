@@ -33,7 +33,7 @@ import {
   logResumeModification
 } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
+import { getAuthenticatedUser, handleApiError } from "@/server/auth-helper"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
 import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import {

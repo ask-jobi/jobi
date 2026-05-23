@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getOrCreateCanonicalSessionSummary } from "@/lib/agent/chat-history"
 import { z } from "zod"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
+import { getAuthenticatedUser, handleApiError } from "@/server/auth-helper"
 
 const createSessionSchema = z.object({
   resumeId: z.uuid("Invalid resume ID format")

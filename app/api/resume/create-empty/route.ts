@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { defaultLocale, locales, type Locale } from "@/lib/i18n/config"
 import { createEmptyResume } from "@/server/intake/empty-orchestrator"
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
     // ── Auth ──
-    const supabase = await createClient()
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

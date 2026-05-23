@@ -5,10 +5,10 @@ import { GET, POST } from "./route"
 import { NextRequest } from "next/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as chatHistoryModule from "@/lib/agent/chat-history"
-import * as authHelpersModule from "@/server/auth-helpers"
+import * as authHelpersModule from "@/server/auth-helper"
 
 vi.mock("@/lib/agent/chat-history")
-vi.mock("@/server/auth-helpers", () => ({
+vi.mock("@/server/auth-helper", () => ({
   getAuthenticatedUser: vi.fn(),
   handleApiError: vi.fn((error: unknown) => {
     const message =

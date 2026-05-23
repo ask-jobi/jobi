@@ -22,7 +22,7 @@ import {
   getAuthenticatedUser,
   verifyOwnership,
   handleApiError
-} from "@/server/auth-helpers"
+} from "@/server/auth-helper"
 import type {
   ResumeData,
   ResumeSectionKey,

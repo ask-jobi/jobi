@@ -2,6 +2,7 @@ import "server-only"
 import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
+import { getAuthenticatedUser, requireAuthContext } from "@/server/auth-helper"
 
 export type ChatTokenQuota = {
   limit: number
@@ -63,16 +64,12 @@ export async function getActiveAccessPass(
 }
 
 export async function getUserTokenBalance(): Promise<UserTokenBalance> {
-  const supabase = await createClient()
-
-  // 获取当前用户
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error("用户未登录")
-  }
+  const user = await getAuthenticatedUser().catch((error: unknown) => {
+    if (error instanceof ApiError) {
+      throw new Error("用户未登录")
+    }
+    throw error
+  })
 
   const accessPass = await getAccessPassByUserId(user.id)
 
@@ -186,16 +183,7 @@ export async function consumeChatTokens(
 
 // 目前不做配额的限制，但是需要限制用户申请岗位的数量， 未来考虑设计进配额
 export async function verifyJobApplicationLimit() {
-  const supabase = await createClient()
-
-  // 获取当前用户
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error("User not logged in")
-  }
+  const { supabase, user } = await requireAuthContext()
 
   const { data: jobApplications, error } = await supabase
     .from("job_applications")

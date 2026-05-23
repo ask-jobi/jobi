@@ -52,7 +52,7 @@ describe("POST /api/access-passes/create-free", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("用户未登录")
+      expect(data.error).toBe("Unauthorized")
     })
 
     it("should return 401 when getUser returns error", async () => {
@@ -69,7 +69,7 @@ describe("POST /api/access-passes/create-free", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("用户未登录")
+      expect(data.error).toBe("Unauthorized")
     })
   })
 

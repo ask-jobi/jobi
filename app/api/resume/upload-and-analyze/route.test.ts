@@ -306,12 +306,11 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
     expect(response.status).toBe(200)
     expect(runUploadedResumeIntake).toHaveBeenCalledWith(
       {
-        actor: { id: "test-user-id" },
         jobInfo: validJobInfo,
         file
       },
       expect.objectContaining({
-        actor: { id: "test-user-id" },
+        userId: "test-user-id",
         emit: expect.any(Function),
         cancellation: expect.objectContaining({
           isCancelled: expect.any(Function),

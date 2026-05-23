@@ -42,8 +42,9 @@ const { evaluateAndSaveResume } = await import("@/server/evaluation")
 const { persistApplicationResume } = await import("./persist")
 const { authorizeUsage, recordAuthorizedUsage } = await import("./quota")
 
+const actorId = "user-1"
+
 const input = {
-  actor: { id: "user-1" },
   jobInfo: {
     name: "Software Engineer",
     company: "Jobi",
@@ -59,7 +60,7 @@ function createContext(options?: {
   let cancelled = false
 
   const ctx: IntakeContext = {
-    actor: { id: input.actor.id },
+    userId: actorId,
     emit: async (event) => {
       events.push(event)
       options?.onEmit?.(event, ctx)
@@ -111,7 +112,7 @@ describe("runUploadedResumeIntake", () => {
       return {
         fileName: "resume.pdf",
         publicUrl: "https://cdn.example/resume.pdf",
-        userId: input.actor.id
+        userId: actorId
       }
     })
     vi.mocked(persistApplicationResume).mockImplementation(async () => ({
@@ -348,7 +349,7 @@ describe("runUploadedResumeIntake", () => {
       return {
         fileName: "resume.pdf",
         publicUrl: "https://cdn.example/resume.pdf",
-        userId: input.actor.id
+        userId: actorId
       }
     })
     vi.mocked(persistApplicationResume).mockRejectedValue(new Error("db down"))

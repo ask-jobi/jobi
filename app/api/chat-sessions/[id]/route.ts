@@ -10,7 +10,7 @@ import {
   getAuthenticatedUser,
   verifyOwnership,
   handleApiError
-} from "@/server/auth-helpers"
+} from "@/server/auth-helper"
 
 const updateSessionSchema = z.object({
   status: z.enum(["active", "completed", "archived"]).optional(),

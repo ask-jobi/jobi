@@ -66,7 +66,7 @@ export interface RollbackRegistry {
 // ── Intake context ──────────────────────────────────────────────
 
 export interface IntakeContext {
-  actor: { id: string }
+  userId: string
   emit: (event: IntakeEvent) => Promise<void>
   cancellation: CancellationSource
   rollback: RollbackRegistry

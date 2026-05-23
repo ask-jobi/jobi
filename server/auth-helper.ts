@@ -1,17 +1,50 @@
+import "server-only"
+
 import { createClient } from "@/lib/supabase/server"
 import { verifySessionOwnership } from "@/lib/agent/chat-history"
+import type { Database } from "@/types/supabase"
+import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js"
 
-export async function getAuthenticatedUser() {
+export type AuthContext = {
+  supabase: SupabaseClient<Database>
+  user: User | null
+  error: AuthError | null
+}
+
+export async function getAuthContext(): Promise<AuthContext> {
   const supabase = await createClient()
   const {
     data: { user },
     error
   } = await supabase.auth.getUser()
 
+  return {
+    supabase,
+    user,
+    error
+  }
+}
+
+export async function getCurrentUser(): Promise<User | null> {
+  const { user, error } = await getAuthContext()
+  return error ? null : user
+}
+
+export async function requireAuthContext(): Promise<{
+  supabase: SupabaseClient<Database>
+  user: User
+}> {
+  const { supabase, user, error } = await getAuthContext()
+
   if (error || !user) {
     throw new ApiError("Unauthorized", 401)
   }
 
+  return { supabase, user }
+}
+
+export async function getAuthenticatedUser() {
+  const { user } = await requireAuthContext()
   return user
 }
 

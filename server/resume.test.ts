@@ -277,9 +277,7 @@ describe("uploadResumeFile", () => {
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(uploadResumeFile(mockFile)).rejects.toThrow(
-      "User not authenticated"
-    )
+    await expect(uploadResumeFile(mockFile)).rejects.toThrow("Unauthorized")
   })
 
   it("should throw error when upload fails", async () => {
@@ -536,7 +534,7 @@ describe("deleteJobApplication", () => {
     )
 
     await expect(deleteJobApplication("app-123")).rejects.toThrow(
-      "User not authenticated"
+      "Unauthorized"
     )
   })
 

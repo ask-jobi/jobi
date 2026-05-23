@@ -79,7 +79,7 @@ vi.mock("@/lib/agent/token-usage", () => ({
   parseTokenUsage: vi.fn()
 }))
 
-vi.mock("@/server/auth-helpers", () => {
+vi.mock("@/server/auth-helper", () => {
   class ApiError extends Error {
     constructor(
       message: string,
@@ -118,7 +118,7 @@ describe("POST /api/chat/resume", () => {
   })
 
   it("should reject sending a message when chat token quota is exhausted", async () => {
-    const authHelpers = await import("@/server/auth-helpers")
+    const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
     const chatHistoryModule = await import("@/lib/agent/chat-history")
     const aiModule = await import("ai")
@@ -158,7 +158,7 @@ describe("POST /api/chat/resume", () => {
   })
 
   it("should update session token usage after message persistence completes", async () => {
-    const authHelpers = await import("@/server/auth-helpers")
+    const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
     const chatHistoryModule = await import("@/lib/agent/chat-history")
     const chatSessionTitleModule =
@@ -300,7 +300,7 @@ describe("POST /api/chat/resume", () => {
   })
 
   it("should re-check quota before consuming tokens on finish", async () => {
-    const authHelpers = await import("@/server/auth-helpers")
+    const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
     const chatHistoryModule = await import("@/lib/agent/chat-history")
     const resumeModule = await import("@/server/resume")

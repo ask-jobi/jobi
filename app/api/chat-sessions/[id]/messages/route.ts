@@ -4,7 +4,7 @@ import {
   getAuthenticatedUser,
   verifyOwnership,
   handleApiError
-} from "@/server/auth-helpers"
+} from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 

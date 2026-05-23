@@ -15,7 +15,6 @@ import { persistApplicationResume } from "./persist"
 import { authorizeUsage, recordAuthorizedUsage } from "./quota"
 
 export type UploadedResumeIntakeInput = {
-  actor: { id: string }
   jobInfo: { name: string; company: string; description: string }
   file: File
 }
@@ -26,10 +25,11 @@ type StepHandler<T> = () => Promise<T>
 
 async function runStep<T>(
   ctx: IntakeContext,
+  intakeId: string,
   step: StepId,
   handler: StepHandler<T>
 ): Promise<T> {
-  await ctx.emit({ type: "step.start", intakeId: ctx.actor.id, step })
+  await ctx.emit({ type: "step.start", intakeId, step })
 
   if (ctx.cancellation.isCancelled()) {
     throw IntakeErrors.cancelled()
@@ -42,7 +42,7 @@ async function runStep<T>(
       throw IntakeErrors.cancelled()
     }
 
-    await ctx.emit({ type: "step.done", intakeId: ctx.actor.id, step })
+    await ctx.emit({ type: "step.done", intakeId, step })
     return result
   } catch (err) {
     if (isCancellationError(err)) {
@@ -55,7 +55,7 @@ async function runStep<T>(
 
     await ctx.emit({
       type: "step.failed",
-      intakeId: ctx.actor.id,
+      intakeId,
       step,
       error
     })
@@ -111,12 +111,7 @@ export async function runUploadedResumeIntake(
   ctx: IntakeContext
 ): Promise<IntakeResult> {
   const intakeId = nanoid()
-
-  // Override actor.id with actual intakeId for event correlation
-  const eventCtx: IntakeContext = {
-    ...ctx,
-    actor: { ...ctx.actor, id: intakeId }
-  }
+  const actorId = ctx.userId
 
   // Wrap emit so intakeId is always set correctly on events
   const emitWithId = (event: IntakeEvent): Promise<void> => {
@@ -124,7 +119,7 @@ export async function runUploadedResumeIntake(
   }
 
   const localCtx: IntakeContext = {
-    ...eventCtx,
+    ...ctx,
     emit: emitWithId
   }
 
@@ -133,7 +128,7 @@ export async function runUploadedResumeIntake(
   try {
     await localCtx.emit({ type: "intake.start", intakeId })
 
-    const authorization = await authorizeUsage(input.actor.id, "resume-parse")
+    const authorization = await authorizeUsage(actorId, "resume-parse")
     if (authorization && !authorization.authorized) {
       const error = IntakeErrors.quotaExceeded({
         used: authorization.used,
@@ -144,7 +139,7 @@ export async function runUploadedResumeIntake(
     }
 
     // ── Step 1: extract ──
-    const docs = await runStep(localCtx, "extract", async () => {
+    const docs = await runStep(localCtx, intakeId, "extract", async () => {
       const result = await loadPdfToDoc(input.file, { splitPages: false })
       if (!result[0]?.pageContent?.trim()) {
         throw IntakeErrors.emptyPdfText()
@@ -155,6 +150,7 @@ export async function runUploadedResumeIntake(
     // ── Step 2: parse ──
     const { parsedResume, language } = await runStep(
       localCtx,
+      intakeId,
       "parse",
       async () => {
         const {
@@ -173,27 +169,37 @@ export async function runUploadedResumeIntake(
     )
 
     // ── Step 3: upload ──
-    const uploadResult = await runStep(localCtx, "upload", async () => {
-      const result = await uploadResumeFile(input.file, localCtx.rollback)
-      return result
-    })
+    const uploadResult = await runStep(
+      localCtx,
+      intakeId,
+      "upload",
+      async () => {
+        const result = await uploadResumeFile(input.file, localCtx.rollback)
+        return result
+      }
+    )
 
     // ── Step 4: persist ──
-    const persistResult = await runStep(localCtx, "persist", async () => {
-      return persistApplicationResume(
-        {
-          actorId: input.actor.id,
-          jobInfo: input.jobInfo,
-          resumeData: parsedResume as unknown as Record<string, unknown>,
-          resumeLanguage: language,
-          uploadedResumePublicUrl: uploadResult.publicUrl
-        },
-        localCtx.rollback
-      )
-    })
+    const persistResult = await runStep(
+      localCtx,
+      intakeId,
+      "persist",
+      async () => {
+        return persistApplicationResume(
+          {
+            actorId,
+            jobInfo: input.jobInfo,
+            resumeData: parsedResume as unknown as Record<string, unknown>,
+            resumeLanguage: language,
+            uploadedResumePublicUrl: uploadResult.publicUrl
+          },
+          localCtx.rollback
+        )
+      }
+    )
 
     // ── Step 5: evaluate (commit point) ──
-    await runStep(localCtx, "evaluate", async () => {
+    await runStep(localCtx, intakeId, "evaluate", async () => {
       await evaluateAndSaveResume(
         persistResult.resumeData.id,
         parsedResume,
