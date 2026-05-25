@@ -8,10 +8,11 @@ type SupabaseCookieToSet = {
   options: CookieOptions
 }
 
-export async function updateSession(
-  request: NextRequest,
-  response: NextResponse
-) {
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request
+  })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -20,12 +21,18 @@ export async function updateSession(
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet: SupabaseCookieToSet[]) {
+        setAll(cookiesToSet: SupabaseCookieToSet[], headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
+          supabaseResponse = NextResponse.next({
+            request
+          })
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options)
+          )
+          Object.entries(headers).forEach(([key, value]) =>
+            supabaseResponse.headers.set(key, value)
           )
         }
       }
@@ -42,14 +49,7 @@ export async function updateSession(
     data: { user }
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/api/stripe/webhook") && // 排除 webhook
-    request.nextUrl.pathname !== "/" &&
-    !request.nextUrl.pathname.startsWith("/pricing")
-  ) {
+  if (!user) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
@@ -69,5 +69,5 @@ export async function updateSession(
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
-  return response
+  return supabaseResponse
 }
