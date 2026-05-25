@@ -64,6 +64,7 @@ export function ApplicationTokenUsage() {
   const [error, setError] = useState<Error | null>(null)
   const requestIdRef = useRef(0)
   const isMountedRef = useRef(true)
+  const tokenBalanceRef = useRef<TokenBalance | null>(null)
 
   useEffect(() => {
     isMountedRef.current = true
@@ -72,6 +73,10 @@ export function ApplicationTokenUsage() {
       isMountedRef.current = false
     }
   }, [])
+
+  useEffect(() => {
+    tokenBalanceRef.current = tokenBalance
+  }, [tokenBalance])
 
   const fetchTokenBalance = useCallback(async () => {
     const requestId = requestIdRef.current + 1
@@ -97,11 +102,13 @@ export function ApplicationTokenUsage() {
         return
       }
 
-      setError(
-        fetchError instanceof Error
-          ? fetchError
-          : new Error("Failed to fetch token balance")
-      )
+      if (tokenBalanceRef.current === null) {
+        setError(
+          fetchError instanceof Error
+            ? fetchError
+            : new Error("Failed to fetch token balance")
+        )
+      }
     } finally {
       if (isMountedRef.current && requestId === requestIdRef.current) {
         setIsLoading(false)

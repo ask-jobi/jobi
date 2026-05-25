@@ -3,8 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
 import {
-  ApiError,
-  getAuthenticatedUser,
+  requireAuthenticatedUserIdentity,
   requireAuthContext
 } from "@/server/auth-helper"
 
@@ -68,12 +67,7 @@ export async function getActiveAccessPass(
 }
 
 export async function getUserTokenBalance(): Promise<UserTokenBalance> {
-  const user = await getAuthenticatedUser().catch((error: unknown) => {
-    if (error instanceof ApiError) {
-      throw new Error("用户未登录")
-    }
-    throw error
-  })
+  const { user } = await requireAuthenticatedUserIdentity()
 
   const accessPass = await getAccessPassByUserId(user.id)
 

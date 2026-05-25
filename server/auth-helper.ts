@@ -3,12 +3,36 @@ import "server-only"
 import { createClient } from "@/lib/supabase/server"
 import { verifySessionOwnership } from "@/lib/agent/chat-history"
 import type { Database } from "@/types/supabase"
-import type { AuthError, SupabaseClient, User } from "@supabase/supabase-js"
+import {
+  isAuthRetryableFetchError,
+  isAuthSessionMissingError,
+  type AuthError,
+  type SupabaseClient,
+  type User
+} from "@supabase/supabase-js"
 
 export type AuthContext = {
   supabase: SupabaseClient<Database>
   user: User | null
   error: AuthError | null
+}
+
+export type AuthenticatedUserIdentity = Pick<User, "id" | "email">
+
+function mapAuthErrorToApiError(error: AuthError | null): ApiError | null {
+  if (!error) {
+    return null
+  }
+
+  if (isAuthRetryableFetchError(error)) {
+    return new ApiError("Auth service temporarily unavailable", 503)
+  }
+
+  if (isAuthSessionMissingError(error)) {
+    return new ApiError("Unauthorized", 401)
+  }
+
+  return new ApiError(error.message || "Unauthorized", 401)
 }
 
 export async function getAuthContext(): Promise<AuthContext> {
@@ -35,12 +59,44 @@ export async function requireAuthContext(): Promise<{
   user: User
 }> {
   const { supabase, user, error } = await getAuthContext()
+  const apiError = mapAuthErrorToApiError(error)
 
-  if (error || !user) {
+  if (apiError) {
+    throw apiError
+  }
+
+  if (!user) {
     throw new ApiError("Unauthorized", 401)
   }
 
   return { supabase, user }
+}
+
+export async function requireAuthenticatedUserIdentity(): Promise<{
+  supabase: SupabaseClient<Database>
+  user: AuthenticatedUserIdentity
+}> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.getClaims()
+  const apiError = mapAuthErrorToApiError(error)
+
+  if (apiError) {
+    throw apiError
+  }
+
+  const claims = data?.claims as { sub?: unknown; email?: unknown } | null
+
+  if (typeof claims?.sub !== "string") {
+    throw new ApiError("Unauthorized", 401)
+  }
+
+  return {
+    supabase,
+    user: {
+      id: claims.sub,
+      email: typeof claims.email === "string" ? claims.email : undefined
+    }
+  }
 }
 
 export async function getAuthenticatedUser() {

@@ -10,6 +10,7 @@ import {
   verifyJobApplicationLimit
 } from "./quota"
 import { createClient } from "@/lib/supabase/server"
+import { AuthRetryableFetchError } from "@supabase/supabase-js"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 vi.mock("@/lib/supabase/server")
@@ -95,8 +96,13 @@ describe("getUserTokenBalance", () => {
 
     mockCreateClient.mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "user-id",
+              email: "user@example.com"
+            }
+          },
           error: null
         })
       },
@@ -114,8 +120,13 @@ describe("getUserTokenBalance", () => {
   it("returns zeroed token balance when no pass is active", async () => {
     mockCreateClient.mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "user-id",
+              email: "user@example.com"
+            }
+          },
           error: null
         })
       },
@@ -132,6 +143,22 @@ describe("getUserTokenBalance", () => {
       chatTokenLimit: 0,
       chatTokenUsed: 0,
       chatTokenRemaining: 0
+    })
+  })
+
+  it("maps transient auth fetch failures to a 503 error", async () => {
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: null,
+          error: new AuthRetryableFetchError("fetch failed", 503)
+        })
+      }
+    } as unknown as ReturnType<typeof createClient>)
+
+    await expect(getUserTokenBalance()).rejects.toMatchObject({
+      message: "Auth service temporarily unavailable",
+      statusCode: 503
     })
   })
 })

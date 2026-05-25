@@ -105,4 +105,38 @@ describe("ApplicationTokenUsage", () => {
       expect(screen.getByText("12,450 / 20,000")).toBeInTheDocument()
     })
   })
+
+  it("keeps the last successful balance when a background refresh fails", async () => {
+    vi.spyOn(global, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            plan: "PRO",
+            chatTokenLimit: 20000,
+            chatTokenUsed: 12000,
+            chatTokenRemaining: 8000
+          })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false
+      } as Response)
+
+    render(<ApplicationTokenUsage />)
+
+    await waitFor(() => {
+      expect(screen.getByText("12,000 / 20,000")).toBeInTheDocument()
+    })
+
+    window.dispatchEvent(new Event(TOKEN_BALANCE_UPDATED_EVENT))
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+    })
+
+    expect(screen.getByText("12,000 / 20,000")).toBeInTheDocument()
+    expect(
+      screen.queryByText("failedToLoadTokenBalance")
+    ).not.toBeInTheDocument()
+  })
 })
