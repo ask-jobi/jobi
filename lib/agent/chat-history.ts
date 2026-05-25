@@ -10,6 +10,8 @@ import {
 import { DEFAULT_CHAT_SESSION_TITLE } from "@/lib/chat-session-title"
 
 type ChatMessage = Database["public"]["Tables"]["resume_chat_messages"]["Row"]
+type ChatMessageUpdate =
+  Database["public"]["Tables"]["resume_chat_messages"]["Update"]
 type ChatSession = Database["public"]["Tables"]["resume_chat_sessions"]["Row"]
 type ChatSessionStatus =
   Database["public"]["Tables"]["resume_chat_sessions"]["Insert"]["status"]
@@ -134,7 +136,7 @@ export async function updateMessage({
 }: UpdateMessageParams): Promise<void> {
   const supabase = await createClient()
 
-  const updateData: Record<string, unknown> = {}
+  const updateData: ChatMessageUpdate = {}
   if (parts !== undefined) {
     updateData.parts = parts
     updateData.has_tools = hasToolParts(parts)

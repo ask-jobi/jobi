@@ -2,7 +2,11 @@ import "server-only"
 import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
-import { getAuthenticatedUser, requireAuthContext } from "@/server/auth-helper"
+import {
+  ApiError,
+  getAuthenticatedUser,
+  requireAuthContext
+} from "@/server/auth-helper"
 
 export type ChatTokenQuota = {
   limit: number
