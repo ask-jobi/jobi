@@ -107,6 +107,7 @@ const NewResumeCard = () => {
     INTAKE_STEPS.map((s) => ({ ...s }))
   )
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [resumeFile, setResumeFile] = useState<File>()
   const [controller, setController] = useState<AbortController | null>(null)
   const activeIntakeIdRef = useRef<string | null>(null)
@@ -122,13 +123,18 @@ const NewResumeCard = () => {
 
   const router = useRouter()
 
+  const resetAnalysisState = useCallback(() => {
+    setSteps(INTAKE_STEPS.map((s) => ({ ...s })))
+    setIsAnalyzing(false)
+    setAnalysisError(null)
+    activeIntakeIdRef.current = null
+  }, [])
+
   const resetForm = useCallback(() => {
     form.reset()
-    setSteps(INTAKE_STEPS.map((s) => ({ ...s })))
+    resetAnalysisState()
     setResumeFile(undefined)
-    setIsAnalyzing(false)
-    activeIntakeIdRef.current = null
-  }, [form])
+  }, [form, resetAnalysisState])
 
   const handleOpenDialog = (open: boolean) => {
     if (!open) {
@@ -210,6 +216,7 @@ const NewResumeCard = () => {
       switch (event.type) {
         case "intake.start":
           activeIntakeIdRef.current = event.intakeId
+          setAnalysisError(null)
           setSteps(INTAKE_STEPS.map((s) => ({ ...s })))
           break
 
@@ -236,6 +243,7 @@ const NewResumeCard = () => {
           trackSuccessResumeUpload({
             fileName: resumeFile?.name || "unknown"
           })
+          setAnalysisError(null)
           setIsAnalyzing(false)
           setTimeout(() => {
             resetForm()
@@ -251,6 +259,7 @@ const NewResumeCard = () => {
             fileName: resumeFile?.name || "unknown",
             error: event.error.userMessage
           })
+          setAnalysisError(event.error.userMessage)
           setIsAnalyzing(false)
           toast.error(event.error.userMessage)
           break
@@ -258,6 +267,7 @@ const NewResumeCard = () => {
 
         case "intake.cancelled":
           activeIntakeIdRef.current = null
+          setAnalysisError(null)
           setIsAnalyzing(false)
           break
       }
@@ -266,8 +276,9 @@ const NewResumeCard = () => {
   )
 
   const analyzeResume = async () => {
-    if (isAnalyzing) return
+    if (isAnalyzing || !resumeFile) return
 
+    resetAnalysisState()
     setIsAnalyzing(true)
     const newController = new AbortController()
     setController(newController)
@@ -303,10 +314,14 @@ const NewResumeCard = () => {
           }
         },
         onerror(err) {
+          const errorMessage =
+            err instanceof Error ? err.message : "unknown error"
+
+          setAnalysisError(errorMessage)
           setIsAnalyzing(false)
           trackFailedResumeUpload({
             fileName: resumeFile?.name || "unknown",
-            error: err instanceof Error ? err.message : "unknown error"
+            error: errorMessage
           })
           throw err
         }
@@ -317,9 +332,14 @@ const NewResumeCard = () => {
         return
       }
       // Other errors (network, etc.)
+      setAnalysisError(error.message || "Upload failed")
       setIsAnalyzing(false)
       toast.error(error.message || "Upload failed")
     }
+  }
+
+  const handleRetryAnalysis = () => {
+    analyzeResume()
   }
 
   const handleCreateEmpty = () => {
@@ -394,7 +414,16 @@ const NewResumeCard = () => {
                     </div>
                   </div>
                 ),
-                "step-3": () => <ResumeAnalyzeProgress steps={steps} />
+                "step-3": () => (
+                  <div className="space-y-3">
+                    <ResumeAnalyzeProgress steps={steps} />
+                    {analysisError ? (
+                      <p className="text-sm text-destructive">
+                        {analysisError}
+                      </p>
+                    ) : null}
+                  </div>
+                )
               })}
               <Stepper.Controls>
                 {!methods.isLast && (
@@ -419,7 +448,16 @@ const NewResumeCard = () => {
                     >
                       {t("form.startAnalysis")}
                     </Button>
-                  )
+                  ),
+                  "step-3": () =>
+                    analysisError ? (
+                      <Button
+                        onClick={handleRetryAnalysis}
+                        disabled={isAnalyzing}
+                      >
+                        {t("form.retryAnalysis")}
+                      </Button>
+                    ) : null
                 })}
               </Stepper.Controls>
             </>

@@ -128,7 +128,8 @@
 
     "previous": "上一步",
     "next": "下一步",
-    "startAnalysis": "开始解析"
+    "startAnalysis": "开始解析",
+    "retryAnalysis": "重新尝试"
   },
 
   "monthPicker": {

@@ -126,7 +126,8 @@
 
     "previous": "Previous",
     "next": "Next",
-    "startAnalysis": "Start Analysis"
+    "startAnalysis": "Start Analysis",
+    "retryAnalysis": "Retry Analysis"
   },
 
   "monthPicker": {

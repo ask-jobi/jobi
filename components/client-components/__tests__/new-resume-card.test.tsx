@@ -329,7 +329,50 @@ describe("NewResumeCard", () => {
     })
 
     expect(mockToastError).toHaveBeenCalledWith("bad parse")
+    expect(screen.getByText("bad parse")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /form.retryAnalysis/i })
+    ).toBeInTheDocument()
     expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it("retries analysis from scratch after an intake failure", async () => {
+    const { options } = await openDialogAndStartAnalysis()
+
+    await emitEvent(options, { type: "intake.start", intakeId: "intake-1" })
+    await emitEvent(options, {
+      type: "step.done",
+      intakeId: "intake-1",
+      step: "extract"
+    })
+    await emitEvent(options, {
+      type: "step.failed",
+      intakeId: "intake-1",
+      step: "parse",
+      error: { code: "PARSE_FAILED", userMessage: "bad parse" }
+    })
+    await emitEvent(options, {
+      type: "intake.failed",
+      intakeId: "intake-1",
+      error: { code: "PARSE_FAILED", userMessage: "bad parse" }
+    })
+
+    expect(screen.getByTestId("step-extract")).toHaveTextContent("success")
+    expect(screen.getByTestId("step-parse")).toHaveTextContent("error")
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: /form.retryAnalysis/i })
+      )
+    })
+
+    await waitFor(() => {
+      expect(mockFetchEventSource).toHaveBeenCalledTimes(2)
+    })
+
+    expect(screen.getByTestId("step-extract")).toHaveTextContent("pending")
+    expect(screen.getByTestId("step-parse")).toHaveTextContent("pending")
+    expect(screen.queryByText("bad parse")).not.toBeInTheDocument()
   })
 
   it("ends silently on intake.cancelled", async () => {
@@ -378,6 +421,9 @@ describe("NewResumeCard", () => {
     expect(mockTrackFailedResumeUpload).toHaveBeenCalledWith(
       expect.objectContaining({ error: "Only PDF files are supported" })
     )
+    expect(
+      screen.getByRole("button", { name: /form.retryAnalysis/i })
+    ).toBeInTheDocument()
   })
 
   it("aborts the in-flight request when the dialog closes", async () => {
