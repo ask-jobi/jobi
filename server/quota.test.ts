@@ -268,12 +268,6 @@ describe("verifyJobApplicationLimit", () => {
 
   it("passes when under the limit", async () => {
     mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
-          error: null
-        })
-      },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({
@@ -284,17 +278,11 @@ describe("verifyJobApplicationLimit", () => {
       })
     } as unknown as ReturnType<typeof createClient>)
 
-    await expect(verifyJobApplicationLimit()).resolves.toBeUndefined()
+    await expect(verifyJobApplicationLimit("user-id")).resolves.toBeUndefined()
   })
 
   it("throws when the user reaches the limit", async () => {
     mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
-          error: null
-        })
-      },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({
@@ -305,7 +293,7 @@ describe("verifyJobApplicationLimit", () => {
       })
     } as unknown as ReturnType<typeof createClient>)
 
-    await expect(verifyJobApplicationLimit()).rejects.toThrow(
+    await expect(verifyJobApplicationLimit("user-id")).rejects.toThrow(
       "You have reached the maximum job application limit"
     )
   })

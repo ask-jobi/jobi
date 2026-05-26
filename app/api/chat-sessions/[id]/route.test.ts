@@ -16,13 +16,13 @@ describe("GET /api/chat-sessions/[id]", () => {
 
     const mockSupabaseClient = {
       auth: {
-        getUser: vi.fn()
+        getClaims: vi.fn()
       }
     } as any
     vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
 
-    vi.mocked(mockSupabaseClient.auth.getUser).mockResolvedValue({
-      data: { user: { id: "test-user-id" } },
+    vi.mocked(mockSupabaseClient.auth.getClaims).mockResolvedValue({
+      data: { claims: { sub: "test-user-id" } },
       error: null
     })
 
@@ -56,8 +56,8 @@ describe("GET /api/chat-sessions/[id]", () => {
   it("should return 401 when user is not authenticated", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: new Error("Not authenticated")
         })
       }
@@ -108,13 +108,13 @@ describe("PATCH /api/chat-sessions/[id]", () => {
 
     const mockSupabaseClient = {
       auth: {
-        getUser: vi.fn()
+        getClaims: vi.fn()
       }
     } as any
     vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
 
-    vi.mocked(mockSupabaseClient.auth.getUser).mockResolvedValue({
-      data: { user: { id: "test-user-id" } },
+    vi.mocked(mockSupabaseClient.auth.getClaims).mockResolvedValue({
+      data: { claims: { sub: "test-user-id" } },
       error: null
     })
 
@@ -157,8 +157,8 @@ describe("PATCH /api/chat-sessions/[id]", () => {
   it("should return 401 when user is not authenticated", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: new Error("Not authenticated")
         })
       }
@@ -253,13 +253,13 @@ describe("DELETE /api/chat-sessions/[id]", () => {
 
     const mockSupabaseClient = {
       auth: {
-        getUser: vi.fn()
+        getClaims: vi.fn()
       }
     } as any
     vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
 
-    vi.mocked(mockSupabaseClient.auth.getUser).mockResolvedValue({
-      data: { user: { id: "test-user-id" } },
+    vi.mocked(mockSupabaseClient.auth.getClaims).mockResolvedValue({
+      data: { claims: { sub: "test-user-id" } },
       error: null
     })
 
@@ -285,8 +285,8 @@ describe("DELETE /api/chat-sessions/[id]", () => {
   it("should return 401 when user is not authenticated", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: new Error("Not authenticated")
         })
       }

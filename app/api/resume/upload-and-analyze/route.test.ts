@@ -62,8 +62,8 @@ function createRawMultipartRequest(parts: string[], boundary: string) {
 function mockAuth(userId = "test-user-id") {
   vi.mocked(createClient).mockResolvedValue({
     auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: userId } },
+      getClaims: vi.fn().mockResolvedValue({
+        data: { claims: { sub: userId } },
         error: null
       })
     }
@@ -73,8 +73,8 @@ function mockAuth(userId = "test-user-id") {
 function mockNoAuth() {
   vi.mocked(createClient).mockResolvedValue({
     auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: null },
+      getClaims: vi.fn().mockResolvedValue({
+        data: { claims: null },
         error: null
       })
     }

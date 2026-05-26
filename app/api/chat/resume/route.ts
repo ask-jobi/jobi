@@ -33,7 +33,10 @@ import {
   logResumeModification
 } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helper"
+import {
+  requireVerifiedUserIdentity,
+  handleApiError
+} from "@/server/auth-helper"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
 import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import {
@@ -103,7 +106,7 @@ async function createTokenLimitReachedResponse() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
 
     const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
@@ -341,7 +344,6 @@ export async function POST(request: NextRequest) {
 
     return createUIMessageStreamResponse({ stream })
   } catch (error) {
-    console.error("Chat API error:", error)
     return handleApiError(error)
   }
 }

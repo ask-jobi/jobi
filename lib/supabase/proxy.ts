@@ -1,11 +1,19 @@
 import { createServerClient } from "@supabase/ssr"
 import type { CookieOptions } from "@supabase/ssr"
+import {
+  isAuthRetryableFetchError,
+  isAuthSessionMissingError
+} from "@supabase/supabase-js"
 import { NextResponse, type NextRequest } from "next/server"
 
 type SupabaseCookieToSet = {
   name: string
   value: string
   options: CookieOptions
+}
+
+function isApiRequest(request: NextRequest) {
+  return request.nextUrl.pathname.startsWith("/api/")
 }
 
 export async function updateSession(request: NextRequest) {
@@ -40,17 +48,27 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
+  // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
+  // IMPORTANT: DO NOT REMOVE auth.getClaims()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data, error } = await supabase.auth.getClaims()
+  const claims = data?.claims as { sub?: unknown } | null
+  const hasVerifiedUser = typeof claims?.sub === "string"
 
-  if (!user) {
-    // no user, potentially respond by redirecting the user to the login page
+  if (isAuthRetryableFetchError(error)) {
+    return supabaseResponse
+  }
+
+  const shouldTreatAsUnauthenticated =
+    isAuthSessionMissingError(error) || (!error && !hasVerifiedUser)
+
+  if (shouldTreatAsUnauthenticated || (error && !hasVerifiedUser)) {
+    if (isApiRequest(request)) {
+      return supabaseResponse
+    }
+
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     return NextResponse.redirect(url)

@@ -7,7 +7,10 @@ import { verifyJobApplicationLimit } from "@/server/quota"
 import { runUploadedResumeIntake } from "@/server/intake/orchestrator"
 import { RollbackRegistryImpl } from "@/server/intake/rollback"
 import type { IntakeEvent } from "@/server/intake/types"
-import { getCurrentUser } from "@/server/auth-helper"
+import {
+  handleApiError,
+  requireVerifiedAuthContext
+} from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -89,160 +92,161 @@ function recordSseTransportFailure(input: {
 //   5. Map orchestrator events to SSE payloads
 
 export async function POST(request: NextRequest) {
-  // ── Auth ──
-  const user = await getCurrentUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  // ── Parse multipart ──
-  let formData: FormData
   try {
-    formData = await request.formData()
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid multipart form data" },
-      { status: 400 }
-    )
-  }
+    const { supabase, user } = await requireVerifiedAuthContext()
 
-  const file = formData.get("file") as File | null
-
-  // ── Validate file ──
-  if (!file) {
-    return NextResponse.json({ error: "No file provided" }, { status: 400 })
-  }
-
-  if (!isPdfUpload(file)) {
-    return NextResponse.json(
-      { error: "Only PDF files are supported" },
-      { status: 400 }
-    )
-  }
-
-  // ── Validate jobInfo ──
-  const jobInfoResult = parseJobInfoField(formData.get("jobInfo"))
-  if (!jobInfoResult.ok) {
-    console.error("resume_intake_invalid_job_info", {
-      receivedType: typeof formData.get("jobInfo"),
-      details: jobInfoResult.details
-    })
-
-    return NextResponse.json(
-      {
-        error: jobInfoResult.error,
-        details: jobInfoResult.details
-      },
-      { status: 400 }
-    )
-  }
-  const jobInfo = jobInfoResult.jobInfo
-
-  // ── Application limit guard (peripheral) ──
-  try {
-    await verifyJobApplicationLimit()
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 403 })
-  }
-
-  // ── Set up SSE stream ──
-  const responseStream = new TransformStream()
-  const writer = responseStream.writable.getWriter()
-  const encoder = new TextEncoder()
-
-  let emitFailed = false
-  let writerClosed = false
-  let committed = false
-
-  const closeWriterSafely = async () => {
-    if (writerClosed) return
-    writerClosed = true
+    // ── Parse multipart ──
+    let formData: FormData
     try {
-      await writer.close()
+      formData = await request.formData()
     } catch {
-      // ignore - writer may already be closed
+      return NextResponse.json(
+        { error: "Invalid multipart form data" },
+        { status: 400 }
+      )
     }
-  }
 
-  // ── Cancellation signal ──
-  const cancellationController = new AbortController()
-  const abortCancellation = () => {
-    if (!cancellationController.signal.aborted) {
-      cancellationController.abort()
+    const file = formData.get("file") as File | null
+
+    // ── Validate file ──
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
-  }
 
-  cancellationController.signal.addEventListener(
-    "abort",
-    () => {
-      void closeWriterSafely()
-    },
-    { once: true }
-  )
+    if (!isPdfUpload(file)) {
+      return NextResponse.json(
+        { error: "Only PDF files are supported" },
+        { status: 400 }
+      )
+    }
 
-  if (request.signal.aborted) {
-    abortCancellation()
-  } else {
-    request.signal.addEventListener("abort", abortCancellation, { once: true })
-  }
+    // ── Validate jobInfo ──
+    const jobInfoResult = parseJobInfoField(formData.get("jobInfo"))
+    if (!jobInfoResult.ok) {
+      console.error("resume_intake_invalid_job_info", {
+        receivedType: typeof formData.get("jobInfo"),
+        details: jobInfoResult.details
+      })
 
-  // ── Emit function ──
-  const emit = async (event: IntakeEvent): Promise<void> => {
-    if (emitFailed) return
+      return NextResponse.json(
+        {
+          error: jobInfoResult.error,
+          details: jobInfoResult.details
+        },
+        { status: 400 }
+      )
+    }
+    const jobInfo = jobInfoResult.jobInfo
 
-    const phase: "pre-commit" | "post-commit" =
-      committed || event.type === "intake.done" ? "post-commit" : "pre-commit"
-
+    // ── Application limit guard (peripheral) ──
     try {
-      await writer.ready
-      await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
-      if (event.type === "intake.done") {
-        committed = true
+      await verifyJobApplicationLimit(user.id, supabase)
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 403 })
+    }
+
+    // ── Set up SSE stream ──
+    const responseStream = new TransformStream()
+    const writer = responseStream.writable.getWriter()
+    const encoder = new TextEncoder()
+
+    let emitFailed = false
+    let writerClosed = false
+    let committed = false
+
+    const closeWriterSafely = async () => {
+      if (writerClosed) return
+      writerClosed = true
+      try {
+        await writer.close()
+      } catch {
+        // ignore - writer may already be closed
       }
-    } catch (err) {
-      emitFailed = true
+    }
+
+    // ── Cancellation signal ──
+    const cancellationController = new AbortController()
+    const abortCancellation = () => {
+      if (!cancellationController.signal.aborted) {
+        cancellationController.abort()
+      }
+    }
+
+    cancellationController.signal.addEventListener(
+      "abort",
+      () => {
+        void closeWriterSafely()
+      },
+      { once: true }
+    )
+
+    if (request.signal.aborted) {
       abortCancellation()
-      recordSseTransportFailure({
-        phase,
-        intakeId: event.intakeId,
-        eventType: event.type,
-        error: err
+    } else {
+      request.signal.addEventListener("abort", abortCancellation, {
+        once: true
       })
     }
+
+    // ── Emit function ──
+    const emit = async (event: IntakeEvent): Promise<void> => {
+      if (emitFailed) return
+
+      const phase: "pre-commit" | "post-commit" =
+        committed || event.type === "intake.done" ? "post-commit" : "pre-commit"
+
+      try {
+        await writer.ready
+        await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+        if (event.type === "intake.done") {
+          committed = true
+        }
+      } catch (err) {
+        emitFailed = true
+        abortCancellation()
+        recordSseTransportFailure({
+          phase,
+          intakeId: event.intakeId,
+          eventType: event.type,
+          error: err
+        })
+      }
+    }
+
+    // ── Rollback registry ──
+    const rollback = new RollbackRegistryImpl()
+
+    // ── Fire-and-forget orchestration ──
+    runUploadedResumeIntake(
+      {
+        jobInfo,
+        file
+      },
+      {
+        userId: user.id,
+        emit,
+        signal: cancellationController.signal,
+        rollback
+      }
+    )
+      .catch((err) => {
+        console.error("Unhandled intake error:", err)
+      })
+      .finally(() => {
+        closeWriterSafely()
+      })
+
+    // ── Return SSE response ──
+    return new NextResponse(responseStream.readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        Connection: "keep-alive",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+        "Transfer-Encoding": "chunked"
+      }
+    })
+  } catch (error) {
+    return handleApiError(error)
   }
-
-  // ── Rollback registry ──
-  const rollback = new RollbackRegistryImpl()
-
-  // ── Fire-and-forget orchestration ──
-  runUploadedResumeIntake(
-    {
-      jobInfo,
-      file
-    },
-    {
-      userId: user.id,
-      emit,
-      signal: cancellationController.signal,
-      rollback
-    }
-  )
-    .catch((err) => {
-      console.error("Unhandled intake error:", err)
-    })
-    .finally(() => {
-      closeWriterSafely()
-    })
-
-  // ── Return SSE response ──
-  return new NextResponse(responseStream.readable, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      Connection: "keep-alive",
-      "Cache-Control": "no-cache, no-transform",
-      "X-Accel-Buffering": "no",
-      "Transfer-Encoding": "chunked"
-    }
-  })
 }

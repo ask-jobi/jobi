@@ -10,5 +10,6 @@
 - [2026-05-21-chat-session-application-resume-edit-deepening.md](./2026-05-21-chat-session-application-resume-edit-deepening.md) - Chat Session 到 Application Resume AI edit 链路 deepening
 - [2026-05-21-evaluation-report-lifecycle-deepening.md](./2026-05-21-evaluation-report-lifecycle-deepening.md) - Evaluation Report lifecycle deepening
 - [2026-05-23-playwright-e2e-coverage-expansion.md](./2026-05-23-playwright-e2e-coverage-expansion.md) - Playwright E2E 覆盖扩展计划
+- [2026-05-25-auth-helper-optimization.md](./2026-05-25-auth-helper-optimization.md) - Supabase auth-helper 与 proxy 优化计划
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。

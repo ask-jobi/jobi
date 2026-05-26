@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { defaultLocale, locales, type Locale } from "@/lib/i18n/config"
 import { createEmptyResume } from "@/server/intake/empty-orchestrator"
-import { getCurrentUser } from "@/server/auth-helper"
+import {
+  getOptionalVerifiedUserIdentity,
+  handleApiError
+} from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
-    // ── Auth ──
-    const user = await getCurrentUser()
+    const user = await getOptionalVerifiedUserIdentity()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -38,8 +40,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result
     })
-  } catch (error: any) {
-    console.error("Create empty resume failed:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error) {
+    return handleApiError(error)
   }
 }

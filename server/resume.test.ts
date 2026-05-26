@@ -228,8 +228,8 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
           error: null
         })
       },
@@ -267,8 +267,8 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: null
         })
       }
@@ -287,8 +287,8 @@ describe("uploadResumeFile", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
           error: null
         })
       },
@@ -498,8 +498,8 @@ describe("deleteJobApplication", () => {
 
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
           error: null
         })
       },
@@ -523,8 +523,8 @@ describe("deleteJobApplication", () => {
   it("should throw error when user not authenticated", async () => {
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: null
         })
       }
@@ -541,8 +541,8 @@ describe("deleteJobApplication", () => {
   it("should throw error when job application not found", async () => {
     const mockSupabase = {
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
           error: null
         })
       },

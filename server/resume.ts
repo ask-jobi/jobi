@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
 import type { RollbackRegistry } from "@/server/intake/types"
-import { requireAuthContext } from "@/server/auth-helper"
+import { requireVerifiedAuthContext } from "@/server/auth-helper"
 import {
   BUCKET_NAME,
   extractFilePathFromPublicUrl,
@@ -194,7 +194,7 @@ export async function uploadResumeFile(
   resumeFile: File,
   rollback?: RollbackRegistry
 ) {
-  const { supabase, user } = await requireAuthContext()
+  const { supabase, user } = await requireVerifiedAuthContext()
 
   const fileName = generateUploadedResumeFileName(user.id, resumeFile.name)
 
@@ -261,7 +261,7 @@ export async function saveApplicationResumeChange(
 }
 
 export async function deleteJobApplication(jobApplicationId: string) {
-  const { supabase, user } = await requireAuthContext()
+  const { supabase, user } = await requireVerifiedAuthContext()
 
   // 先验证该 jobApplication 是否存在且属于当前用户，同时获取关联的 resume 信息
   const { data: jobApplication, error: fetchError } = await supabase

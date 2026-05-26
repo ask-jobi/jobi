@@ -91,7 +91,7 @@ vi.mock("@/server/auth-helper", () => {
 
   return {
     ApiError,
-    getAuthenticatedUser: vi.fn(),
+    requireVerifiedUserIdentity: vi.fn(),
     handleApiError: vi.fn((error: unknown) => {
       if (error instanceof ApiError) {
         return Response.json(
@@ -124,7 +124,7 @@ describe("POST /api/chat/resume", () => {
     const aiModule = await import("ai")
     const routeModule = await import("./route")
 
-    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
     vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue({
@@ -171,7 +171,7 @@ describe("POST /api/chat/resume", () => {
     const events: string[] = []
     let onFinishPromise: Promise<void> | null = null
 
-    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
     vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
@@ -310,7 +310,7 @@ describe("POST /api/chat/resume", () => {
 
     let onFinishPromise: Promise<void> | null = null
 
-    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
     vi.mocked(quotaModule.getActiveAccessPass)

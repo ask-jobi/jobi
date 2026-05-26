@@ -41,8 +41,8 @@ describe("POST /api/access-passes/create-free", () => {
     it("should return 401 when user is not authenticated", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: null },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: null },
             error: new Error("Not authenticated")
           })
         }
@@ -58,8 +58,8 @@ describe("POST /api/access-passes/create-free", () => {
     it("should return 401 when getUser returns error", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: null },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: null },
             error: { message: "Session expired" }
           })
         }
@@ -116,8 +116,8 @@ describe("POST /api/access-passes/create-free", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -162,8 +162,8 @@ describe("POST /api/access-passes/create-free", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -195,8 +195,8 @@ describe("POST /api/access-passes/create-free", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },

@@ -7,7 +7,7 @@ import {
 } from "@/lib/agent/chat-history"
 import { z } from "zod"
 import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
   handleApiError
 } from "@/server/auth-helper"
@@ -32,7 +32,7 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     const session = await getSessionSummary(sessionId)
@@ -69,7 +69,7 @@ export async function PATCH(
       )
     }
 
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     if (validationResult.data.status) {
@@ -101,7 +101,7 @@ export async function DELETE(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     await permanentlyDeleteSession(sessionId)

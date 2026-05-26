@@ -26,8 +26,8 @@ describe("POST /api/resume/create-empty", () => {
     // Mock authenticated user
     vi.mocked(createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "test-user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "test-user-id" } },
           error: null
         })
       }
@@ -52,8 +52,8 @@ describe("POST /api/resume/create-empty", () => {
     it("should return 401 when user is not authenticated", async () => {
       vi.mocked(createClient).mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: null },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: null },
             error: null
           })
         }

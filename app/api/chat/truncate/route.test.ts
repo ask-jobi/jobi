@@ -21,7 +21,7 @@ describe("POST /api/chat/truncate", () => {
 
     const mockSupabaseClient = {
       auth: {
-        getUser: vi.fn()
+        getClaims: vi.fn()
       },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -39,8 +39,8 @@ describe("POST /api/chat/truncate", () => {
     } as any
     vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
 
-    vi.mocked(mockSupabaseClient.auth.getUser).mockResolvedValue({
-      data: { user: { id: "test-user-id" } },
+    vi.mocked(mockSupabaseClient.auth.getClaims).mockResolvedValue({
+      data: { claims: { sub: "test-user-id" } },
       error: null
     })
 
@@ -97,8 +97,8 @@ describe("POST /api/chat/truncate", () => {
   it("should return 401 when user is not authenticated", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: new Error("Not authenticated")
         })
       }
@@ -124,8 +124,8 @@ describe("POST /api/chat/truncate", () => {
   it("should return 404 when message not found", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "test-user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "test-user-id" } },
           error: null
         })
       },
@@ -163,8 +163,8 @@ describe("POST /api/chat/truncate", () => {
   it("should return 404 when session not found", async () => {
     vi.mocked(supabaseModule.createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "test-user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "test-user-id" } },
           error: null
         })
       },

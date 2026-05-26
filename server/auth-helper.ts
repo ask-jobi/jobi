@@ -7,19 +7,27 @@ import {
   isAuthRetryableFetchError,
   isAuthSessionMissingError,
   type AuthError,
-  type SupabaseClient,
-  type User
+  type SupabaseClient
 } from "@supabase/supabase-js"
 
-export type AuthContext = {
+type AuthenticatedUserIdentity = {
+  id: string
+  email?: string
+}
+
+type VerifiedAuthContext = {
   supabase: SupabaseClient<Database>
-  user: User | null
+  user: AuthenticatedUserIdentity | null
   error: AuthError | null
 }
 
-export type AuthenticatedUserIdentity = Pick<User, "id" | "email">
+function isSupabaseAuthError(error: unknown): error is AuthError {
+  return typeof error === "object" && error !== null && "__isAuthError" in error
+}
 
-function mapAuthErrorToApiError(error: AuthError | null): ApiError | null {
+function mapAuthErrorToApiError(
+  error: AuthError | null | unknown
+): ApiError | null {
   if (!error) {
     return null
   }
@@ -32,75 +40,96 @@ function mapAuthErrorToApiError(error: AuthError | null): ApiError | null {
     return new ApiError("Unauthorized", 401)
   }
 
+  if (!isSupabaseAuthError(error)) {
+    return new ApiError("Unauthorized", 401)
+  }
+
   return new ApiError(error.message || "Unauthorized", 401)
 }
 
-export async function getAuthContext(): Promise<AuthContext> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error
-  } = await supabase.auth.getUser()
+function claimsToUserIdentity(
+  claims: unknown
+): AuthenticatedUserIdentity | null {
+  const authClaims = claims as { sub?: unknown; email?: unknown } | null
+
+  if (typeof authClaims?.sub !== "string") {
+    return null
+  }
 
   return {
-    supabase,
-    user,
-    error
+    id: authClaims.sub,
+    email: typeof authClaims.email === "string" ? authClaims.email : undefined
   }
 }
 
-export async function getCurrentUser(): Promise<User | null> {
-  const { user, error } = await getAuthContext()
-  return error ? null : user
+function isMissingVerifiedIdentity(
+  error: AuthError | null,
+  user: AuthenticatedUserIdentity | null
+): boolean {
+  return isAuthSessionMissingError(error) || (!error && !user)
 }
 
-export async function requireAuthContext(): Promise<{
+function requireVerifiedIdentityFromContext(context: VerifiedAuthContext): {
   supabase: SupabaseClient<Database>
-  user: User
-}> {
-  const { supabase, user, error } = await getAuthContext()
-  const apiError = mapAuthErrorToApiError(error)
+  user: AuthenticatedUserIdentity
+} {
+  if (isMissingVerifiedIdentity(context.error, context.user)) {
+    throw new ApiError("Unauthorized", 401)
+  }
+
+  const apiError = mapAuthErrorToApiError(context.error)
 
   if (apiError) {
     throw apiError
   }
 
-  if (!user) {
+  if (!context.user) {
     throw new ApiError("Unauthorized", 401)
   }
 
-  return { supabase, user }
+  return {
+    supabase: context.supabase,
+    user: context.user
+  }
 }
 
-export async function requireAuthenticatedUserIdentity(): Promise<{
+async function getVerifiedAuthContext(): Promise<VerifiedAuthContext> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.getClaims()
+
+  return {
+    supabase,
+    user: claimsToUserIdentity(data?.claims ?? null),
+    error
+  }
+}
+
+export async function getOptionalVerifiedUserIdentity(): Promise<AuthenticatedUserIdentity | null> {
+  const context = await getVerifiedAuthContext()
+
+  if (isMissingVerifiedIdentity(context.error, context.user)) {
+    return null
+  }
+
+  const apiError = mapAuthErrorToApiError(context.error)
+
+  if (apiError) {
+    throw apiError
+  }
+
+  return context.user
+}
+
+export async function requireVerifiedAuthContext(): Promise<{
   supabase: SupabaseClient<Database>
   user: AuthenticatedUserIdentity
 }> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getClaims()
-  const apiError = mapAuthErrorToApiError(error)
-
-  if (apiError) {
-    throw apiError
-  }
-
-  const claims = data?.claims as { sub?: unknown; email?: unknown } | null
-
-  if (typeof claims?.sub !== "string") {
-    throw new ApiError("Unauthorized", 401)
-  }
-
-  return {
-    supabase,
-    user: {
-      id: claims.sub,
-      email: typeof claims.email === "string" ? claims.email : undefined
-    }
-  }
+  const context = await getVerifiedAuthContext()
+  return requireVerifiedIdentityFromContext(context)
 }
 
-export async function getAuthenticatedUser() {
-  const { user } = await requireAuthContext()
+export async function requireVerifiedUserIdentity(): Promise<AuthenticatedUserIdentity> {
+  const { user } = await requireVerifiedAuthContext()
   return user
 }
 
@@ -122,9 +151,11 @@ export class ApiError extends Error {
 }
 
 export function handleApiError(error: unknown): Response {
-  console.error("API error:", error)
-
   if (error instanceof ApiError) {
+    if (error.statusCode >= 500) {
+      console.error("API error:", error)
+    }
+
     return Response.json({ error: error.message }, { status: error.statusCode })
   }
 
@@ -138,11 +169,16 @@ export function handleApiError(error: unknown): Response {
     if (error.message.includes("not found")) {
       return Response.json({ error: error.message }, { status: 404 })
     }
+
+    console.error("API error:", error)
+
     return Response.json(
       { error: error.message || "Internal server error" },
       { status: 500 }
     )
   }
+
+  console.error("API error:", error)
 
   return Response.json({ error: "Internal server error" }, { status: 500 })
 }

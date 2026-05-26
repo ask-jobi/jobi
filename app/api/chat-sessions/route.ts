@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getOrCreateCanonicalSessionSummary } from "@/lib/agent/chat-history"
 import { z } from "zod"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helper"
+import {
+  requireVerifiedUserIdentity,
+  handleApiError
+} from "@/server/auth-helper"
 
 const createSessionSchema = z.object({
   resumeId: z.uuid("Invalid resume ID format")
@@ -11,7 +14,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     const { searchParams } = new URL(request.url)
     const resumeId = searchParams.get("resumeId")
 
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
 
     const session = await getOrCreateCanonicalSessionSummary({
       userId: user.id,
@@ -54,7 +57,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(session)
   } catch (error) {
-    console.error("Create chat session failed:", error)
     return handleApiError(error)
   }
 }

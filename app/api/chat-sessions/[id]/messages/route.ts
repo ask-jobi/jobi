@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { loadHistory } from "@/lib/agent/chat-history"
 import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
   handleApiError
 } from "@/server/auth-helper"
@@ -18,7 +18,7 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     const messages = await loadHistory(sessionId)

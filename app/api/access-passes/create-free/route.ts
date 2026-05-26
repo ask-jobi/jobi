@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server"
 import { QUOTA } from "@/lib/payment/quota"
-import { ApiError, requireAuthContext } from "@/server/auth-helper"
+import {
+  handleApiError,
+  requireVerifiedAuthContext
+} from "@/server/auth-helper"
 
 export async function POST() {
   try {
-    const { supabase, user } = await requireAuthContext()
+    const { supabase, user } = await requireVerifiedAuthContext()
 
     // 只允许从未拥有过任何 access pass 历史的用户领取一次免费包
     const { data: accessPassHistory, error: historyError } = await supabase
@@ -60,15 +63,7 @@ export async function POST() {
       message: "Free token grant created successfully",
       accessPass
     })
-  } catch (error: any) {
-    if (error instanceof ApiError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.statusCode }
-      )
-    }
-
-    console.error("Create free access pass failed:", error.message)
-    return NextResponse.json({ error: "创建免费通行证失败" }, { status: 500 })
+  } catch (error) {
+    return handleApiError(error)
   }
 }

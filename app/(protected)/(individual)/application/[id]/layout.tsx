@@ -1,14 +1,21 @@
 import React from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Provider } from "jotai"
 import { ResumeInitializer, store } from "@/components/resumes/resume-context"
+import { getOptionalVerifiedUserIdentity } from "@/server/auth-helper"
 
 async function Layout(props: {
   children: React.ReactNode
   params: Promise<{ id: string }>
 }) {
   const { children, params } = props
+  const user = await getOptionalVerifiedUserIdentity()
+
+  if (!user) {
+    redirect("/auth/login")
+  }
+
   const supabase = await createClient()
   const { id } = await params
 

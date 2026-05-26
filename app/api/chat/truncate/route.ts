@@ -19,7 +19,7 @@ import {
   ResumeEditorReorderOutput
 } from "@/types/chat"
 import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
   handleApiError
 } from "@/server/auth-helper"
@@ -139,7 +139,7 @@ async function applyToolReversions(
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     const supabase = await createClient()
 
     const body = await request.json()
@@ -214,7 +214,6 @@ export async function POST(request: NextRequest) {
       resume
     })
   } catch (error) {
-    console.error("Truncate error:", error)
     return handleApiError(error)
   }
 }

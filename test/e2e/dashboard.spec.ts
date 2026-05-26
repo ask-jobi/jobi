@@ -472,7 +472,11 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
     await page.locator('input[type="file"]').setInputFiles("test/test_pdf.pdf")
     await page.getByRole("button", { name: "Start Analysis" }).click()
 
-    await expect(page.getByText("Only PDF files are supported")).toBeVisible()
+    await expect(
+      page
+        .getByTestId("ui-dialog-content")
+        .getByText("Only PDF files are supported")
+    ).toBeVisible()
     await expect(page).toHaveURL(/.*\/dashboard/)
   })
 })

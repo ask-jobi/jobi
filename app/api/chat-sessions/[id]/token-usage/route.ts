@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSessionTokenUsage } from "@/lib/agent/chat-history"
 import { buildChatTokenQuota, getActiveAccessPass } from "@/server/quota"
 import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
   handleApiError
 } from "@/server/auth-helper"
@@ -19,7 +19,7 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     const tokenUsage = await getSessionTokenUsage(sessionId)

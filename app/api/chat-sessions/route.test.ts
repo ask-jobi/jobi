@@ -9,7 +9,7 @@ import * as authHelpersModule from "@/server/auth-helper"
 
 vi.mock("@/lib/agent/chat-history")
 vi.mock("@/server/auth-helper", () => ({
-  getAuthenticatedUser: vi.fn(),
+  requireVerifiedUserIdentity: vi.fn(),
   handleApiError: vi.fn((error: unknown) => {
     const message =
       error instanceof Error ? error.message : "Internal server error"
@@ -20,7 +20,7 @@ vi.mock("@/server/auth-helper", () => ({
 describe("GET /api/chat-sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(authHelpersModule.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpersModule.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
   })
@@ -71,7 +71,7 @@ describe("GET /api/chat-sessions", () => {
 describe("POST /api/chat-sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(authHelpersModule.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpersModule.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
   })
