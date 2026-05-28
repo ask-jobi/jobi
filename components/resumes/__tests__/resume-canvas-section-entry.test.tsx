@@ -39,6 +39,7 @@ function renderSectionEntry(
       language: "en",
       evaluation_report: null,
       evaluation_report_refresh_flag: false,
+      current_revision: 1,
       resume_json: persistedResume
     },
     job: {

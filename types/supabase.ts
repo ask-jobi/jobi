@@ -139,6 +139,7 @@ export type Database = {
       resumes: {
         Row: {
           created_at: string
+          current_revision: number
           evaluation_report: ResumeEvaluationOutput | null
           evaluation_report_refresh_flag?: boolean
           id: string
@@ -150,6 +151,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_revision?: number
           evaluation_report?: ResumeEvaluationOutput | null
           evaluation_report_refresh_flag?: boolean
           id?: string
@@ -161,6 +163,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_revision?: number
           evaluation_report?: ResumeEvaluationOutput | null
           evaluation_report_refresh_flag?: boolean
           id?: string
@@ -176,6 +179,48 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      resumes_snapshot: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          id: string
+          resume_id: string
+          resume_json: ResumeData
+          revision: number
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          resume_id: string
+          resume_json: ResumeData
+          revision: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          resume_id?: string
+          resume_json?: ResumeData
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumes_snapshot_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "chat_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resumes_snapshot_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
             referencedColumns: ["id"]
           }
         ]

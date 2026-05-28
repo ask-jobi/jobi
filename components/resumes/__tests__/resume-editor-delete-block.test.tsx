@@ -100,12 +100,17 @@ describe("ResumeEditor delete entry", () => {
   })
 
   it("removes an optional section only after delete confirmation and a successful save", async () => {
-    let resolveSave!: () => void
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
     )
 
     const store = createStore()
@@ -147,6 +152,7 @@ describe("ResumeEditor delete entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -192,7 +198,7 @@ describe("ResumeEditor delete entry", () => {
     )
 
     await act(async () => {
-      resolveSave()
+      resolveSave({ resume: expectedResume, currentRevision: 2 })
     })
 
     await waitFor(() => {
@@ -204,12 +210,17 @@ describe("ResumeEditor delete entry", () => {
   })
 
   it("removes the section after deleting its last entry", async () => {
-    let resolveSave!: () => void
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
     )
 
     const store = createStore()
@@ -246,6 +257,7 @@ describe("ResumeEditor delete entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -284,7 +296,7 @@ describe("ResumeEditor delete entry", () => {
     expect(screen.getByText("education-edu-1")).toBeInTheDocument()
 
     await act(async () => {
-      resolveSave()
+      resolveSave({ resume: expectedResume, currentRevision: 2 })
     })
 
     await waitFor(() => {

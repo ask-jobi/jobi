@@ -73,7 +73,12 @@ function renderModal(store = createStore()) {
 describe("ResumeSectionEditModal", () => {
   it("renders the selected section form while open", () => {
     const store = createStore()
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     store.set(applicationAtom, {
       id: "app-1",
       resume: {
@@ -81,6 +86,7 @@ describe("ResumeSectionEditModal", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: {
           sectionOrder: ["employment", "skills"],
           personalInfo: {
@@ -137,7 +143,12 @@ describe("ResumeSectionEditModal", () => {
 
   it("clears the selected section when the modal closes", () => {
     const store = createStore()
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     store.set(applicationAtom, {
       id: "app-1",
       resume: {
@@ -145,6 +156,7 @@ describe("ResumeSectionEditModal", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
@@ -185,7 +197,12 @@ describe("ResumeSectionEditModal", () => {
 
   it("does not mutate the persisted resume when a create-entry modal is cancelled", async () => {
     const store = createStore()
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
@@ -210,6 +227,7 @@ describe("ResumeSectionEditModal", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -239,12 +257,17 @@ describe("ResumeSectionEditModal", () => {
 
   it("keeps the modal open and the persisted resume unchanged until save succeeds", async () => {
     const store = createStore()
-    let resolveSave!: () => void
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
     )
 
     const originalResume: ResumeData = {
@@ -297,6 +320,7 @@ describe("ResumeSectionEditModal", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -327,7 +351,7 @@ describe("ResumeSectionEditModal", () => {
     )
     expect(store.get(editModalOpenAtom)).toBe(true)
 
-    resolveSave()
+    resolveSave({ resume: savedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(

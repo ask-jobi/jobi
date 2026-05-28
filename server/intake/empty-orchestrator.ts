@@ -32,7 +32,7 @@ export async function createEmptyResume(
       {
         userId: input.actorId,
         jobInfo: input.jobInfo,
-        resumeData: emptyResumeData as unknown as Record<string, unknown>,
+        resumeData: emptyResumeData,
         resumeLanguage: language,
         uploadedResumePublicUrl: null
       },

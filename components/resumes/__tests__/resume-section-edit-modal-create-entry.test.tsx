@@ -73,12 +73,17 @@ function renderModal(store = createStore()) {
 describe("ResumeSectionEditModal create entry", () => {
   it("inserts the saved entry into the persisted resume only after save succeeds", async () => {
     const store = createStore()
-    let resolveSave!: () => void
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
     )
 
     const originalResume: ResumeData = {
@@ -114,6 +119,7 @@ describe("ResumeSectionEditModal create entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -162,7 +168,7 @@ describe("ResumeSectionEditModal create entry", () => {
     )
     expect(store.get(editModalOpenAtom)).toBe(true)
 
-    resolveSave()
+    resolveSave({ resume: expectedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(

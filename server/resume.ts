@@ -1,7 +1,11 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { ResumeData, ResumeJobDescription } from "@/types/resume"
+import {
+  AuthoritativeResumeState,
+  ResumeData,
+  ResumeJobDescription
+} from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
 import type { RollbackRegistry } from "@/server/intake/types"
 import { requireVerifiedAuthContext } from "@/server/auth-helper"
@@ -10,6 +14,7 @@ import {
   extractFilePathFromPublicUrl,
   generateUploadedResumeFileName
 } from "./utils"
+import { commitResumeChange } from "./resume/commit"
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -22,7 +27,8 @@ export async function fetchJobApplication() {
             resumes:resume_id (
                 id,
                 upload_url,
-                resume_json
+                resume_json,
+                current_revision
             ),
             jobs:job_id (
                 id,
@@ -50,7 +56,8 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
               upload_url,
               evaluation_report,
               language,
-              resume_json
+              resume_json,
+              current_revision
           ),
           jobs:job_id (
               id,
@@ -96,7 +103,8 @@ export async function getJobApplication(jobApplicationId: string) {
               upload_url,
               evaluation_report,
               language,
-              resume_json
+              resume_json,
+              current_revision
           ),
           jobs:job_id (
               id,
@@ -127,7 +135,7 @@ export async function getJobApplication(jobApplicationId: string) {
 
 export async function getApplicationResumeData(
   id: string
-): Promise<ResumeData> {
+): Promise<AuthoritativeResumeState> {
   const supabase = await createClient()
 
   const { data: resume, error } = await supabase
@@ -135,7 +143,8 @@ export async function getApplicationResumeData(
     .select(
       `
       id,
-      resume_json
+      resume_json,
+      current_revision
     `
     )
     .eq("id", id)
@@ -152,7 +161,10 @@ export async function getApplicationResumeData(
     throw new Error(`Multiple resume found with id: ${id}`)
   }
 
-  return resume[0].resume_json as ResumeData
+  return {
+    resume: resume[0].resume_json as ResumeData,
+    currentRevision: resume[0].current_revision
+  }
 }
 
 export async function getApplicationResumeForPrint(id: string): Promise<{
@@ -248,16 +260,14 @@ export async function saveApplicationResumeChange(
   resumeId: string,
   data: ResumeData
 ) {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("resumes")
-    .update({
-      resume_json: data,
-      evaluation_report_refresh_flag: true
-    })
-    .eq("id", resumeId)
+  const { supabase, user } = await requireVerifiedAuthContext()
 
-  if (error) throw error
+  return commitResumeChange({
+    supabase,
+    actorId: user.id,
+    resumeId,
+    nextResume: data
+  })
 }
 
 export async function deleteJobApplication(jobApplicationId: string) {

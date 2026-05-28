@@ -48,7 +48,12 @@ vi.mock("@/components/ui/monthrangepicker-form-field", () => ({
 
 describe("ResumeSectionEditModal local form mode", () => {
   it("saves a real section form without requiring a page-level FormProvider", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const store = createStore()
 
     const originalResume: ResumeData = {
@@ -87,6 +92,7 @@ describe("ResumeSectionEditModal local form mode", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {

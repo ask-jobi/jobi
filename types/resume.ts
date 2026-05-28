@@ -8,11 +8,17 @@ export type ResumeJobDescription = {
   description: string
 }
 
+export type AuthoritativeResumeState = {
+  resume: ResumeData
+  currentRevision: number
+}
+
 export type JobApplication = {
   id: string
   resume: {
     id: string
     resume_json: ResumeData
+    current_revision: number
     language: Locale
     evaluation_report: ResumeEvaluationOutput | null
     evaluation_report_refresh_flag: boolean

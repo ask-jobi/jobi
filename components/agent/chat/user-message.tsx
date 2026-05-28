@@ -36,7 +36,7 @@ export function UserActionBar() {
   const t = useTranslations("chat")
   const messageId = useAuiState((s) => s.message?.id)
   const messageParts = useAuiState((s) => s.message?.parts)
-  const { replacePersistedResume } = useApplicationResume()
+  const { replaceAuthoritativeResume } = useApplicationResume()
   const aui = useAui()
 
   const handleTruncate = useCallback(async () => {
@@ -59,7 +59,7 @@ export function UserActionBar() {
       const result = await response.json()
 
       if (result.resume) {
-        replacePersistedResume(result.resume)
+        replaceAuthoritativeResume(result)
       }
 
       const currentState = aui.thread().export()
@@ -84,7 +84,7 @@ export function UserActionBar() {
       console.error("Truncate error:", error)
       toast.error(error instanceof Error ? error.message : t("truncateFailed"))
     }
-  }, [aui, replacePersistedResume, t, messageId, messageParts])
+  }, [aui, replaceAuthoritativeResume, t, messageId, messageParts])
 
   return (
     <ActionBarPrimitive.Root

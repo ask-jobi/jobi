@@ -1,12 +1,12 @@
 import { z } from "zod"
 import { InferUITools, UIDataTypes, UIMessage } from "ai"
 import {
-  resumeEditorModifyInputSchema,
   resumeEditorModifyOutputSchema,
   resumeEditorReorderInputSchema,
   resumeEditorReorderOutputSchema,
   tools
 } from "@/lib/agent/tools"
+import type { ResumeSectionKey, SortableSectionKey } from "@/types/resume"
 
 export interface ChatTokenUsage {
   inputTokens: number
@@ -37,9 +37,23 @@ export const chatDataPartSchemas = {
 export type ResumeEditorModifyOutput = z.infer<
   typeof resumeEditorModifyOutputSchema
 >
-export type ResumeEditorModifyInput = z.infer<
-  typeof resumeEditorModifyInputSchema
->
+export type ResumeEditorModifyInput =
+  | {
+      operation: "rewrite"
+      entity: ResumeSectionKey
+      id: string
+      field: string
+      value: string
+    }
+  | {
+      operation: "delete"
+      entity: SortableSectionKey
+      id: string
+    }
+  | {
+      operation: "add"
+      entity: SortableSectionKey
+    }
 export type ResumeEditorReorderOutput = z.infer<
   typeof resumeEditorReorderOutputSchema
 >

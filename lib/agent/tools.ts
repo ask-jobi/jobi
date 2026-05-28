@@ -121,24 +121,64 @@ export const SortableSectionKeyEnum = z.enum([
   "skills"
 ])
 
-export const resumeEditorModifyInputSchema = z.discriminatedUnion("operation", [
-  z.object({
-    operation: z.literal("rewrite"),
+export const resumeEditorModifyInputSchema = z
+  .object({
+    operation: z
+      .enum(["rewrite", "delete", "add"])
+      .describe("Operation type: rewrite, delete, or add"),
     entity: SectionKeyEnum,
-    id: z.string().describe("The entry ID to be modified"),
-    field: z.string().describe("The field name to be modified"),
-    value: z.string().describe("The new value for the field")
-  }),
-  z.object({
-    operation: z.literal("delete"),
-    entity: SortableSectionKeyEnum,
-    id: z.string().describe("The entry ID to be deleted")
-  }),
-  z.object({
-    operation: z.literal("add"),
-    entity: SortableSectionKeyEnum
+    id: z
+      .string()
+      .describe("The entry ID to be modified or deleted")
+      .optional(),
+    field: z.string().describe("The field name to be modified").optional(),
+    value: z.string().describe("The new value for the field").optional()
   })
-])
+  .superRefine((input, ctx) => {
+    if (input.operation === "rewrite") {
+      if (!input.id) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["id"],
+          message: "id is required for rewrite operations"
+        })
+      }
+
+      if (!input.field) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["field"],
+          message: "field is required for rewrite operations"
+        })
+      }
+
+      if (input.value === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["value"],
+          message: "value is required for rewrite operations"
+        })
+      }
+
+      return
+    }
+
+    if (input.entity === "personalInfo") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["entity"],
+        message: "personalInfo only supports rewrite operations"
+      })
+    }
+
+    if (input.operation === "delete" && !input.id) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["id"],
+        message: "id is required for delete operations"
+      })
+    }
+  })
 
 export const resumeEditorModifyOutputSchema = z.discriminatedUnion(
   "operation",

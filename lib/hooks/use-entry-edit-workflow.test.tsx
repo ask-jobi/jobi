@@ -139,6 +139,7 @@ function renderHarness(store = createStore(), resume = createResume()) {
       language: "en",
       evaluation_report: null,
       evaluation_report_refresh_flag: false,
+      current_revision: 1,
       resume_json: resume
     },
     job: {
@@ -229,7 +230,12 @@ describe("useEntryEditWorkflow reorderAndPersistEntry", () => {
   })
 
   it("does not start a manual reorder while an AI resume action is running", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const store = createStore()
     store.set(chatThreadLifecycleAtom, "running")
     const resume = createResume()
@@ -287,7 +293,12 @@ describe("useEntryEditWorkflow reorderAndPersistEntry", () => {
   })
 
   it("scrolls the moved section back into view after a successful save", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const scrollIntoViewMock = vi.mocked(
       window.HTMLElement.prototype.scrollIntoView
     )

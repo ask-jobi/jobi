@@ -28,6 +28,7 @@ async function Layout(props: {
         id,
         language,
         resume_json,
+        current_revision,
         evaluation_report,
         evaluation_report_refresh_flag
       ),

@@ -5,6 +5,7 @@ import {
   fetchJobApplication,
   getJobApplication,
   getApplicationResumeData,
+  getApplicationResumeForPrint,
   uploadResumeFile,
   updateResumeJobDescription,
   saveApplicationResumeChange,
@@ -156,14 +157,14 @@ describe("getApplicationResumeData", () => {
     vi.clearAllMocks()
   })
 
-  it("should return resume data when exists", async () => {
+  it("should return authoritative resume data when exists", async () => {
     const mockResumeJson = { personalInfo: { firstName: "John" } }
 
     const mockSupabase = {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({
-            data: [{ resume_json: mockResumeJson }],
+            data: [{ resume_json: mockResumeJson, current_revision: 3 }],
             error: null
           })
         })
@@ -175,7 +176,10 @@ describe("getApplicationResumeData", () => {
 
     const result = await getApplicationResumeData("resume-1")
 
-    expect(result).toEqual(mockResumeJson)
+    expect(result).toEqual({
+      resume: mockResumeJson,
+      currentRevision: 3
+    })
   })
 
   it("should throw error when not found", async () => {
@@ -212,6 +216,44 @@ describe("getApplicationResumeData", () => {
 
     await expect(getApplicationResumeData("resume-1")).rejects.toThrow(
       "Multiple resume found with id: resume-1"
+    )
+  })
+})
+
+describe("getApplicationResumeForPrint", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("should return resume data and language when exists", async () => {
+    const mockResumeJson = { personalInfo: { firstName: "John" } }
+    const select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        data: [
+          {
+            resume_json: mockResumeJson,
+            language: "en"
+          }
+        ],
+        error: null
+      })
+    })
+
+    const mockSupabase = {
+      from: vi.fn().mockReturnValue({ select })
+    }
+    mockCreateClient.mockResolvedValue(
+      mockSupabase as unknown as ReturnType<typeof createClient>
+    )
+
+    const result = await getApplicationResumeForPrint("resume-1")
+
+    expect(result).toEqual({
+      resumeData: mockResumeJson,
+      language: "en"
+    })
+    expect(select).toHaveBeenCalledWith(
+      expect.not.stringContaining("current_revision")
     )
   })
 })
@@ -383,8 +425,8 @@ describe("saveApplicationResumeChange", () => {
     vi.clearAllMocks()
   })
 
-  it("should save resume change successfully", async () => {
-    const resumeData: ResumeData = {
+  it("returns the authoritative resume and revision after saving a changed resume", async () => {
+    const nextResume: ResumeData = {
       sectionOrder: ["education", "employment", "skills"],
       personalInfo: {
         entryId: "p1",
@@ -397,23 +439,78 @@ describe("saveApplicationResumeChange", () => {
       employment: { entries: [] },
       skills: { entries: [] }
     }
+    const currentResume: ResumeData = {
+      ...nextResume,
+      education: {
+        entries: [
+          {
+            entryId: "edu-1",
+            school: "Original School",
+            degree: "BSc",
+            content: "CS",
+            start: "2023",
+            end: "2023"
+          }
+        ]
+      }
+    }
 
-    const mockFrom = vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null })
-      })
+    const selectSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "resume-123",
+        user_id: "user-123",
+        resume_json: currentResume,
+        current_revision: 1
+      },
+      error: null
+    })
+    const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
+    const select = vi.fn().mockReturnValue({ eq: selectEq })
+    const updateEq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    const mockFrom = vi.fn((table: string) => {
+      if (table === "resumes") {
+        return { select, update }
+      }
+
+      if (table === "resumes_snapshot") {
+        return { insert }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
     })
 
     const mockSupabase = {
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
+          error: null
+        })
+      },
       from: mockFrom
     }
     mockCreateClient.mockResolvedValue(
       mockSupabase as unknown as ReturnType<typeof createClient>
     )
 
-    await saveApplicationResumeChange("resume-123", resumeData)
-
-    expect(mockFrom).toHaveBeenCalledWith("resumes")
+    await expect(
+      saveApplicationResumeChange("resume-123", nextResume)
+    ).resolves.toEqual({
+      resume: nextResume,
+      currentRevision: 2
+    })
+    expect(update).toHaveBeenCalledWith({
+      resume_json: nextResume,
+      current_revision: 2,
+      evaluation_report_refresh_flag: true
+    })
+    expect(insert).toHaveBeenCalledWith({
+      resume_id: "resume-123",
+      revision: 2,
+      resume_json: nextResume,
+      event_id: null
+    })
   })
 
   it("should throw error when save fails", async () => {
@@ -431,15 +528,50 @@ describe("saveApplicationResumeChange", () => {
       skills: { entries: [] }
     }
 
-    const mockFrom = vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          error: { message: "Save failed" }
-        })
-      })
+    const selectSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "resume-123",
+        user_id: "user-123",
+        resume_json: {
+          ...resumeData,
+          education: {
+            entries: [
+              {
+                entryId: "edu-1",
+                school: "Original School",
+                degree: "BSc",
+                content: "CS",
+                start: "2023",
+                end: "2023"
+              }
+            ]
+          }
+        },
+        current_revision: 1
+      },
+      error: null
+    })
+    const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
+    const select = vi.fn().mockReturnValue({ eq: selectEq })
+    const updateEq = vi.fn().mockResolvedValue({
+      error: { message: "Save failed" }
+    })
+    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const mockFrom = vi.fn((table: string) => {
+      if (table === "resumes") {
+        return { select, update }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
     })
 
     const mockSupabase = {
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user-123" } },
+          error: null
+        })
+      },
       from: mockFrom
     }
     mockCreateClient.mockResolvedValue(

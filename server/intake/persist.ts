@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { insertResumeSnapshot } from "@/server/resume/snapshots"
 import type { PersistInput, PersistOutput, RollbackRegistry } from "./types"
 
 /**
@@ -41,7 +42,7 @@ export async function persistApplicationResume(
       job_id: jobData.id,
       upload_url: input.uploadedResumePublicUrl,
       language: input.resumeLanguage,
-      resume_json: input.resumeData as Record<string, unknown>
+      resume_json: input.resumeData as unknown as Record<string, unknown>
     } as any)
     .select("id")
     .single()
@@ -52,6 +53,13 @@ export async function persistApplicationResume(
 
   rollback.register("db", "delete-resume", async () => {
     await supabase.from("resumes").delete().eq("id", resumeData.id)
+  })
+
+  await insertResumeSnapshot({
+    supabase,
+    resumeId: resumeData.id,
+    revision: 1,
+    resume: input.resumeData
   })
 
   // 3. Create Job Application

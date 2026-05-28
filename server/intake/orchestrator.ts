@@ -1,11 +1,5 @@
 import { nanoid } from "nanoid"
-import type {
-  IntakeContext,
-  IntakeResult,
-  IntakeError,
-  IntakeEvent,
-  StepId
-} from "./types"
+import type { IntakeContext, IntakeResult, IntakeError, StepId } from "./types"
 import { IntakeErrors } from "./errors"
 import { loadPdfToDoc } from "@/server/ai/tools"
 import { parseResumeWithTokenUsage } from "@/server/ai/resume-parser"
@@ -168,7 +162,7 @@ export async function runUploadedResumeIntake(
         {
           userId: ctx.userId,
           jobInfo: input.jobInfo,
-          resumeData: parsedResume as unknown as Record<string, unknown>,
+          resumeData: parsedResume,
           resumeLanguage: language,
           uploadedResumePublicUrl: uploadResult.publicUrl
         },

@@ -68,6 +68,7 @@ describe("POST /api/chat/truncate", () => {
     vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
       id: "app-1",
       resumes: {
+        current_revision: 3,
         resume_json: {
           personalInfo: { entryId: "p1", firstName: "John", lastName: "Doe" },
           education: { entries: [] }
@@ -77,7 +78,13 @@ describe("POST /api/chat/truncate", () => {
     vi.mocked(resumeModule.getApplicationResumeData).mockResolvedValue({
       personalInfo: { entryId: "p1", firstName: "John" }
     } as any)
-    vi.mocked(resumeModule.saveApplicationResumeChange).mockResolvedValue()
+    vi.mocked(resumeModule.saveApplicationResumeChange).mockResolvedValue({
+      resume: {
+        personalInfo: { entryId: "p1", firstName: "John" },
+        education: { entries: [] }
+      } as any,
+      currentRevision: 4
+    })
 
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
@@ -188,15 +195,46 @@ describe("POST /api/chat/truncate", () => {
     expect(response.status).toBe(404)
   })
 
-  it("should truncate messages and return resume data on success", async () => {
+  it("returns the authoritative resume and revision after rollback", async () => {
+    vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([
+      {
+        id: "msg-2",
+        session_id: "session-1",
+        role: "assistant" as const,
+        parts: [],
+        truncated: false,
+        has_tools: true,
+        created_at: "2024-01-01T00:01:00Z",
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0
+      }
+    ])
+    vi.mocked(chatHistoryModule.extractToolOriginalValues).mockReturnValue([
+      {
+        operation: "rewrite",
+        entity: "education",
+        id: "edu-1",
+        field: "school",
+        originalValue: "Original School"
+      } as any
+    ])
+
     const request = createMockRequest({
       messageId: "550e8400-e29b-41d4-a716-446655440000"
     })
     const response = await POST(request)
 
     expect(response.status).toBe(200)
-    const data = await response.json()
-    expect(data.resume).toBeDefined()
+    await expect(response.json()).resolves.toEqual({
+      resume: {
+        personalInfo: { entryId: "p1", firstName: "John" },
+        education: { entries: [] }
+      },
+      currentRevision: 4
+    })
+    expect(resumeModule.saveApplicationResumeChange).toHaveBeenCalled()
   })
 
   it("should call truncateMessages with correct messages", async () => {

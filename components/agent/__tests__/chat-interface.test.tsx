@@ -134,6 +134,7 @@ function renderChatInterface({
       language: "en",
       evaluation_report: null,
       evaluation_report_refresh_flag: false,
+      current_revision: 1,
       resume_json: persistedResume
     },
     job: {
@@ -158,7 +159,12 @@ describe("ChatInterface", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     capturedOnToolCall = null
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 2
+      })
+    )
     mockExecuteResumeEditorModifyTool.mockResolvedValue({
       operation: "rewrite",
       entity: "education",
@@ -196,10 +202,10 @@ describe("ChatInterface", () => {
     const expectedResume: ResumeData = {
       ...persistedResume,
       education: {
-        ...persistedResume.education,
+        ...persistedResume.education!,
         entries: [
           {
-            ...persistedResume.education.entries[0],
+            ...persistedResume.education!.entries[0],
             school: "Edited School"
           }
         ]

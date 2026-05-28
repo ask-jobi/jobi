@@ -21,6 +21,7 @@
     ]
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.35",
     "@ai-sdk/devtools": "^0.0.14",
     "@ai-sdk/react": "^3.0.79",
     "@assistant-ui/react": "^0.12.11",

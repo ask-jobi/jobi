@@ -68,133 +68,11 @@ function renderEditor(store = createStore()) {
 
 describe("ResumeEditor add entry", () => {
   it("opens the modal for a new entry without mutating the persisted resume", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
-    const store = createStore()
-    const originalResume: ResumeData = {
-      sectionOrder: ["education", "skills"],
-      personalInfo: {
-        entryId: "pi-1",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: ""
-      },
-      education: {
-        entries: [
-          {
-            entryId: "edu-1",
-            school: "School 1",
-            degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
-            content: ""
-          }
-        ]
-      },
-      skills: {
-        entries: []
-      }
-    }
-
-    store.set(applicationAtom, {
-      id: "app-1",
-      resume: {
-        id: "resume-1",
-        language: "en",
-        evaluation_report: null,
-        evaluation_report_refresh_flag: false,
-        resume_json: originalResume
-      },
-      job: {
-        id: "job-1",
-        name: "",
-        company: "",
-        description: ""
-      }
-    })
-
-    renderEditor(store)
-
-    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
-
-    await waitFor(() => {
-      expect(store.get(editModalOpenAtom)).toBe(true)
-      expect(store.get(selectedSectionIdAtom)).toBe("education")
-      expect(store.get(selectedEntryIndexAtom)).toBe(1)
-      expect(store.get(selectedEntryIdAtom)).toBeNull()
-      expect(
-        store.get(applicationAtom)?.resume.resume_json.education?.entries
-      ).toHaveLength(1)
-    })
-  })
-
-  it("does not open the modal for manual editing while an AI edit is running", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
-    const store = createStore()
-    const originalResume: ResumeData = {
-      sectionOrder: ["education", "skills"],
-      personalInfo: {
-        entryId: "pi-1",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: ""
-      },
-      education: {
-        entries: [
-          {
-            entryId: "edu-1",
-            school: "School 1",
-            degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
-            content: ""
-          }
-        ]
-      },
-      skills: {
-        entries: []
-      }
-    }
-
-    store.set(applicationAtom, {
-      id: "app-1",
-      resume: {
-        id: "resume-1",
-        language: "en",
-        evaluation_report: null,
-        evaluation_report_refresh_flag: false,
-        resume_json: originalResume
-      },
-      job: {
-        id: "job-1",
-        name: "",
-        company: "",
-        description: ""
-      }
-    })
-    store.set(chatThreadLifecycleAtom, "running")
-
-    renderEditor(store)
-
-    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
-
-    await waitFor(() => {
-      expect(store.get(editModalOpenAtom)).toBe(false)
-      expect(store.get(selectedSectionIdAtom)).toBeNull()
-      expect(store.get(selectedEntryIndexAtom)).toBeNull()
-      expect(store.get(selectedEntryIdAtom)).toBeNull()
-      expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()
-    })
-  })
-
-  it("keeps the persisted resume unchanged until entry deletion save succeeds", async () => {
-    let resolveSave!: () => void
     saveApplicationResumeChangeMock.mockImplementation(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
     )
     const store = createStore()
     const originalResume: ResumeData = {
@@ -230,6 +108,146 @@ describe("ResumeEditor add entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
+        resume_json: originalResume
+      },
+      job: {
+        id: "job-1",
+        name: "",
+        company: "",
+        description: ""
+      }
+    })
+
+    renderEditor(store)
+
+    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
+
+    await waitFor(() => {
+      expect(store.get(editModalOpenAtom)).toBe(true)
+      expect(store.get(selectedSectionIdAtom)).toBe("education")
+      expect(store.get(selectedEntryIndexAtom)).toBe(1)
+      expect(store.get(selectedEntryIdAtom)).toBeNull()
+      expect(
+        store.get(applicationAtom)?.resume.resume_json.education?.entries
+      ).toHaveLength(1)
+    })
+  })
+
+  it("does not open the modal for manual editing while an AI edit is running", async () => {
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
+    const store = createStore()
+    const originalResume: ResumeData = {
+      sectionOrder: ["education", "skills"],
+      personalInfo: {
+        entryId: "pi-1",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: ""
+      },
+      education: {
+        entries: [
+          {
+            entryId: "edu-1",
+            school: "School 1",
+            degree: "Degree 1",
+            start: "2020-01",
+            end: "2021-01",
+            content: ""
+          }
+        ]
+      },
+      skills: {
+        entries: []
+      }
+    }
+
+    store.set(applicationAtom, {
+      id: "app-1",
+      resume: {
+        id: "resume-1",
+        language: "en",
+        evaluation_report: null,
+        evaluation_report_refresh_flag: false,
+        current_revision: 1,
+        resume_json: originalResume
+      },
+      job: {
+        id: "job-1",
+        name: "",
+        company: "",
+        description: ""
+      }
+    })
+    store.set(chatThreadLifecycleAtom, "running")
+
+    renderEditor(store)
+
+    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
+
+    await waitFor(() => {
+      expect(store.get(editModalOpenAtom)).toBe(false)
+      expect(store.get(selectedSectionIdAtom)).toBeNull()
+      expect(store.get(selectedEntryIndexAtom)).toBeNull()
+      expect(store.get(selectedEntryIdAtom)).toBeNull()
+      expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("keeps the persisted resume unchanged until entry deletion save succeeds", async () => {
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
+    saveApplicationResumeChangeMock.mockImplementation(
+      () =>
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
+    )
+    const store = createStore()
+    const originalResume: ResumeData = {
+      sectionOrder: ["education", "skills"],
+      personalInfo: {
+        entryId: "pi-1",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: ""
+      },
+      education: {
+        entries: [
+          {
+            entryId: "edu-1",
+            school: "School 1",
+            degree: "Degree 1",
+            start: "2020-01",
+            end: "2021-01",
+            content: ""
+          }
+        ]
+      },
+      skills: {
+        entries: []
+      }
+    }
+
+    store.set(applicationAtom, {
+      id: "app-1",
+      resume: {
+        id: "resume-1",
+        language: "en",
+        evaluation_report: null,
+        evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -263,7 +281,7 @@ describe("ResumeEditor add entry", () => {
       store.get(applicationAtom)?.resume.resume_json.education?.entries
     ).toHaveLength(1)
 
-    resolveSave()
+    resolveSave({ resume: expectedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(

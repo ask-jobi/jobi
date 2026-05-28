@@ -1,6 +1,7 @@
 import { atom, useAtom } from "jotai"
 import {
   ResumeData,
+  AuthoritativeResumeState,
   JobApplication,
   ResumeMetadata,
   ResumeJobDescription
@@ -107,7 +108,7 @@ export function useApplicationResume() {
   const [persistedResume, setPersistedResume] = useAtom(
     applicationResumeDataAtom
   )
-  const [application] = useAtom(applicationAtom)
+  const [application, setApplication] = useAtom(applicationAtom)
   const [jobDescription, setJobDescription] = useAtom(jobAtom)
   const [isLoading, setLoading] = useAtom(isLoadingAtom)
   const [resumeEvaluation, setResumeEvaluation] = useAtom(resumeEvaluationAtom)
@@ -116,12 +117,31 @@ export function useApplicationResume() {
   )
 
   const replacePersistedResume = (data: ResumeData) => setPersistedResume(data)
+  const replaceAuthoritativeResume = ({
+    resume,
+    currentRevision
+  }: AuthoritativeResumeState) => {
+    if (!application) return
+
+    setApplication({
+      ...application,
+      resume: {
+        ...application.resume,
+        resume_json: resume,
+        current_revision: currentRevision,
+        evaluation_report_refresh_flag: true
+      }
+    })
+  }
 
   const saveApplicationResume = async (data: ResumeData) => {
     if (!application?.resume.id) return false
     try {
-      await saveApplicationResumeChange(application.resume.id, data)
-      setPersistedResume(data)
+      const authoritativeState = await saveApplicationResumeChange(
+        application.resume.id,
+        data
+      )
+      replaceAuthoritativeResume(authoritativeState)
       return true
     } catch (error) {
       console.error("Save failed:", error)
@@ -158,6 +178,7 @@ export function useApplicationResume() {
     isLoading,
     setLoading,
     replacePersistedResume,
+    replaceAuthoritativeResume,
     saveApplicationResume,
     resumeEvaluation,
     setResumeEvaluation,

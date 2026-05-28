@@ -1,3 +1,6 @@
+import type { Locale } from "@/lib/i18n/config"
+import type { ResumeData } from "@/types/resume"
+
 /** Intake step identifiers */
 export type StepId = "extract" | "parse" | "upload" | "persist" | "evaluate"
 
@@ -95,9 +98,9 @@ export type PersistInput = {
     company: string
     description: string
   }
-  /** Raw resume JSON data — passed as-is to Supabase resume_json column */
-  resumeData: unknown
-  resumeLanguage: string
+  /** Normalized resume data persisted as the authoritative revision 1 state. */
+  resumeData: ResumeData
+  resumeLanguage: Locale
   uploadedResumePublicUrl: string | null
 }
 

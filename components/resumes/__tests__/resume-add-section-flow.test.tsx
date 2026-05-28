@@ -70,12 +70,17 @@ vi.mock("@/components/ui/monthrangepicker-form-field", () => ({
 describe("Resume add section flow", () => {
   it("creates a missing optional section only after save succeeds", async () => {
     const store = createStore()
-    let resolveSave!: () => void
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
     saveApplicationResumeChangeMock.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSave = resolve
-        })
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
     )
 
     const originalResume: ResumeData = {
@@ -111,6 +116,7 @@ describe("Resume add section flow", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -173,7 +179,7 @@ describe("Resume add section flow", () => {
       store.get(applicationAtom)?.resume.resume_json.employment
     ).toBeUndefined()
 
-    resolveSave()
+    resolveSave({ resume: expectedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(screen.getByTestId("employment-entry-count")).toHaveTextContent(

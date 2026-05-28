@@ -9,7 +9,6 @@ import {
 } from "@/lib/agent/chat-history"
 import {
   getJobApplicationByResumeId,
-  getApplicationResumeData,
   saveApplicationResumeChange
 } from "@/server/resume"
 import { logRollback } from "@/server/chat-events"
@@ -134,7 +133,7 @@ async function applyToolReversions(
     jobApp.resumes.resume_json
   )
 
-  await saveApplicationResumeChange(resumeId, updatedResume)
+  return saveApplicationResumeChange(resumeId, updatedResume)
 }
 
 export async function POST(request: NextRequest) {
@@ -202,16 +201,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let authoritativeResume = null
+
     if (toolsToRevert.length > 0) {
-      await applyToolReversions(toolsToRevert, session.resume_id)
+      authoritativeResume = await applyToolReversions(
+        toolsToRevert,
+        session.resume_id
+      )
     }
 
     await logRollback(targetMessage.session_id, messageId)
 
-    const resume = await getApplicationResumeData(session.resume_id)
+    if (authoritativeResume) {
+      return NextResponse.json(authoritativeResume)
+    }
+
+    const currentJobApp = await getJobApplicationByResumeId(session.resume_id)
 
     return NextResponse.json({
-      resume
+      resume: currentJobApp.resumes.resume_json,
+      currentRevision: currentJobApp.resumes.current_revision
     })
   } catch (error) {
     return handleApiError(error)
