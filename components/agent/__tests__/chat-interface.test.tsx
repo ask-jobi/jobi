@@ -10,19 +10,16 @@ import { applicationAtom, editModalOpenAtom } from "@/lib/store/resume"
 import { chatSessionIdAtom } from "@/lib/store/chat"
 import type { ResumeData } from "@/types/resume"
 
-const mockExecuteResumeEditorModifyTool = vi.fn()
-const mockExecuteResumeEditorReorderTool = vi.fn()
 const mockAddToolOutput = vi.fn()
 const saveApplicationResumeChangeMock = vi.fn()
 
-let capturedOnToolCall:
-  | ((args: {
-      toolCall: {
-        toolName: string
-        toolCallId: string
-        input: unknown
-      }
-    }) => Promise<void>)
+let capturedOnData:
+  | ((dataPart: {
+      type: string
+      data: unknown
+      id?: string
+      transient?: boolean
+    }) => void)
   | null = null
 
 const persistedResume: ResumeData = {
@@ -96,8 +93,7 @@ vi.mock("@assistant-ui/react", () => ({
 
 vi.mock("@ai-sdk/react", () => ({
   useChat: (config: unknown) => {
-    capturedOnToolCall = (config as { onToolCall: typeof capturedOnToolCall })
-      .onToolCall
+    capturedOnData = (config as { onData: typeof capturedOnData }).onData
 
     return {
       addToolOutput: mockAddToolOutput,
@@ -109,10 +105,6 @@ vi.mock("@ai-sdk/react", () => ({
 
 vi.mock("../chat", () => ({
   ThreadViewport: () => <div>thread-viewport</div>,
-  executeResumeEditorModifyTool: (...args: unknown[]) =>
-    mockExecuteResumeEditorModifyTool(...args),
-  executeResumeEditorReorderTool: (...args: unknown[]) =>
-    mockExecuteResumeEditorReorderTool(...args),
   toUIMessage: vi.fn()
 }))
 
@@ -158,48 +150,21 @@ function renderChatInterface({
 describe("ChatInterface", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    capturedOnToolCall = null
+    capturedOnData = null
     saveApplicationResumeChangeMock.mockImplementation(
       async (_resumeId: string, nextResume: ResumeData) => ({
         resume: nextResume,
         currentRevision: 2
       })
     )
-    mockExecuteResumeEditorModifyTool.mockResolvedValue({
-      operation: "rewrite",
-      entity: "education",
-      id: "edu-1",
-      field: "school",
-      originalValue: "Draft School",
-      value: "Edited School"
-    })
-    mockExecuteResumeEditorReorderTool.mockResolvedValue({
-      operation: "reorderEntries",
-      entity: "education",
-      orderedEntryIds: ["edu-1"]
-    })
   })
 
-  it("runs resume editor tools against the persisted resume and saves the resulting resume", async () => {
-    renderChatInterface()
+  it("applies authoritative resume patches from streaming data", () => {
+    const { store } = renderChatInterface()
 
-    expect(capturedOnToolCall).not.toBeNull()
+    expect(capturedOnData).not.toBeNull()
 
-    await capturedOnToolCall?.({
-      toolCall: {
-        toolName: "resumeEditorModify",
-        toolCallId: "tool-1",
-        input: {
-          operation: "rewrite",
-          entity: "education",
-          id: "edu-1",
-          field: "school",
-          value: "Edited School"
-        }
-      }
-    })
-
-    const expectedResume: ResumeData = {
+    const patchedResume: ResumeData = {
       ...persistedResume,
       education: {
         ...persistedResume.education!,
@@ -212,42 +177,48 @@ describe("ChatInterface", () => {
       }
     }
 
-    expect(mockExecuteResumeEditorModifyTool).toHaveBeenCalledWith(
-      expect.objectContaining({
-        entity: "education",
-        id: "edu-1"
-      }),
-      persistedResume
-    )
-    expect(mockAddToolOutput).toHaveBeenCalledWith({
-      tool: "resumeEditorModify",
-      toolCallId: "tool-1",
-      output: expect.objectContaining({
-        operation: "rewrite",
-        id: "edu-1"
-      })
+    capturedOnData?.({
+      type: "data-resume-patch",
+      id: "tool-1",
+      transient: true,
+      data: {
+        snapshotId: "resume-1:2",
+        messageId: "message-1",
+        baseVersion: 1,
+        nextVersion: 2,
+        body: {
+          output: {
+            operation: "rewrite",
+            entity: "education",
+            id: "edu-1",
+            field: "school",
+            originalValue: "Draft School",
+            value: "Edited School"
+          },
+          resume: patchedResume
+        }
+      }
     })
-    expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
-      "resume-1",
-      expectedResume
+
+    expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
+      patchedResume
     )
+    expect(store.get(applicationAtom)?.resume.current_revision).toBe(2)
+    expect(
+      store.get(applicationAtom)?.resume.evaluation_report_refresh_flag
+    ).toBe(true)
+    expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()
+    expect(mockAddToolOutput).not.toHaveBeenCalled()
   })
 
-  it("keeps the persisted resume unchanged when an AI edit save fails", async () => {
-    saveApplicationResumeChangeMock.mockRejectedValueOnce(new Error("boom"))
+  it("ignores non-resume patch data parts", () => {
     const { store } = renderChatInterface()
 
-    await capturedOnToolCall?.({
-      toolCall: {
-        toolName: "resumeEditorModify",
-        toolCallId: "tool-2",
-        input: {
-          operation: "rewrite",
-          entity: "education",
-          id: "edu-1",
-          field: "school",
-          value: "Edited School"
-        }
+    capturedOnData?.({
+      type: "data-sessionTitle",
+      data: {
+        sessionId: "session-1",
+        title: "Updated title"
       }
     })
 

@@ -27,6 +27,16 @@ export type PendingChatAction = {
   message: string
 }
 export const chatThreadLifecycleAtom = atom<ChatThreadLifecycle>("idle")
+export const pendingChatPatchCountAtom = atom(0)
+export const adjustPendingChatPatchCountAtom = atom(
+  null,
+  (get, set, delta: number) => {
+    set(
+      pendingChatPatchCountAtom,
+      Math.max(0, get(pendingChatPatchCountAtom) + delta)
+    )
+  }
+)
 export const dispatchChatThreadLifecycleAtom = atom(
   null,
   (get, set, action: ChatThreadLifecycleAction) => {
@@ -113,11 +123,24 @@ export function usePendingChatActionValue() {
   return useAtomValue(pendingChatActionAtom)
 }
 
+export function usePendingChatPatchCountValue() {
+  return useAtomValue(pendingChatPatchCountAtom)
+}
+
+export function useAdjustPendingChatPatchCount() {
+  return useSetAtom(adjustPendingChatPatchCountAtom)
+}
+
 export function useIsResumeAiActionActive() {
   const lifecycle = useAtomValue(chatThreadLifecycleAtom)
   const pendingChatAction = useAtomValue(pendingChatActionAtom)
+  const pendingChatPatchCount = useAtomValue(pendingChatPatchCountAtom)
 
-  return lifecycle === "running" || pendingChatAction !== null
+  return (
+    lifecycle === "running" ||
+    pendingChatAction !== null ||
+    pendingChatPatchCount > 0
+  )
 }
 
 export function useSetPendingChatAction() {

@@ -79,6 +79,14 @@ vi.mock("@/lib/agent/token-usage", () => ({
   parseTokenUsage: vi.fn()
 }))
 
+vi.mock("@/server/ai/resume-chat-tools", () => ({
+  createResumeChatServerTools: vi.fn(() => ({}))
+}))
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => ({}))
+}))
+
 vi.mock("@/server/auth-helper", () => {
   class ApiError extends Error {
     constructor(
@@ -92,6 +100,7 @@ vi.mock("@/server/auth-helper", () => {
   return {
     ApiError,
     requireVerifiedUserIdentity: vi.fn(),
+    verifyOwnership: vi.fn(),
     handleApiError: vi.fn((error: unknown) => {
       if (error instanceof ApiError) {
         return Response.json(
@@ -115,6 +124,42 @@ vi.mock("@/server/quota", () => ({
 describe("POST /api/chat/resume", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it("verifies session ownership before loading chat context", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const routeModule = await import("./route")
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(authHelpers.verifyOwnership).mockRejectedValueOnce(
+      new authHelpers.ApiError("Forbidden", 403)
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "hello" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+
+    expect(response.status).toBe(403)
+    expect(authHelpers.verifyOwnership).toHaveBeenCalledWith(
+      "session-1",
+      "user-1"
+    )
+    expect(quotaModule.getActiveAccessPass).not.toHaveBeenCalled()
+    expect(chatHistoryModule.getSessionSummary).not.toHaveBeenCalled()
   })
 
   it("should reject sending a message when chat token quota is exhausted", async () => {

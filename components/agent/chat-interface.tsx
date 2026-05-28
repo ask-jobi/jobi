@@ -2,35 +2,22 @@
 
 import { cn } from "@/lib/utils"
 import { editModalOpenAtom, useApplicationResume } from "@/lib/store/resume"
-import { applyToolOutputToResume } from "@/lib/resume/mutations"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk"
 import { useChat as useAIChat } from "@ai-sdk/react"
 import { AssistantRuntimeProvider, ThreadPrimitive } from "@assistant-ui/react"
-import {
-  DefaultChatTransport,
-  lastAssistantMessageIsCompleteWithToolCalls
-} from "ai"
-import {
-  ThreadViewport,
-  executeResumeEditorModifyTool,
-  executeResumeEditorReorderTool,
-  toUIMessage
-} from "./chat"
+import { DefaultChatTransport } from "ai"
+import { ThreadViewport, toUIMessage } from "./chat"
 import { chatDataPartSchemas } from "@/types/chat"
-import type {
-  ChatUIMessage,
-  ResumeEditorModifyInput,
-  ResumeEditorModifyOutput,
-  ResumeEditorReorderInput,
-  ResumeEditorReorderOutput
-} from "@/types/chat"
+import type { AuthoritativeResumePatch, ChatUIMessage } from "@/types/chat"
 import { useEffect, useRef } from "react"
 import { useAtomValue } from "jotai"
 import {
+  useAdjustPendingChatPatchCount,
   useChatSessionIdValue,
   usePendingChatActionValue,
+  usePendingChatPatchCountValue,
   useSetPendingChatAction
 } from "@/lib/store/chat"
 import { ChatPendingActionEffect } from "./chat/chat-pending-action-effect"
@@ -52,12 +39,14 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 }
 
 function ChatInterfaceThread({ className }: ChatInterfaceProps) {
-  const { application, applicationResumeData, saveApplicationResume } =
+  const { application, applicationResumeData, replaceAuthoritativeResume } =
     useApplicationResume()
   const isEditModalOpen = useAtomValue(editModalOpenAtom)
   const sessionId = useChatSessionIdValue()
   const pendingChatAction = usePendingChatActionValue()
+  const pendingChatPatchCount = usePendingChatPatchCountValue()
   const setPendingChatAction = useSetPendingChatAction()
+  const adjustPendingChatPatchCount = useAdjustPendingChatPatchCount()
   const {
     lifecycle,
     markThreadSynced,
@@ -70,54 +59,23 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
     id: sessionId,
     generateId: generateUUID,
     dataPartSchemas: chatDataPartSchemas,
-    onToolCall: async ({ toolCall }) => {
-      const { input } = toolCall
-
-      if (!applicationResumeData) {
+    onData: (dataPart) => {
+      if (dataPart.type !== "data-resume-patch") {
         return
       }
 
-      if (toolCall.toolName === "resumeEditorModify") {
-        const typedInput = input as ResumeEditorModifyInput
+      const patch = dataPart.data as AuthoritativeResumePatch
+      adjustPendingChatPatchCount(1)
 
-        const modifyOutput = (await executeResumeEditorModifyTool(
-          typedInput,
-          applicationResumeData
-        )) as ResumeEditorModifyOutput
-
-        addToolOutput({
-          tool: "resumeEditorModify",
-          toolCallId: toolCall.toolCallId,
-          output: modifyOutput
+      try {
+        replaceAuthoritativeResume({
+          resume: patch.body.resume,
+          currentRevision: patch.nextVersion
         })
-
-        const nextResume = applyToolOutputToResume(
-          applicationResumeData,
-          modifyOutput
-        )
-        await saveApplicationResume(nextResume)
-      } else if (toolCall.toolName === "resumeEditorReorder") {
-        const typedInput = input as ResumeEditorReorderInput
-
-        const reorderOutput = (await executeResumeEditorReorderTool(
-          typedInput,
-          applicationResumeData
-        )) as ResumeEditorReorderOutput
-
-        addToolOutput({
-          tool: "resumeEditorReorder",
-          toolCallId: toolCall.toolCallId,
-          output: reorderOutput
-        })
-
-        const nextResume = applyToolOutputToResume(
-          applicationResumeData,
-          reorderOutput
-        )
-        await saveApplicationResume(nextResume)
+      } finally {
+        adjustPendingChatPatchCount(-1)
       }
     },
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
       api: "/api/chat/resume",
       prepareSendMessagesRequest({ messages, id }) {
@@ -126,20 +84,6 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       }
     })
   })
-
-  const addToolOutput = chat.addToolOutput as (
-    output:
-      | {
-          tool: "resumeEditorModify"
-          toolCallId: string
-          output: ResumeEditorModifyOutput
-        }
-      | {
-          tool: "resumeEditorReorder"
-          toolCallId: string
-          output: ResumeEditorReorderOutput
-        }
-  ) => void
 
   const { messages, hasLoadedInitialHistory } = useChatHistory({ sessionId })
   const setChatMessagesRef = useRef(chat.setMessages)
@@ -170,11 +114,22 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       return
     }
 
-    if (chat.status === "ready" && lifecycle === "running") {
+    if (
+      chat.status === "ready" &&
+      lifecycle === "running" &&
+      pendingChatPatchCount === 0
+    ) {
       markRunFinished()
       notifyTokenBalanceUpdated()
     }
-  }, [chat.status, lifecycle, markFailed, markRunFinished, markRunStarted])
+  }, [
+    chat.status,
+    lifecycle,
+    markFailed,
+    markRunFinished,
+    markRunStarted,
+    pendingChatPatchCount
+  ])
 
   const runtime = useAISDKRuntime(chat)
 

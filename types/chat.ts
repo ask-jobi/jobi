@@ -6,7 +6,11 @@ import {
   resumeEditorReorderOutputSchema,
   tools
 } from "@/lib/agent/tools"
-import type { ResumeSectionKey, SortableSectionKey } from "@/types/resume"
+import type {
+  ResumeData,
+  ResumeSectionKey,
+  SortableSectionKey
+} from "@/types/resume"
 
 export interface ChatTokenUsage {
   inputTokens: number
@@ -16,11 +20,32 @@ export interface ChatTokenUsage {
   totalTokens: number
 }
 
+export const authoritativeResumePatchSchema = z.object({
+  snapshotId: z.string(),
+  messageId: z.string(),
+  baseVersion: z.number(),
+  nextVersion: z.number(),
+  body: z.object({
+    output: z.union([
+      resumeEditorModifyOutputSchema,
+      resumeEditorReorderOutputSchema
+    ]),
+    resume: z.custom<ResumeData>(
+      (value) => typeof value === "object" && value !== null
+    )
+  })
+})
+
+export type AuthoritativeResumePatch = z.infer<
+  typeof authoritativeResumePatchSchema
+>
+
 export interface ChatDataParts {
   sessionTitle: {
     sessionId: string
     title: string
   }
+  "resume-patch": AuthoritativeResumePatch
 }
 
 export interface ChatMessageMetadata {
@@ -31,7 +56,8 @@ export const chatDataPartSchemas = {
   sessionTitle: z.object({
     sessionId: z.string(),
     title: z.string()
-  })
+  }),
+  "resume-patch": authoritativeResumePatchSchema
 }
 
 export type ResumeEditorModifyOutput = z.infer<

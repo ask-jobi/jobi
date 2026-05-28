@@ -35,7 +35,9 @@ import {
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
 import {
   requireVerifiedUserIdentity,
-  handleApiError
+  handleApiError,
+  verifyOwnership,
+  ApiError
 } from "@/server/auth-helper"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
 import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
@@ -46,6 +48,8 @@ import {
   verifyChatTokenQuota
 } from "@/server/quota"
 import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
+import { createResumeChatServerTools } from "@/server/ai/resume-chat-tools"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -110,6 +114,9 @@ export async function POST(request: NextRequest) {
 
     const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
+
+    await verifyOwnership(sessionId, user.id)
+
     const activeAccessPass = await getActiveAccessPass(user.id)
 
     if (activeAccessPass) {
@@ -132,11 +139,17 @@ export async function POST(request: NextRequest) {
       loadContextMessages(sessionId)
     ])
 
+    if (!currentSession) {
+      throw new ApiError("Chat session not found", 404)
+    }
+
     const jobApplication = await getJobApplicationByResumeId(
-      currentSession!!.resumeId
+      currentSession.resumeId
     )
 
+    const resumeId = currentSession.resumeId
     const resumeData = jobApplication.resumes.resume_json as ResumeData
+    const currentRevision = jobApplication.resumes.current_revision
     const resumeLang = jobApplication.resumes.language
     const jobDescription = jobApplication.jobs as ResumeJobDescription
     const evaluationReport = jobApplication.resumes
@@ -149,6 +162,22 @@ export async function POST(request: NextRequest) {
       contextMessages[existingIdx] = message
     } else {
       contextMessages.push(message)
+    }
+
+    if (message.role === "user") {
+      if (existingIdx >= 0) {
+        await updateMessage({
+          messageId: message.id,
+          parts: message.parts
+        })
+      } else {
+        await saveMessage({
+          id: message.id,
+          sessionId,
+          role: "user",
+          parts: message.parts
+        })
+      }
     }
 
     const systemMessage = {
@@ -173,15 +202,6 @@ export async function POST(request: NextRequest) {
       currentSession?.title
     )
 
-    if (message.role === "user") {
-      void saveMessage({
-        id: message.id,
-        sessionId,
-        role: "user",
-        parts: message.parts
-      })
-    }
-
     // 空的message会导致验证失败
     const uiMessages = await validateUIMessages<ChatUIMessage>({
       messages: allMessages,
@@ -192,17 +212,31 @@ export async function POST(request: NextRequest) {
       originalMessages: uiMessages,
       generateId: generateUUID,
       execute: async ({ writer: dataStream }) => {
+        const assistantMessageId = generateUUID()
+        const supabase = await createClient()
+        const serverTools = createResumeChatServerTools({
+          supabase,
+          userId: user.id,
+          resumeId,
+          sessionId,
+          assistantMessageId,
+          initialResume: resumeData,
+          initialRevision: currentRevision,
+          writer: dataStream
+        })
+
         const result = streamText({
           model: model,
           stopWhen: stepCountIs(5),
           messages: await convertToModelMessages(uiMessages),
           experimental_transform: smoothStream(),
-          tools,
-          experimental_repairToolCall: repairToolCall
+          tools: serverTools,
+          experimental_repairToolCall: repairToolCall as never
         })
 
         dataStream.merge(
           result.toUIMessageStream({
+            generateMessageId: () => assistantMessageId,
             sendReasoning: true,
             messageMetadata: ({ part }) => {
               if (part.type !== "finish") {

@@ -75,45 +75,45 @@
 
 ### Phase 2A: 路由与 registry
 
-- [ ] 在 `POST /api/chat/resume` 入口显式执行 `verifyOwnership(sessionId, user.id)`
-- [ ] 将 chat runtime registry 切为服务端执行 tool
-- [ ] 对 `resumeEditorModify` / `resumeEditorReorder` 启用 `strict: true`
-- [ ] 为主要操作补 `inputExamples`
-- [ ] 适用性校验失败时落 `tool_failed`
+- [x] 在 `POST /api/chat/resume` 入口显式执行 `verifyOwnership(sessionId, user.id)`
+- [x] 将 chat runtime registry 切为服务端执行 tool
+- [x] 对 `resumeEditorModify` / `resumeEditorReorder` 启用 `strict: true`
+- [x] 为主要操作补 `inputExamples`
+- [x] 适用性校验失败时落 `tool_failed`
 
 ### Phase 2B: authoritative patch 与消息主路径
 
-- [ ] 定义 `data-resume-patch` schema，并加入 `chatDataPartSchemas`
-- [ ] 通过 transient streaming data 下发 authoritative patch
-- [ ] patch 至少携带 `snapshotId`、`messageId`、`baseVersion`、`nextVersion`、patch body
-- [ ] `user message` 持久化改为主路径同步完成
-- [ ] `assistant` 完成态 message 持久化改为主路径同步完成
-- [ ] `tool_result` / `tool-error` / `error` parts 随 `resume_chat_messages.parts` 一起持久化
+- [x] 定义 `data-resume-patch` schema，并加入 `chatDataPartSchemas`
+- [x] 通过 transient streaming data 下发 authoritative patch
+- [x] patch 至少携带 `snapshotId`、`messageId`、`baseVersion`、`nextVersion`、patch body
+- [x] `user message` 持久化改为主路径同步完成
+- [x] `assistant` 完成态 message 持久化改为主路径同步完成
+- [x] `tool_result` / `tool-error` / `error` parts 随 `resume_chat_messages.parts` 一起持久化
 
 ### Phase 2C: 前端消费者切换
 
-- [ ] 从 chat 主链路移除 `useChat({ onToolCall })` 执行逻辑
-- [ ] 从 chat 主链路移除 `applyToolOutputToResume(...)`
-- [ ] 前端在 `onData` 中消费 authoritative patch 并推进 `current_revision`
-- [ ] patch apply 成功后本地置 `evaluation_report_refresh_flag=true`
-- [ ] `pendingPatchCount` 只表示“已收到但尚未完成应用/冲突恢复的 patch 数量”
-- [ ] AI 运行期间继续保持 UI 级编辑锁
+- [x] 从 chat 主链路移除 `useChat({ onToolCall })` 执行逻辑
+- [x] 从 chat 主链路移除 `applyToolOutputToResume(...)`
+- [x] 前端在 `onData` 中消费 authoritative patch 并推进 `current_revision`
+- [x] patch apply 成功后本地置 `evaluation_report_refresh_flag=true`
+- [x] `pendingPatchCount` 只表示“已收到但尚未完成应用/冲突恢复的 patch 数量”
+- [x] AI 运行期间继续保持 UI 级编辑锁
 
 ## 测试计划
 
 ### 单元 / 组件测试
 
-- [ ] `data-resume-patch` schema 类型正确
-- [ ] authoritative patch apply 后本地 `current_revision` 与 `evaluation_report_refresh_flag` 正确推进
+- [x] `data-resume-patch` schema 类型正确
+- [x] authoritative patch apply 后本地 `current_revision` 与 `evaluation_report_refresh_flag` 正确推进
 - [ ] `ResumeEditorToolUI` 在 AI SDK 原生 tool result part 下仍能正常渲染
 
 ### API / 集成测试
 
-- [ ] `POST /api/chat/resume` ownership 校验测试
-- [ ] 单 tool 成功：写 `tool_call` / `tool_result` / snapshot / patch
+- [x] `POST /api/chat/resume` ownership 校验测试
+- [x] 单 tool 成功：写 `tool_call` / `tool_result` / snapshot / patch
 - [ ] 多 tool 串行成功：revision 连续推进、patch 连续应用
-- [ ] 部分成功部分失败：成功有 snapshot/patch，失败写 `tool_failed`
-- [ ] user/assistant message 主路径同步持久化测试
+- [x] 部分成功部分失败：成功有 snapshot/patch，失败写 `tool_failed`
+- [x] user/assistant message 主路径同步持久化测试
 - [ ] AI SDK 原生 `tool-error` / `error` parts 随消息历史持久化测试
 
 ### 回归检查

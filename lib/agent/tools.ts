@@ -242,25 +242,77 @@ export const resumeEditorReorderOutputSchema = z.object({
     .describe("Original order before reordering")
 })
 
+export const resumeEditorModifyToolDescription =
+  "Tool to modify resume entries: rewrite fields, delete entries, or add new entries. " +
+  "Supports: " +
+  "1) Rewrite entry fields - modify any field in an entry; " +
+  "2) Delete an entry - remove an entry from a section; " +
+  "3) Add a new entry - insert a new entry into a section. " +
+  "The output language MUST remain consistent with the original resume language."
+
+export const resumeEditorReorderToolDescription =
+  "Tool to reorder resume entries and sections. " +
+  "Supports: " +
+  "1) Reorder entries - change order of entries within a section; " +
+  "2) Reorder sections - change order of sections (personalInfo is always first). " +
+  "The output language MUST remain consistent with the original resume language."
+
+export const resumeEditorModifyInputExamples = [
+  {
+    input: {
+      operation: "rewrite",
+      entity: "employment",
+      id: "entry-id",
+      field: "content",
+      value: "Improved bullet content tailored to the target job."
+    }
+  },
+  {
+    input: {
+      operation: "delete",
+      entity: "projects",
+      id: "entry-id"
+    }
+  },
+  {
+    input: {
+      operation: "add",
+      entity: "skills"
+    }
+  }
+] satisfies Array<{ input: z.infer<typeof resumeEditorModifyInputSchema> }>
+
+export const resumeEditorReorderInputExamples = [
+  {
+    input: {
+      operation: "reorderEntries",
+      entity: "employment",
+      orderedEntryIds: ["entry-id-2", "entry-id-1"]
+    }
+  },
+  {
+    input: {
+      operation: "reorderSections",
+      entity: null,
+      orderedSectionIds: ["employment", "projects", "education", "skills"]
+    }
+  }
+] satisfies Array<{ input: z.infer<typeof resumeEditorReorderInputSchema> }>
+
 export const tools = {
   resumeEditorModify: tool({
-    description:
-      "Tool to modify resume entries: rewrite fields, delete entries, or add new entries. " +
-      "Supports: " +
-      "1) Rewrite entry fields - modify any field in an entry; " +
-      "2) Delete an entry - remove an entry from a section; " +
-      "3) Add a new entry - insert a new entry into a section. " +
-      "The output language MUST remain consistent with the original resume language.",
-    inputSchema: resumeEditorModifyInputSchema
+    description: resumeEditorModifyToolDescription,
+    inputSchema: resumeEditorModifyInputSchema,
+    outputSchema: resumeEditorModifyOutputSchema,
+    strict: true,
+    inputExamples: resumeEditorModifyInputExamples
   }),
   resumeEditorReorder: tool({
-    description:
-      "Tool to reorder resume entries and sections. " +
-      "Supports: " +
-      "1) Reorder entries - change order of entries within a section; " +
-      "2) Reorder sections - change order of sections (personalInfo is always first). " +
-      "The output language MUST remain consistent with the original resume language.",
-    inputSchema: resumeEditorReorderInputSchema
+    description: resumeEditorReorderToolDescription,
+    inputSchema: resumeEditorReorderInputSchema,
+    outputSchema: resumeEditorReorderOutputSchema,
+    strict: true,
+    inputExamples: resumeEditorReorderInputExamples
   })
 }
 

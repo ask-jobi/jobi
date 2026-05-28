@@ -351,7 +351,13 @@ export type Database = {
           id: string
           session_id: string
           message_id: string | null
-          event_type: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_type:
+            | "resume_modification"
+            | "summary_checkpoint"
+            | "rollback"
+            | "tool_call"
+            | "tool_result"
+            | "tool_failed"
           event_data: Record<string, unknown>
           created_at: string
         }
@@ -359,7 +365,13 @@ export type Database = {
           id?: string
           session_id: string
           message_id?: string | null
-          event_type: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_type:
+            | "resume_modification"
+            | "summary_checkpoint"
+            | "rollback"
+            | "tool_call"
+            | "tool_result"
+            | "tool_failed"
           event_data?: Record<string, unknown>
           created_at?: string
         }
@@ -367,7 +379,13 @@ export type Database = {
           id?: string
           session_id?: string
           message_id?: string | null
-          event_type?: "resume_modification" | "summary_checkpoint" | "rollback"
+          event_type?:
+            | "resume_modification"
+            | "summary_checkpoint"
+            | "rollback"
+            | "tool_call"
+            | "tool_result"
+            | "tool_failed"
           event_data?: Record<string, unknown>
           created_at?: string
         }
