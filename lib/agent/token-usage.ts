@@ -28,9 +28,10 @@ export function parseTokenUsage(
   const inputTokens = usage.inputTokenDetails.noCacheTokens ?? 0
   const cachedTokens = usage.inputTokenDetails.cacheReadTokens ?? 0
   const outputTokens = usage.outputTokens ?? 0
+  // reasoningTokens is a sub-breakdown of output, not additive
   const reasoningTokens = usage.outputTokenDetails.reasoningTokens ?? 0
-  const totalTokens =
-    usage.totalTokens ?? inputTokens + outputTokens + cachedTokens
+  // Trust provider/AI SDK total directly
+  const totalTokens = usage.totalTokens ?? 0
 
   return {
     inputTokens,

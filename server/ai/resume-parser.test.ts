@@ -396,10 +396,8 @@ zhangsan@example.com
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(
-        "Structured resume parsing failed, falling back to text parsing",
-        {
-          messages: ["no object generated"]
-        }
+        "Structured resume parsing failed",
+        "No object generated"
       )
 
       warnSpy.mockRestore()
@@ -418,16 +416,14 @@ zhangsan@example.com
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(
-        "Structured resume parsing failed, falling back to text parsing",
-        {
-          messages: ["invalid error response format: gateway request failed"]
-        }
+        "Structured resume parsing failed",
+        "Invalid error response format: Gateway request failed"
       )
 
       warnSpy.mockRestore()
     })
 
-    it("should include nested transport error messages in warning logs", async () => {
+    it("should log top-level error message on parse failure", async () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
       const socketError = new Error("other side closed")
@@ -447,14 +443,8 @@ zhangsan@example.com
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(
-        "Structured resume parsing failed, falling back to text parsing",
-        {
-          messages: [
-            "invalid error response format: gateway request failed",
-            "cannot connect to api: other side closed",
-            "other side closed"
-          ]
-        }
+        "Structured resume parsing failed",
+        "Invalid error response format: Gateway request failed"
       )
 
       warnSpy.mockRestore()

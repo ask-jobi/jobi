@@ -30,6 +30,7 @@
 | `2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md` | Resume revision / snapshot 基础链路、authoritative save/rollback 返回值 |
 | `2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md` | Chat server-authority cutover：服务端 tool 执行 + data-resume-patch 下发 + 前端纯消费者切换 |
 | `2026-05-23-ai-sdk-phase-3-chat-contract-boundary-cleanup.md` | Chat contract boundary cleanup：schema 收口 + 模块迁移 + 旧边界清理 |
+| `2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md` | Provider/parser consistency：gateway-first 落地 + parser 死代码清理 + token 口径修正 |
 | `blank-resume-defaults.md` | 空白简历起步流程 |
 | `resume-chat.md` | chat 能力最终落地结果 |
 | `resume-editor-tools.md` | editor tools 最终落地结果 |

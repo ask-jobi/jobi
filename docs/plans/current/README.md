@@ -12,6 +12,5 @@
 - [2026-05-23-playwright-e2e-coverage-expansion.md](./2026-05-23-playwright-e2e-coverage-expansion.md) - Playwright E2E 覆盖扩展计划
 - [2026-05-25-auth-helper-optimization.md](./2026-05-25-auth-helper-optimization.md) - Supabase auth-helper 与 proxy 优化计划
 - [2026-05-23-ai-sdk-integration-deepening.md](./2026-05-23-ai-sdk-integration-deepening.md) - AI SDK 集成 deepening 总览与决策记录
-- [2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md](./2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md) - Phase 4：Provider / parser 一致性清理
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。

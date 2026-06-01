@@ -2,6 +2,18 @@
 
 **Date:** 2026-05-23
 
+> **已完成** — 完成日期：2026-06-01
+>
+> **实际落地要点：**
+> - `server/ai/model.ts`：启用 gateway-first 策略，`AI_GATEWAY_API_KEY` 存在时使用 `gateway("deepseek/deepseek-v4-flash")`，否则回退到直连 deepseek provider 并输出 warning
+> - `@ai-sdk/gateway` 新增为直接依赖
+> - `.env.example` 已包含 `AI_GATEWAY_API_KEY` 说明
+> - `server/ai/resume-parser.ts`：删除 `collectErrorMessages` 死代码，移除 `NoObjectGeneratedError` 无用导入，将误导性 "falling back to text parsing" 日志修正为如实记录
+> - `server/ai/parse-json-from-model-text.ts` 及其测试文件删除（无生产消费者）
+> - `lib/agent/token-usage.ts`：`totalTokens` 直接信任 provider/AI SDK 总量，移除自算 fallback
+> - 测试：token-usage.test.ts 对齐新口径，resume-parser.test.ts 对齐新 warning 格式
+> - Tests: 94 files / 495 tests pass (1 pre-existing flaky test in upload-and-analyze)
+
 ## 背景
 
 在前 3 个阶段完成后，应用应该已经能在新的 chat authority 与 revision/snapshot 链路上正常运行。剩余问题主要是“实现与文档的真相一致性”：
@@ -57,29 +69,29 @@
 
 ### Phase 4A: provider 一致性
 
-- [ ] 对齐 `lib/agent/model.ts` / `server/ai/model.ts` 与 gateway-first 策略
-- [ ] 更新 `.env.example` 与相关说明文档
-- [ ] 确保自动化测试只覆盖 gateway-first 正式路径
+- [x] 对齐 `lib/agent/model.ts` / `server/ai/model.ts` 与 gateway-first 策略
+- [x] 更新 `.env.example` 与相关说明文档
+- [x] 确保自动化测试只覆盖 gateway-first 正式路径
 
 ### Phase 4B: parser / token 清理
 
-- [ ] 删除 `resume-parser` 中虚假的 fallback 叙述
-- [ ] 删除不再使用的 fallback / dead code
-- [ ] 修正 token usage 总量统计口径
-- [ ] 保留 reasoning parts 展示，但不再重复累计 reasoning token
+- [x] 删除 `resume-parser` 中虚假的 fallback 叙述
+- [x] 删除不再使用的 fallback / dead code
+- [x] 修正 token usage 总量统计口径
+- [x] 保留 reasoning parts 展示，但不再重复累计 reasoning token
 
 ## 测试计划
 
 ### 单元 / 组件测试
 
-- [ ] gateway-first 配置选择测试
-- [ ] `resume-parser` 仅保留结构化解析路径的测试
-- [ ] token usage 总量与 reasoning breakdown 口径测试
+- [x] gateway-first 配置选择测试
+- [x] `resume-parser` 仅保留结构化解析路径的测试
+- [x] token usage 总量与 reasoning breakdown 口径测试
 
 ### 回归检查
 
-- [ ] gateway-first 正式路径可正常生成 AI 响应
-- [ ] reasoning 展示仍可见，但总 token 统计不再失真
+- [x] gateway-first 正式路径可正常生成 AI 响应
+- [x] reasoning 展示仍可见，但总 token 统计不再失真
 
 ## 验收标准
 

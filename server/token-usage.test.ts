@@ -43,9 +43,9 @@ describe("parseTokenUsage", () => {
     })
   })
 
-  it("should derive total tokens when totalTokens is unavailable", () => {
+  it("should return zero totalTokens when provider total is missing", () => {
     const usage = parseTokenUsage({
-      inputTokens: 1,
+      inputTokens: 4243,
       inputTokenDetails: {
         noCacheTokens: 1,
         cacheReadTokens: 4242,
@@ -55,16 +55,15 @@ describe("parseTokenUsage", () => {
       outputTokenDetails: {
         textTokens: 270,
         reasoningTokens: 0
-      },
-      totalTokens: 4513
-    })
+      }
+    } as any)
 
     expect(usage).toEqual({
       inputTokens: 1,
       outputTokens: 270,
       cachedTokens: 4242,
       reasoningTokens: 0,
-      totalTokens: 4513
+      totalTokens: 0
     })
   })
 

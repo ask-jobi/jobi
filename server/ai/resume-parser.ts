@@ -1,47 +1,15 @@
 import "server-only"
 import { z } from "zod"
-import { generateText, NoObjectGeneratedError, Output } from "ai"
+import { generateText, Output } from "ai"
 import { ResumeData, ResumeSection } from "@/types/resume"
 import { resumeParsePrompt } from "./prompts/resume-parse.prompt"
 import { Locale } from "@/lib/i18n/config"
 import { model } from "@/server/ai/model"
 import { nanoid } from "nanoid"
 import { parseTokenUsage, type TokenUsage } from "@/lib/agent/token-usage"
-import { parseJsonFromModelText } from "./parse-json-from-model-text"
 
 const EMPTY_RESUME_TEXT_ERROR =
   "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
-
-function collectErrorMessages(error: unknown): string[] {
-  const messages: string[] = []
-  const seen = new Set<unknown>()
-
-  let current: unknown = error
-  while (current && !seen.has(current)) {
-    seen.add(current)
-
-    if (current instanceof Error) {
-      messages.push(current.message)
-      current = current.cause
-      continue
-    }
-
-    if (
-      typeof current === "object" &&
-      current !== null &&
-      "message" in current &&
-      typeof current.message === "string"
-    ) {
-      messages.push(current.message)
-      current = "cause" in current ? current.cause : undefined
-      continue
-    }
-
-    break
-  }
-
-  return messages.map((message) => message.toLowerCase())
-}
 
 const resumeSchema = z.object({
   // required
@@ -297,10 +265,8 @@ export const parseResumeWithTokenUsage = async (
     totalUsage = parseTokenUsage(structured.totalUsage)
   } catch (error) {
     console.warn(
-      "Structured resume parsing failed, falling back to text parsing",
-      {
-        messages: collectErrorMessages(error)
-      }
+      "Structured resume parsing failed",
+      error instanceof Error ? error.message : String(error)
     )
 
     throw error
