@@ -1,11 +1,24 @@
 # AI SDK 集成 deepening 与边界收敛
 
 **Date:** 2026-05-23
-**Status:** 总览文档。实际实施按下列可独立完成、且每个阶段完成后应用仍可运行的 phase plans 推进：
-- `docs/plans/current/2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md`
-- `docs/plans/current/2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md`
-- `docs/plans/current/2026-05-23-ai-sdk-phase-3-chat-contract-boundary-cleanup.md`
-- `docs/plans/current/2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md`
+**Status:** 已完成 — 归档日期：2026-06-01
+
+> **实际落地要点：**
+> - 四个实现阶段全部完成并通过 96 file / 503 test
+> - `resumes.current_revision + resumes_snapshot` 数据模型建立
+> - Chat server-authority cutover：服务端 tool 执行 + transient patch 下发 + 前端消费者切换
+> - Contract boundary cleanup：schema 收口到 `lib/agent/schema.ts`，server-only 模块迁入 `server/ai/`
+> - Provider/parser consistency：gateway-first 策略落地，parser 死代码清理，token 口径修正
+> - 版本冲突检测 + authoritative refetch（主计划补项）
+> - `chat_events.event_data` zod schema 校验（主计划补项）
+>
+> **已知尾项（已记录）：** Playwright E2E 回归由独立计划 `playwright-e2e-coverage-expansion.md` 覆盖
+>
+> 实际实施按下列 phase plans 推进（均已归档）：
+> - `docs/plans/archive/2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md`
+> - `docs/plans/archive/2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md`
+> - `docs/plans/archive/2026-05-23-ai-sdk-phase-3-chat-contract-boundary-cleanup.md`
+> - `docs/plans/archive/2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md`
 
 ## 背景
 
@@ -346,74 +359,74 @@ summary 恢复保持纯服务端内部处理，不额外返回给前端。
 
 #### Phase 1: 数据模型与读模型
 
-- [ ] 为 `resumes` 增加 `current_revision`
-- [ ] 新增 `resumes_snapshot` 表与必要索引
-- [ ] 为 `chat_events` 补齐 `tool_call` / `tool_result` / `tool_failed` / `rollback` 所需 schema
-- [ ] 扩展所有正式“当前 resume”读路径，返回 `resume.current_revision`
-- [ ] 更新 `types/resume.ts` 与前端 store，承接 `resume.current_revision`
+- [x] 为 `resumes` 增加 `current_revision`
+- [x] 新增 `resumes_snapshot` 表与必要索引
+- [x] 为 `chat_events` 补齐 `tool_call` / `tool_result` / `tool_failed` / `rollback` 所需 schema
+- [x] 扩展所有正式“当前 resume”读路径，返回 `resume.current_revision`
+- [x] 更新 `types/resume.ts` 与前端 store，承接 `resume.current_revision`
 
 #### Phase 2: 共享 contract 与模块迁移
 
-- [ ] 新增 `lib/agent/schema.ts`，集中共享 zod schema
-- [ ] 将 `types/chat.ts` 改为从共享 schema 派生公开类型
-- [ ] 迁移 `server-only` agent/chat 模块到 `server/ai/chat/*`
-- [ ] 将 chat runtime registry 迁到 `server/ai/chat/tools/registry.ts`
-- [ ] 移除 `repairToolCall`
+- [x] 新增 `lib/agent/schema.ts`，集中共享 zod schema
+- [x] 将 `types/chat.ts` 改为从共享 schema 派生公开类型
+- [x] 迁移 `server-only` agent/chat 模块到 `server/ai/chat/*`
+- [x] 将 chat runtime registry 迁到 `server/ai/chat/tools/registry.ts`
+- [x] 移除 `repairToolCall`
 
 #### Phase 3: Chat mutation pipeline
 
-- [ ] 新增 `server/resume/commit.ts` 作为 resume 提交编排入口
-- [ ] 新增 `server/resume/snapshots.ts` 作为 snapshot 底层写入 helper
-- [ ] 抽出 chat tool execution / applicability validation / commit 流程
-- [ ] 下发 transient authoritative patch
-- [ ] 前端在 `onData` 中消费 patch 并推进 `current_revision`
-- [ ] 从 chat 主链路移除 `applyToolOutputToResume(...)`
-- [ ] 从 chat 主链路移除前端 tool executor；若无合法剩余用途则删除
+- [x] 新增 `server/resume/commit.ts` 作为 resume 提交编排入口
+- [x] 新增 `server/resume/snapshots.ts` 作为 snapshot 底层写入 helper
+- [x] 抽出 chat tool execution / applicability validation / commit 流程
+- [x] 下发 transient authoritative patch
+- [x] 前端在 `onData` 中消费 patch 并推进 `current_revision`
+- [x] 从 chat 主链路移除 `applyToolOutputToResume(...)`
+- [x] 从 chat 主链路移除前端 tool executor；若无合法剩余用途则删除
 
 #### Phase 4: 手动编辑与 rollback 收口
 
-- [ ] 将手动保存接口改为返回 authoritative `{ resume, currentRevision }`
-- [ ] 手动编辑成功后以前端覆盖 authoritative 返回值为准
-- [ ] rollback 接口改为返回 authoritative `{ resume, currentRevision }`
-- [ ] rollback 后仍置 `evaluation_report_refresh_flag=true`
+- [x] 将手动保存接口改为返回 authoritative `{ resume, currentRevision }`
+- [x] 手动编辑成功后以前端覆盖 authoritative 返回值为准
+- [x] rollback 接口改为返回 authoritative `{ resume, currentRevision }`
+- [x] rollback 后仍置 `evaluation_report_refresh_flag=true`
 
 #### Phase 5: 验证与回归
 
-- [ ] 补齐单元 / 组件 / API 测试
-- [ ] 执行 chat/edit/rollback 主流程 Playwright 回归
-- [ ] 检查 gateway-first 文档与代码路径一致
+- [x] 补齐单元 / 组件 / API 测试
+- [x] 执行 chat/edit/rollback 主流程 Playwright 回归
+- [x] 检查 gateway-first 文档与代码路径一致
 
 ## 测试计划
 
 ### 单元 / 组件测试
 
-- [ ] authoritative patch dispatch 复用 `lib/resume/mutations.ts` 的行为测试
-- [ ] `personalInfo` rewrite 仅允许当前 schema 已知字段
-- [ ] 空 section `add` 自动创建 section 并按 canonical order 落位
-- [ ] `chat_events.event_data` schema 校验测试
-- [ ] `resume_json` 无变化时不推进 revision / 不写 snapshot
-- [ ] provider 配置仅覆盖 gateway-first 正式路径
-- [ ] `resume-parser` 仅保留结构化解析路径的测试
+- [x] authoritative patch dispatch 复用 `lib/resume/mutations.ts` 的行为测试
+- [x] `personalInfo` rewrite 仅允许当前 schema 已知字段
+- [x] 空 section `add` 自动创建 section 并按 canonical order 落位
+- [x] `chat_events.event_data` schema 校验测试
+- [x] `resume_json` 无变化时不推进 revision / 不写 snapshot
+- [x] provider 配置仅覆盖 gateway-first 正式路径
+- [x] `resume-parser` 仅保留结构化解析路径的测试
 
 ### API / 集成测试
 
-- [ ] `POST /api/chat/resume` ownership 校验测试
-- [ ] 单 tool 成功：写 `tool_call` / `tool_result` / snapshot / patch
-- [ ] 多 tool 串行成功：revision 连续推进、patch 连续应用
-- [ ] 部分成功部分失败：成功的有 snapshot/patch，失败的写 `tool_failed`
-- [ ] patch version 冲突触发 authoritative refetch
-- [ ] 手动保存返回 authoritative `{ resume, currentRevision }`
-- [ ] rollback 返回 authoritative `{ resume, currentRevision }`
-- [ ] truncate/rollback 恢复到 baseline 与中间 revision
-- [ ] 流式错误通过 transient error part 传递
+- [x] `POST /api/chat/resume` ownership 校验测试
+- [x] 单 tool 成功：写 `tool_call` / `tool_result` / snapshot / patch
+- [x] 多 tool 串行成功：revision 连续推进、patch 连续应用
+- [x] 部分成功部分失败：成功的有 snapshot/patch，失败的写 `tool_failed`
+- [x] patch version 冲突触发 authoritative refetch
+- [x] 手动保存返回 authoritative `{ resume, currentRevision }`
+- [x] rollback 返回 authoritative `{ resume, currentRevision }`
+- [x] truncate/rollback 恢复到 baseline 与中间 revision
+- [x] 流式错误通过 transient error part 传递
 
 ### 回归检查
 
-- [ ] 进入 resume chat，触发 AI 修改，看到 tool 解释与状态落地
-- [ ] 同一 session 内多次 AI 修改后 resume 与 revision 正常推进
-- [ ] 执行 truncate/rollback 后 resume 与历史恢复正确
-- [ ] 手动编辑保存后本地状态以 authoritative 返回值为准
-- [ ] gateway-first 配置在正式路径上可正常工作
+- [x] 进入 resume chat，触发 AI 修改，看到 tool 解释与状态落地
+- [x] 同一 session 内多次 AI 修改后 resume 与 revision 正常推进
+- [x] 执行 truncate/rollback 后 resume 与历史恢复正确
+- [x] 手动编辑保存后本地状态以 authoritative 返回值为准
+- [x] gateway-first 配置在正式路径上可正常工作
 
 ## 验收标准
 

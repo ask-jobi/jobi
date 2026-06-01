@@ -12,6 +12,7 @@ import type { ResumeData } from "@/types/resume"
 
 const mockAddToolOutput = vi.fn()
 const saveApplicationResumeChangeMock = vi.fn()
+const getJobApplicationByResumeIdMock = vi.fn()
 
 let capturedOnData:
   | ((dataPart: {
@@ -50,7 +51,9 @@ const persistedResume: ResumeData = {
 
 vi.mock("@/server/resume", () => ({
   saveApplicationResumeChange: (...args: unknown[]) =>
-    saveApplicationResumeChangeMock(...args)
+    saveApplicationResumeChangeMock(...args),
+  getJobApplicationByResumeId: (...args: unknown[]) =>
+    getJobApplicationByResumeIdMock(...args)
 }))
 
 vi.mock("@/lib/hooks/use-chat-history", () => ({
@@ -225,6 +228,71 @@ describe("ChatInterface", () => {
     expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
       persistedResume
     )
+  })
+
+  it("rejects patch and refetches on version conflict", async () => {
+    const { store } = renderChatInterface()
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    const freshResume: ResumeData = {
+      ...persistedResume,
+      personalInfo: { ...persistedResume.personalInfo, firstName: "Refetched" }
+    }
+    getJobApplicationByResumeIdMock.mockResolvedValue({
+      resumes: {
+        resume_json: freshResume,
+        current_revision: 5
+      }
+    })
+
+    // Patch baseVersion (2) does not match local revision (1)
+    capturedOnData?.({
+      type: "data-resume-patch",
+      id: "tool-1",
+      transient: true,
+      data: {
+        snapshotId: "resume-1:2",
+        messageId: "message-1",
+        baseVersion: 2,
+        nextVersion: 3,
+        body: {
+          output: {
+            operation: "rewrite",
+            entity: "education",
+            id: "edu-1",
+            field: "school",
+            originalValue: "Draft School",
+            value: "Conflicting Edit"
+          },
+          resume: persistedResume
+        }
+      }
+    })
+
+    // Patch should not be applied (resume unchanged)
+    expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
+      persistedResume
+    )
+    expect(store.get(applicationAtom)?.resume.current_revision).toBe(1)
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Resume patch version conflict: rejecting patch and refetching authoritative state",
+      expect.objectContaining({
+        baseVersion: 2,
+        localRevision: 1
+      })
+    )
+
+    // Wait for refetch to resolve
+    await vi.waitFor(() => {
+      expect(getJobApplicationByResumeIdMock).toHaveBeenCalledWith("resume-1")
+      expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
+        freshResume
+      )
+      expect(store.get(applicationAtom)?.resume.current_revision).toBe(5)
+    })
+
+    warnSpy.mockRestore()
   })
 
   it("does not render the chat thread while the resume edit modal is open", () => {

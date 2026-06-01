@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { editModalOpenAtom, useApplicationResume } from "@/lib/store/resume"
 import { useChatHistory } from "@/lib/hooks/use-chat-history"
 import { generateUUID } from "@/lib/utils"
+import { getJobApplicationByResumeId } from "@/server/resume"
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk"
 import { useChat as useAIChat } from "@ai-sdk/react"
 import { AssistantRuntimeProvider, ThreadPrimitive } from "@assistant-ui/react"
@@ -65,6 +66,37 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       }
 
       const patch = dataPart.data as AuthoritativeResumePatch
+      const localRevision = application?.resume.current_revision
+
+      if (localRevision != null && patch.baseVersion !== localRevision) {
+        console.warn(
+          "Resume patch version conflict: rejecting patch and refetching authoritative state",
+          {
+            baseVersion: patch.baseVersion,
+            localRevision,
+            nextVersion: patch.nextVersion,
+            snapshotId: patch.snapshotId
+          }
+        )
+
+        if (application?.resume.id) {
+          getJobApplicationByResumeId(application.resume.id)
+            .then((fresh) => {
+              replaceAuthoritativeResume({
+                resume: fresh.resumes.resume_json,
+                currentRevision: fresh.resumes.current_revision
+              })
+            })
+            .catch((err) => {
+              console.error(
+                "Failed to refetch authoritative resume state after version conflict",
+                err
+              )
+            })
+        }
+        return
+      }
+
       adjustPendingChatPatchCount(1)
 
       try {

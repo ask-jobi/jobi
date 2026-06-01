@@ -292,3 +292,36 @@ export const resumeEditorReorderInputExamples = [
     }
   }
 ] satisfies Array<{ input: z.infer<typeof resumeEditorReorderInputSchema> }>
+
+// ── Chat Event Data Schemas ───────────────────────────────────────────────
+// Validated in server/chat-events.ts before writing to chat_events.event_data
+
+export const toolCallEventDataSchema = z.object({
+  toolCallId: z.string(),
+  toolName: z.string(),
+  input: z.unknown(),
+  baseVersion: z.number().optional()
+})
+
+export const toolResultEventDataSchema = z.object({
+  toolCallId: z.string(),
+  toolName: z.string(),
+  output: z.unknown(),
+  snapshotId: z.string(),
+  baseVersion: z.number(),
+  nextVersion: z.number()
+})
+
+export const toolFailedEventDataSchema = z.object({
+  toolCallId: z.string(),
+  toolName: z.string(),
+  input: z.unknown(),
+  baseVersion: z.number(),
+  error: z.string()
+})
+
+export const summaryCheckpointEventDataSchema = z.object({
+  summary_text: z.string()
+})
+
+export const rollbackEventDataSchema = z.object({})
