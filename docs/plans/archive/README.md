@@ -27,6 +27,7 @@
 | `2026-05-20-resume-entry-drag-reorder.md` | entry 拖拽排序 |
 | `2026-05-20-resume-section-manual-reorder.md` | section 上/下移排序 + sectionOrder 语义收敛 |
 | `2026-05-21-uploaded-resume-intake-deepening.md` | 上传 PDF → Application Resume intake orchestration、SSE 协议与 rollback 语义 |
+| `2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md` | Resume revision / snapshot 基础链路、authoritative save/rollback 返回值 |
 | `blank-resume-defaults.md` | 空白简历起步流程 |
 | `resume-chat.md` | chat 能力最终落地结果 |
 | `resume-editor-tools.md` | editor tools 最终落地结果 |

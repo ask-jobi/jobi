@@ -16,5 +16,6 @@
 | `persisted-resume-model.md` | 简历编辑器数据模型：persisted-only 架构、mutation helpers、状态模型、数据流 |
 | `resume-editor-interactions.md` | 画布交互：entry 拖拽排序、section 上/下移、空白简历起步、sectionOrder 语义 |
 | `ai-chat-system.md` | AI Chat 与 Editor Tools：chat 消息、token 统计、editor tools schema、回溯机制 |
+| `ai-sdk-phase-1-resume-revision-foundation.md` | Resume authoritative state：revision、snapshot、save/rollback authoritative 返回值 |
 | `uploaded-resume-intake-deepening.md` | 上传 intake：orchestrator、SSE 协议、取消/回滚/提交语义 |
 | `test-patterns.md` | 测试模式约定：全局 mock、data-testid 命名、维护原则 |

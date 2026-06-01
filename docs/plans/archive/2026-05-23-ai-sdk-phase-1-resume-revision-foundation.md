@@ -1,5 +1,17 @@
 # AI SDK Phase 1：Resume Revision Foundation
 
+> **已完成** — 归档日期：2026-06-01
+>
+> **实际落地要点：**
+> - `supabase/migrations/20260523000000_add_resume_revisions_and_snapshots.sql` 为 `resumes` 增加 `current_revision`，并引入 `resumes_snapshot`
+> - `server/resume/commit.ts` 与 `server/resume/snapshots.ts` 收口 authoritative resume 提交、revision 推进与 snapshot 写入
+> - `server/resume.ts`、`lib/store/resume.ts`、`app/api/chat/truncate/route.ts`、`app/(protected)/(individual)/application/[id]/layout.tsx` 已统一承接 authoritative `{ resume, currentRevision }`
+> - `server/intake/persist.ts` 在新建 resume 时写入 revision 1 snapshot；rollback 仍通过提交链路把 `evaluation_report_refresh_flag` 置为 `true`
+>
+> **与计划的差异：**
+> - 实际落地时把 uploaded intake 的初始 snapshot 写入也一起并入了 Phase 1，而不只覆盖手动保存与 rollback
+> - 本阶段的验收证据以聚焦测试和主流程实测为主，未额外拆出独立的 UI spec
+
 **Date:** 2026-05-23
 
 ## 背景

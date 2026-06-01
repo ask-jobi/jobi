@@ -12,7 +12,6 @@
 - [2026-05-23-playwright-e2e-coverage-expansion.md](./2026-05-23-playwright-e2e-coverage-expansion.md) - Playwright E2E 覆盖扩展计划
 - [2026-05-25-auth-helper-optimization.md](./2026-05-25-auth-helper-optimization.md) - Supabase auth-helper 与 proxy 优化计划
 - [2026-05-23-ai-sdk-integration-deepening.md](./2026-05-23-ai-sdk-integration-deepening.md) - AI SDK 集成 deepening 总览与决策记录
-- [2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md](./2026-05-23-ai-sdk-phase-1-resume-revision-foundation.md) - Phase 1：Resume revision / snapshot 基础链路
 - [2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md](./2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md) - Phase 2：Chat server-authority cutover
 - [2026-05-23-ai-sdk-phase-3-chat-contract-boundary-cleanup.md](./2026-05-23-ai-sdk-phase-3-chat-contract-boundary-cleanup.md) - Phase 3：Chat contract 与模块边界收口
 - [2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md](./2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md) - Phase 4：Provider / parser 一致性清理
