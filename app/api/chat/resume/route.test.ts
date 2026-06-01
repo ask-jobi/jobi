@@ -70,8 +70,7 @@ vi.mock("@/server/ai/prompts/resume-chat.prompt", () => ({
 }))
 
 vi.mock("@/server/chat-events", () => ({
-  logSummaryCheckpoint: vi.fn(),
-  logResumeModification: vi.fn()
+  logSummaryCheckpoint: vi.fn()
 }))
 
 vi.mock("@/lib/agent/token-usage", () => ({

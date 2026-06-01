@@ -130,7 +130,7 @@
 
 ### 已完成 ✅
 
-- ✅ `chat_events` 表支持 `event_type`：`resume_modification`、`summary_checkpoint`、`rollback`
+- ✅ `chat_events` 表支持 `event_type`：`summary_checkpoint`、`rollback`、`tool_call`、`tool_result`、`tool_failed`
 - ✅ `extractToolOriginalValues()` — 从 message parts 中统一提取 modification output
 - ✅ `getLatestValidSummaryCheckpoint()` / `restoreConversationSummaryAfterTruncate()` — replay/revert 基础设施
 - ✅ `executeResumeEditorModifyTool()` / `executeResumeEditorReorderTool()` — 工具执行集中到 `components/agent/chat/resume-editor.ts`

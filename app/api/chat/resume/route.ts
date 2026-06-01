@@ -28,10 +28,7 @@ import { generateUUID } from "@/lib/utils"
 import chatPrompt from "@/server/ai/prompts/resume-chat.prompt"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { ResumeEvaluationOutput } from "@/types/evaluation"
-import {
-  logSummaryCheckpoint,
-  logResumeModification
-} from "@/server/chat-events"
+import { logSummaryCheckpoint } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
 import {
   requireVerifiedUserIdentity,
@@ -337,21 +334,6 @@ export async function POST(request: NextRequest) {
               }
             } catch (err) {
               console.error("Failed to update access pass token usage:", err)
-            }
-          }
-        }
-        if (responseMessage) {
-          for (const part of responseMessage.parts) {
-            if (
-              (part.type === "tool-resumeEditorModify" ||
-                part.type === "tool-resumeEditorReorder") &&
-              part.state === "output-available"
-            ) {
-              void logResumeModification(
-                sessionId,
-                responseMessage.id,
-                part.output as Record<string, unknown>
-              )
             }
           }
         }

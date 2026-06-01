@@ -739,7 +739,6 @@ export type ChatEvent = {
   session_id: string
   message_id: string | null
   event_type:
-    | "resume_modification"
     | "summary_checkpoint"
     | "rollback"
     | "tool_call"

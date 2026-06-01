@@ -101,7 +101,9 @@
 
 | Type | 说明 |
 |---|---|
-| `resume_modification` | 简历修改事件 |
+| `tool_call` | 工具调用事件 |
+| `tool_result` | 工具执行结果事件 |
+| `tool_failed` | 工具执行失败事件 |
 | `summary_checkpoint` | 摘要检查点 |
 | `rollback` | 回滚事件 |
 

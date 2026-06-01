@@ -49,5 +49,5 @@
 - pending action 会绑定 resumeId，避免切换简历后误执行
 - session 默认标题为 `New Chat`
 - 默认标题会在首条可用用户消息后自动生成新标题
-- 系统会写入 `resume_modification`、`summary_checkpoint`、`rollback` 三类 `chat_events`
+- 系统会写入 `tool_call`、`tool_result`、`tool_failed`、`summary_checkpoint`、`rollback` 五类 `chat_events`
 - 当前只实现事件写入，没有产品侧事件查询接口

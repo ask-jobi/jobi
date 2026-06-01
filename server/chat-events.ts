@@ -71,19 +71,6 @@ export async function logChatEvent({
   return data.id
 }
 
-export async function logResumeModification(
-  sessionId: string,
-  messageId: string,
-  eventData: Record<string, unknown>
-) {
-  return logChatEvent({
-    sessionId,
-    messageId,
-    eventType: "resume_modification",
-    eventData
-  })
-}
-
 export async function logSummaryCheckpoint(
   sessionId: string,
   messageId: string,

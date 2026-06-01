@@ -352,7 +352,6 @@ export type Database = {
           session_id: string
           message_id: string | null
           event_type:
-            | "resume_modification"
             | "summary_checkpoint"
             | "rollback"
             | "tool_call"
@@ -366,7 +365,6 @@ export type Database = {
           session_id: string
           message_id?: string | null
           event_type:
-            | "resume_modification"
             | "summary_checkpoint"
             | "rollback"
             | "tool_call"
@@ -380,7 +378,6 @@ export type Database = {
           session_id?: string
           message_id?: string | null
           event_type?:
-            | "resume_modification"
             | "summary_checkpoint"
             | "rollback"
             | "tool_call"

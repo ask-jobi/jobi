@@ -137,7 +137,7 @@ describe("chat_events", () => {
       await logChatEvent({
         sessionId: "session-1",
         messageId: "msg-1",
-        eventType: "resume_modification" as any,
+        eventType: "unknown_type" as any,
         eventData: {
           customField: "any-value"
         }
@@ -145,7 +145,7 @@ describe("chat_events", () => {
 
       expect(mockInsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          event_type: "resume_modification",
+          event_type: "unknown_type",
           event_data: { customField: "any-value" }
         })
       )
