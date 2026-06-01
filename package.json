@@ -2,18 +2,22 @@
   "name": "jobi",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.15.0"
+  },
   "scripts": {
+    "check:node-version": "node scripts/check-node-version.js",
     "prepare": "husky",
-    "dev": "next dev --turbopack",
-    "dev:test": "next dev -p 3001 --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "pnpm run check:node-version && next dev --turbopack",
+    "dev:test": "pnpm run check:node-version && NODE_ENV=test next dev -p 3001 --turbopack",
+    "build": "pnpm run check:node-version && next build",
+    "start": "pnpm run check:node-version && next start",
+    "lint": "pnpm run check:node-version && next lint",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "vitest",
-    "e2e-test": "NODE_ENV=test pnpm exec playwright test --ui",
-    "e2e-test-headless": "NODE_ENV=test pnpm exec playwright test"
+    "test": "pnpm run check:node-version && vitest",
+    "e2e-test": "pnpm run check:node-version && NODE_ENV=test pnpm exec playwright test --ui",
+    "e2e-test-headless": "pnpm run check:node-version && NODE_ENV=test pnpm exec playwright test"
   },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,json,css}": [

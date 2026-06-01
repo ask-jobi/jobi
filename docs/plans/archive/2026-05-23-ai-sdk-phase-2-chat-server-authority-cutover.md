@@ -2,6 +2,19 @@
 
 **Date:** 2026-05-23
 
+> **已完成** — 归档日期：2026-06-01
+>
+> **实际落地要点：**
+> - `POST /api/chat/resume` 显式调用 `verifyOwnership(sessionId, user.id)` 做 ownership 校验
+> - `server/ai/resume-chat-tools.ts` 中 `createResumeChatServerTools()` 实现串行化 tool execution queue，服务端做 resume mutation + snapshot 推进 + `tool_call`/`tool_result`/`tool_failed` 事件记录
+> - `lib/agent/resume-editor-execution.ts` 实现 `executeResumeEditorModifyTool` / `executeResumeEditorReorderTool` 服务端执行逻辑
+> - `data-resume-patch` schema 在 `server/ai/resume-chat-tools.ts` 中定义，通过 `writer.write({ type: "data-resume-patch" })` 下发
+> - `components/agent/chat-interface.tsx` 移除 `onToolCall` 主路径，改为在 `onData` 中消费 patch 并推进 `current_revision`
+> - `pendingPatchCount` 通过 `useChatThreadLifecycle` store 管理，patch 应用完成后释放 AI 锁
+> - Tests: `app/api/chat/resume/route.test.ts` ownership 校验测试, `components/agent/chat/resume-editor-tool.test.tsx` 组件测试, `server/ai/resume-chat-tools.test.ts` 编排逻辑测试
+>
+> **与计划的差异：** 无重大偏差。实现与计划一致。
+
 ## 背景
 
 在 Phase 1 建立 `resume_json + current_revision + resumes_snapshot` 之后，chat 主链路仍保留现有“前端消费 tool call 并本地修改 resume”的路径。这个边界会继续带来：
@@ -105,22 +118,28 @@
 
 - [x] `data-resume-patch` schema 类型正确
 - [x] authoritative patch apply 后本地 `current_revision` 与 `evaluation_report_refresh_flag` 正确推进
-- [ ] `ResumeEditorToolUI` 在 AI SDK 原生 tool result part 下仍能正常渲染
+- [x] `ResumeEditorToolUI` 在 AI SDK 原生 tool result part 下仍能正常渲染
 
 ### API / 集成测试
 
 - [x] `POST /api/chat/resume` ownership 校验测试
 - [x] 单 tool 成功：写 `tool_call` / `tool_result` / snapshot / patch
-- [ ] 多 tool 串行成功：revision 连续推进、patch 连续应用
+- [x] 多 tool 串行成功：revision 连续推进、patch 连续应用
 - [x] 部分成功部分失败：成功有 snapshot/patch，失败写 `tool_failed`
 - [x] user/assistant message 主路径同步持久化测试
-- [ ] AI SDK 原生 `tool-error` / `error` parts 随消息历史持久化测试
+- [x] AI SDK 原生 `tool-error` / `error` parts 随消息历史持久化测试
 
 ### 回归检查
 
-- [ ] 进入 resume chat，触发 AI 修改，看到 tool 解释与状态落地
-- [ ] 同一 session 内多次 AI 修改后 resume 与 revision 正常推进
-- [ ] 失败的 tool 在聊天流中以内联错误块形式可见
+- [x] 进入 resume chat，触发 AI 修改，看到 tool 解释与状态落地
+- [x] 同一 session 内多次 AI 修改后 resume 与 revision 正常推进
+- [x] 失败的 tool 在聊天流中以内联错误块形式可见
+
+回归备注（2026-06-01）：
+- 在 `Node 24.15.0 + .env.test` 的受控 `next dev` 环境下，实际登录 `mock_normal@mail.com` 后验证通过
+- `application/5ee35717-2791-434e-974c-5debada94ff8/resume` 的同一 chat session `589a6247-ff59-46e7-9e64-739792a6e6e7` 中，浏览器内连续完成 `lastName -> Smith`、`firstName -> Alicia`
+- `resumes.current_revision` 从 `2 -> 3 -> 4` 连续推进，最终 `personalInfo.firstName=Alicia`、`personalInfo.lastName=Smith`
+- UI 可见 reasoning、`tool-resumeEditorModify` 结果块与最终 assistant 文案，页面标题同步更新为 `Alicia Smith`
 
 ## 验收标准
 

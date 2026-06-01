@@ -195,6 +195,25 @@ export function applyToolOutputToResume(
     output.operation === "add"
   ) {
     const modifyOutput = output as ResumeEditorModifyOutput
+
+    if (
+      modifyOutput.operation === "rewrite" &&
+      modifyOutput.entity === "personalInfo"
+    ) {
+      const mutablePersonalInfo = copiedResume.personalInfo as unknown as {
+        entryId: string
+      } & Record<string, unknown>
+
+      if (
+        mutablePersonalInfo.entryId === modifyOutput.id &&
+        modifyOutput.field in mutablePersonalInfo
+      ) {
+        mutablePersonalInfo[modifyOutput.field] = modifyOutput.value
+      }
+
+      return copiedResume
+    }
+
     const section = copiedResume[modifyOutput.entity]
 
     if (!hasEntries(section)) {

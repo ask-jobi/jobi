@@ -2,6 +2,8 @@
 
 ## 开发
 
+- Node 版本固定为 `24.15.0`
+- 首次进入仓库或切换终端后，先执行 `nvm use`
 - `pnpm dev` - 启动本地开发服务器（Turbopack，默认 3000）
 - `pnpm dev:test` - 启动 E2E 用开发服务器（3001）
 - `pnpm start` - 启动生产构建产物

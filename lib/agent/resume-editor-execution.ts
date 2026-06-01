@@ -7,6 +7,37 @@ import {
 import { ResumeData, ResumeSectionKey } from "@/types/resume"
 import { getEntrySchema } from "@/lib/agent/tools"
 
+function assertOrderedIdsMatch({
+  currentIds,
+  orderedIds,
+  subject
+}: {
+  currentIds: string[]
+  orderedIds: string[]
+  subject: string
+}) {
+  const currentIdSet = new Set(currentIds)
+  const orderedIdSet = new Set(orderedIds)
+  const duplicateIds = orderedIds.filter(
+    (id, index) => orderedIds.indexOf(id) !== index
+  )
+  const missingIds = currentIds.filter((id) => !orderedIdSet.has(id))
+  const unknownIds = orderedIds.filter((id) => !currentIdSet.has(id))
+
+  if (
+    duplicateIds.length > 0 ||
+    missingIds.length > 0 ||
+    unknownIds.length > 0
+  ) {
+    throw new Error(
+      `Invalid ${subject} order: missing ids [${missingIds.join(", ")}], ` +
+        `unknown ids [${unknownIds.join(", ")}], duplicate ids [${[
+          ...new Set(duplicateIds)
+        ].join(", ")}]`
+    )
+  }
+}
+
 export const extractValueFromResume = (
   resume: ResumeData,
   entity: ResumeSectionKey,
@@ -32,14 +63,52 @@ export async function executeResumeEditorModifyTool(
 
   if (operation === "rewrite") {
     const { entity, id, field, value } = input
-    const originalValue = extractValueFromResume(resumeData, entity, id, field)
+
+    if (entity === "personalInfo") {
+      const personalInfo = resumeData.personalInfo
+
+      if (!personalInfo || personalInfo.entryId !== id) {
+        throw new Error(`Entry with id ${id} not found in section ${entity}`)
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(personalInfo, field)) {
+        throw new Error(`Field ${field} not found in entry ${id}`)
+      }
+
+      return {
+        operation: "rewrite",
+        entity,
+        id,
+        field,
+        originalValue: (personalInfo as unknown as Record<string, unknown>)[
+          field
+        ],
+        value
+      }
+    }
+
+    const section = resumeData?.[entity]
+
+    if (!section?.entries) {
+      throw new Error(`Section ${entity} not found or has no entries`)
+    }
+
+    const entry = section.entries.find((item) => item.entryId === id)
+
+    if (!entry) {
+      throw new Error(`Entry with id ${id} not found in section ${entity}`)
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(entry, field)) {
+      throw new Error(`Field ${field} not found in entry ${id}`)
+    }
 
     return {
       operation: "rewrite",
       entity,
       id,
       field,
-      originalValue,
+      originalValue: (entry as Record<string, unknown>)[field],
       value
     }
   }
@@ -102,6 +171,12 @@ export async function executeResumeEditorReorderTool(
 
     const originalValue = section.entries.map((entry) => entry.entryId)
 
+    assertOrderedIdsMatch({
+      currentIds: originalValue,
+      orderedIds: orderedEntryIds,
+      subject: `${entity} entries`
+    })
+
     return {
       operation: "reorderEntries",
       entity,
@@ -112,6 +187,12 @@ export async function executeResumeEditorReorderTool(
 
   if (operation === "reorderSections" && orderedSectionIds) {
     const originalValue = [...(resumeData?.sectionOrder || [])]
+
+    assertOrderedIdsMatch({
+      currentIds: originalValue,
+      orderedIds: orderedSectionIds,
+      subject: "sections"
+    })
 
     return {
       operation: "reorderSections",

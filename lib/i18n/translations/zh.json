@@ -342,6 +342,7 @@
     "cancel": "取消",
     "update": "更新",
     "processing": "处理中...",
+    "toolError": "简历工具执行失败",
     "truncate": "撤回",
     "stopGenerating": "停止生成",
     "tokenUsage": "对话 Token 用量",

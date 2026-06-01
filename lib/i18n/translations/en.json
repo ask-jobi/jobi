@@ -344,6 +344,7 @@
     "cancel": "Cancel",
     "update": "Update",
     "processing": "Processing...",
+    "toolError": "Resume tool failed",
     "truncate": "Truncate",
     "stopGenerating": "Stop generating",
     "tokenUsage": "Chat token usage",
