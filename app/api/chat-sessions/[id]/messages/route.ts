@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { loadHistory } from "@/lib/agent/chat-history"
+import { loadHistory } from "@/server/ai/chat/history"
 import {
   requireVerifiedUserIdentity,
   verifyOwnership,

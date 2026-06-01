@@ -14,7 +14,7 @@ vi.mock("ai", () => ({
   }
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: vi.fn()
 }))
 

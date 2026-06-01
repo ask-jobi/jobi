@@ -2,6 +2,21 @@
 
 **Date:** 2026-05-23
 
+> **已完成** — 完成日期：2026-06-01
+>
+> **实际落地要点：**
+> - `lib/agent/schema.ts` 新建，提取所有 entry schema、section enum、tool input/output schemas
+> - `lib/agent/tools.ts` 重新导出 schema.ts 全部内容，保留 tool 定义与描述
+> - `types/chat.ts` 改为从 `@/lib/agent/schema` 导入 schemas
+> - `lib/agent/model.ts` → `server/ai/model.ts`，所有消费者按新路径导入
+> - `lib/agent/chat-history.ts` → `server/ai/chat/history.ts`
+> - `lib/agent/chat-session-title-generator.ts` → `server/ai/chat/session-title-generator.ts`
+> - `lib/agent/conversation-summary.ts` → `server/ai/chat/conversation-summary.ts`
+> - `server/ai/resume-chat-tools.ts` → `server/ai/chat/tools/registry.ts`
+> - `repairToolCall` 从 `lib/agent/tools.ts` 和 `app/api/chat/resume/route.ts` 移除
+> - 前端 `components/agent/chat/resume-editor.ts` / `index.ts` 移除无用的 tool executor 重导出
+> - Tests: 96 files / 500 tests pass
+
 ## 背景
 
 在 Phase 2 完成 chat server-authority cutover 后，应用应该已经能在新的 authoritative 路径上工作。但代码结构仍会残留旧边界：
@@ -40,7 +55,7 @@
 
 ## 相关计划
 
-- 前置阶段：`docs/plans/current/2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md`
+- 前置阶段：`docs/plans/archive/2026-05-23-ai-sdk-phase-2-chat-server-authority-cutover.md`
 - 总览：`docs/plans/current/2026-05-23-ai-sdk-integration-deepening.md`
 - 后续阶段：`docs/plans/current/2026-05-23-ai-sdk-phase-4-provider-parser-consistency.md`
 
@@ -65,42 +80,42 @@
 
 ### Phase 3A: schema / type 收口
 
-- [ ] 新增或完善 `lib/agent/schema.ts`
-- [ ] 将 tool contract、entry schema、event schema、stream data schema 收口到共享 schema
-- [ ] 让 `types/chat.ts` 从共享 schema 派生公开类型
-- [ ] 清理 `InferUITools<typeof tools>` 对 runtime registry 的反向依赖
+- [x] 新增或完善 `lib/agent/schema.ts`
+- [x] 将 tool contract、entry schema、event schema、stream data schema 收口到共享 schema
+- [x] 让 `types/chat.ts` 从共享 schema 派生公开类型
+- [x] 清理 `InferUITools<typeof tools>` 对 runtime registry 的反向依赖
 
 ### Phase 3B: 模块迁移
 
-- [ ] 将 `lib/agent/model.ts` 迁到 `server/ai/model.ts`
-- [ ] 将 `lib/agent/chat-history.ts`、标题生成、summary 等 `server-only` 模块迁到 `server/ai/chat/*`
-- [ ] 将 chat runtime registry 迁到 `server/ai/chat/tools/registry.ts`
-- [ ] 删除 `repairToolCall`
+- [x] 将 `lib/agent/model.ts` 迁到 `server/ai/model.ts`
+- [x] 将 `lib/agent/chat-history.ts`、标题生成、summary 等 `server-only` 模块迁到 `server/ai/chat/*`
+- [x] 将 chat runtime registry 迁到 `server/ai/chat/tools/registry.ts`
+- [x] 删除 `repairToolCall`
 
 ### Phase 3C: 旧边界清理
 
-- [ ] 删除已无合法用途的前端 tool executor helper
-- [ ] 删除 chat 主链路已不再需要的旧 apply helper
-- [ ] 确认 `ResumeEditorToolUI` 继续消费当前 output discriminated union
-- [ ] 保持现有 renderer 分发方式不变
+- [x] 删除已无合法用途的前端 tool executor helper
+- [x] 删除 chat 主链路已不再需要的旧 apply helper
+- [x] 确认 `ResumeEditorToolUI` 继续消费当前 output discriminated union
+- [x] 保持现有 renderer 分发方式不变
 
 ## 测试计划
 
 ### 单元 / 组件测试
 
-- [ ] 共享 schema 能派生出既有公开类型
-- [ ] field whitelist / entry schema 从共享 schema 派生后行为不变
-- [ ] 既有 tool UI 渲染不因 contract 收口而回归
+- [x] 共享 schema 能派生出既有公开类型
+- [x] field whitelist / entry schema 从共享 schema 派生后行为不变
+- [x] 既有 tool UI 渲染不因 contract 收口而回归
 
 ### API / 集成测试
 
-- [ ] registry 迁移后 chat tool 行为不变
-- [ ] event schema 收口后 `tool_call` / `tool_result` / `tool_failed` 仍可正常写入
+- [x] registry 迁移后 chat tool 行为不变
+- [x] event schema 收口后 `tool_call` / `tool_result` / `tool_failed` 仍可正常写入
 
 ### 回归检查
 
-- [ ] chat 主流程与手动编辑在迁模块后仍正常运行
-- [ ] tool 解释卡片渲染无回归
+- [x] chat 主流程与手动编辑在迁模块后仍正常运行
+- [x] tool 解释卡片渲染无回归
 
 ## 验收标准
 

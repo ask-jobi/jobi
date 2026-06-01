@@ -4,7 +4,7 @@ import {
   updateSessionTitle,
   updateSessionStatus,
   permanentlyDeleteSession
-} from "@/lib/agent/chat-history"
+} from "@/server/ai/chat/history"
 import { z } from "zod"
 import {
   requireVerifiedUserIdentity,

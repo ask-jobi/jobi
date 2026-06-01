@@ -3,7 +3,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ResumeData } from "@/types/resume"
-import { createResumeChatServerTools } from "./resume-chat-tools"
+import { createResumeChatServerTools } from "./registry"
 
 vi.mock("@/server/chat-events", () => ({
   logChatEvent: vi.fn()

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getOrCreateCanonicalSessionSummary } from "@/lib/agent/chat-history"
+import { getOrCreateCanonicalSessionSummary } from "@/server/ai/chat/history"
 import { z } from "zod"
 import {
   requireVerifiedUserIdentity,

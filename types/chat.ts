@@ -1,11 +1,11 @@
 import { z } from "zod"
 import { InferUITools, UIDataTypes, UIMessage } from "ai"
+import { tools } from "@/lib/agent/tools"
 import {
   resumeEditorModifyOutputSchema,
   resumeEditorReorderInputSchema,
-  resumeEditorReorderOutputSchema,
-  tools
-} from "@/lib/agent/tools"
+  resumeEditorReorderOutputSchema
+} from "@/lib/agent/schema"
 import type {
   ResumeData,
   ResumeSectionKey,

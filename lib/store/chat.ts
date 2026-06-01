@@ -1,5 +1,5 @@
 import { atom, useAtomValue, useSetAtom } from "jotai"
-import type { SessionSummary } from "@/lib/agent/chat-history"
+import type { SessionSummary } from "@/server/ai/chat/history"
 
 export const chatSessionIdAtom = atom<string>("")
 export const chatSessionAtom = atom<SessionSummary | null>(null)

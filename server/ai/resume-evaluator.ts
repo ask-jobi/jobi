@@ -5,7 +5,7 @@ import { ResumeData } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { resumeFormat } from "@/lib/utils"
 import { resumeEvaluationPrompt } from "@/server/ai/prompts/resume-evaluation.prompt"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 
 // New unified evaluation schema for structured output
 export const evaluationSchema = z.object({

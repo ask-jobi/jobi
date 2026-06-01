@@ -8,7 +8,7 @@ import {
   streamText,
   validateUIMessages
 } from "ai"
-import { repairToolCall, tools } from "@/lib/agent/tools"
+import { tools } from "@/lib/agent/tools"
 import {
   getLatestValidSummaryCheckpoint,
   loadHistory,
@@ -20,10 +20,10 @@ import {
   getSessionSummary,
   updateSessionTokenUsage,
   updateSessionTitle
-} from "@/lib/agent/chat-history"
-import { generateConversationSummary } from "@/lib/agent/conversation-summary"
+} from "@/server/ai/chat/history"
+import { generateConversationSummary } from "@/server/ai/chat/conversation-summary"
 import { getJobApplicationByResumeId } from "@/server/resume"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 import { generateUUID } from "@/lib/utils"
 import chatPrompt from "@/server/ai/prompts/resume-chat.prompt"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
@@ -47,8 +47,8 @@ import {
   getActiveAccessPass,
   verifyChatTokenQuota
 } from "@/server/quota"
-import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
-import { createResumeChatServerTools } from "@/server/ai/resume-chat-tools"
+import { generateChatSessionTitle } from "@/server/ai/chat/session-title-generator"
+import { createResumeChatServerTools } from "@/server/ai/chat/tools/registry"
 import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -230,8 +230,7 @@ export async function POST(request: NextRequest) {
           stopWhen: stepCountIs(5),
           messages: await convertToModelMessages(uiMessages),
           experimental_transform: smoothStream(),
-          tools: serverTools,
-          experimental_repairToolCall: repairToolCall as never
+          tools: serverTools
         })
 
         dataStream.merge(

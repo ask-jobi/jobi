@@ -1,7 +1,7 @@
 import "server-only"
 
 import { createClient } from "@/lib/supabase/server"
-import { verifySessionOwnership } from "@/lib/agent/chat-history"
+import { verifySessionOwnership } from "@/server/ai/chat/history"
 import type { Database } from "@/types/supabase"
 import {
   isAuthRetryableFetchError,

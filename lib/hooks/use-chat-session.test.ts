@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, expect, it } from "vitest"
-import type { SessionSummary } from "@/lib/agent/chat-history"
+import type { SessionSummary } from "@/server/ai/chat/history"
 import type { UseChatSessionReturn } from "./use-chat-session"
 
 describe("use-chat-session types", () => {

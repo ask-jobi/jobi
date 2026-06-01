@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { rewriteEntry } from "./resume-entry-rewriter"
 import { generateText } from "ai"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock("ai", () => ({
   }
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {
     "MiniMax-M2.1": {}
   }

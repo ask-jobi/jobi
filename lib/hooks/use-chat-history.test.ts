@@ -9,7 +9,7 @@ import type {
   UseChatHistoryReturn
 } from "./use-chat-history"
 import { useChatHistory } from "./use-chat-history"
-import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
+import type { ChatHistoryEntry } from "@/server/ai/chat/history"
 
 afterEach(() => {
   vi.restoreAllMocks()

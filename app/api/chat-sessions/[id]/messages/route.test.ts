@@ -4,11 +4,11 @@
 import { GET } from "./route"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import * as chatHistoryModule from "@/lib/agent/chat-history"
+import * as chatHistoryModule from "@/server/ai/chat/history"
 import * as supabaseModule from "@/lib/supabase/server"
 
 vi.mock("@/lib/supabase/server")
-vi.mock("@/lib/agent/chat-history")
+vi.mock("@/server/ai/chat/history")
 
 describe("GET /api/chat-sessions/[id]/messages", () => {
   beforeEach(() => {

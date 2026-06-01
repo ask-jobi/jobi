@@ -19,7 +19,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn()
 }))
 
-vi.mock("@/lib/agent/chat-history", () => ({
+vi.mock("@/server/ai/chat/history", () => ({
   verifySessionOwnership: vi.fn()
 }))
 

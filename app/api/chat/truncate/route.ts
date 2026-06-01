@@ -6,7 +6,7 @@ import {
   getMessagesAfter,
   restoreConversationSummaryAfterTruncate,
   truncateMessages
-} from "@/lib/agent/chat-history"
+} from "@/server/ai/chat/history"
 import {
   getJobApplicationByResumeId,
   saveApplicationResumeChange

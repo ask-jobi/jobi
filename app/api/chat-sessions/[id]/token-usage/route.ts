@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSessionTokenUsage } from "@/lib/agent/chat-history"
+import { getSessionTokenUsage } from "@/server/ai/chat/history"
 import { buildChatTokenQuota, getActiveAccessPass } from "@/server/quota"
 import {
   requireVerifiedUserIdentity,

@@ -1,6 +1,6 @@
 import "server-only"
 import { generateText } from "ai"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 import { conversationSummaryPrompt } from "@/server/ai/prompts/conversation-summary.prompt"
 import { ChatUIMessage, MessagePart } from "@/types/chat"
 

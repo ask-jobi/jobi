@@ -28,11 +28,10 @@ vi.mock("ai", () => ({
 }))
 
 vi.mock("@/lib/agent/tools", () => ({
-  repairToolCall: vi.fn(),
   tools: {}
 }))
 
-vi.mock("@/lib/agent/chat-history", () => ({
+vi.mock("@/server/ai/chat/history", () => ({
   getLatestValidSummaryCheckpoint: vi.fn(),
   loadHistory: vi.fn(),
   loadMessagesAfter: vi.fn(),
@@ -44,11 +43,11 @@ vi.mock("@/lib/agent/chat-history", () => ({
   updateSessionTokenUsage: vi.fn()
 }))
 
-vi.mock("@/lib/agent/chat-session-title-generator", () => ({
+vi.mock("@/server/ai/chat/session-title-generator", () => ({
   generateChatSessionTitle: vi.fn()
 }))
 
-vi.mock("@/lib/agent/conversation-summary", () => ({
+vi.mock("@/server/ai/chat/conversation-summary", () => ({
   generateConversationSummary: vi.fn()
 }))
 
@@ -56,7 +55,7 @@ vi.mock("@/server/resume", () => ({
   getJobApplicationByResumeId: vi.fn()
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {}
 }))
 
@@ -79,7 +78,7 @@ vi.mock("@/lib/agent/token-usage", () => ({
   parseTokenUsage: vi.fn()
 }))
 
-vi.mock("@/server/ai/resume-chat-tools", () => ({
+vi.mock("@/server/ai/chat/tools/registry", () => ({
   createResumeChatServerTools: vi.fn(() => ({}))
 }))
 
@@ -129,7 +128,7 @@ describe("POST /api/chat/resume", () => {
   it("verifies session ownership before loading chat context", async () => {
     const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const routeModule = await import("./route")
 
     vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
@@ -165,7 +164,7 @@ describe("POST /api/chat/resume", () => {
   it("should reject sending a message when chat token quota is exhausted", async () => {
     const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const aiModule = await import("ai")
     const routeModule = await import("./route")
 
@@ -205,9 +204,9 @@ describe("POST /api/chat/resume", () => {
   it("should update session token usage after message persistence completes", async () => {
     const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const chatSessionTitleModule =
-      await import("@/lib/agent/chat-session-title-generator")
+      await import("@/server/ai/chat/session-title-generator")
     const resumeModule = await import("@/server/resume")
     const aiModule = await import("ai")
     const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
@@ -347,7 +346,7 @@ describe("POST /api/chat/resume", () => {
   it("persists AI SDK tool output-error and error parts with assistant history", async () => {
     const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const resumeModule = await import("@/server/resume")
     const aiModule = await import("ai")
     const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
@@ -475,7 +474,7 @@ describe("POST /api/chat/resume", () => {
   it("should re-check quota before consuming tokens on finish", async () => {
     const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const resumeModule = await import("@/server/resume")
     const aiModule = await import("ai")
     const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")

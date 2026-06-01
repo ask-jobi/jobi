@@ -19,7 +19,7 @@ vi.mock("ai", () => ({
   }
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {
     "MiniMax-M2.1": {}
   }

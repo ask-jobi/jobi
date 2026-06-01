@@ -4,12 +4,12 @@
 import { POST } from "./route"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import * as chatHistoryModule from "@/lib/agent/chat-history"
+import * as chatHistoryModule from "@/server/ai/chat/history"
 import * as supabaseModule from "@/lib/supabase/server"
 import * as resumeModule from "@/server/resume"
 
 vi.mock("@/lib/supabase/server")
-vi.mock("@/lib/agent/chat-history")
+vi.mock("@/server/ai/chat/history")
 vi.mock("@/server/resume")
 vi.mock("@/server/chat-events", () => ({
   logRollback: vi.fn().mockResolvedValue(undefined)

@@ -2,13 +2,13 @@
  * @vitest-environment node
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
+import { generateChatSessionTitle } from "@/server/ai/chat/session-title-generator"
 
 vi.mock("ai", () => ({
   generateText: vi.fn()
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {}
 }))
 

@@ -1,6 +1,6 @@
 import "server-only"
 import { generateText } from "ai"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 import { normalizeChatSessionTitle } from "@/lib/chat-session-title"
 import { chatSessionTitlePrompt } from "@/server/ai/prompts/chat-session-title.prompt"
 import type { MessagePart } from "@/types/chat"
