@@ -68,7 +68,6 @@ describe("GET /api/resume/print", () => {
   })
 
   it("renders the print page through Cloudflare Browser Run and returns a PDF", async () => {
-    process.env.NEXT_PUBLIC_BASE_URL = "https://jobi-validation.workers.dev"
     const { browser, page, pdf } = createSuccessfulBrowser()
     mockLaunch.mockResolvedValue(browser)
     mockGetAllCookies.mockReturnValue([
@@ -104,7 +103,8 @@ describe("GET /api/resume/print", () => {
     expect(browser.close).toHaveBeenCalled()
   })
 
-  it("falls back to the request origin when NEXT_PUBLIC_BASE_URL is not set", async () => {
+  it("uses the request origin even when NEXT_PUBLIC_BASE_URL was inlined at build time", async () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000"
     const { browser, page } = createSuccessfulBrowser()
     mockLaunch.mockResolvedValue(browser)
 

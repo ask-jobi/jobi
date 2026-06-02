@@ -222,14 +222,14 @@
 ## 当前实现记录
 
 - 已接入 OpenNext Cloudflare 配置：`wrangler.jsonc`、`open-next.config.ts`、`public/_headers`、`cf:*` scripts。
-- 已将 `/api/resume/print?id=...` 改为 Cloudflare Browser Run (`MYBROWSER`) + `@cloudflare/puppeteer`，并继续把当前 cookies 传入打印页。
+- 已将 `/api/resume/print?id=...` 改为 Cloudflare Browser Run (`MYBROWSER`) + `@cloudflare/puppeteer`，并继续把当前 cookies 传入打印页；线上排查发现 `NEXT_PUBLIC_BASE_URL=http://localhost:3000` 会在 OpenNext build 时被内联，导致 Browser Run 打开本地地址，已改为始终使用当前请求 origin 生成 `/resume-print/[id]` URL。
 - 已移除 Vercel AI Gateway 路径，`server/ai/model.ts` 使用 direct DeepSeek provider，默认模型为 `deepseek-v4-flash`，可通过 `DEEPSEEK_MODEL_ID` 覆盖。
 - 已将 PDF 上传解析从 `pdf-parse` / `@napi-rs/canvas` 替换为 Workers 可打包的 `pdfjs-dist` 文本解析路径。
 - 已移除 thumbnail route 的显式 `runtime = "edge"`；线上部署验证发现 `next/og` / `ImageResponse` 会引入 `@vercel/og` WASM 资源并超过 Workers Free plan 3 MiB 限制，已按 TDD 改为 SVG Response 实时生成，并对 SVG 用户内容做 XML escape。
 - 已删除超过 Workers asset 单文件限制的 `public/fonts/SourceHanSansSC-VF.ttf`，resume print 回退到系统字体。
 - 已运行 `pnpm lint`、`pnpm format:check`、`pnpm test --run`、`pnpm build`；`pnpm cf:preview` 已构建并启动到 `Ready on http://localhost:8787`。
-- `pnpm cf:deploy` 已通过，Worker gzip 上传体积从 3157.90 KiB 降至 2409.96 KiB，已成功部署到 `https://jobi.ytdgoreturn764.workers.dev`。
-- Phase 6 的 Supabase allow list、Stripe endpoint、Workers Builds 和 Vercel 项目关闭仍需在外部控制台完成。
+- `pnpm cf:deploy` 已通过，Worker gzip 上传体积从 3157.90 KiB 降至 2409.96 KiB，已成功部署到 `https://jobi.ytdgoreturn764.workers.dev`；修复 PDF 导出 origin 后再次部署通过，当前 Version ID 为 `57de754a-3b28-4614-bd57-a193fcf17d25`。
+- Phase 6 的 Supabase allow list、Stripe endpoint、Workers Builds Dashboard 连接和 Vercel 项目关闭仍需在外部控制台完成。
 
 ## 测试计划
 

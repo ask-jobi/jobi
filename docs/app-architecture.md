@@ -197,7 +197,7 @@ resume editor 已切到 **persisted-resume-only**：
 
 - `/resume-print/[id]`：服务端读取 resume 数据并渲染打印页
 - `/api/resume/print?id=...`：通过 Cloudflare Browser Run binding (`MYBROWSER`) 和 `@cloudflare/puppeteer` 访问打印页并导出 PDF
-- `/api/resume/thumbnail?resume_id=...`：用 `ImageResponse` 生成 dashboard 缩略图
+- `/api/resume/thumbnail?resume_id=...`：服务端实时生成 SVG dashboard 缩略图
 
 ## 错误处理
 

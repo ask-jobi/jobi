@@ -30,7 +30,17 @@ pnpm cf:deploy
 pnpm cf:typegen
 ```
 
-Required Cloudflare settings:
+Cloudflare Workers Builds settings:
+
+- Worker: connect the existing `jobi` Worker to repository `ask-jobi/jobi`
+- Production branch: `main`
+- Build command: `pnpm run cf:build`
+- Deploy command: `pnpm run cf:upload`
+- Non-production branch deploy command: `pnpm run cf:upload-preview`
+- Root directory: empty / repository root
+- Build image versions: `.nvmrc` pins Node `24.15.0`; set `PNPM_VERSION=10.9.0` if the dashboard needs an explicit pnpm version
+
+Required Cloudflare runtime settings:
 
 - Worker Browser Run binding: `MYBROWSER`
 - Compatibility flags: `nodejs_compat`, `global_fetch_strictly_public`
@@ -86,6 +96,7 @@ pnpm e2e-test-headless
 ## Documentation
 
 - `docs/commands.md` - commands
+- `docs/cloudflare-workers-builds.md` - Cloudflare Workers Builds setup
 - `docs/app-architecture.md` - architecture and route conventions
 - `docs/testing-and-i18n.md` - test/i18n rules
 - `docs/plans/current/` - active implementation plans

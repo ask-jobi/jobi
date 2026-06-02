@@ -11,7 +11,7 @@ type CloudflareBrowserEnv = {
 }
 
 function getBaseUrl(request: NextRequest) {
-  return process.env.NEXT_PUBLIC_BASE_URL ?? new URL(request.url).origin
+  return new URL(request.url).origin
 }
 
 async function launchBrowser() {
