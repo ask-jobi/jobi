@@ -307,7 +307,7 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
     expect(runUploadedResumeIntake).toHaveBeenCalledWith(
       {
         jobInfo: validJobInfo,
-        file
+        file: expect.any(File)
       },
       expect.objectContaining({
         userId: "test-user-id",
@@ -316,6 +316,12 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
         rollback: expect.any(Object)
       })
     )
+
+    const [{ file: validatedFile }] = vi.mocked(runUploadedResumeIntake).mock
+      .calls[0]
+    expect(validatedFile.name).toBe("resume.pdf")
+    expect(validatedFile.type).toBe("application/pdf")
+    expect(validatedFile.size).toBe(4)
   })
 
   it("records post-commit SSE transport failure without changing the domain result", async () => {

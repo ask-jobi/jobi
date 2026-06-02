@@ -83,7 +83,7 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
           getJobApplicationByResumeId(application.resume.id)
             .then((fresh) => {
               replaceAuthoritativeResume({
-                resume: fresh.resumes.resume_json,
+                resume: fresh.resumes.resume_json!!,
                 currentRevision: fresh.resumes.current_revision
               })
             })

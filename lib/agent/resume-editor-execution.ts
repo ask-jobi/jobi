@@ -108,7 +108,7 @@ export async function executeResumeEditorModifyTool(
       entity,
       id,
       field,
-      originalValue: (entry as Record<string, unknown>)[field],
+      originalValue: (entry as unknown as Record<string, unknown>)[field],
       value
     }
   }

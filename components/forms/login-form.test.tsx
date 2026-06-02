@@ -62,7 +62,7 @@ describe("LoginForm", () => {
   })
 
   it("starts Google OAuth with the current origin and callback URL", async () => {
-    setLocationOrigin("https://jobi-git-feature-team.vercel.app")
+    setLocationOrigin("https://jobi-validation.workers.dev")
     mockSearchParams = new URLSearchParams("callbackUrl=/pricing")
 
     render(<LoginForm />)
@@ -75,7 +75,7 @@ describe("LoginForm", () => {
         provider: "google",
         options: {
           redirectTo:
-            "https://jobi-git-feature-team.vercel.app/auth/callback?next=%2Fpricing"
+            "https://jobi-validation.workers.dev/auth/callback?next=%2Fpricing"
         }
       })
     })

@@ -18,7 +18,7 @@
 | `lib/agent/schema.ts` | 共享 zod schema 单一来源 (entry + tool + event + chat) |
 | `lib/agent/tools.ts` | 共享 tool 定义 (重新导出 schema.ts) |
 | `server/ai/chat/history.ts` | Chat session / message CRUD |
-| `server/ai/model.ts` | Gateway-first 模型选择 |
+| `server/ai/model.ts` | direct DeepSeek provider 模型选择 |
 | `components/agent/chat-interface.tsx` | 前端 `onData` 消费 patch + 版本冲突检测 |
 | `server/chat-events.ts` | Chat event 持久化 + event_data zod 校验 |
 
@@ -28,7 +28,7 @@
 - **Chat tool execution**: 服务端执行，`data-resume-patch` 流式下发给前端
 - **前端消费者**: `onData` 消费 patch，版本冲突时拒绝应用并触发 authoritative refetch
 - **Schema 单一来源**: entry schemas + tool I/O schemas + event data schemas 统一在 `lib/agent/schema.ts`
-- **Gateway-first**: `AI_GATEWAY_API_KEY` 存在时走 gateway，否则本地直连 fallback
+- **AI provider**: 通过 direct DeepSeek API provider 调用 `DEEPSEEK_MODEL_ID`（默认 `deepseek-v4-flash`）
 - **Token 统计**: 信任 provider 总量，reasoning 作为 breakdown 不计入
 
 ## 数据 / 接口约定

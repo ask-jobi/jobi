@@ -5,8 +5,6 @@ import { Locale } from "@/lib/i18n/config"
 import { createClient } from "@/lib/supabase/server"
 import { getResumeThumbnailSections } from "@/lib/resume-thumbnail"
 
-export const runtime = "edge"
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

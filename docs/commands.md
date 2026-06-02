@@ -11,6 +11,9 @@
 ## 构建
 
 - `pnpm build` - 构建生产环境应用
+- `pnpm cf:preview` - 使用 OpenNext 构建并在本地 Cloudflare Workers runtime 预览
+- `pnpm cf:deploy` - 使用 OpenNext 构建并部署到 Cloudflare Workers
+- `pnpm cf:typegen` - 根据 `wrangler.jsonc` 生成 `cloudflare-env.d.ts`（该文件不提交）
 
 ## 代码质量
 

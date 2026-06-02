@@ -37,8 +37,12 @@ yarn-error.log*
 .env.production
 .env
 
-# vercel
+# deployment build outputs
 .vercel
+.open-next/
+.wrangler/
+.dev.vars
+cloudflare-env.d.ts
 
 # typescript
 *.tsbuildinfo

@@ -21,12 +21,12 @@ describe("GET /auth/callback", () => {
     mockExchangeCodeForSession.mockResolvedValue({ error: null })
   })
 
-  it("exchanges the OAuth code and redirects to the Vercel forwarded host", async () => {
+  it("exchanges the OAuth code and redirects to the forwarded host", async () => {
     const request = new Request(
       "https://jobi.com/auth/callback?code=oauth-code&next=%2Fpricing",
       {
         headers: {
-          "x-forwarded-host": "jobi-git-feature-team.vercel.app"
+          "x-forwarded-host": "jobi-validation.workers.dev"
         }
       }
     )
@@ -35,7 +35,7 @@ describe("GET /auth/callback", () => {
 
     expect(mockExchangeCodeForSession).toHaveBeenCalledWith("oauth-code")
     expect(response.headers.get("location")).toBe(
-      "https://jobi-git-feature-team.vercel.app/pricing"
+      "https://jobi-validation.workers.dev/pricing"
     )
   })
 

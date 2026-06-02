@@ -10,7 +10,8 @@
 - 表单：react-hook-form + Zod
 - 国际化：next-intl（`en` / `zh`）
 - 数据与认证：Supabase
-- AI：Vercel AI SDK + 自定义 `server/ai/*` 与 `lib/agent/*`
+- AI：Vercel AI SDK 库 + direct DeepSeek API provider + 自定义 `server/ai/*` 与 `lib/agent/*`
+- 部署：Cloudflare Workers + OpenNext (`@opennextjs/cloudflare`)
 - 支付：Stripe Checkout + access pass token 额度模型
 - E2E：Playwright
 - 单元/组件测试：Vitest
@@ -195,7 +196,7 @@ resume editor 已切到 **persisted-resume-only**：
 ## 导出与缩略图
 
 - `/resume-print/[id]`：服务端读取 resume 数据并渲染打印页
-- `/api/resume/print?id=...`：用 Puppeteer 访问打印页并导出 PDF
+- `/api/resume/print?id=...`：通过 Cloudflare Browser Run binding (`MYBROWSER`) 和 `@cloudflare/puppeteer` 访问打印页并导出 PDF
 - `/api/resume/thumbnail?resume_id=...`：用 `ImageResponse` 生成 dashboard 缩略图
 
 ## 错误处理
