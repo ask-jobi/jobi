@@ -34,7 +34,7 @@
 - 本计划不迁移 Stripe、DeepSeek、Umami 等非部署平台供应商。
 - 本计划不保留 Vercel AI Gateway、Vercel hosting、Vercel preview、Vercel 回滚路径。
 - 本计划不保留 Puppeteer + 本地 Chromium 的实现方式；PDF 导出固定改用 Cloudflare Browser Run。
-- 本计划不把缩略图降级为静态占位或客户端延迟生成；缩略图继续使用 `next/og` / `ImageResponse` 实时生成，除非 OpenNext 实测发现阻塞问题。
+- 本计划不把缩略图降级为静态占位或客户端延迟生成；缩略图继续服务端实时生成，但实现改为 SVG Response，避免 `next/og` / `ImageResponse` 引入 Worker bundle 体积问题。
 - 本计划不处理正式生产 DNS 灰度、生产切流、生产事故回滚；项目当前仍处于验证阶段。
 
 ## 已确认决策
@@ -47,7 +47,7 @@
 - AI 模型调用改为当前 DeepSeek API 直连，保留 `@ai-sdk/deepseek`。
 - Cloudflare 环境优先以 preview / validation 为准，不引入生产切流复杂度。
 - PDF 导出使用 Cloudflare Browser Run，不保留本地 Chromium / Vercel fallback。
-- 缩略图保持实时生成，优先沿用当前 `next/og` / `ImageResponse` 方案；如 Cloudflare build 要求，移除显式 `runtime = "edge"`。
+- 缩略图保持实时生成，改用服务端 SVG Response；保持 `/api/resume/thumbnail?resume_id=...` route contract 不变，并移除 `next/og` / `ImageResponse` 依赖以降低 Worker bundle 体积。
 - CI/CD 使用 Cloudflare Workers Builds，不使用 GitHub Actions + `wrangler deploy` 作为主路径。
 - 暂不配置自定义域名；Cloudflare validation 环境使用 `workers.dev` URL。
 
@@ -58,7 +58,7 @@
 | `package.json` | 只有 `next build` / `next start`，无 `wrangler`、`@opennextjs/cloudflare`、Cloudflare preview/deploy scripts；存在 `@ai-sdk/gateway` 与 `vercel-minimax-ai-provider` 依赖 |
 | `next.config.ts` | 配置 `serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"]`，这些 native / Node 依赖需要 Cloudflare Workers 兼容性验证 |
 | `app/api/resume/print/route.ts` | 通过 `process.env.VERCEL` 判断是否使用 `@sparticuz/chromium`，并依赖 Puppeteer/Chromium；Workers 上不能直接运行本地 Chromium binary |
-| `app/api/resume/thumbnail/route.tsx` | `export const runtime = "edge"` + `next/og`；OpenNext 可支持 `next/og` / `ImageResponse`，迁移重点是验证并视情况移除显式 `runtime = "edge"` |
+| `app/api/resume/thumbnail/route.tsx` | 当前 `next/og` / `ImageResponse` 会把 `@vercel/og` WASM 与字体资源打进 Worker，导致 Free plan 3 MiB 限制下部署失败；迁移重点改为 SVG Response 实时生成 |
 | `app/api/resume/upload-and-analyze/route.ts` | `runtime = "nodejs"`，上传解析链路依赖 `server/ai/tools.ts` 的 `pdf-parse` |
 | `app/api/chat/resume/route.ts` | `runtime = "nodejs"`，需验证 AI streaming 在 Workers + OpenNext 下行为 |
 | `app/auth/callback/route.ts` | 非 development 环境优先使用 `x-forwarded-host` 生成 OAuth redirect，Cloudflare headers 行为需回归 |
@@ -109,9 +109,9 @@
    - 迁移时要保持 `/api/resume/print?id=...` 对前端契约不变。
    - 需要验证登录 cookie / Supabase session 传递到 `/resume-print/[id]` 的方式。
 2. 缩略图生成
-   - 当前 `next/og` + `ImageResponse` 方案保持不变，继续实时生成缩略图。
+   - 将当前 `next/og` + `ImageResponse` 改为服务端 SVG Response，继续实时生成缩略图。
    - 缩略图必须保持实时生成，不接受静态占位或客户端延迟生成作为最终方案。
-   - 迁移重点是验证 OpenNext Cloudflare 对 `next/og` 的支持；如显式 `runtime = "edge"` 导致 build/runtime 问题，则移除该 runtime 声明并保持 route contract `/api/resume/thumbnail?resume_id=...` 不变。
+   - 迁移重点是移除 `next/og` / `ImageResponse` 依赖，避免 `@vercel/og` WASM 资源进入 Worker bundle，并保持 route contract `/api/resume/thumbnail?resume_id=...` 不变。
 3. PDF 上传解析
    - `pdf-parse` 及其 native canvas 依赖可能影响 Workers bundle / runtime。
    - 若不可行，改用 Workers 兼容解析库，或拆到独立 Node 解析服务。
@@ -166,7 +166,7 @@
 
 ### Phase 3: Runtime 兼容修复
 
-- [x] 在 Cloudflare preview 中验证 `app/api/resume/thumbnail/route.tsx` 的 `next/og` / `ImageResponse` 行为；仅在显式 `runtime = "edge"` 导致问题时移除该声明。
+- [x] 发现 `app/api/resume/thumbnail/route.tsx` 的 `next/og` / `ImageResponse` 会引入 `@vercel/og` WASM 资源并导致 Worker Free plan bundle 超限。
 - [ ] 验证 `app/api/chat/resume/route.ts` 在 Cloudflare preview 下的 streaming 行为。
 - [ ] 验证 `app/api/stripe/webhook/route.ts` 的 raw body 签名校验。
 - [ ] 验证 Supabase SSR cookies 在 Middleware / Route Handler / Server Component 下的读写。
@@ -182,10 +182,10 @@
 - [x] 使用 Browser Run 实现 `/api/resume/print?id=...` PDF 生成。
 - [x] 将当前 cookies / auth session 传递到 Browser Run 打开的 `/resume-print/[id]` 页面。
 - [x] 保持 `/api/resume/print?id=...` 响应 contract 不变。
-- [x] 保留 `/api/resume/thumbnail` 的 `next/og` / `ImageResponse` 实时生成方案。
-- [x] 在 Cloudflare preview 中验证 `next/og` 缩略图 route。
-- [x] 如显式 `runtime = "edge"` 导致 OpenNext build/runtime 问题，移除该 runtime 声明。
-- [x] 补充 PDF/thumbnail route tests，覆盖 Browser Run 与实时 thumbnail renderer 分支。
+- [x] 使用 TDD 将 `/api/resume/thumbnail` 从 `next/og` / `ImageResponse` 改为 SVG Response 实时生成。
+- [x] 保持 `/api/resume/thumbnail?resume_id=...` 响应 contract：缺参 400、未取到 resume 500、成功返回可被前端 `<Image unoptimized>` 加载的图片响应。
+- [x] 对 SVG 内容做 XML escape，避免用户简历内容注入 SVG/XML。
+- [x] 补充 PDF/thumbnail route tests，覆盖 Browser Run 与 SVG thumbnail renderer 分支。
 
 ### Phase 5: AI Gateway 去 Vercel 化
 
@@ -199,7 +199,7 @@
 
 ### Phase 6: Cloudflare 验证环境集成
 
-- [ ] 创建 Cloudflare Worker validation 环境，先使用 `workers.dev` URL，不配置 custom domain。
+- [x] 创建 Cloudflare Worker validation 环境，先使用 `workers.dev` URL，不配置 custom domain。
 - [ ] 配置 Cloudflare secrets：Supabase、Stripe 测试 key、DeepSeek、Umami、base URL。
 - [ ] 在 Supabase Auth allow list 增加 Cloudflare validation callback URL。
 - [ ] 在 Stripe 测试模式增加 Cloudflare validation webhook endpoint，配置 `STRIPE_WEBHOOK_SECRET`。
@@ -225,10 +225,11 @@
 - 已将 `/api/resume/print?id=...` 改为 Cloudflare Browser Run (`MYBROWSER`) + `@cloudflare/puppeteer`，并继续把当前 cookies 传入打印页。
 - 已移除 Vercel AI Gateway 路径，`server/ai/model.ts` 使用 direct DeepSeek provider，默认模型为 `deepseek-v4-flash`，可通过 `DEEPSEEK_MODEL_ID` 覆盖。
 - 已将 PDF 上传解析从 `pdf-parse` / `@napi-rs/canvas` 替换为 Workers 可打包的 `pdfjs-dist` 文本解析路径。
-- 已移除 thumbnail route 的显式 `runtime = "edge"`，保留 `next/og` / `ImageResponse` 实时生成。
+- 已移除 thumbnail route 的显式 `runtime = "edge"`；线上部署验证发现 `next/og` / `ImageResponse` 会引入 `@vercel/og` WASM 资源并超过 Workers Free plan 3 MiB 限制，已按 TDD 改为 SVG Response 实时生成，并对 SVG 用户内容做 XML escape。
 - 已删除超过 Workers asset 单文件限制的 `public/fonts/SourceHanSansSC-VF.ttf`，resume print 回退到系统字体。
 - 已运行 `pnpm lint`、`pnpm format:check`、`pnpm test --run`、`pnpm build`；`pnpm cf:preview` 已构建并启动到 `Ready on http://localhost:8787`。
-- Phase 6 的 Cloudflare 线上 validation 环境、Supabase allow list、Stripe endpoint、Workers Builds 和 Vercel 项目关闭仍需在外部控制台完成。
+- `pnpm cf:deploy` 已通过，Worker gzip 上传体积从 3157.90 KiB 降至 2409.96 KiB，已成功部署到 `https://jobi.ytdgoreturn764.workers.dev`。
+- Phase 6 的 Supabase allow list、Stripe endpoint、Workers Builds 和 Vercel 项目关闭仍需在外部控制台完成。
 
 ## 测试计划
 
@@ -239,6 +240,7 @@
 - [x] `pnpm test --run`
 - [x] `pnpm build`
 - [x] `pnpm cf:preview`
+- [x] `pnpm cf:deploy`
 - [ ] `pnpm e2e-test-headless` 指向 Cloudflare preview/validation URL 或本地 preview URL
 
 ### 重点回归路径
@@ -251,7 +253,7 @@
 - [ ] AI chat 流式响应与工具改写简历。
 - [ ] Stripe Checkout 创建 session 与 webhook 发放 token。
 - [ ] `/api/resume/print?id=...` 导出 PDF。
-- [ ] `/api/resume/thumbnail?resume_id=...` 实时生成缩略图。
+- [ ] `/api/resume/thumbnail?resume_id=...` 实时生成 SVG 缩略图。
 - [ ] 受保护路由未登录重定向与 API 未登录 401 行为。
 
 ## 风险
@@ -266,7 +268,7 @@
 ## 并行执行建议
 
 - Worker A：Cloudflare/OpenNext 配置、build/preview、Workers Builds CI/CD。
-- Worker B：运行时兼容审计，重点处理 `pdf-parse`、`next/og` thumbnail、Browser Run PDF export。
+- Worker B：运行时兼容审计，重点处理 `pdf-parse`、SVG thumbnail、Browser Run PDF export。
 - Worker C：Supabase Auth、Stripe webhook、环境变量与 validation 域名。
 - Worker D：移除 Vercel AI Gateway，改造 `server/ai/model.ts` 为 direct DeepSeek provider。
 - 主 agent：合并改动、统一测试、更新文档和 validation runbook。
@@ -275,7 +277,7 @@
 
 - Cloudflare validation 环境可通过 `workers.dev` URL 访问完整应用。
 - `pnpm build` 与 Cloudflare preview/deploy 命令均通过。
-- 登录、dashboard、上传解析、AI chat、支付测试、Browser Run PDF 导出、实时缩略图核心路径在 Cloudflare 环境通过回归。
+- 登录、dashboard、上传解析、AI chat、支付测试、Browser Run PDF 导出、实时 SVG 缩略图核心路径在 Cloudflare 环境通过回归。
 - 代码中不再依赖 `process.env.VERCEL` 决定运行行为。
 - 生产/验证 AI 调用不再依赖 `AI_GATEWAY_API_KEY` / Vercel AI Gateway，改用 direct DeepSeek API。
 - `package.json` 不再包含未使用的 Vercel-only provider 依赖。
