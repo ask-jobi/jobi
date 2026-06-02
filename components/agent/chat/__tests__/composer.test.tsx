@@ -115,6 +115,15 @@ describe("Composer", () => {
     expect(mockSetText).toHaveBeenCalledWith("")
   })
 
+  it("lets assistant-ui handle sends after a chat error", () => {
+    render(<Composer lifecycle="error" />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }))
+
+    expect(mockSetPendingChatAction).not.toHaveBeenCalled()
+    expect(mockSetText).not.toHaveBeenCalled()
+  })
+
   it("does not queue when the composer is empty", () => {
     composerState = {
       text: "   ",
