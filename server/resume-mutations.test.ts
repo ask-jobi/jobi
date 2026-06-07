@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  applyToolOutputToResume,
   moveSectionInResume,
   reorderSectionEntriesInResume
 } from "@/lib/resume/mutations"
@@ -22,8 +23,7 @@ describe("moveSectionInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "One"
           }
         ]
@@ -34,8 +34,7 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Built stuff"
           }
         ]
@@ -77,8 +76,7 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Built stuff"
           }
         ]
@@ -117,8 +115,7 @@ describe("moveSectionInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "One"
           }
         ]
@@ -129,8 +126,7 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Built stuff"
           }
         ]
@@ -158,24 +154,21 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "One"
           },
           {
             entryId: "edu-2",
             school: "School 2",
             degree: "Degree 2",
-            start: "2021-01",
-            end: "2022-01",
+            date: { start: "2021-01", end: "2022-01", isCurrent: false },
             content: "Two"
           },
           {
             entryId: "edu-3",
             school: "School 3",
             degree: "Degree 3",
-            start: "2022-01",
-            end: "2023-01",
+            date: { start: "2022-01", end: "2023-01", isCurrent: false },
             content: "Three"
           }
         ]
@@ -186,8 +179,7 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Built stuff"
           }
         ]
@@ -229,8 +221,7 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "One"
           }
         ]
@@ -243,5 +234,36 @@ describe("reorderSectionEntriesInResume", () => {
     expect(reorderSectionEntriesInResume(resume, "education", 0, 0)).toBe(
       resume
     )
+  })
+})
+
+describe("applyToolOutputToResume", () => {
+  it("creates a missing section when an AI add targets a blank resume", () => {
+    const resume: ResumeData = {
+      sectionOrder: [],
+      personalInfo: {
+        entryId: "pi-1",
+        firstName: "Ada",
+        lastName: "Lovelace",
+        email: "ada@example.com",
+        phone: "123"
+      }
+    }
+    const project = {
+      entryId: "project-1",
+      title: "Compiler Notes",
+      role: "Maintainer",
+      content: "Built a tiny compiler.",
+      date: { start: "2024-01", end: "2024-06", isCurrent: false }
+    }
+
+    const nextResume = applyToolOutputToResume(resume, {
+      operation: "add",
+      entity: "projects",
+      newEntry: project
+    })
+
+    expect(nextResume.sectionOrder).toEqual(["projects"])
+    expect(nextResume.projects?.entries).toEqual([project])
   })
 })

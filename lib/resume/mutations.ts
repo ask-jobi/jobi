@@ -1,10 +1,10 @@
 import type { Locale } from "@/lib/i18n/config"
 import { addSection, removeSection } from "@/lib/templates/section-helpers"
+import { applyAiResumeEdit } from "@/lib/resume/ai-edits"
 import type {
   PersonalInfo,
   ResumeData,
   ResumeSection,
-  ResumeSectionKey,
   SortableSectionKey
 } from "@/types/resume"
 import type {
@@ -14,14 +14,6 @@ import type {
 
 type ResumeSectionEntry<ID extends SortableSectionKey> =
   NonNullable<ResumeData[ID]> extends ResumeSection<infer Entry> ? Entry : never
-
-type EntryBasedResumeSection = NonNullable<ResumeData[SortableSectionKey]>
-
-function hasEntries(
-  section: ResumeData[ResumeSectionKey] | undefined
-): section is EntryBasedResumeSection {
-  return Boolean(section && "entries" in section)
-}
 
 export function replacePersonalInfoInResume(
   resume: ResumeData,
@@ -187,117 +179,7 @@ export function applyToolOutputToResume(
   baseResume: ResumeData,
   output: ResumeEditorModifyOutput | ResumeEditorReorderOutput
 ): ResumeData {
-  const copiedResume = structuredClone(baseResume) as ResumeData
-
-  if (
-    output.operation === "rewrite" ||
-    output.operation === "delete" ||
-    output.operation === "add"
-  ) {
-    const modifyOutput = output as ResumeEditorModifyOutput
-
-    if (
-      modifyOutput.operation === "rewrite" &&
-      modifyOutput.entity === "personalInfo"
-    ) {
-      const mutablePersonalInfo = copiedResume.personalInfo as unknown as {
-        entryId: string
-      } & Record<string, unknown>
-
-      if (
-        mutablePersonalInfo.entryId === modifyOutput.id &&
-        modifyOutput.field in mutablePersonalInfo
-      ) {
-        mutablePersonalInfo[modifyOutput.field] = modifyOutput.value
-      }
-
-      return copiedResume
-    }
-
-    const section = copiedResume[modifyOutput.entity]
-
-    if (!hasEntries(section)) {
-      return copiedResume
-    }
-
-    if (modifyOutput.operation === "rewrite") {
-      section.entries.forEach((item) => {
-        const mutableItem = item as unknown as {
-          entryId: string
-        } & Record<string, unknown>
-
-        if (
-          mutableItem.entryId === modifyOutput.id &&
-          modifyOutput.field in mutableItem
-        ) {
-          mutableItem[modifyOutput.field] = modifyOutput.value
-        }
-      })
-    }
-
-    if (modifyOutput.operation === "delete") {
-      section.entries = section.entries.filter(
-        (item) => item.entryId !== modifyOutput.id
-      ) as typeof section.entries
-
-      if (section.entries.length === 0) {
-        return removeSection(copiedResume, modifyOutput.entity)
-      }
-    }
-
-    if (modifyOutput.operation === "add") {
-      ;(
-        section.entries as unknown as Array<
-          { entryId: string } & Record<string, unknown>
-        >
-      ).push(
-        modifyOutput.newEntry as unknown as {
-          entryId: string
-        } & Record<string, unknown>
-      )
-    }
-
-    return copiedResume
-  }
-
-  const reorderOutput = output as ResumeEditorReorderOutput
-
-  if (reorderOutput.operation === "reorderEntries") {
-    const entity = reorderOutput.entity
-    if (!entity) {
-      return copiedResume
-    }
-
-    const section = copiedResume[entity]
-    if (!hasEntries(section)) {
-      return copiedResume
-    }
-
-    const orderedEntries = reorderOutput.orderedEntryIds
-      ?.map((id) =>
-        section.entries.find(
-          (entry: { entryId: string }) => entry.entryId === id
-        )
-      )
-      .filter((entry): entry is (typeof section.entries)[number] =>
-        Boolean(entry)
-      )
-
-    if (orderedEntries) {
-      section.entries = orderedEntries as typeof section.entries
-    }
-
-    return copiedResume
-  }
-
-  if (
-    reorderOutput.operation === "reorderSections" &&
-    reorderOutput.orderedSectionIds
-  ) {
-    copiedResume.sectionOrder = reorderOutput.orderedSectionIds
-  }
-
-  return copiedResume
+  return applyAiResumeEdit(baseResume, output)
 }
 
 export function insertSectionEntryInResume<ID extends SortableSectionKey>(

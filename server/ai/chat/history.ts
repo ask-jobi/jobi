@@ -689,7 +689,7 @@ export async function getMessagesAfter(
   return data || []
 }
 
-export function extractToolOriginalValues(
+export function extractAiResumeEditOutputs(
   parts: Array<UIMessagePart<UIDataTypes, UITools>>
 ): (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[] {
   const results: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[] = []
@@ -717,6 +717,8 @@ export function extractToolOriginalValues(
 
   return results
 }
+
+export const extractToolOriginalValues = extractAiResumeEditOutputs
 
 export async function getMessage(messageId: string) {
   const supabase = await createClient()

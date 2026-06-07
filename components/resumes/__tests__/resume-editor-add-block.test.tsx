@@ -90,8 +90,7 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: ""
           }
         ]
@@ -157,8 +156,7 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: ""
           }
         ]
@@ -229,8 +227,7 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: ""
           }
         ]
@@ -265,15 +262,16 @@ describe("ResumeEditor add entry", () => {
     )
 
     const expectedResume: ResumeData = {
-      ...originalResume,
-      education: undefined,
-      sectionOrder: ["skills"]
+      sectionOrder: ["skills"],
+      personalInfo: originalResume.personalInfo,
+      skills: originalResume.skills
     }
 
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        expectedResume
+        expectedResume,
+        { baseRevision: 1 }
       )
     })
 

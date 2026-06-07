@@ -13,6 +13,10 @@ import ResumeSkeleton from "@/components/skeletons/resume-skeleton"
 import { type TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
+import {
+  formatDateRange,
+  normalizeResumeDateRanges
+} from "@/lib/resume/date-ranges"
 
 interface Props {
   data: ResumeData | null
@@ -76,7 +80,7 @@ const renderers: Partial<Record<SortableSectionKey, ModernSectionRenderer>> = {
             {block.school}
           </h3>
           <span className="text-sm text-gray-500 font-medium">
-            {block.start} - {block.end}
+            {formatDateRange(block.date)}
           </span>
         </div>
       )}
@@ -129,7 +133,7 @@ const renderers: Partial<Record<SortableSectionKey, ModernSectionRenderer>> = {
             <p className="text-sm text-gray-600">{block.jobTitle}</p>
           </div>
           <span className="text-sm text-gray-500 font-medium">
-            {block.start} - {block.end}
+            {formatDateRange(block.date)}
           </span>
         </div>
       )}
@@ -212,9 +216,10 @@ export const ModernTemplate: React.FC<Props> = ({
     )
   }
 
+  const normalizedData = normalizeResumeDateRanges(data)
   const interactionDisabled = entryDragDisabled || sectionMoveDisabled
-  const visibleSectionIds = data.sectionOrder.filter((sectionId) => {
-    const section = data[sectionId]
+  const visibleSectionIds = normalizedData.sectionOrder.filter((sectionId) => {
+    const section = normalizedData[sectionId]
     return !!renderers[sectionId] && !!section && section.entries.length > 0
   })
 
@@ -233,21 +238,22 @@ export const ModernTemplate: React.FC<Props> = ({
         }
       >
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {data.personalInfo.firstName} {data.personalInfo.lastName}
+          {normalizedData.personalInfo.firstName}{" "}
+          {normalizedData.personalInfo.lastName}
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-          <span>{data.personalInfo.email}</span>
-          <span>{data.personalInfo.phone}</span>
-          {data.personalInfo.linkedin && (
-            <span>LinkedIn: {data.personalInfo.linkedin}</span>
+          <span>{normalizedData.personalInfo.email}</span>
+          <span>{normalizedData.personalInfo.phone}</span>
+          {normalizedData.personalInfo.linkedin && (
+            <span>LinkedIn: {normalizedData.personalInfo.linkedin}</span>
           )}
-          {data.personalInfo.website && (
-            <span>Website: {data.personalInfo.website}</span>
+          {normalizedData.personalInfo.website && (
+            <span>Website: {normalizedData.personalInfo.website}</span>
           )}
         </div>
       </ResumeSectionActionButtonGroup>
 
-      {data.sectionOrder.map((sectionId) => {
+      {normalizedData.sectionOrder.map((sectionId) => {
         const renderer = renderers[sectionId]
 
         if (!renderer) {
@@ -257,7 +263,7 @@ export const ModernTemplate: React.FC<Props> = ({
         const visibleIndex = visibleSectionIds.indexOf(sectionId)
 
         return renderer(
-          data,
+          normalizedData,
           language,
           isInteractive,
           onEntryAdd,

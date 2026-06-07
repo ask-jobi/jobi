@@ -1,139 +1,62 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import {
-  extractToolOriginalValues,
+  extractAiResumeEditOutputs,
   getMessage,
   getMessagesAfter,
   restoreConversationSummaryAfterTruncate,
   truncateMessages
 } from "@/server/ai/chat/history"
-import {
-  getJobApplicationByResumeId,
-  saveApplicationResumeChange
-} from "@/server/resume"
+import { AiResumeEditError, revertAiResumeEdits } from "@/lib/resume/ai-edits"
+import { getJobApplicationByResumeId } from "@/server/resume"
 import { logRollback } from "@/server/chat-events"
+import { commitResumeOperation } from "@/server/resume/commit"
 import { z } from "zod"
-import {
-  ResumeEditorModifyOutput,
-  ResumeEditorReorderOutput
-} from "@/types/chat"
 import {
   requireVerifiedUserIdentity,
   verifyOwnership,
-  handleApiError
+  handleApiError,
+  ApiError
 } from "@/server/auth-helper"
-import type {
-  ResumeData,
-  ResumeSectionKey,
-  SortableSectionKey
-} from "@/types/resume"
+import type { AiResumeEditOutput } from "@/lib/resume/ai-edits"
 
 const truncateSchema = z.object({
   messageId: z.uuid()
 })
 
-type EntryBasedResumeSection = NonNullable<ResumeData[SortableSectionKey]>
-
-function hasEntries(
-  section: ResumeData[ResumeSectionKey] | undefined
-): section is EntryBasedResumeSection {
-  return Boolean(section && "entries" in section)
-}
-
-async function revertToolOutput(
-  toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
-  resumeData: ResumeData
-): Promise<ResumeData> {
-  const updatedResume = structuredClone(resumeData)
-
-  for (const output of toolOutputs) {
-    if (output.operation === "rewrite") {
-      if (!output.field) continue
-
-      const section = updatedResume[output.entity]
-      if (hasEntries(section)) {
-        const entry = section.entries.find((item) => item.entryId === output.id)
-        const mutableEntry = entry as unknown as
-          | ({ entryId: string } & Record<string, unknown>)
-          | undefined
-
-        if (mutableEntry && output.field in mutableEntry) {
-          mutableEntry[output.field] = output.originalValue
-        }
-      }
-    }
-
-    if (output.operation === "delete") {
-      const section = updatedResume[output.entity]
-      if (hasEntries(section)) {
-        ;(
-          section.entries as unknown as Array<
-            { entryId: string } & Record<string, unknown>
-          >
-        ).push(
-          output.originalValue as unknown as {
-            entryId: string
-          } & Record<string, unknown>
-        )
-      }
-    }
-
-    if (output.operation === "add") {
-      const section = updatedResume[output.entity]
-      if (hasEntries(section)) {
-        const newEntry = output.newEntry
-        const entryIndex = section.entries.findIndex(
-          (item) => item.entryId === newEntry?.entryId
-        )
-        if (entryIndex !== -1) {
-          section.entries.splice(entryIndex, 1)
-        }
-      }
-    }
-
-    if (output.operation === "reorderEntries") {
-      const entity = output.entity
-      if (entity) {
-        const section = updatedResume[entity]
-        if (hasEntries(section)) {
-          const currentEntries = [...section.entries]
-          const originalValue = output.originalValue as string[]
-          const orderedEntries = originalValue
-            .map((id) => {
-              return currentEntries.find((item) => item.entryId === id)
-            })
-            .filter((entry): entry is (typeof section.entries)[number] =>
-              Boolean(entry)
-            )
-          section.entries = orderedEntries as typeof section.entries
-        }
-      }
-    }
-
-    if (output.operation === "reorderSections") {
-      updatedResume.sectionOrder = output.originalValue as SortableSectionKey[]
-    }
-  }
-
-  return updatedResume
-}
-
 async function applyToolReversions(
-  toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
-  resumeId: string
+  toolOutputs: AiResumeEditOutput[],
+  resumeId: string,
+  actorId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
 ) {
-  const jobApp = await getJobApplicationByResumeId(resumeId)
+  try {
+    const authoritativeState = await commitResumeOperation({
+      supabase,
+      actorId,
+      resumeId,
+      operation: ({ resume }) => ({
+        nextResume: revertAiResumeEdits(resume, toolOutputs, {
+          detectSemanticConflict: true
+        }),
+        metadata: undefined
+      })
+    })
 
-  if (!jobApp || !jobApp.resumes.resume_json) {
-    throw new Error("Resume not found")
+    return {
+      resume: authoritativeState.resume,
+      currentRevision: authoritativeState.currentRevision
+    }
+  } catch (error) {
+    if (
+      error instanceof AiResumeEditError &&
+      error.code === "semantic-conflict"
+    ) {
+      throw new ApiError(error.message, 409)
+    }
+
+    throw error
   }
-
-  const updatedResume = await revertToolOutput(
-    toolOutputs,
-    jobApp.resumes.resume_json
-  )
-
-  return saveApplicationResumeChange(resumeId, updatedResume)
 }
 
 export async function POST(request: NextRequest) {
@@ -182,21 +105,11 @@ export async function POST(request: NextRequest) {
       targetMessage.created_at
     )
 
-    await truncateMessages(messagesToTruncate)
-
-    await restoreConversationSummaryAfterTruncate(
-      targetMessage.session_id,
-      targetMessage.created_at
-    )
-
-    const toolsToRevert: (
-      | ResumeEditorModifyOutput
-      | ResumeEditorReorderOutput
-    )[] = []
+    const toolsToRevert: AiResumeEditOutput[] = []
 
     for (const msg of messagesToTruncate) {
       if (msg.has_tools) {
-        const originalValues = extractToolOriginalValues(msg.parts)
+        const originalValues = extractAiResumeEditOutputs(msg.parts)
         toolsToRevert.push(...originalValues)
       }
     }
@@ -206,9 +119,18 @@ export async function POST(request: NextRequest) {
     if (toolsToRevert.length > 0) {
       authoritativeResume = await applyToolReversions(
         toolsToRevert,
-        session.resume_id
+        session.resume_id,
+        user.id,
+        supabase
       )
     }
+
+    await truncateMessages(messagesToTruncate)
+
+    await restoreConversationSummaryAfterTruncate(
+      targetMessage.session_id,
+      targetMessage.created_at
+    )
 
     await logRollback(targetMessage.session_id, messageId)
 

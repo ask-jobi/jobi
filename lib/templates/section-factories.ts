@@ -51,8 +51,11 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         entryId: nanoid(),
         school: "",
         degree: "",
-        start: "",
-        end: "",
+        date: {
+          start: "",
+          end: "",
+          isCurrent: false
+        },
         content: ""
       } as EmptyEntryMap[ID]
     case "employment":
@@ -60,8 +63,11 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         entryId: nanoid(),
         company: "",
         jobTitle: "",
-        start: "",
-        end: "",
+        date: {
+          start: "",
+          end: "",
+          isCurrent: false
+        },
         content: ""
       } as EmptyEntryMap[ID]
     case "skills":
@@ -78,7 +84,8 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         content: "",
         date: {
           start: "",
-          end: ""
+          end: "",
+          isCurrent: false
         }
       } as EmptyEntryMap[ID]
     case "research":
@@ -89,7 +96,8 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         content: "",
         date: {
           start: "",
-          end: ""
+          end: "",
+          isCurrent: false
         }
       } as EmptyEntryMap[ID]
     case "publications":

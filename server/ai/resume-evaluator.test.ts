@@ -39,8 +39,7 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
           content: "Computer Science degree",
           school: "MIT",
           degree: "Bachelor",
-          start: "2018-09",
-          end: "2022-06"
+          date: { start: "2018-09", end: "2022-06", isCurrent: false }
         }
       ]
     },
@@ -51,8 +50,7 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
           content: "Software Engineer",
           company: "Tech Corp",
           jobTitle: "Senior Engineer",
-          start: "2022-07",
-          end: "present"
+          date: { start: "2022-07", end: "present", isCurrent: false }
         }
       ]
     },
@@ -174,8 +172,7 @@ describe("evaluateResume", () => {
               content: "Degree",
               school: "University",
               degree: "Master",
-              start: "2019-09",
-              end: "2021-06"
+              date: { start: "2019-09", end: "2021-06", isCurrent: false }
             }
           ]
         },

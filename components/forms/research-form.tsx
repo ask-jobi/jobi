@@ -53,6 +53,7 @@ export function ResearchForm({
               <MonthRangePickerFormField
                 startName="date.start"
                 endName="date.end"
+                isCurrentName="date.isCurrent"
                 label="Start/End Date"
               />
 

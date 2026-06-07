@@ -10,6 +10,7 @@ import {
 
 export {
   // Entry schemas
+  DateRangeSchema,
   EducationEntrySchema,
   EmploymentEntrySchema,
   SkillEntrySchema,
@@ -40,6 +41,8 @@ export const resumeEditorModifyToolDescription =
   "1) Rewrite entry fields - modify any field in an entry; " +
   "2) Delete an entry - remove an entry from a section; " +
   "3) Add a new entry - insert a new entry into a section. " +
+  "For education, employment, projects, and research dates, you may rewrite flat date fields " +
+  "such as start, end, date.start, or date.end; the server stores them as canonical date ranges. " +
   "The output language MUST remain consistent with the original resume language."
 
 export const resumeEditorReorderToolDescription =

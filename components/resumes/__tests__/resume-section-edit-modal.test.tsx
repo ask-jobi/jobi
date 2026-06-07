@@ -12,6 +12,7 @@ import {
   selectedSectionIdAtom
 } from "@/lib/store/resume-editor-state"
 import type { ResumeData } from "@/types/resume"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key
@@ -50,8 +51,7 @@ vi.mock("../resume-section-form", () => ({
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Saved"
           })
         }
@@ -108,16 +108,14 @@ describe("ResumeSectionEditModal", () => {
                 entryId: "emp-1",
                 company: "A",
                 jobTitle: "A",
-                start: "2020-01",
-                end: "2020-12",
+                date: { start: "2020-01", end: "2020-12", isCurrent: false },
                 content: ""
               },
               {
                 entryId: "emp-2",
                 company: "B",
                 jobTitle: "B",
-                start: "2021-01",
-                end: "2021-12",
+                date: { start: "2021-01", end: "2021-12", isCurrent: false },
                 content: ""
               }
             ]
@@ -285,8 +283,7 @@ describe("ResumeSectionEditModal", () => {
             entryId: "edu-1",
             school: "Old School",
             degree: "Old Degree",
-            start: "2019-01",
-            end: "2020-01",
+            date: { start: "2019-01", end: "2020-01", isCurrent: false },
             content: "Old"
           }
         ]
@@ -305,13 +302,13 @@ describe("ResumeSectionEditModal", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Saved"
           }
         ]
       }
     }
+    const normalizedSavedResume = normalizeResumeDateRanges(savedResume)
 
     store.set(applicationAtom, {
       id: "app-1",
@@ -342,7 +339,8 @@ describe("ResumeSectionEditModal", () => {
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        savedResume
+        normalizedSavedResume,
+        { baseRevision: 1 }
       )
     })
 
@@ -351,11 +349,11 @@ describe("ResumeSectionEditModal", () => {
     )
     expect(store.get(editModalOpenAtom)).toBe(true)
 
-    resolveSave({ resume: savedResume, currentRevision: 2 })
+    resolveSave({ resume: normalizedSavedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
-        savedResume
+        normalizedSavedResume
       )
       expect(store.get(editModalOpenAtom)).toBe(false)
     })

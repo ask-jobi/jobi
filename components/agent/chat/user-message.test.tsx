@@ -106,4 +106,39 @@ describe("UserActionBar", () => {
       expect(replacePersistedResumeMock).not.toHaveBeenCalled()
     })
   })
+
+  it("points headId at the last retained message after truncating", async () => {
+    exportThreadMock.mockReturnValue({
+      messages: [
+        { message: { id: "previous-message" } },
+        { message: { id: "message-1" } },
+        { message: { id: "assistant-1" } }
+      ],
+      headId: "assistant-1"
+    })
+
+    render(<UserActionBar />)
+
+    fireEvent.click(screen.getByRole("button", { name: /truncate/i }))
+
+    await waitFor(() => {
+      expect(importThreadMock).toHaveBeenCalledWith({
+        messages: [{ message: { id: "previous-message" } }],
+        headId: "previous-message"
+      })
+    })
+  })
+
+  it("sets headId to null when truncating the first message", async () => {
+    render(<UserActionBar />)
+
+    fireEvent.click(screen.getByRole("button", { name: /truncate/i }))
+
+    await waitFor(() => {
+      expect(importThreadMock).toHaveBeenCalledWith({
+        messages: [],
+        headId: null
+      })
+    })
+  })
 })

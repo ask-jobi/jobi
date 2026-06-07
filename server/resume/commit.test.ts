@@ -3,7 +3,11 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ResumeData } from "@/types/resume"
-import { commitResumeChange } from "./commit"
+import {
+  commitResumeChange,
+  commitResumeOperation,
+  ResumeCommitError
+} from "./commit"
 
 function createResume(overrides: Partial<ResumeData> = {}): ResumeData {
   return {
@@ -36,8 +40,7 @@ describe("commitResumeChange", () => {
             school: "Updated School",
             degree: "BSc",
             content: "CS",
-            start: "2024",
-            end: "2024"
+            date: { start: "2024", end: "2024", isCurrent: false }
           }
         ]
       }
@@ -54,8 +57,11 @@ describe("commitResumeChange", () => {
     })
     const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
     const select = vi.fn().mockReturnValue({ eq: selectEq })
-    const updateEq = vi.fn().mockResolvedValue({ error: null })
-    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const updateRevisionEq = vi
+      .fn()
+      .mockResolvedValue({ error: null, count: 1 })
+    const updateIdEq = vi.fn().mockReturnValue({ eq: updateRevisionEq })
+    const update = vi.fn().mockReturnValue({ eq: updateIdEq })
     const insert = vi.fn().mockResolvedValue({ error: null })
     const from = vi.fn((table: string) => {
       if (table === "resumes") {
@@ -77,11 +83,16 @@ describe("commitResumeChange", () => {
       eventId: "event-1"
     })
 
-    expect(update).toHaveBeenCalledWith({
-      resume_json: nextResume,
-      current_revision: 4,
-      evaluation_report_refresh_flag: true
-    })
+    expect(update).toHaveBeenCalledWith(
+      {
+        resume_json: nextResume,
+        current_revision: 4,
+        evaluation_report_refresh_flag: true
+      },
+      { count: "exact" }
+    )
+    expect(updateIdEq).toHaveBeenCalledWith("id", "resume-1")
+    expect(updateRevisionEq).toHaveBeenCalledWith("current_revision", 3)
     expect(insert).toHaveBeenCalledWith({
       resume_id: "resume-1",
       revision: 4,
@@ -134,5 +145,186 @@ describe("commitResumeChange", () => {
       resume: currentResume,
       currentRevision: 3
     })
+  })
+
+  it("rejects a full-json save when the caller base revision is stale", async () => {
+    const currentResume = createResume()
+    const selectSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "resume-1",
+        user_id: "user-1",
+        resume_json: currentResume,
+        current_revision: 4
+      },
+      error: null
+    })
+    const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
+    const select = vi.fn().mockReturnValue({ eq: selectEq })
+    const update = vi.fn()
+    const from = vi.fn((table: string) => {
+      if (table === "resumes") {
+        return { select, update }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await expect(
+      commitResumeChange({
+        supabase: { from } as any,
+        actorId: "user-1",
+        resumeId: "resume-1",
+        nextResume: createResume({ skills: { entries: [] } }),
+        baseRevision: 3
+      })
+    ).rejects.toMatchObject({
+      code: "stale-json-conflict"
+    })
+    expect(update).not.toHaveBeenCalled()
+  })
+})
+
+describe("commitResumeOperation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("rebases an operation onto the latest resume after a revision race", async () => {
+    const initialResume = createResume()
+    const latestResume = createResume({
+      skills: {
+        entries: [
+          {
+            entryId: "skill-1",
+            group: "Languages",
+            content: "TypeScript"
+          }
+        ]
+      }
+    })
+    const finalResume = createResume({
+      ...latestResume,
+      education: {
+        entries: [
+          {
+            entryId: "edu-1",
+            school: "Rebased School",
+            degree: "BSc",
+            content: "CS",
+            date: { start: "2024", end: "2024", isCurrent: false }
+          }
+        ]
+      }
+    })
+
+    const selectSingle = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: {
+          id: "resume-1",
+          user_id: "user-1",
+          resume_json: initialResume,
+          current_revision: 3
+        },
+        error: null
+      })
+      .mockResolvedValueOnce({
+        data: {
+          id: "resume-1",
+          user_id: "user-1",
+          resume_json: latestResume,
+          current_revision: 4
+        },
+        error: null
+      })
+    const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
+    const select = vi.fn().mockReturnValue({ eq: selectEq })
+    const updateRevisionEq = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null, count: 0 })
+      .mockResolvedValueOnce({ error: null, count: 1 })
+    const updateIdEq = vi.fn().mockReturnValue({ eq: updateRevisionEq })
+    const update = vi.fn().mockReturnValue({ eq: updateIdEq })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    const from = vi.fn((table: string) => {
+      if (table === "resumes") {
+        return { select, update }
+      }
+
+      if (table === "resumes_snapshot") {
+        return { insert }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    const result = await commitResumeOperation({
+      supabase: { from } as any,
+      actorId: "user-1",
+      resumeId: "resume-1",
+      eventId: "event-1",
+      operation: ({ resume }) => ({
+        nextResume: {
+          ...resume,
+          education: finalResume.education
+        },
+        metadata: { appliedToSkillsCount: resume.skills?.entries.length ?? 0 }
+      })
+    })
+
+    expect(result).toEqual({
+      resume: finalResume,
+      currentRevision: 5,
+      baseRevision: 4,
+      metadata: { appliedToSkillsCount: 1 }
+    })
+    expect(updateRevisionEq).toHaveBeenNthCalledWith(1, "current_revision", 3)
+    expect(updateRevisionEq).toHaveBeenNthCalledWith(2, "current_revision", 4)
+    expect(insert).toHaveBeenCalledWith({
+      resume_id: "resume-1",
+      revision: 5,
+      resume_json: finalResume,
+      event_id: "event-1"
+    })
+  })
+
+  it("propagates semantic conflicts from operation replay", async () => {
+    const currentResume = createResume()
+    const selectSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: "resume-1",
+        user_id: "user-1",
+        resume_json: currentResume,
+        current_revision: 3
+      },
+      error: null
+    })
+    const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
+    const select = vi.fn().mockReturnValue({ eq: selectEq })
+    const update = vi.fn()
+    const from = vi.fn((table: string) => {
+      if (table === "resumes") {
+        return { select, update }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await expect(
+      commitResumeOperation({
+        supabase: { from } as any,
+        actorId: "user-1",
+        resumeId: "resume-1",
+        operation: () => {
+          throw new ResumeCommitError(
+            "Entry changed before operation replay.",
+            "semantic-conflict"
+          )
+        }
+      })
+    ).rejects.toMatchObject({
+      code: "semantic-conflict"
+    })
+    expect(update).not.toHaveBeenCalled()
   })
 })

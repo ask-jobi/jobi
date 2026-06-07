@@ -42,8 +42,11 @@ function createResume(school: string): ResumeData {
           school,
           degree: "BSc",
           content: "Computer Science",
-          start: "2020",
-          end: "2024"
+          date: {
+            start: "2020",
+            end: "2024",
+            isCurrent: false
+          }
         }
       ]
     },
@@ -93,7 +96,7 @@ describe("POST /api/chat/truncate rollback persistence", () => {
     vi.mocked(
       chatHistoryModule.restoreConversationSummaryAfterTruncate
     ).mockResolvedValue()
-    vi.mocked(chatHistoryModule.extractToolOriginalValues).mockReturnValue([
+    vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
       {
         operation: "rewrite",
         entity: "education",
@@ -110,8 +113,11 @@ describe("POST /api/chat/truncate rollback persistence", () => {
       }
     } as any)
 
-    const updateEq = vi.fn().mockResolvedValue({ error: null })
-    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const updateRevisionEq = vi
+      .fn()
+      .mockResolvedValue({ error: null, count: 1 })
+    const updateIdEq = vi.fn().mockReturnValue({ eq: updateRevisionEq })
+    const update = vi.fn().mockReturnValue({ eq: updateIdEq })
     const snapshotInsert = vi.fn().mockResolvedValue({ error: null })
 
     const from = vi.fn((table: string) => {
@@ -192,11 +198,16 @@ describe("POST /api/chat/truncate rollback persistence", () => {
       resume: revertedResume,
       currentRevision: 4
     })
-    expect(update).toHaveBeenCalledWith({
-      resume_json: revertedResume,
-      current_revision: 4,
-      evaluation_report_refresh_flag: true
-    })
+    expect(update).toHaveBeenCalledWith(
+      {
+        resume_json: revertedResume,
+        current_revision: 4,
+        evaluation_report_refresh_flag: true
+      },
+      { count: "exact" }
+    )
+    expect(updateIdEq).toHaveBeenCalledWith("id", "resume-1")
+    expect(updateRevisionEq).toHaveBeenCalledWith("current_revision", 3)
     expect(snapshotInsert).toHaveBeenCalledWith({
       resume_id: "resume-1",
       revision: 4,

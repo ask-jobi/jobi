@@ -14,6 +14,10 @@ import ResumeSkeleton from "../skeletons/resume-skeleton"
 import { type TemplateOptions } from "@/lib/templates/registry"
 import { getSectionLabel } from "@/lib/templates/section-labels"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
+import {
+  formatDateRange,
+  normalizeResumeDateRanges
+} from "@/lib/resume/date-ranges"
 
 interface Props {
   data: ResumeData | null
@@ -75,7 +79,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.school}</h3>
             <span className="text-sm text-gray-600">
-              {block.start} - {block.end}
+              {formatDateRange(block.date)}
             </span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
@@ -118,7 +122,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.company}</h3>
             <span className="text-sm text-gray-600">
-              {block.start} - {block.end}
+              {formatDateRange(block.date)}
             </span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
@@ -161,7 +165,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.title}</h3>
             <span className="text-sm text-gray-600">
-              {block.date?.start} - {block.date?.end}
+              {formatDateRange(block.date)}
             </span>
           </div>
           {block.role && (
@@ -206,7 +210,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.title}</h3>
             <span className="text-sm text-gray-600">
-              {block.date?.start} - {block.date?.end}
+              {formatDateRange(block.date)}
             </span>
           </div>
           {block.role && (
@@ -421,9 +425,10 @@ export const DefaultTemplate: React.FC<Props> = ({
     )
   }
 
+  const normalizedData = normalizeResumeDateRanges(data)
   const interactionDisabled = entryDragDisabled || sectionMoveDisabled
-  const visibleSectionIds = data.sectionOrder.filter((sectionId) => {
-    const section = data[sectionId]
+  const visibleSectionIds = normalizedData.sectionOrder.filter((sectionId) => {
+    const section = normalizedData[sectionId]
     return !!section && section.entries.length > 0
   })
 
@@ -442,17 +447,22 @@ export const DefaultTemplate: React.FC<Props> = ({
         }
       >
         <h1 className="text-2xl font-bold mb-1">
-          {data.personalInfo.firstName} {data.personalInfo.lastName}
+          {normalizedData.personalInfo.firstName}{" "}
+          {normalizedData.personalInfo.lastName}
         </h1>
-        <p className="text-sm text-gray-600">{data.personalInfo.email}</p>
-        <p className="text-sm text-gray-600">{data.personalInfo.phone}</p>
+        <p className="text-sm text-gray-600">
+          {normalizedData.personalInfo.email}
+        </p>
+        <p className="text-sm text-gray-600">
+          {normalizedData.personalInfo.phone}
+        </p>
       </ResumeSectionActionButtonGroup>
 
-      {data.sectionOrder.map((sectionId) => {
+      {normalizedData.sectionOrder.map((sectionId) => {
         const visibleIndex = visibleSectionIds.indexOf(sectionId)
 
         return renderers[sectionId]?.(
-          data,
+          normalizedData,
           language,
           isInteractive,
           onEntryAdd,

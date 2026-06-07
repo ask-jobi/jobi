@@ -10,22 +10,24 @@ import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
 import { saveApplicationResumeChange } from "@/server/resume"
 import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 export const applicationAtom = atom<JobApplication | null>(null)
 export const applicationResumeDataAtom = atom(
   (get) => {
     const app = get(applicationAtom)
-    return app ? app.resume.resume_json : null
+    return app ? normalizeResumeDateRanges(app.resume.resume_json) : null
   },
   (get, set, update: ResumeData) => {
     const app = get(applicationAtom)
     if (!app) return
+    const normalizedUpdate = normalizeResumeDateRanges(update)
     set(evaluationRefreshFlagAtom, true)
     set(applicationAtom, {
       ...app,
       resume: {
         ...app.resume,
-        resume_json: update
+        resume_json: normalizedUpdate
       }
     })
   }
@@ -127,7 +129,7 @@ export function useApplicationResume() {
       ...application,
       resume: {
         ...application.resume,
-        resume_json: resume,
+        resume_json: normalizeResumeDateRanges(resume),
         current_revision: currentRevision,
         evaluation_report_refresh_flag: true
       }
@@ -139,13 +141,20 @@ export function useApplicationResume() {
     try {
       const authoritativeState = await saveApplicationResumeChange(
         application.resume.id,
-        data
+        normalizeResumeDateRanges(data),
+        {
+          baseRevision: application.resume.current_revision
+        }
       )
       replaceAuthoritativeResume(authoritativeState)
       return true
     } catch (error) {
       console.error("Save failed:", error)
-      toast.error("Failed to save resume changes")
+      const errorMessage =
+        error instanceof Error && error.message.includes("Resume changed")
+          ? "Resume changed elsewhere. Refresh and try again."
+          : "Failed to save resume changes"
+      toast.error(errorMessage)
       return false
     }
   }

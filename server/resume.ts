@@ -15,6 +15,25 @@ import {
   generateUploadedResumeFileName
 } from "./utils"
 import { commitResumeChange } from "./resume/commit"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
+
+function normalizeJobApplicationResumeJson<
+  T extends { resumes?: Record<string, unknown> }
+>(jobApplication: T): T {
+  const resumeJson = jobApplication.resumes?.resume_json
+
+  if (!resumeJson) {
+    return jobApplication
+  }
+
+  return {
+    ...jobApplication,
+    resumes: {
+      ...jobApplication.resumes,
+      resume_json: normalizeResumeDateRanges(resumeJson as ResumeData)
+    }
+  }
+}
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
@@ -85,7 +104,8 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
     )
   }
 
-  return jobApplications[0]
+  const jobApplication = jobApplications[0]
+  return normalizeJobApplicationResumeJson(jobApplication)
 }
 
 export async function getJobApplication(jobApplicationId: string) {
@@ -130,7 +150,8 @@ export async function getJobApplication(jobApplicationId: string) {
     )
   }
 
-  return jobApplications[0]
+  const jobApplication = jobApplications[0]
+  return normalizeJobApplicationResumeJson(jobApplication)
 }
 
 export async function getApplicationResumeData(
@@ -162,7 +183,7 @@ export async function getApplicationResumeData(
   }
 
   return {
-    resume: resume[0].resume_json as ResumeData,
+    resume: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
     currentRevision: resume[0].current_revision
   }
 }
@@ -197,7 +218,7 @@ export async function getApplicationResumeForPrint(id: string): Promise<{
   }
 
   return {
-    resumeData: resume[0].resume_json as ResumeData,
+    resumeData: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
     language: resume[0].language as Locale
   }
 }
@@ -258,7 +279,8 @@ export async function updateResumeJobDescription(
 
 export async function saveApplicationResumeChange(
   resumeId: string,
-  data: ResumeData
+  data: ResumeData,
+  options: { baseRevision?: number | null } = {}
 ) {
   const { supabase, user } = await requireVerifiedAuthContext()
 
@@ -266,7 +288,8 @@ export async function saveApplicationResumeChange(
     supabase,
     actorId: user.id,
     resumeId,
-    nextResume: data
+    nextResume: data,
+    baseRevision: options.baseRevision
   })
 }
 

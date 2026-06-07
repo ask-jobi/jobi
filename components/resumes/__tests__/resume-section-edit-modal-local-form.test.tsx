@@ -12,6 +12,7 @@ import {
   selectedSectionIdAtom
 } from "@/lib/store/resume-editor-state"
 import type { ResumeData } from "@/types/resume"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 const saveApplicationResumeChangeMock = vi.fn()
 
@@ -74,8 +75,7 @@ describe("ResumeSectionEditModal local form mode", () => {
             entryId: "emp-1",
             company: "Old Company",
             jobTitle: "Engineer",
-            start: "2021-09",
-            end: "2022-02",
+            date: { start: "2021-09", end: "2022-02", isCurrent: false },
             content: "Original content"
           }
         ]
@@ -134,14 +134,16 @@ describe("ResumeSectionEditModal local form mode", () => {
         ]
       }
     }
+    const normalizedExpectedResume = normalizeResumeDateRanges(expectedResume)
 
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        expectedResume
+        normalizedExpectedResume,
+        { baseRevision: 1 }
       )
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
-        expectedResume
+        normalizedExpectedResume
       )
       expect(store.get(editModalOpenAtom)).toBe(false)
     })

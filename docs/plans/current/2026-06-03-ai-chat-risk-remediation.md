@@ -169,70 +169,115 @@ Resume domain / persisted `resume_json` 应统一使用 canonical `DateRange`。
 
 ### Phase 1: AI Edit Contract 盘点与测试复现
 
-- [ ] 盘点当前 `resumeEditorModify` / `resumeEditorReorder` input/output schema 与 `types/resume.ts` 的差异
-- [ ] 补充失败复现测试：`personalInfo` rewrite 后 truncate 能恢复原字段
-- [ ] 补充失败复现测试：连续 rewrite 同一字段后 truncate 应逆序恢复
-- [ ] 补充失败复现测试：delete section 最后一条 entry 后 truncate 应恢复 section 和 entry
-- [ ] 补充失败复现测试：delete 后恢复 entry 原始位置
-- [ ] 补充失败复现测试：空白简历上 AI add 不存在 section 应创建 section
-- [ ] 补充失败复现测试：projects / research 的 date schema 与 UI 渲染一致
+- [x] 盘点当前 `resumeEditorModify` / `resumeEditorReorder` input/output schema 与 `types/resume.ts` 的差异
+- [x] 补充失败复现测试：`personalInfo` rewrite 后 truncate 能恢复原字段
+- [x] 补充失败复现测试：连续 rewrite 同一字段后 truncate 应逆序恢复
+- [x] 补充失败复现测试：delete section 最后一条 entry 后 truncate 应恢复 section 和 entry
+- [x] 补充失败复现测试：delete 后恢复 entry 原始位置
+- [x] 补充失败复现测试：空白简历上 AI add 不存在 section 应创建 section
+- [x] 补充失败复现测试：projects / research 的 date schema 与 UI 渲染一致
+
+Phase 1 盘点记录：
+
+- `types/resume.ts` 中 `projects` / `research` 使用 `date: DateRange`，模板渲染读取 `block.date?.start` / `block.date?.end`；但 `lib/agent/schema.ts` 的 `ProjectEntrySchema` / `ResearchEntrySchema` 仍输出或保留 `start` / `end`，会在 tool output parse 时丢失 canonical `date`。
+- `types/resume.ts` 中 `education` / `employment` 仍使用裸 `start` / `end`，与本计划 Phase 4 目标的统一 `DateRange` 尚未对齐。
+- `resumeEditorModifyOutputSchema` 的 `delete` output 只保留 `originalValue`，缺少 `originalIndex` / `originalSectionOrder`，无法精确恢复删除位置或被删除的 section 生命周期。
+- `resumeEditorModifyOutputSchema` 的 `add` output 只保留 `newEntry`，缺少 `createdSection` 或 `sectionDidNotExistBefore`，无法区分 add revert 后是否应移除新建 section。
+- `resumeEditorReorderOutputSchema` 已保存原始和目标顺序，可支持逆向恢复；但回滚实现目前仍在 `app/api/chat/truncate/route.ts` 内私有分叉。
 
 ### Phase 2: 统一 AI Resume Edit Module
 
-- [ ] 新建统一 AI resume edit module
-- [ ] 迁入 `applyToolOutputToResume()` 的现有行为
-- [ ] 明确单独撤回默认走 inverse tool output，不走整份 snapshot 回退
-- [ ] 实现 `personalInfo` rewrite apply / revert
-- [ ] 实现 entry rewrite apply / revert
-- [ ] 实现 add entry 到不存在 section 时自动创建 section
-- [ ] 实现 add revert 时移除新增 entry，并在必要时移除新建 section
-- [ ] 实现 delete revert 时按原始 index 恢复 entry，并在必要时恢复 section
-- [ ] 实现 reorderEntries / reorderSections 的 apply / revert
-- [ ] 为旧历史 output 缺少 metadata 的情况保留 best-effort fallback
-- [ ] 为无法精确撤回的旧历史 output 返回明确错误或人工恢复提示
+- [x] 新建统一 AI resume edit module
+- [x] 迁入 `applyToolOutputToResume()` 的现有行为
+- [x] 明确单独撤回默认走 inverse tool output，不走整份 snapshot 回退
+- [x] 实现 `personalInfo` rewrite apply / revert
+- [x] 实现 entry rewrite apply / revert
+- [x] 实现 add entry 到不存在 section 时自动创建 section
+- [x] 实现 add revert 时移除新增 entry，并在必要时移除新建 section
+- [x] 实现 delete revert 时按原始 index 恢复 entry，并在必要时恢复 section
+- [x] 实现 reorderEntries / reorderSections 的 apply / revert
+- [x] 为旧历史 output 缺少 metadata 的情况保留 best-effort fallback
+- [x] 为无法精确撤回的旧历史 output 返回明确错误或人工恢复提示
+
+Phase 2 实现记录：
+
+- 新增 `lib/resume/ai-edits.ts`，集中提供 `applyAiResumeEdit()`、`revertAiResumeEdit()`、`replayAiResumeEdits()`、`revertAiResumeEdits()` 和 `AiResumeEditError`。
+- `lib/resume/mutations.ts` 的旧入口 `applyToolOutputToResume()` 已改为委托统一 module，保持现有调用方兼容。
+- 默认撤回路径按 inverse tool output 执行；旧 output 缺少 `originalIndex` / section metadata 时走 best-effort，`strictRevert` 可返回明确 `AiResumeEditError`。
+- Phase 3 前，`app/api/chat/truncate/route.ts` 仍未迁移到统一 module，因此 Phase 1 中的 route 级 rollback 复现仍保持红灯。
 
 ### Phase 3: 调整 Chat 调用方
 
-- [ ] `server/ai/chat/tools/registry.ts` 改为调用统一 module apply
-- [ ] `app/api/chat/truncate/route.ts` 改为调用统一 module revert
-- [ ] `server/ai/chat/history.ts` 收口 tool output 提取逻辑，避免 route 自行解释 message parts
-- [ ] 确认 `tool_result` event 和 assistant message parts 中保存足够 rollback metadata
-- [ ] truncate rollback 提交撤回结果时生成新的 revision / snapshot，而不是倒退 `current_revision`
-- [ ] truncate rollback 发现 interleaved edit 且无法精确撤回时，不静默恢复旧 snapshot
-- [ ] 修复前端 truncate 后 `headId` 指向已删除消息的问题
+- [x] `server/ai/chat/tools/registry.ts` 改为调用统一 module apply
+- [x] `app/api/chat/truncate/route.ts` 改为调用统一 module revert
+- [x] `server/ai/chat/history.ts` 收口 tool output 提取逻辑，避免 route 自行解释 message parts
+- [x] 确认 `tool_result` event 和 assistant message parts 中保存足够 rollback metadata
+- [x] truncate rollback 提交撤回结果时生成新的 revision / snapshot，而不是倒退 `current_revision`
+- [x] truncate rollback 发现 interleaved edit 且无法精确撤回时，不静默恢复旧 snapshot
+- [x] 修复前端 truncate 后 `headId` 指向已删除消息的问题
+
+Phase 3 实现记录：
+
+- `server/ai/chat/tools/registry.ts` 直接调用 `applyAiResumeEdit()`；`app/api/chat/truncate/route.ts` 调用 `revertAiResumeEdits()`，并在 rollback 保存成功后才截断消息。
+- `server/ai/chat/history.ts` 新增 `extractAiResumeEditOutputs()`，旧 `extractToolOriginalValues()` 保留为兼容别名。
+- `lib/agent/resume-editor-execution.ts` 为 `delete` 输出 `originalIndex` / `originalSectionOrder`，为 `add` 输出 `createdSection` / `sectionDidNotExistBefore`，并通过 tool result / streamed resume patch 持久化。
+- rollback 启用 semantic conflict 检测；当当前 resume 已不匹配待撤回 tool output 时返回 `409`，且不会调用 `truncateMessages()`。
+- `components/agent/chat/user-message.tsx` 将 truncate 后 `headId` 指向保留消息列表最后一条，空列表时为 `null`。
 
 ### Phase 4: Schema 与类型对齐
 
-- [ ] 制定全局日期模型迁移规则：所有表达起止时间的 resume 字段统一使用 `DateRange`
-- [ ] 盘点并移除 resume domain 中的裸 `start` / `end`、`start_date` / `end_date`、`startDate` / `endDate` 起止时间字段
-- [ ] 明确 agent-facing tool input 可以使用扁平日期字段，但 persisted domain 必须使用 canonical `DateRange`
-- [ ] 在 tool execution 中新增日期归一化层，将 agent 原始日期输入转换为 canonical `DateRange`
-- [ ] 在 rollback metadata 中保存归一化后的 `DateRange`，避免依赖 agent 原始日期字符串
-- [ ] 将 `EducationEntry` 从 `start` / `end` 迁移到 `date: DateRange`
-- [ ] 将 `EmploymentEntry` 从 `start` / `end` 迁移到 `date: DateRange`
-- [ ] 修正 `lib/agent/schema.ts` 中 `ProjectEntrySchema` 的日期字段结构
-- [ ] 修正 `lib/agent/schema.ts` 中 `ResearchEntrySchema` 的日期字段结构
-- [ ] 为历史 `resume_json` 增加兼容迁移或读取归一化：旧 `start` / `end` 映射到 `date`
-- [ ] 更新 education / employment / projects / research 相关表单、模板、缩略图和 parser，使 `isCurrent` 能统一表达当前仍在读 / 在职 / 仍在进行
-- [ ] 检查 publications / awards / certifications / skills schema 与 `types/resume.ts` 是否完全一致
-- [ ] 更新 tool examples，覆盖 personalInfo rewrite、空 section add、projects date
-- [ ] 更新 prompt 中对工具能力的描述，避免鼓励模型生成不支持字段
+- [x] 制定全局日期模型迁移规则：所有表达起止时间的 resume 字段统一使用 `DateRange`
+- [x] 盘点并移除 resume domain 中的裸 `start` / `end`、`start_date` / `end_date`、`startDate` / `endDate` 起止时间字段
+- [x] 明确 agent-facing tool input 可以使用扁平日期字段，但 persisted domain 必须使用 canonical `DateRange`
+- [x] 在 tool execution 中新增日期归一化层，将 agent 原始日期输入转换为 canonical `DateRange`
+- [x] 在 rollback metadata 中保存归一化后的 `DateRange`，避免依赖 agent 原始日期字符串
+- [x] 将 `EducationEntry` 从 `start` / `end` 迁移到 `date: DateRange`
+- [x] 将 `EmploymentEntry` 从 `start` / `end` 迁移到 `date: DateRange`
+- [x] 修正 `lib/agent/schema.ts` 中 `ProjectEntrySchema` 的日期字段结构
+- [x] 修正 `lib/agent/schema.ts` 中 `ResearchEntrySchema` 的日期字段结构
+- [x] 为历史 `resume_json` 增加兼容迁移或读取归一化：旧 `start` / `end` 映射到 `date`
+- [x] 更新 education / employment / projects / research 相关表单、模板、缩略图和 parser，使 `isCurrent` 能统一表达当前仍在读 / 在职 / 仍在进行
+- [x] 检查 publications / awards / certifications / skills schema 与 `types/resume.ts` 是否完全一致
+- [x] 更新 tool examples，覆盖 personalInfo rewrite、空 section add、projects date
+- [x] 更新 prompt 中对工具能力的描述，避免鼓励模型生成不支持字段
+
+Phase 4 实现记录：
+
+- 新增 `lib/resume/date-ranges.ts`，集中处理 legacy `start` / `end` 到 canonical `date: DateRange` 的读取归一化、当前状态解析和渲染格式化。
+- `types/resume.ts` 已将 education / employment / projects / research 起止时间统一为完整 `DateRange`；`ProjectEntry.date` 也改为必填 canonical 结构。
+- 表单、模板、缩略图、store、server resume 读取、commit 和 parser 均接入日期归一化；轻量 job application 查询缺少 `resume_json` 时保持原返回结构。
+- `lib/agent/schema.ts` 的 date-bearing entry schema 改为 canonical `date`，并通过 `.strict()` 避免 union schema 把 project / research 误解析为 education。
+- `lib/agent/resume-editor-execution.ts` 接受 agent-facing 的 `start` / `end`、`date.start` / `date.end`、`isCurrent` 等扁平输入，但输出和 rollback metadata 均保存 canonical `DateRange`。
+- prompt 和 tool examples 已补充日期输入说明，避免模型生成 persisted domain 不支持的裸日期字段。
+- 验证：`pnpm format:check` 通过；生产代码日期残留扫描无 `entry.start` / `entry.end` 等直接消费；改动测试集 28 个文件 / 136 个用例通过。
+- `pnpm exec tsc --noEmit` 已清除 Phase 4 DateRange 迁移相关错误；仍剩既有无关测试类型问题：`components/agent/chat/resume-editor-tool.test.tsx` 的 AI SDK tool part mock shape、`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 5: Resume 写入并发保护
 
-- [ ] 设计串行 operation rebase 提交接口：输入 operation / base revision，输出 authoritative resume / current revision
-- [ ] 明确短期写入分类：AI tool / rollback inverse 走 operation rebase；手动编辑继续完整 `resume_json` replacement
-- [ ] 不依赖 Postgres RPC；在 TypeScript server module 中实现读取最新 resume、条件更新 `current_revision`、snapshot insert 的提交循环
-- [ ] 当条件更新因 revision 变化失败时，重读最新 resume 并尝试 rebase 可重放 operation
-- [ ] 为 update 成功但 snapshot insert 失败的情况设计补偿或错误处理，避免 revision / snapshot 长期不一致
-- [ ] AI tool 后到时基于最新 resume 重新 apply operation，而不是直接写入旧 base 上生成的完整 JSON
-- [ ] rollback inverse operation 后到时基于最新 resume 重新 apply inverse，并保留目标之后的其他有效修改
-- [ ] 手动编辑的完整 `resume_json` replacement 遇到 base revision 过期时返回 `stale-json-conflict`
-- [ ] operation 目标被后续修改影响时返回 `semantic-conflict`
-- [ ] 为 `operation-rebase-success`、`stale-json-conflict`、`semantic-conflict` 补单元测试
-- [ ] 手动编辑保存遇到 `stale-json-conflict` 时 refetch authoritative resume 或提示用户重试
-- [ ] 记录后续方向：手动编辑若要支持自动 rebase，需要另开计划将表单保存从完整 JSON replacement 改为 operation / patch intent
-- [ ] truncate rollback 遇到 semantic conflict 时避免继续截断消息后留下 resume 未恢复状态
+- [x] 设计串行 operation rebase 提交接口：输入 operation / base revision，输出 authoritative resume / current revision
+- [x] 明确短期写入分类：AI tool / rollback inverse 走 operation rebase；手动编辑继续完整 `resume_json` replacement
+- [x] 不依赖 Postgres RPC；在 TypeScript server module 中实现读取最新 resume、条件更新 `current_revision`、snapshot insert 的提交循环
+- [x] 当条件更新因 revision 变化失败时，重读最新 resume 并尝试 rebase 可重放 operation
+- [x] 为 update 成功但 snapshot insert 失败的情况设计补偿或错误处理，避免 revision / snapshot 长期不一致
+- [x] AI tool 后到时基于最新 resume 重新 apply operation，而不是直接写入旧 base 上生成的完整 JSON
+- [x] rollback inverse operation 后到时基于最新 resume 重新 apply inverse，并保留目标之后的其他有效修改
+- [x] 手动编辑的完整 `resume_json` replacement 遇到 base revision 过期时返回 `stale-json-conflict`
+- [x] operation 目标被后续修改影响时返回 `semantic-conflict`
+- [x] 为 `operation-rebase-success`、`stale-json-conflict`、`semantic-conflict` 补单元测试
+- [x] 手动编辑保存遇到 `stale-json-conflict` 时 refetch authoritative resume 或提示用户重试
+- [x] 记录后续方向：手动编辑若要支持自动 rebase，需要另开计划将表单保存从完整 JSON replacement 改为 operation / patch intent
+- [x] truncate rollback 遇到 semantic conflict 时避免继续截断消息后留下 resume 未恢复状态
+
+Phase 5 实现记录：
+
+- `server/resume/commit.ts` 新增 `commitResumeOperation()` 与 `ResumeCommitError`，在 TypeScript server module 中完成 read latest、operation replay、`current_revision` 条件更新、snapshot insert 和最多 3 次重试。
+- `commitResumeChange()` 保留给手动编辑的完整 JSON replacement；新增 `baseRevision` 检查，过期时返回 `stale-json-conflict`，避免手动保存覆盖更新后的 authoritative resume。
+- 条件更新成功但 snapshot insert 失败时，会 best-effort 将 `resumes.resume_json` / `current_revision` 回滚到上一 revision，并抛出 `snapshot-insert-failed`，避免静默留下长期 revision / snapshot 不一致。
+- AI tool 写入改为通过 `commitResumeOperation()` 执行；每次重试都会在最新 authoritative resume 上重新执行 tool intent 并生成 output，因此 rollback metadata 的 `originalValue` 来自实际写入前的最新值。
+- truncate rollback 改为通过 `commitResumeOperation()` 在最新 resume 上执行 inverse operation；semantic conflict 会返回 `409`，且不会继续 `truncateMessages()`。
+- 手动编辑保存仍走完整 replacement，但 `useApplicationResume()` 会传当前 `application.resume.current_revision` 作为 `baseRevision`；当前 UI 对 stale save 仍显示保存失败 toast，后续若要自动 rebase 手动表单，需要另开计划把表单保存改为 operation / patch intent。
+- 验证：`pnpm format:check` 通过；改动回归集 28 个测试文件 / 140 个用例通过，覆盖 operation rebase success、stale-json-conflict、semantic-conflict、AI output metadata rebase、rollback conflict 不截断消息。
+- `pnpm exec tsc --noEmit` 没有新增 Phase 5 类型错误；仍剩既有无关测试类型问题：`components/agent/chat/resume-editor-tool.test.tsx` 的 AI SDK tool part mock shape、`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 6: Canonical Session 唯一性
 
@@ -272,11 +317,11 @@ Resume domain / persisted `resume_json` 应统一使用 canonical `DateRange`。
 - [ ] add 到已有 section round-trip
 - [ ] add 到不存在 section round-trip
 - [ ] reorderEntries / reorderSections round-trip
-- [ ] education / employment / projects / research 均使用 `DateRange` 作为起止时间模型
-- [ ] agent-facing 扁平日期输入能 normalize 成 canonical `DateRange`
-- [ ] projects / research date schema parse 与模板消费一致
-- [ ] `DateRange.isCurrent` 在 education / employment / projects / research 中能正确解析、编辑、渲染为 Present
-- [ ] resume 写入覆盖 `operation-rebase-success`、`stale-json-conflict`、`semantic-conflict`
+- [x] education / employment / projects / research 均使用 `DateRange` 作为起止时间模型
+- [x] agent-facing 扁平日期输入能 normalize 成 canonical `DateRange`
+- [x] projects / research date schema parse 与模板消费一致
+- [x] `DateRange.isCurrent` 在 education / employment / projects / research 中能正确解析、编辑、渲染为 Present
+- [x] resume 写入覆盖 `operation-rebase-success`、`stale-json-conflict`、`semantic-conflict`
 - [ ] canonical session 并发创建
 
 ### 组件测试

@@ -36,8 +36,7 @@ const originalEntry: EmploymentEntry = {
   entryId: "emp-1",
   company: "Old Company",
   jobTitle: "Engineer",
-  start: "2021-09",
-  end: "2022-02",
+  date: { start: "2021-09", end: "2022-02", isCurrent: false },
   content: "Original content"
 }
 

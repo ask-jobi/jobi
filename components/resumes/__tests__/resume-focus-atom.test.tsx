@@ -46,16 +46,14 @@ describe("focusSectionAtom", () => {
                 entryId: "edu-1",
                 school: "School 1",
                 degree: "Degree 1",
-                start: "2020-01",
-                end: "2021-01",
+                date: { start: "2020-01", end: "2021-01", isCurrent: false },
                 content: ""
               },
               {
                 entryId: "edu-2",
                 school: "School 2",
                 degree: "Degree 2",
-                start: "2021-01",
-                end: "2022-01",
+                date: { start: "2021-01", end: "2022-01", isCurrent: false },
                 content: ""
               }
             ]

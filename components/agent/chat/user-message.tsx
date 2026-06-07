@@ -69,11 +69,9 @@ export function UserActionBar() {
       )
 
       if (messageIndex !== -1) {
-        currentState.messages = messages.slice(0, messageIndex)
-        currentState.headId =
-          messageIndex === 0
-            ? null
-            : (messages[messageIndex]?.message?.id ?? null)
+        const retainedMessages = messages.slice(0, messageIndex)
+        currentState.messages = retainedMessages
+        currentState.headId = retainedMessages.at(-1)?.message?.id ?? null
         aui.thread().import(currentState)
 
         aui.thread().composer().setText(inputText)

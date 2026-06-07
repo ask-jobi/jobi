@@ -448,8 +448,7 @@ describe("saveApplicationResumeChange", () => {
             school: "Original School",
             degree: "BSc",
             content: "CS",
-            start: "2023",
-            end: "2023"
+            date: { start: "2023", end: "2023", isCurrent: false }
           }
         ]
       }
@@ -466,8 +465,11 @@ describe("saveApplicationResumeChange", () => {
     })
     const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
     const select = vi.fn().mockReturnValue({ eq: selectEq })
-    const updateEq = vi.fn().mockResolvedValue({ error: null })
-    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const updateRevisionEq = vi
+      .fn()
+      .mockResolvedValue({ error: null, count: 1 })
+    const updateIdEq = vi.fn().mockReturnValue({ eq: updateRevisionEq })
+    const update = vi.fn().mockReturnValue({ eq: updateIdEq })
     const insert = vi.fn().mockResolvedValue({ error: null })
     const mockFrom = vi.fn((table: string) => {
       if (table === "resumes") {
@@ -500,11 +502,16 @@ describe("saveApplicationResumeChange", () => {
       resume: nextResume,
       currentRevision: 2
     })
-    expect(update).toHaveBeenCalledWith({
-      resume_json: nextResume,
-      current_revision: 2,
-      evaluation_report_refresh_flag: true
-    })
+    expect(update).toHaveBeenCalledWith(
+      {
+        resume_json: nextResume,
+        current_revision: 2,
+        evaluation_report_refresh_flag: true
+      },
+      { count: "exact" }
+    )
+    expect(updateIdEq).toHaveBeenCalledWith("id", "resume-123")
+    expect(updateRevisionEq).toHaveBeenCalledWith("current_revision", 1)
     expect(insert).toHaveBeenCalledWith({
       resume_id: "resume-123",
       revision: 2,
@@ -541,8 +548,7 @@ describe("saveApplicationResumeChange", () => {
                 school: "Original School",
                 degree: "BSc",
                 content: "CS",
-                start: "2023",
-                end: "2023"
+                date: { start: "2023", end: "2023", isCurrent: false }
               }
             ]
           }
@@ -553,10 +559,11 @@ describe("saveApplicationResumeChange", () => {
     })
     const selectEq = vi.fn().mockReturnValue({ single: selectSingle })
     const select = vi.fn().mockReturnValue({ eq: selectEq })
-    const updateEq = vi.fn().mockResolvedValue({
+    const updateRevisionEq = vi.fn().mockResolvedValue({
       error: { message: "Save failed" }
     })
-    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const updateIdEq = vi.fn().mockReturnValue({ eq: updateRevisionEq })
+    const update = vi.fn().mockReturnValue({ eq: updateIdEq })
     const mockFrom = vi.fn((table: string) => {
       if (table === "resumes") {
         return { select, update }

@@ -45,17 +45,15 @@ export interface EducationEntry {
   content: string
   school: string
   degree: string
-  start: string
-  end: string
+  date: DateRange
 }
-// TODO: 改为用 DateRange 类型
+
 export interface EmploymentEntry {
   entryId: string
   content: string
   company: string
   jobTitle: string
-  start: string
-  end: string
+  date: DateRange
 }
 
 export interface SkillEntry {
@@ -65,9 +63,9 @@ export interface SkillEntry {
 }
 
 export interface DateRange {
-  start?: string
-  end?: string
-  isCurrent?: boolean
+  start: string
+  end: string
+  isCurrent: boolean
 }
 
 export interface ProjectEntry {
@@ -75,7 +73,7 @@ export interface ProjectEntry {
   title: string
   content: string
   role?: string
-  date?: DateRange
+  date: DateRange
 }
 
 export interface ResearchEntry {

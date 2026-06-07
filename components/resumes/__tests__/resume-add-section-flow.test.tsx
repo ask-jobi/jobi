@@ -8,6 +8,7 @@ import { ResumeEditor } from "../resume-editor"
 import { ResumeSectionEditModal } from "../resume-section-edit-modal"
 import { applicationAtom } from "@/lib/store/resume"
 import type { ResumeData } from "@/types/resume"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 const saveApplicationResumeChangeMock = vi.fn()
 
@@ -98,8 +99,7 @@ describe("Resume add section flow", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: ""
           }
         ]
@@ -159,18 +159,19 @@ describe("Resume add section flow", () => {
             entryId: "new-employment-entry",
             company: "New Company",
             jobTitle: "",
-            start: "",
-            end: "",
+            date: { start: "", end: "", isCurrent: false },
             content: ""
           }
         ]
       }
     }
+    const normalizedExpectedResume = normalizeResumeDateRanges(expectedResume)
 
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        expectedResume
+        normalizedExpectedResume,
+        { baseRevision: 1 }
       )
     })
 
@@ -179,14 +180,14 @@ describe("Resume add section flow", () => {
       store.get(applicationAtom)?.resume.resume_json.employment
     ).toBeUndefined()
 
-    resolveSave({ resume: expectedResume, currentRevision: 2 })
+    resolveSave({ resume: normalizedExpectedResume, currentRevision: 2 })
 
     await waitFor(() => {
       expect(screen.getByTestId("employment-entry-count")).toHaveTextContent(
         "1"
       )
       expect(store.get(applicationAtom)?.resume.resume_json).toEqual(
-        expectedResume
+        normalizedExpectedResume
       )
     })
   })

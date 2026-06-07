@@ -318,7 +318,7 @@ zhangsan@example.com
       const result = await parseResume("No content")
 
       expect(result).toHaveLength(2)
-      expect(result[0].education.entries).toEqual([])
+      expect(result[0]!.education!.entries).toEqual([])
     })
   })
 

@@ -3,69 +3,105 @@ import { nanoid } from "nanoid"
 
 // ── Entry Schemas ────────────────────────────────────────────────────────
 
-export const EducationEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  content: z.string().default(""),
-  school: z.string().default(""),
-  degree: z.string().default(""),
-  start: z.string().default(""),
-  end: z.string().default("")
-})
+export const DateRangeSchema = z
+  .object({
+    start: z.string().default(""),
+    end: z.string().default(""),
+    isCurrent: z.boolean().default(false)
+  })
+  .strict()
 
-export const EmploymentEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  content: z.string().default(""),
-  company: z.string().default(""),
-  jobTitle: z.string().default(""),
-  start: z.string().default(""),
-  end: z.string().default("")
-})
+export const EducationEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    content: z.string().default(""),
+    school: z.string().default(""),
+    degree: z.string().default(""),
+    date: DateRangeSchema.default(() => ({
+      start: "",
+      end: "",
+      isCurrent: false
+    }))
+  })
+  .strict()
 
-export const SkillEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  group: z.string().default(""),
-  content: z.string().default("")
-})
+export const EmploymentEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    content: z.string().default(""),
+    company: z.string().default(""),
+    jobTitle: z.string().default(""),
+    date: DateRangeSchema.default(() => ({
+      start: "",
+      end: "",
+      isCurrent: false
+    }))
+  })
+  .strict()
 
-export const ProjectEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  title: z.string().default(""),
-  content: z.string().default(""),
-  role: z.string().optional(),
-  start: z.string().optional(),
-  end: z.string().optional()
-})
+export const SkillEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    group: z.string().default(""),
+    content: z.string().default("")
+  })
+  .strict()
 
-export const ResearchEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  title: z.string().default(""),
-  content: z.string().default(""),
-  role: z.string().optional(),
-  start: z.string().default(""),
-  end: z.string().default("")
-})
+export const ProjectEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    title: z.string().default(""),
+    content: z.string().default(""),
+    role: z.string().optional(),
+    date: DateRangeSchema.default(() => ({
+      start: "",
+      end: "",
+      isCurrent: false
+    }))
+  })
+  .strict()
 
-export const PublicationEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  title: z.string().default(""),
-  date: z.string().default(""),
-  description: z.string().optional()
-})
+export const ResearchEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    title: z.string().default(""),
+    content: z.string().default(""),
+    role: z.string().optional(),
+    date: DateRangeSchema.default(() => ({
+      start: "",
+      end: "",
+      isCurrent: false
+    }))
+  })
+  .strict()
 
-export const AwardEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  title: z.string().default(""),
-  issuer: z.string().optional(),
-  date: z.string().optional(),
-  description: z.string().optional()
-})
+export const PublicationEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    title: z.string().default(""),
+    date: z.string().default(""),
+    description: z.string().optional()
+  })
+  .strict()
 
-export const CertificationEntrySchema = z.object({
-  entryId: z.string().default(() => nanoid()),
-  name: z.string().default(""),
-  issuer: z.string().optional(),
-  date: z.string().optional()
-})
+export const AwardEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    title: z.string().default(""),
+    issuer: z.string().optional(),
+    date: z.string().optional(),
+    description: z.string().optional()
+  })
+  .strict()
+
+export const CertificationEntrySchema = z
+  .object({
+    entryId: z.string().default(() => nanoid()),
+    name: z.string().default(""),
+    issuer: z.string().optional(),
+    date: z.string().optional()
+  })
+  .strict()
 
 export const AnyEntrySchema = z.union([
   EducationEntrySchema,
@@ -195,19 +231,23 @@ export const resumeEditorModifyOutputSchema = z.discriminatedUnion(
       entity: SectionKeyEnum,
       id: z.string().describe("The entry ID to be modified"),
       field: z.string().describe("The field name to be modified"),
-      value: z.string().describe("The new value for the field"),
+      value: z.any().describe("The new value for the field"),
       originalValue: z.any()
     }),
     z.object({
       operation: z.literal("delete"),
       entity: SortableSectionKeyEnum,
       id: z.string().describe("The entry ID to be deleted"),
-      originalValue: AnyEntrySchema
+      originalValue: AnyEntrySchema,
+      originalIndex: z.number().int().nonnegative().optional(),
+      originalSectionOrder: z.array(SortableSectionKeyEnum).optional()
     }),
     z.object({
       operation: z.literal("add"),
       entity: SortableSectionKeyEnum,
-      newEntry: AnyEntrySchema
+      newEntry: AnyEntrySchema,
+      createdSection: z.boolean().optional(),
+      sectionDidNotExistBefore: z.boolean().optional()
     })
   ]
 )
@@ -263,6 +303,24 @@ export const resumeEditorModifyInputExamples = [
   },
   {
     input: {
+      operation: "rewrite",
+      entity: "personalInfo",
+      id: "personal-info-id",
+      field: "firstName",
+      value: "Ada"
+    }
+  },
+  {
+    input: {
+      operation: "rewrite",
+      entity: "projects",
+      id: "entry-id",
+      field: "end",
+      value: "Present"
+    }
+  },
+  {
+    input: {
       operation: "delete",
       entity: "projects",
       id: "entry-id"
@@ -271,7 +329,7 @@ export const resumeEditorModifyInputExamples = [
   {
     input: {
       operation: "add",
-      entity: "skills"
+      entity: "projects"
     }
   }
 ] satisfies Array<{ input: z.infer<typeof resumeEditorModifyInputSchema> }>

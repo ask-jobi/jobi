@@ -6,6 +6,7 @@ import { Provider, createStore, useAtomValue } from "jotai"
 import { describe, expect, it, vi } from "vitest"
 import { applicationAtom, useApplicationResume } from "@/lib/store/resume"
 import type { JobApplication, ResumeData } from "@/types/resume"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 const saveApplicationResumeChangeMock = vi.fn()
 
@@ -31,8 +32,7 @@ function createResume(school: string): ResumeData {
           school,
           degree: "BSc",
           content: "CS",
-          start: "2024",
-          end: "2024"
+          date: { start: "2024", end: "2024", isCurrent: false }
         }
       ]
     },
@@ -114,7 +114,8 @@ describe("useApplicationResume", () => {
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        submittedResume
+        normalizeResumeDateRanges(submittedResume),
+        { baseRevision: 3 }
       )
       expect(screen.getByTestId("school")).toHaveTextContent(
         "Authoritative School"

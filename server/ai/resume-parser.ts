@@ -7,9 +7,32 @@ import { Locale } from "@/lib/i18n/config"
 import { model } from "@/server/ai/model"
 import { nanoid } from "nanoid"
 import { parseTokenUsage, type TokenUsage } from "@/lib/agent/token-usage"
+import { normalizeDateRange } from "@/lib/resume/date-ranges"
 
 const EMPTY_RESUME_TEXT_ERROR =
   "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
+
+const DateRangeSchema = z
+  .object({
+    start: z.string().describe("Start date in YYYY-MM format").prefault(""),
+    end: z
+      .string()
+      .describe(
+        "End date in YYYY-MM format; use current/present/now wording only when ongoing"
+      )
+      .prefault(""),
+    isCurrent: z
+      .boolean()
+      .describe("Whether this period is ongoing")
+      .prefault(false)
+  })
+  .transform((date) => normalizeDateRange(date))
+
+const ParsedDateRangeEntryFields = {
+  start: z.string().optional(),
+  end: z.string().optional(),
+  date: DateRangeSchema.optional()
+}
 
 const resumeSchema = z.object({
   // required
@@ -23,25 +46,21 @@ const resumeSchema = z.object({
   education: z.object({
     entries: z
       .array(
-        z.object({
-          content: z
-            .string()
-            .describe(
-              "Description of the education experience, return markdown formatted"
-            ),
-          school: z.string().describe("Name of the school"),
-          degree: z.string().describe("Degree obtained"),
-          start: z
-            .string()
-            .describe("Start date in YYYY-MM format")
-            .prefault(""),
-          end: z
-            .string()
-            .describe(
-              "End date in YYYY-MM format, if contains current/present/now, format as 'present'"
-            )
-            .prefault("")
-        })
+        z
+          .object({
+            content: z
+              .string()
+              .describe(
+                "Description of the education experience, return markdown formatted"
+              ),
+            school: z.string().describe("Name of the school"),
+            degree: z.string().describe("Degree obtained"),
+            ...ParsedDateRangeEntryFields
+          })
+          .transform(({ start, end, date, ...entry }) => ({
+            ...entry,
+            date: normalizeDateRange(date, { start, end })
+          }))
       )
       .default(() => [])
   }),
@@ -62,25 +81,21 @@ const resumeSchema = z.object({
     .object({
       entries: z
         .array(
-          z.object({
-            content: z
-              .string()
-              .describe(
-                "Description of the work experience, return markdown formatted"
-              ),
-            company: z.string().describe("Name of the company"),
-            jobTitle: z.string().describe("Job title"),
-            start: z
-              .string()
-              .describe("Start date in YYYY-MM format")
-              .prefault(""),
-            end: z
-              .string()
-              .describe(
-                "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
-              )
-              .prefault("")
-          })
+          z
+            .object({
+              content: z
+                .string()
+                .describe(
+                  "Description of the work experience, return markdown formatted"
+                ),
+              company: z.string().describe("Name of the company"),
+              jobTitle: z.string().describe("Job title"),
+              ...ParsedDateRangeEntryFields
+            })
+            .transform(({ start, end, date, ...entry }) => ({
+              ...entry,
+              date: normalizeDateRange(date, { start, end })
+            }))
         )
         .default(() => [])
     })
@@ -101,22 +116,7 @@ const resumeSchema = z.object({
               .string()
               .describe("Role of the research experience")
               .optional(),
-            date: z.object({
-              start: z
-                .string()
-                .describe("Start date in YYYY-MM format")
-                .prefault(""),
-              end: z
-                .string()
-                .describe(
-                  "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
-                )
-                .prefault(""),
-              isCurrent: z
-                .boolean()
-                .describe("Whether the research experience is ongoing")
-                .prefault(false)
-            })
+            date: DateRangeSchema
           })
         )
         .default(() => [])
@@ -138,24 +138,7 @@ const resumeSchema = z.object({
               .string()
               .describe("Role of this project experience")
               .optional(),
-            date: z
-              .object({
-                start: z
-                  .string()
-                  .describe("Start date in YYYY-MM format")
-                  .prefault(""),
-                end: z
-                  .string()
-                  .describe(
-                    "End date in YYYY-MM format, if contains current/present/now this kind of ongoing word, format as 'present'"
-                  )
-                  .prefault(""),
-                isCurrent: z
-                  .boolean()
-                  .describe("Whether the project experience is ongoing")
-                  .prefault(false)
-              })
-              .optional()
+            date: DateRangeSchema.optional()
           })
         )
         .default(() => [])

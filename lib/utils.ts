@@ -6,6 +6,7 @@ import {
   ResumeData,
   SkillEntry
 } from "@/types/resume"
+import { formatDateRange } from "@/lib/resume/date-ranges"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -33,7 +34,7 @@ ${
   resumeData.education?.entries
     ?.map(
       (edu: EducationEntry, index: number) =>
-        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${edu.start} ~ ${edu.end}]`
+        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${formatDateRange(edu.date) ?? ""}]`
     )
     .join("\n\n") || "None"
 }
@@ -43,7 +44,7 @@ ${
   resumeData.employment?.entries
     ?.map(
       (emp: EmploymentEntry, index: number) =>
-        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content}`
+        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content} [${formatDateRange(emp.date) ?? ""}]`
     )
     .join("\n\n") || "None"
 }

@@ -85,24 +85,21 @@ function createResume(): ResumeData {
           entryId: "edu-1",
           school: "School 1",
           degree: "Degree 1",
-          start: "2020-01",
-          end: "2021-01",
+          date: { start: "2020-01", end: "2021-01", isCurrent: false },
           content: "One"
         },
         {
           entryId: "edu-2",
           school: "School 2",
           degree: "Degree 2",
-          start: "2021-01",
-          end: "2022-01",
+          date: { start: "2021-01", end: "2022-01", isCurrent: false },
           content: "Two"
         },
         {
           entryId: "edu-3",
           school: "School 3",
           degree: "Degree 3",
-          start: "2022-01",
-          end: "2023-01",
+          date: { start: "2022-01", end: "2023-01", isCurrent: false },
           content: "Three"
         }
       ]
@@ -113,8 +110,7 @@ function createResume(): ResumeData {
           entryId: "job-1",
           company: "Acme",
           jobTitle: "Engineer",
-          start: "2023-01",
-          end: "2024-01",
+          date: { start: "2023-01", end: "2024-01", isCurrent: false },
           content: "Built stuff"
         }
       ]
@@ -189,16 +185,20 @@ describe("useEntryEditWorkflow reorderAndPersistEntry", () => {
       ).toEqual(["edu-2", "edu-3", "edu-1"])
     })
 
-    expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", {
-      ...resume,
-      education: {
-        entries: [
-          resume.education?.entries[1],
-          resume.education?.entries[2],
-          resume.education?.entries[0]
-        ]
-      }
-    })
+    expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
+      "resume-1",
+      {
+        ...resume,
+        education: {
+          entries: [
+            resume.education?.entries[1],
+            resume.education?.entries[2],
+            resume.education?.entries[0]
+          ]
+        }
+      },
+      { baseRevision: 1 }
+    )
     expect(screen.getByTestId("reorder-pending")).toHaveTextContent("true")
 
     await act(async () => {
@@ -270,10 +270,14 @@ describe("useEntryEditWorkflow reorderAndPersistEntry", () => {
       ).toEqual(["education", "skills", "employment"])
     })
 
-    expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", {
-      ...resume,
-      sectionOrder: ["education", "skills", "employment"]
-    })
+    expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
+      "resume-1",
+      {
+        ...resume,
+        sectionOrder: ["education", "skills", "employment"]
+      },
+      { baseRevision: 1 }
+    )
     expect(screen.getByTestId("section-reorder-pending")).toHaveTextContent(
       "true"
     )

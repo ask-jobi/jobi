@@ -16,12 +16,20 @@ import {
   executeResumeEditorModifyTool,
   executeResumeEditorReorderTool
 } from "@/lib/agent/resume-editor-execution"
-import { applyToolOutputToResume } from "@/lib/resume/mutations"
+import { applyAiResumeEdit } from "@/lib/resume/ai-edits"
 import { logChatEvent } from "@/server/chat-events"
-import { commitResumeChange } from "@/server/resume/commit"
-import type { ChatUIMessage, ResumeEditorModifyInput } from "@/types/chat"
+import { commitResumeOperation } from "@/server/resume/commit"
+import type {
+  ChatUIMessage,
+  ResumeEditorModifyInput,
+  ResumeEditorReorderInput
+} from "@/types/chat"
 import type { Database } from "@/types/supabase"
 import type { ResumeData } from "@/types/resume"
+
+type ResumeEditorToolOutput =
+  | Awaited<ReturnType<typeof executeResumeEditorModifyTool>>
+  | Awaited<ReturnType<typeof executeResumeEditorReorderTool>>
 
 export function createResumeChatServerTools({
   supabase,
@@ -52,25 +60,18 @@ export function createResumeChatServerTools({
     return run
   }
 
-  const commitToolOutput = async ({
+  const commitToolOperation = async ({
     toolName,
     toolCallId,
     input,
-    output
+    createOutput
   }: {
     toolName: "resumeEditorModify" | "resumeEditorReorder"
     toolCallId: string
     input: unknown
-    output: Awaited<
-      ReturnType<
-        | typeof executeResumeEditorModifyTool
-        | typeof executeResumeEditorReorderTool
-      >
-    >
+    createOutput: (resume: ResumeData) => Promise<ResumeEditorToolOutput>
   }) => {
-    const baseResume = currentResume
-    const baseVersion = currentRevision
-    const nextResume = applyToolOutputToResume(baseResume, output)
+    const observedBaseVersion = currentRevision
 
     const toolCallEventId = await logChatEvent({
       sessionId,
@@ -80,17 +81,26 @@ export function createResumeChatServerTools({
         toolName,
         toolCallId,
         input,
-        baseVersion
+        baseVersion: observedBaseVersion
       }
     })
 
-    const authoritativeState = await commitResumeChange({
+    const authoritativeState = await commitResumeOperation({
       supabase,
       actorId: userId,
       resumeId,
-      nextResume,
-      eventId: toolCallEventId
+      eventId: toolCallEventId,
+      operation: async ({ resume }) => {
+        const output = await createOutput(resume)
+
+        return {
+          nextResume: applyAiResumeEdit(resume, output),
+          metadata: output
+        }
+      }
     })
+    const output = authoritativeState.metadata
+    const baseVersion = authoritativeState.baseRevision
 
     currentResume = authoritativeState.resume
     currentRevision = authoritativeState.currentRevision
@@ -177,16 +187,15 @@ export function createResumeChatServerTools({
             toolCallId,
             input,
             task: async () => {
-              const output = await executeResumeEditorModifyTool(
-                input as ResumeEditorModifyInput,
-                currentResume
-              )
-
-              return commitToolOutput({
+              return commitToolOperation({
                 toolName: "resumeEditorModify",
                 toolCallId,
                 input,
-                output
+                createOutput: (resume) =>
+                  executeResumeEditorModifyTool(
+                    input as ResumeEditorModifyInput,
+                    resume
+                  )
               })
             }
           })
@@ -205,16 +214,15 @@ export function createResumeChatServerTools({
             toolCallId,
             input,
             task: async () => {
-              const output = await executeResumeEditorReorderTool(
-                input,
-                currentResume
-              )
-
-              return commitToolOutput({
+              return commitToolOperation({
                 toolName: "resumeEditorReorder",
                 toolCallId,
                 input,
-                output
+                createOutput: (resume) =>
+                  executeResumeEditorReorderTool(
+                    input as ResumeEditorReorderInput,
+                    resume
+                  )
               })
             }
           })

@@ -12,8 +12,7 @@ describe("getResumeThumbnailSections", () => {
           entryId: "edu-1",
           school: "ZJU",
           degree: "BS CS",
-          start: "2018",
-          end: "2022",
+          date: { start: "2018", end: "2022", isCurrent: false },
           content: "Computer Science"
         }
       ]
@@ -24,7 +23,7 @@ describe("getResumeThumbnailSections", () => {
           entryId: "project-1",
           title: "Jobi",
           role: "Founder",
-          date: { start: "2024-01", end: "2025-01" },
+          date: { start: "2024-01", end: "2025-01", isCurrent: false },
           content: "Built an AI resume workflow."
         }
       ]

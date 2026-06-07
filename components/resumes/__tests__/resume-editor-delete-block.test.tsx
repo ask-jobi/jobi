@@ -132,10 +132,7 @@ describe("ResumeEditor delete entry", () => {
             entryId: "project-1",
             title: "Project 1",
             role: "Lead",
-            date: {
-              start: "2020-01",
-              end: "2021-01"
-            },
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "Built stuff"
           }
         ]
@@ -180,15 +177,17 @@ describe("ResumeEditor delete entry", () => {
     fireEvent.click(deleteButton)
 
     const expectedResume: ResumeData = {
-      ...originalResume,
       sectionOrder: ["education", "skills"],
-      projects: undefined
+      personalInfo: originalResume.personalInfo,
+      education: originalResume.education,
+      skills: originalResume.skills
     }
 
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        expectedResume
+        expectedResume,
+        { baseRevision: 1 }
       )
     })
 
@@ -239,8 +238,7 @@ describe("ResumeEditor delete entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            start: "2020-01",
-            end: "2021-01",
+            date: { start: "2020-01", end: "2021-01", isCurrent: false },
             content: "A"
           }
         ]
@@ -280,15 +278,16 @@ describe("ResumeEditor delete entry", () => {
     fireEvent.click(deleteButton)
 
     const expectedResume: ResumeData = {
-      ...originalResume,
-      education: undefined,
-      sectionOrder: ["skills"]
+      sectionOrder: ["skills"],
+      personalInfo: originalResume.personalInfo,
+      skills: originalResume.skills
     }
 
     await waitFor(() => {
       expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
         "resume-1",
-        expectedResume
+        expectedResume,
+        { baseRevision: 1 }
       )
     })
 
