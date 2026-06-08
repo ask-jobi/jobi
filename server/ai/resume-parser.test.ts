@@ -214,7 +214,8 @@ zhangsan@example.com
               title: "AI Research",
               content: "Published paper on ML",
               role: "Researcher",
-              date: { start: "2018-01", end: "2019-06", isCurrent: false }
+              start: "2018-01",
+              end: "2019-06"
             }
           ]
         },
@@ -226,7 +227,8 @@ zhangsan@example.com
               title: "E-commerce Platform",
               content: "Built full-stack application",
               role: "Lead Developer",
-              date: { start: "2020-01", end: "2020-12", isCurrent: false }
+              start: "2020-01",
+              end: "2020-12"
             }
           ]
         },

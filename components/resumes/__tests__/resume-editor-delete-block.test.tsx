@@ -132,7 +132,8 @@ describe("ResumeEditor delete entry", () => {
             entryId: "project-1",
             title: "Project 1",
             role: "Lead",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Built stuff"
           }
         ]
@@ -238,7 +239,8 @@ describe("ResumeEditor delete entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "A"
           }
         ]

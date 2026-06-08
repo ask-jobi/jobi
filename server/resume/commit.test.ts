@@ -40,7 +40,8 @@ describe("commitResumeChange", () => {
             school: "Updated School",
             degree: "BSc",
             content: "CS",
-            date: { start: "2024", end: "2024", isCurrent: false }
+            start: "2024",
+            end: "2024"
           }
         ]
       }
@@ -211,7 +212,8 @@ describe("commitResumeOperation", () => {
             school: "Rebased School",
             degree: "BSc",
             content: "CS",
-            date: { start: "2024", end: "2024", isCurrent: false }
+            start: "2024",
+            end: "2024"
           }
         ]
       }

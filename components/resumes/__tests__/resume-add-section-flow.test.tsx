@@ -99,7 +99,8 @@ describe("Resume add section flow", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: ""
           }
         ]
@@ -159,7 +160,8 @@ describe("Resume add section flow", () => {
             entryId: "new-employment-entry",
             company: "New Company",
             jobTitle: "",
-            date: { start: "", end: "", isCurrent: false },
+            start: "",
+            end: "",
             content: ""
           }
         ]

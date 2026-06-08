@@ -38,7 +38,8 @@ const persistedResume: ResumeData = {
         entryId: "edu-1",
         school: "Draft School",
         degree: "Draft Degree",
-        date: { start: "2020-01", end: "2021-01", isCurrent: false },
+        start: "2020-01",
+        end: "2021-01",
         content: ""
       }
     ]

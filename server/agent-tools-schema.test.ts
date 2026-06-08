@@ -53,11 +53,8 @@ describe("resume chat tool schemas", () => {
         title: "Compiler Notes",
         role: "Maintainer",
         content: "Built a tiny compiler.",
-        date: {
-          start: "2024-01",
-          end: "2024-06",
-          isCurrent: false
-        }
+        start: "2024-01",
+        end: "2024-06"
       }
     })
 
@@ -66,11 +63,8 @@ describe("resume chat tool schemas", () => {
       throw new Error("Expected project output schema to parse")
     }
     expect(result.data.newEntry).toMatchObject({
-      date: {
-        start: "2024-01",
-        end: "2024-06",
-        isCurrent: false
-      }
+      start: "2024-01",
+      end: "2024-06"
     })
   })
 
@@ -83,11 +77,8 @@ describe("resume chat tool schemas", () => {
         title: "Distributed Systems Lab",
         role: "Research Assistant",
         content: "Studied consensus protocols.",
-        date: {
-          start: "2023-09",
-          end: "",
-          isCurrent: true
-        }
+        start: "2023-09",
+        end: ""
       }
     })
 
@@ -96,11 +87,8 @@ describe("resume chat tool schemas", () => {
       throw new Error("Expected research output schema to parse")
     }
     expect(result.data.newEntry).toMatchObject({
-      date: {
-        start: "2023-09",
-        end: "",
-        isCurrent: true
-      }
+      start: "2023-09",
+      end: ""
     })
   })
 })

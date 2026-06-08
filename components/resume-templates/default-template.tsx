@@ -79,7 +79,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.school}</h3>
             <span className="text-sm text-gray-600">
-              {formatDateRange(block.date)}
+              {formatDateRange(block.start, block.end)}
             </span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.degree}</p>
@@ -122,7 +122,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.company}</h3>
             <span className="text-sm text-gray-600">
-              {formatDateRange(block.date)}
+              {formatDateRange(block.start, block.end)}
             </span>
           </div>
           <p className="text-sm text-gray-600 mb-1">{block.jobTitle}</p>
@@ -165,7 +165,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.title}</h3>
             <span className="text-sm text-gray-600">
-              {formatDateRange(block.date)}
+              {formatDateRange(block.start, block.end)}
             </span>
           </div>
           {block.role && (
@@ -210,7 +210,7 @@ const renderers: Record<SortableSectionKey, SectionRenderer> = {
           <div className="flex justify-between mb-0.5">
             <h3 className="text-base font-bold">{block.title}</h3>
             <span className="text-sm text-gray-600">
-              {formatDateRange(block.date)}
+              {formatDateRange(block.start, block.end)}
             </span>
           </div>
           {block.role && (

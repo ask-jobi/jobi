@@ -25,14 +25,16 @@ function createResume(): ResumeData {
           entryId: "edu-1",
           school: "Original School",
           degree: "BS",
-          date: { start: "2020", end: "2024", isCurrent: false },
+          start: "2020",
+          end: "2024",
           content: "Computer Science"
         },
         {
           entryId: "edu-2",
           school: "Second School",
           degree: "MS",
-          date: { start: "2024", end: "2026", isCurrent: false },
+          start: "2024",
+          end: "2026",
           content: "AI"
         }
       ]
@@ -44,7 +46,8 @@ function createResume(): ResumeData {
           title: "Compiler",
           role: "Maintainer",
           content: "Built a compiler.",
-          date: { start: "2023-01", end: "2023-06", isCurrent: false }
+          start: "2023-01",
+          end: "2023-06"
         }
       ]
     },
@@ -263,15 +266,12 @@ describe("revertAiResumeEdit", () => {
 
   it("throws an error when delete output lacks originalIndex", () => {
     expect(() =>
-      revertAiResumeEdit(
-        createResume(),
-        {
-          operation: "delete",
-          entity: "education",
-          id: "edu-1",
-          originalValue: createResume().education!.entries[0]!
-        }
-      )
+      revertAiResumeEdit(createResume(), {
+        operation: "delete",
+        entity: "education",
+        id: "edu-1",
+        originalValue: createResume().education!.entries[0]!
+      })
     ).toThrow(AiResumeEditError)
   })
 
@@ -294,11 +294,8 @@ describe("revertAiResumeEdit", () => {
 
   it("does not treat reordered object keys as a semantic conflict", () => {
     const currentResume = createResume()
-    currentResume.projects!.entries[0]!.date = {
-      start: "2026-01",
-      end: "",
-      isCurrent: true
-    }
+    currentResume.projects!.entries[0]!.start = "2026-01"
+    currentResume.projects!.entries[0]!.end = ""
 
     const revertedResume = revertAiResumeEdit(
       currentResume,
@@ -306,26 +303,15 @@ describe("revertAiResumeEdit", () => {
         operation: "rewrite",
         entity: "projects",
         id: "project-1",
-        field: "date",
-        value: {
-          end: "",
-          start: "2026-01",
-          isCurrent: true
-        },
-        originalValue: {
-          end: "",
-          start: "2026-01",
-          isCurrent: false
-        }
+        field: "start",
+        value: "2026-01",
+        originalValue: "2024-01"
       } as any,
       { detectSemanticConflict: true }
     )
 
-    expect(revertedResume.projects?.entries[0]?.date).toEqual({
-      end: "",
-      start: "2026-01",
-      isCurrent: false
-    })
+    expect(revertedResume.projects?.entries[0]?.start).toEqual("2024-01")
+    expect(revertedResume.projects?.entries[0]?.end).toEqual("")
   })
 
   it("reverts entry and section reorders", () => {

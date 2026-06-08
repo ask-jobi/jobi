@@ -7,7 +7,7 @@ import { Locale } from "@/lib/i18n/config"
 import { model } from "@/server/ai/model"
 import { nanoid } from "nanoid"
 import { parseTokenUsage, type TokenUsage } from "@/lib/agent/token-usage"
-import { normalizeDateRange } from "@/lib/resume/date-ranges"
+import { normalizeDateEnd } from "@/lib/resume/date-ranges"
 
 const EMPTY_RESUME_TEXT_ERROR =
   "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
@@ -20,16 +20,16 @@ const DateRangeSchema = z
       .describe(
         "End date in YYYY-MM format; use current/present/now wording only when ongoing"
       )
-      .prefault(""),
-    isCurrent: z
-      .boolean()
-      .describe("Whether this period is ongoing")
-      .prefault(false)
+      .prefault("")
   })
-  .transform((date) => normalizeDateRange(date))
+  .transform((date) => ({
+    start: date.start,
+    end: normalizeDateEnd(date.end)
+  }))
 
 const ParsedDateRangeEntryFields = {
-  date: DateRangeSchema.optional()
+  start: z.string().optional(),
+  end: z.string().optional()
 }
 
 const resumeSchema = z.object({
@@ -55,9 +55,9 @@ const resumeSchema = z.object({
             degree: z.string().describe("Degree obtained"),
             ...ParsedDateRangeEntryFields
           })
-          .transform(({ date, ...entry }) => ({
+          .transform((entry) => ({
             ...entry,
-            date: normalizeDateRange(date)
+            end: normalizeDateEnd(entry.end)
           }))
       )
       .default(() => [])
@@ -90,9 +90,9 @@ const resumeSchema = z.object({
               jobTitle: z.string().describe("Job title"),
               ...ParsedDateRangeEntryFields
             })
-            .transform(({ date, ...entry }) => ({
+            .transform((entry) => ({
               ...entry,
-              date: normalizeDateRange(date)
+              end: normalizeDateEnd(entry.end)
             }))
         )
         .default(() => [])
@@ -103,19 +103,25 @@ const resumeSchema = z.object({
     .object({
       entries: z
         .array(
-          z.object({
-            title: z.string().describe("Title of this research experience"),
-            content: z
-              .string()
-              .describe(
-                "Description of this research experience, return markdown formatted"
-              ),
-            role: z
-              .string()
-              .describe("Role of the research experience")
-              .optional(),
-            date: DateRangeSchema
-          })
+          z
+            .object({
+              title: z.string().describe("Title of this research experience"),
+              content: z
+                .string()
+                .describe(
+                  "Description of this research experience, return markdown formatted"
+                ),
+              role: z
+                .string()
+                .describe("Role of the research experience")
+                .optional(),
+              date: DateRangeSchema
+            })
+            .transform(({ date, ...entry }) => ({
+              ...entry,
+              start: date.start,
+              end: date.end
+            }))
         )
         .default(() => [])
     })
@@ -125,19 +131,24 @@ const resumeSchema = z.object({
     .object({
       entries: z
         .array(
-          z.object({
-            title: z.string().describe("Title of this project experience"),
-            content: z
-              .string()
-              .describe(
-                "Description of this project experience, return markdown formatted"
-              ),
-            role: z
-              .string()
-              .describe("Role of this project experience")
-              .optional(),
-            date: DateRangeSchema.optional()
-          })
+          z
+            .object({
+              title: z.string().describe("Title of this project experience"),
+              content: z
+                .string()
+                .describe(
+                  "Description of this project experience, return markdown formatted"
+                ),
+              role: z
+                .string()
+                .describe("Role of this project experience")
+                .optional(),
+              date: DateRangeSchema.optional()
+            })
+            .transform(({ date, ...entry }) => ({
+              ...entry,
+              ...(date ? { start: date.start, end: date.end } : {})
+            }))
         )
         .default(() => [])
     })

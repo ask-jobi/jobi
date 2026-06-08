@@ -51,9 +51,8 @@ export function EmploymentForm({
               </div>
 
               <MonthRangePickerFormField
-                startName="date.start"
-                endName="date.end"
-                isCurrentName="date.isCurrent"
+                startName="start"
+                endName="end"
                 label="Start/End Date"
               />
 

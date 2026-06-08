@@ -80,7 +80,7 @@ const renderers: Partial<Record<SortableSectionKey, ModernSectionRenderer>> = {
             {block.school}
           </h3>
           <span className="text-sm text-gray-500 font-medium">
-            {formatDateRange(block.date)}
+            {formatDateRange(block.start, block.end)}
           </span>
         </div>
       )}
@@ -133,7 +133,7 @@ const renderers: Partial<Record<SortableSectionKey, ModernSectionRenderer>> = {
             <p className="text-sm text-gray-600">{block.jobTitle}</p>
           </div>
           <span className="text-sm text-gray-500 font-medium">
-            {formatDateRange(block.date)}
+            {formatDateRange(block.start, block.end)}
           </span>
         </div>
       )}

@@ -3,25 +3,14 @@ import { nanoid } from "nanoid"
 
 // ── Entry Schemas ────────────────────────────────────────────────────────
 
-export const DateRangeSchema = z
-  .object({
-    start: z.string().default(""),
-    end: z.string().default(""),
-    isCurrent: z.boolean().default(false)
-  })
-  .strict()
-
 export const EducationEntrySchema = z
   .object({
     entryId: z.string().default(() => nanoid()),
     content: z.string().default(""),
     school: z.string().default(""),
     degree: z.string().default(""),
-    date: DateRangeSchema.default(() => ({
-      start: "",
-      end: "",
-      isCurrent: false
-    }))
+    start: z.string().optional(),
+    end: z.string().optional()
   })
   .strict()
 
@@ -31,11 +20,8 @@ export const EmploymentEntrySchema = z
     content: z.string().default(""),
     company: z.string().default(""),
     jobTitle: z.string().default(""),
-    date: DateRangeSchema.default(() => ({
-      start: "",
-      end: "",
-      isCurrent: false
-    }))
+    start: z.string().optional(),
+    end: z.string().optional()
   })
   .strict()
 
@@ -53,11 +39,8 @@ export const ProjectEntrySchema = z
     title: z.string().default(""),
     content: z.string().default(""),
     role: z.string().optional(),
-    date: DateRangeSchema.default(() => ({
-      start: "",
-      end: "",
-      isCurrent: false
-    }))
+    start: z.string().optional(),
+    end: z.string().optional()
   })
   .strict()
 
@@ -67,11 +50,8 @@ export const ResearchEntrySchema = z
     title: z.string().default(""),
     content: z.string().default(""),
     role: z.string().optional(),
-    date: DateRangeSchema.default(() => ({
-      start: "",
-      end: "",
-      isCurrent: false
-    }))
+    start: z.string().optional(),
+    end: z.string().optional()
   })
   .strict()
 

@@ -51,7 +51,8 @@ vi.mock("../resume-section-form", () => ({
             entryId: "edu-2",
             school: "School 2",
             degree: "Degree 2",
-            date: { start: "2021-01", end: "2022-01", isCurrent: false },
+            start: "2021-01",
+            end: "2022-01",
             content: "Created"
           })
         }
@@ -101,7 +102,8 @@ describe("ResumeSectionEditModal create entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: ""
           }
         ]
@@ -147,7 +149,8 @@ describe("ResumeSectionEditModal create entry", () => {
             entryId: "edu-2",
             school: "School 2",
             degree: "Degree 2",
-            date: { start: "2021-01", end: "2022-01", isCurrent: false },
+            start: "2021-01",
+            end: "2022-01",
             content: "Created"
           }
         ]

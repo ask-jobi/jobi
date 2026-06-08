@@ -448,7 +448,8 @@ describe("saveApplicationResumeChange", () => {
             school: "Original School",
             degree: "BSc",
             content: "CS",
-            date: { start: "2023", end: "2023", isCurrent: false }
+            start: "2023",
+            end: "2023"
           }
         ]
       }
@@ -548,7 +549,8 @@ describe("saveApplicationResumeChange", () => {
                 school: "Original School",
                 degree: "BSc",
                 content: "CS",
-                date: { start: "2023", end: "2023", isCurrent: false }
+                start: "2023",
+                end: "2023"
               }
             ]
           }

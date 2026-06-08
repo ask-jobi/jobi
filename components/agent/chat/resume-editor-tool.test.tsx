@@ -45,7 +45,7 @@ describe("ResumeEditorToolUI", () => {
     expect(screen.getByText("Edited School")).toBeInTheDocument()
   })
 
-  it("renders object rewrite values without crashing", () => {
+  it("renders date rewrite values without crashing", () => {
     render(
       <TestResumeEditorToolUI
         isError={false}
@@ -53,17 +53,16 @@ describe("ResumeEditorToolUI", () => {
           operation: "rewrite",
           entity: "education",
           id: "edu-1",
-          field: "date",
-          originalValue: { start: "2020", end: "2024", isCurrent: false },
-          value: { start: "2020", end: "", isCurrent: true }
+          field: "end",
+          originalValue: "2024",
+          value: ""
         }}
       />
     )
 
     expect(screen.getByText("Education")).toBeInTheDocument()
-    expect(screen.getByText("date")).toBeInTheDocument()
-    expect(screen.getAllByText(/isCurrent/)).toHaveLength(2)
-    expect(screen.getByText(/2024/)).toBeInTheDocument()
+    expect(screen.getByText("end")).toBeInTheDocument()
+    expect(screen.getByText("2024")).toBeInTheDocument()
   })
 
   it("renders inline errors instead of hiding failed tool calls", () => {

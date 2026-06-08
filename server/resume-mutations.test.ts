@@ -22,7 +22,8 @@ describe("moveSectionInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "One"
           }
         ]
@@ -33,7 +34,8 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Built stuff"
           }
         ]
@@ -75,7 +77,8 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Built stuff"
           }
         ]
@@ -114,7 +117,8 @@ describe("moveSectionInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "One"
           }
         ]
@@ -125,7 +129,8 @@ describe("moveSectionInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Built stuff"
           }
         ]
@@ -153,21 +158,24 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "One"
           },
           {
             entryId: "edu-2",
             school: "School 2",
             degree: "Degree 2",
-            date: { start: "2021-01", end: "2022-01", isCurrent: false },
+            start: "2021-01",
+            end: "2022-01",
             content: "Two"
           },
           {
             entryId: "edu-3",
             school: "School 3",
             degree: "Degree 3",
-            date: { start: "2022-01", end: "2023-01", isCurrent: false },
+            start: "2022-01",
+            end: "2023-01",
             content: "Three"
           }
         ]
@@ -178,7 +186,8 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Built stuff"
           }
         ]
@@ -220,7 +229,8 @@ describe("reorderSectionEntriesInResume", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "One"
           }
         ]
@@ -235,5 +245,3 @@ describe("reorderSectionEntriesInResume", () => {
     )
   })
 })
-
-

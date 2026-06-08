@@ -537,7 +537,8 @@ describe("POST /api/chat/resume", () => {
             entryId: "edu-1",
             school: "Original School",
             degree: "BS",
-            date: { start: "2020", end: "2024", isCurrent: false },
+            start: "2020",
+            end: "2024",
             content: "Computer Science"
           },
           originalIndex: 0,

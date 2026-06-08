@@ -90,7 +90,8 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: ""
           }
         ]
@@ -156,7 +157,8 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: ""
           }
         ]
@@ -227,7 +229,8 @@ describe("ResumeEditor add entry", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: ""
           }
         ]

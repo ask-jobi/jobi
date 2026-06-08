@@ -32,7 +32,8 @@ function createResume(school: string): ResumeData {
           school,
           degree: "BSc",
           content: "CS",
-          date: { start: "2024", end: "2024", isCurrent: false }
+          start: "2024",
+          end: "2024"
         }
       ]
     },

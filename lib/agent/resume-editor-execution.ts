@@ -6,54 +6,6 @@ import {
 } from "@/types/chat"
 import { ResumeData, ResumeSectionKey } from "@/types/resume"
 import { getEntrySchema } from "@/lib/agent/tools"
-import { normalizeDateRange } from "@/lib/resume/date-ranges"
-
-const DATE_RANGE_SECTION_KEYS = new Set([
-  "education",
-  "employment",
-  "projects",
-  "research"
-])
-
-const CURRENT_DATE_FIELDS = new Set(["date.isCurrent", "isCurrent"])
-
-function isDateRangeRewrite(entity: ResumeSectionKey, field: string) {
-  return (
-    DATE_RANGE_SECTION_KEYS.has(entity) &&
-    (field === "date" ||
-      field === "date.start" ||
-      field === "date.end" ||
-      CURRENT_DATE_FIELDS.has(field))
-  )
-}
-
-function normalizeDateRewrite({
-  currentDate,
-  field,
-  value
-}: {
-  currentDate: unknown
-  field: string
-  value: string
-}) {
-  const baseDate =
-    typeof currentDate === "object" && currentDate !== null
-      ? normalizeDateRange(currentDate as any)
-      : normalizeDateRange()
-
-  if (field === "date" || field === "date.end") {
-    return normalizeDateRange({ ...baseDate, end: value })
-  }
-
-  if (field === "date.start") {
-    return normalizeDateRange({ ...baseDate, start: value })
-  }
-
-  return normalizeDateRange({
-    ...baseDate,
-    isCurrent: value.toLocaleLowerCase() === "true"
-  })
-}
 
 function assertOrderedIdsMatch({
   currentIds,
@@ -145,22 +97,6 @@ export async function executeResumeEditorModifyTool(
 
     if (!entry) {
       throw new Error(`Entry with id ${id} not found in section ${entity}`)
-    }
-
-    if (isDateRangeRewrite(entity, field)) {
-      const originalValue = (entry as unknown as Record<string, unknown>).date
-      return {
-        operation: "rewrite",
-        entity,
-        id,
-        field: "date",
-        originalValue: normalizeDateRange(originalValue as any),
-        value: normalizeDateRewrite({
-          currentDate: originalValue,
-          field,
-          value
-        })
-      }
     }
 
     if (!Object.prototype.hasOwnProperty.call(entry, field)) {

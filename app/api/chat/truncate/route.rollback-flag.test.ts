@@ -42,11 +42,8 @@ function createResume(school: string): ResumeData {
           school,
           degree: "BSc",
           content: "Computer Science",
-          date: {
-            start: "2020",
-            end: "2024",
-            isCurrent: false
-          }
+          start: "2020",
+          end: "2024"
         }
       ]
     },

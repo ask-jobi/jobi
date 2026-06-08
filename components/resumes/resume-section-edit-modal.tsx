@@ -25,7 +25,7 @@ import {
   replaceSectionEntryInResume
 } from "@/lib/resume/mutations"
 import { createEmptySectionEntry } from "@/lib/templates/section-factories"
-import { normalizeDateRange } from "@/lib/resume/date-ranges"
+import { normalizeDateEnd } from "@/lib/resume/date-ranges"
 
 export function ResumeSectionEditModal() {
   const t = useTranslations("rightPanel")
@@ -76,7 +76,7 @@ export function ResumeSectionEditModal() {
       ["education", "employment", "projects", "research"].includes(
         selectedSectionId
       )
-      ? { ...entry, date: normalizeDateRange(entry.date) }
+      ? { ...entry, end: normalizeDateEnd((entry as { end?: string }).end) }
       : entry
   }, [
     applicationResumeData,

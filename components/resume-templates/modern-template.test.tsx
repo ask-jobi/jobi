@@ -23,7 +23,8 @@ describe("ModernTemplate", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "One"
           }
         ]
@@ -34,7 +35,8 @@ describe("ModernTemplate", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2021-01", end: "2022-01", isCurrent: false },
+            start: "2021-01",
+            end: "2022-01",
             content: "Built stuff"
           }
         ]

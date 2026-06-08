@@ -44,7 +44,7 @@ function buildEducationSummary(entry: EducationEntry): ThumbnailEntrySummary {
   return {
     heading: entry.school,
     subheading: entry.degree,
-    meta: formatDateRange(entry.date)
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
@@ -52,7 +52,7 @@ function buildEmploymentSummary(entry: EmploymentEntry): ThumbnailEntrySummary {
   return {
     heading: entry.company,
     subheading: entry.jobTitle,
-    meta: formatDateRange(entry.date)
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
@@ -67,7 +67,7 @@ function buildProjectSummary(entry: ProjectEntry): ThumbnailEntrySummary {
   return {
     heading: entry.title,
     subheading: entry.role,
-    meta: formatDateRange(entry.date)
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
@@ -75,7 +75,7 @@ function buildResearchSummary(entry: ResearchEntry): ThumbnailEntrySummary {
   return {
     heading: entry.title,
     subheading: entry.role,
-    meta: formatDateRange(entry.date)
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 

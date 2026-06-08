@@ -51,7 +51,8 @@ vi.mock("../resume-section-form", () => ({
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Saved"
           })
         }
@@ -108,14 +109,16 @@ describe("ResumeSectionEditModal", () => {
                 entryId: "emp-1",
                 company: "A",
                 jobTitle: "A",
-                date: { start: "2020-01", end: "2020-12", isCurrent: false },
+                start: "2020-01",
+                end: "2020-12",
                 content: ""
               },
               {
                 entryId: "emp-2",
                 company: "B",
                 jobTitle: "B",
-                date: { start: "2021-01", end: "2021-12", isCurrent: false },
+                start: "2021-01",
+                end: "2021-12",
                 content: ""
               }
             ]
@@ -283,7 +286,8 @@ describe("ResumeSectionEditModal", () => {
             entryId: "edu-1",
             school: "Old School",
             degree: "Old Degree",
-            date: { start: "2019-01", end: "2020-01", isCurrent: false },
+            start: "2019-01",
+            end: "2020-01",
             content: "Old"
           }
         ]
@@ -302,7 +306,8 @@ describe("ResumeSectionEditModal", () => {
             entryId: "edu-1",
             school: "School 1",
             degree: "Degree 1",
-            date: { start: "2020-01", end: "2021-01", isCurrent: false },
+            start: "2020-01",
+            end: "2021-01",
             content: "Saved"
           }
         ]

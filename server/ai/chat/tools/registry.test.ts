@@ -30,11 +30,8 @@ const baseResume: ResumeData = {
         school: "Draft School",
         degree: "BSc",
         content: "",
-        date: {
-          start: "2020",
-          end: "2024",
-          isCurrent: false
-        }
+        start: "2020",
+        end: "2024"
       }
     ]
   },
@@ -290,7 +287,7 @@ describe("createResumeChatServerTools", () => {
         operation: "rewrite",
         entity: "education",
         id: "edu-1",
-        field: "date.end",
+        field: "end",
         value: "Present"
       },
       {
@@ -304,17 +301,9 @@ describe("createResumeChatServerTools", () => {
       operation: "rewrite",
       entity: "education",
       id: "edu-1",
-      field: "date",
-      originalValue: {
-        start: "2020",
-        end: "2024",
-        isCurrent: false
-      },
-      value: {
-        start: "2020",
-        end: "",
-        isCurrent: true
-      }
+      field: "end",
+      originalValue: "2024",
+      value: "Present"
     })
     expect(commitResumeOperation).toHaveBeenCalledWith(
       expect.objectContaining({

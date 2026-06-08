@@ -1,4 +1,4 @@
-import type { DateRange, ResumeData } from "@/types/resume"
+import type { ResumeData } from "@/types/resume"
 
 const CURRENT_DATE_VALUES = new Set([
   "present",
@@ -11,54 +11,40 @@ const CURRENT_DATE_VALUES = new Set([
   "目前"
 ])
 
-export function normalizeDateRange(value?: DateRange | null): DateRange {
-  const start = value?.start ?? ""
-  const rawEnd = value?.end ?? ""
-  const normalizedEnd = rawEnd.trim()
-  const endMeansCurrent = CURRENT_DATE_VALUES.has(
-    normalizedEnd.toLocaleLowerCase()
-  )
-  const isCurrent = endMeansCurrent || Boolean(value?.isCurrent)
-
-  return {
-    start,
-    end: isCurrent ? "" : rawEnd,
-    isCurrent
-  }
+export function normalizeDateEnd(value?: string | null): string {
+  const rawEnd = (value ?? "").trim()
+  return CURRENT_DATE_VALUES.has(rawEnd.toLocaleLowerCase()) ? "" : rawEnd
 }
 
-export function formatDateRange(date?: DateRange): string | undefined {
-  const normalizedDate = normalizeDateRange(date)
-  const startValue = normalizedDate.start?.trim()
-  const endValue = normalizedDate.isCurrent
-    ? "Present"
-    : normalizedDate.end?.trim()
+export function formatDateRange(
+  start?: string,
+  end?: string
+): string | undefined {
+  const startValue = start?.trim()
+  const normalizedEnd = normalizeDateEnd(end)
+  const isPresent = !normalizedEnd && !!startValue
+  const endDisplay = isPresent ? "Present" : normalizedEnd
 
-  if (startValue && endValue) {
-    return `${startValue} - ${endValue}`
+  if (startValue && endDisplay) {
+    return `${startValue} - ${endDisplay}`
   }
 
-  return startValue || endValue || undefined
+  return startValue || endDisplay || undefined
 }
 
 export function normalizeResumeDateRanges(resume: ResumeData): ResumeData {
   const normalizedResume = { ...resume }
 
-  const sections = [
-    "education",
-    "employment",
-    "projects",
-    "research"
-  ] as const
+  const sections = ["education", "employment", "projects", "research"] as const
 
   for (const section of sections) {
     const data = resume[section]
     if (data) {
-      normalizedResume[section] = {
+      ;(normalizedResume as Record<string, unknown>)[section] = {
         ...data,
         entries: data.entries.map((entry) => ({
           ...entry,
-          date: normalizeDateRange(entry.date)
+          end: normalizeDateEnd((entry as { end?: string }).end)
         }))
       }
     }

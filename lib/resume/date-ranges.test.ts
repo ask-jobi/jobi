@@ -1,33 +1,29 @@
 import { describe, expect, it } from "vitest"
 import {
   formatDateRange,
-  normalizeDateRange,
+  normalizeDateEnd,
   normalizeResumeDateRanges
 } from "@/lib/resume/date-ranges"
 import type { ResumeData } from "@/types/resume"
 
 describe("resume date ranges", () => {
-  it("normalizes current end values to isCurrent", () => {
-    expect(
-      normalizeDateRange({
-        start: "2024-01",
-        end: "Present",
-        isCurrent: false
-      })
-    ).toEqual({
-      start: "2024-01",
-      end: "",
-      isCurrent: true
-    })
+  it("normalizes current end values to empty string", () => {
+    expect(normalizeDateEnd("Present")).toBe("")
+    expect(normalizeDateEnd("present")).toBe("")
+    expect(normalizeDateEnd("Current")).toBe("")
+    expect(normalizeDateEnd("Now")).toBe("")
+    expect(normalizeDateEnd("至今")).toBe("")
+    expect(normalizeDateEnd("2024-06")).toBe("2024-06")
   })
 
-  it("formats current date ranges as Present", () => {
-    expect(
-      formatDateRange({ start: "2024-01", end: "", isCurrent: true })
-    ).toBe("2024-01 - Present")
+  it("formats date ranges", () => {
+    expect(formatDateRange("2024-01", "")).toBe("2024-01 - Present")
+    expect(formatDateRange("2024-01", "2024-06")).toBe("2024-01 - 2024-06")
+    expect(formatDateRange("2024-01")).toBe("2024-01 - Present")
+    expect(formatDateRange()).toBeUndefined()
   })
 
-  it("normalizes all date-bearing sections in a resume", () => {
+  it("normalizes end fields across all date-bearing sections", () => {
     const resume: ResumeData = {
       sectionOrder: ["education", "employment"],
       personalInfo: {
@@ -43,7 +39,8 @@ describe("resume date ranges", () => {
             entryId: "edu-1",
             school: "ZJU",
             degree: "BS",
-            date: { start: "2018-09", end: "present", isCurrent: false },
+            start: "2018-09",
+            end: "present",
             content: "CS"
           }
         ]
@@ -54,7 +51,8 @@ describe("resume date ranges", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            date: { start: "2022-07", end: "Present", isCurrent: false },
+            start: "2022-07",
+            end: "Present",
             content: "Built products."
           }
         ]
@@ -63,11 +61,7 @@ describe("resume date ranges", () => {
 
     const normalizedResume = normalizeResumeDateRanges(resume)
 
-    expect(normalizedResume.education?.entries[0]).toMatchObject({
-      date: { start: "2018-09", end: "", isCurrent: true }
-    })
-    expect(normalizedResume.employment?.entries[0]).toMatchObject({
-      date: { start: "2022-07", end: "", isCurrent: true }
-    })
+    expect(normalizedResume.education?.entries[0]?.end).toBe("")
+    expect(normalizedResume.employment?.entries[0]?.end).toBe("")
   })
 })

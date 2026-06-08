@@ -45,7 +45,8 @@ export interface EducationEntry {
   content: string
   school: string
   degree: string
-  date: DateRange
+  start?: string
+  end?: string
 }
 
 export interface EmploymentEntry {
@@ -53,7 +54,8 @@ export interface EmploymentEntry {
   content: string
   company: string
   jobTitle: string
-  date: DateRange
+  start?: string
+  end?: string
 }
 
 export interface SkillEntry {
@@ -62,18 +64,13 @@ export interface SkillEntry {
   content: string
 }
 
-export interface DateRange {
-  start: string
-  end: string
-  isCurrent: boolean
-}
-
 export interface ProjectEntry {
   entryId: string
   title: string
   content: string
   role?: string
-  date: DateRange
+  start?: string
+  end?: string
 }
 
 export interface ResearchEntry {
@@ -81,7 +78,8 @@ export interface ResearchEntry {
   title: string
   content: string
   role?: string
-  date: DateRange
+  start?: string
+  end?: string
 }
 
 export interface PublicationEntry {

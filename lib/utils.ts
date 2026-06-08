@@ -34,7 +34,7 @@ ${
   resumeData.education?.entries
     ?.map(
       (edu: EducationEntry, index: number) =>
-        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${formatDateRange(edu.date) ?? ""}]`
+        `Education Entry ${index + 1}:\n${edu.school} - ${edu.degree}\n${edu.content} [${formatDateRange(edu.start, edu.end) ?? ""}]`
     )
     .join("\n\n") || "None"
 }
@@ -44,7 +44,7 @@ ${
   resumeData.employment?.entries
     ?.map(
       (emp: EmploymentEntry, index: number) =>
-        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content} [${formatDateRange(emp.date) ?? ""}]`
+        `Employment Entry ${index + 1}:\n${emp.company} - ${emp.jobTitle}\n${emp.content} [${formatDateRange(emp.start, emp.end) ?? ""}]`
     )
     .join("\n\n") || "None"
 }

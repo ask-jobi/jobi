@@ -156,7 +156,8 @@ describe("POST /api/chat/truncate", () => {
           school: "Original School",
           degree: "BS",
           content: "Computer Science",
-          date: { start: "2020", end: "2024", isCurrent: false }
+          start: "2020",
+          end: "2024"
         }
       ]
     },
@@ -354,7 +355,8 @@ describe("POST /api/chat/truncate", () => {
               school: "Third School",
               degree: "BS",
               content: "Computer Science",
-              date: { start: "2020", end: "2024", isCurrent: false }
+              start: "2020",
+              end: "2024"
             }
           ]
         }
@@ -562,7 +564,8 @@ describe("POST /api/chat/truncate", () => {
       title: "Added Project",
       role: "Owner",
       content: "Built a demo",
-      date: { start: "2024", end: "", isCurrent: true }
+      start: "2024",
+      end: ""
     }
 
     mockCurrentResume(
@@ -687,7 +690,8 @@ describe("POST /api/chat/truncate", () => {
               school: "Manual School",
               degree: "BS",
               content: "Computer Science",
-              date: { start: "2020", end: "2024", isCurrent: false }
+              start: "2020",
+              end: "2024"
             }
           ]
         }

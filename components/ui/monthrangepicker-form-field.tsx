@@ -13,27 +13,23 @@ import { useTranslations } from "next-intl"
 interface MonthRangePickerFormFieldProps {
   startName: string
   endName: string
-  isCurrentName?: string
   label?: string
   disabled?: boolean
 }
 
 export const MonthRangePickerFormField: React.FC<
   MonthRangePickerFormFieldProps
-> = ({ startName, endName, isCurrentName, label, disabled = false }) => {
+> = ({ startName, endName, label, disabled = false }) => {
   const { getValues, setValue } = useFormContext()
   const t = useTranslations("monthPicker")
 
   // 解析当前值
   const start = getValues(startName)
   const end = getValues(endName)
-  const isCurrent = isCurrentName ? Boolean(getValues(isCurrentName)) : false
 
   // 解析为Date对象
-  const parseDate = (val?: string, current = false) => {
-    if (current) return new Date()
+  const parseDate = (val?: string) => {
     if (!val) return undefined
-    // 如果是当前进行时标记，返回当前日期
     if (val.toLowerCase() === "present") return new Date()
     const [y, m] = val.split("-")
     if (!y || !m) return undefined
@@ -41,12 +37,21 @@ export const MonthRangePickerFormField: React.FC<
   }
 
   const startDate = parseDate(start)
-  const endDate = parseDate(end, isCurrent)
+  const endDate = parseDate(end)
 
   const selectedMonthRange =
     startDate && endDate ? { start: startDate, end: endDate } : undefined
 
   const [open, setOpen] = React.useState(false)
+
+  const isCurrentMonth = (date?: Date) => {
+    if (!date) return false
+    const now = new Date()
+    return (
+      now.getFullYear() === date.getFullYear() &&
+      now.getMonth() === date.getMonth()
+    )
+  }
 
   const handleChange = (range: { start: Date; end: Date }) => {
     const toStr = (d: Date) =>
@@ -56,23 +61,12 @@ export const MonthRangePickerFormField: React.FC<
       shouldTouch: true,
       shouldValidate: true
     })
-    setValue(
-      endName,
-      sameYearMonth(new Date(), range.end) ? "present" : toStr(range.end),
-      { shouldDirty: true, shouldTouch: true, shouldValidate: true }
-    )
-    if (isCurrentName) {
-      setValue(isCurrentName, sameYearMonth(new Date(), range.end), {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true
-      })
-    }
+    setValue(endName, isCurrentMonth(range.end) ? "" : toStr(range.end), {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true
+    })
     setOpen(false)
-  }
-
-  const sameYearMonth = (a: Date, b: Date) => {
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
   }
 
   const formatDate = (date: Date) => {
@@ -80,11 +74,14 @@ export const MonthRangePickerFormField: React.FC<
   }
 
   // value => 到实际展示的值
-  const formatDisplayValue = (val?: string, date?: Date, current = false) => {
-    if (val === "present" || current) return "Present"
+  const formatDisplayValue = (val?: string, date?: Date) => {
+    if (val === "present") return "Present"
+    if (!val && date) return "Present"
     if (!val) return ""
     return date ? formatDate(date) : val
   }
+
+  const isOngoing = !end && !!startDate
 
   return (
     <div className="space-y-1">
@@ -98,11 +95,15 @@ export const MonthRangePickerFormField: React.FC<
           >
             <CalendarIcon className="ml-2 h-4 w-4" />
             <div className="flex-1">
-              {start && (end || isCurrent) ? (
+              {start && (end || endDate || isOngoing) ? (
                 <div className="flex justify-around">
                   <span>{formatDisplayValue(start, startDate)}</span>
                   <span>~</span>
-                  <span>{formatDisplayValue(end, endDate, isCurrent)}</span>
+                  <span>
+                    {isOngoing && !end
+                      ? "Present"
+                      : formatDisplayValue(end, endDate)}
+                  </span>
                 </div>
               ) : (
                 t("selectStartEndDate")
