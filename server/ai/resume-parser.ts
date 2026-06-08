@@ -29,8 +29,6 @@ const DateRangeSchema = z
   .transform((date) => normalizeDateRange(date))
 
 const ParsedDateRangeEntryFields = {
-  start: z.string().optional(),
-  end: z.string().optional(),
   date: DateRangeSchema.optional()
 }
 
@@ -57,9 +55,9 @@ const resumeSchema = z.object({
             degree: z.string().describe("Degree obtained"),
             ...ParsedDateRangeEntryFields
           })
-          .transform(({ start, end, date, ...entry }) => ({
+          .transform(({ date, ...entry }) => ({
             ...entry,
-            date: normalizeDateRange(date, { start, end })
+            date: normalizeDateRange(date)
           }))
       )
       .default(() => [])
@@ -92,9 +90,9 @@ const resumeSchema = z.object({
               jobTitle: z.string().describe("Job title"),
               ...ParsedDateRangeEntryFields
             })
-            .transform(({ start, end, date, ...entry }) => ({
+            .transform(({ date, ...entry }) => ({
               ...entry,
-              date: normalizeDateRange(date, { start, end })
+              date: normalizeDateRange(date)
             }))
         )
         .default(() => [])

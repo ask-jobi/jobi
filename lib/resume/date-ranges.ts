@@ -1,11 +1,4 @@
-import type {
-  DateRange,
-  EducationEntry,
-  EmploymentEntry,
-  ProjectEntry,
-  ResearchEntry,
-  ResumeData
-} from "@/types/resume"
+import type { DateRange, ResumeData } from "@/types/resume"
 
 const CURRENT_DATE_VALUES = new Set([
   "present",
@@ -18,23 +11,9 @@ const CURRENT_DATE_VALUES = new Set([
   "目前"
 ])
 
-type LegacyDateFields = {
-  start?: string
-  end?: string
-}
-
-type DateRangeEntry =
-  | EducationEntry
-  | EmploymentEntry
-  | ProjectEntry
-  | ResearchEntry
-
-export function normalizeDateRange(
-  value?: DateRange | null,
-  legacy?: LegacyDateFields
-): DateRange {
-  const start = value?.start ?? legacy?.start ?? ""
-  const rawEnd = value?.end ?? legacy?.end ?? ""
+export function normalizeDateRange(value?: DateRange | null): DateRange {
+  const start = value?.start ?? ""
+  const rawEnd = value?.end ?? ""
   const normalizedEnd = rawEnd.trim()
   const endMeansCurrent = CURRENT_DATE_VALUES.has(
     normalizedEnd.toLocaleLowerCase()
@@ -62,55 +41,26 @@ export function formatDateRange(date?: DateRange): string | undefined {
   return startValue || endValue || undefined
 }
 
-export function normalizeDateRangeEntry<T extends DateRangeEntry>(entry: T): T {
-  const legacyEntry = entry as T & LegacyDateFields
-  const normalizedEntry = {
-    ...entry,
-    date: normalizeDateRange(entry.date, legacyEntry)
-  } as T & LegacyDateFields
-
-  delete normalizedEntry.start
-  delete normalizedEntry.end
-
-  return normalizedEntry
-}
-
 export function normalizeResumeDateRanges(resume: ResumeData): ResumeData {
   const normalizedResume = { ...resume }
 
-  if (resume.education) {
-    normalizedResume.education = {
-      ...resume.education,
-      entries: resume.education.entries.map((entry) =>
-        normalizeDateRangeEntry(entry)
-      )
-    }
-  }
+  const sections = [
+    "education",
+    "employment",
+    "projects",
+    "research"
+  ] as const
 
-  if (resume.employment) {
-    normalizedResume.employment = {
-      ...resume.employment,
-      entries: resume.employment.entries.map((entry) =>
-        normalizeDateRangeEntry(entry)
-      )
-    }
-  }
-
-  if (resume.projects) {
-    normalizedResume.projects = {
-      ...resume.projects,
-      entries: resume.projects.entries.map((entry) =>
-        normalizeDateRangeEntry(entry)
-      )
-    }
-  }
-
-  if (resume.research) {
-    normalizedResume.research = {
-      ...resume.research,
-      entries: resume.research.entries.map((entry) =>
-        normalizeDateRangeEntry(entry)
-      )
+  for (const section of sections) {
+    const data = resume[section]
+    if (data) {
+      normalizedResume[section] = {
+        ...data,
+        entries: data.entries.map((entry) => ({
+          ...entry,
+          date: normalizeDateRange(entry.date)
+        }))
+      }
     }
   }
 

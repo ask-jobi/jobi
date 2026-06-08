@@ -20,9 +20,7 @@ const CURRENT_DATE_FIELDS = new Set(["date.isCurrent", "isCurrent"])
 function isDateRangeRewrite(entity: ResumeSectionKey, field: string) {
   return (
     DATE_RANGE_SECTION_KEYS.has(entity) &&
-    (field === "start" ||
-      field === "end" ||
-      field === "date" ||
+    (field === "date" ||
       field === "date.start" ||
       field === "date.end" ||
       CURRENT_DATE_FIELDS.has(field))
@@ -43,16 +41,12 @@ function normalizeDateRewrite({
       ? normalizeDateRange(currentDate as any)
       : normalizeDateRange()
 
-  if (field === "date") {
+  if (field === "date" || field === "date.end") {
     return normalizeDateRange({ ...baseDate, end: value })
   }
 
-  if (field === "start" || field === "date.start") {
+  if (field === "date.start") {
     return normalizeDateRange({ ...baseDate, start: value })
-  }
-
-  if (field === "end" || field === "date.end") {
-    return normalizeDateRange({ ...baseDate, end: value })
   }
 
   return normalizeDateRange({

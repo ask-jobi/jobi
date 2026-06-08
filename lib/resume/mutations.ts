@@ -1,16 +1,12 @@
 import type { Locale } from "@/lib/i18n/config"
 import { addSection, removeSection } from "@/lib/templates/section-helpers"
-import { applyAiResumeEdit } from "@/lib/resume/ai-edits"
+
 import type {
   PersonalInfo,
   ResumeData,
   ResumeSection,
   SortableSectionKey
 } from "@/types/resume"
-import type {
-  ResumeEditorModifyOutput,
-  ResumeEditorReorderOutput
-} from "@/types/chat"
 
 type ResumeSectionEntry<ID extends SortableSectionKey> =
   NonNullable<ResumeData[ID]> extends ResumeSection<infer Entry> ? Entry : never
@@ -173,13 +169,6 @@ export function moveSectionInResume(
         ...resume,
         sectionOrder: nextSectionOrder
       }
-}
-
-export function applyToolOutputToResume(
-  baseResume: ResumeData,
-  output: ResumeEditorModifyOutput | ResumeEditorReorderOutput
-): ResumeData {
-  return applyAiResumeEdit(baseResume, output)
 }
 
 export function insertSectionEntryInResume<ID extends SortableSectionKey>(

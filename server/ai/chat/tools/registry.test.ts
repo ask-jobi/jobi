@@ -277,7 +277,7 @@ describe("createResumeChatServerTools", () => {
     )
   })
 
-  it("normalizes flat date rewrites to canonical date range output", async () => {
+  it("normalizes date rewrites to canonical date range output", async () => {
     const { logChatEvent } = await import("@/server/chat-events")
     const { commitResumeOperation } = await import("@/server/resume/commit")
     const { tools } = createTools()
@@ -290,7 +290,7 @@ describe("createResumeChatServerTools", () => {
         operation: "rewrite",
         entity: "education",
         id: "edu-1",
-        field: "end",
+        field: "date.end",
         value: "Present"
       },
       {

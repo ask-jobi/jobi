@@ -44,7 +44,6 @@ type ReversibleDeleteOutput = Extract<
 
 export type AiResumeEditOptions = {
   resumeLanguage?: Locale
-  strictRevert?: boolean
   detectSemanticConflict?: boolean
 }
 
@@ -432,7 +431,7 @@ function revertModifyOutput(
   if (output.operation === "delete") {
     const deleteOutput = output as ReversibleDeleteOutput
 
-    if (options.strictRevert && deleteOutput.originalIndex === undefined) {
+    if (deleteOutput.originalIndex === undefined) {
       throw new AiResumeEditError(
         `Cannot precisely restore ${deleteOutput.entity} entry ${deleteOutput.id}: originalIndex is missing.`,
         "missing-rollback-metadata"
@@ -514,7 +513,7 @@ function revertReorderOutput(
     }
 
     const originalIds = output.originalValue as string[] | undefined
-    if (!originalIds && options.strictRevert) {
+    if (!originalIds) {
       throw new AiResumeEditError(
         `Cannot restore ${entity} entry order: originalValue is missing.`,
         "invalid-reorder-metadata"
@@ -545,7 +544,7 @@ function revertReorderOutput(
     const originalOrder = output.originalValue as
       | SortableSectionKey[]
       | undefined
-    if (!originalOrder && options.strictRevert) {
+    if (!originalOrder) {
       throw new AiResumeEditError(
         "Cannot restore section order: originalValue is missing.",
         "invalid-reorder-metadata"

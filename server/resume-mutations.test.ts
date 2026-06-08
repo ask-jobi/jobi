@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  applyToolOutputToResume,
   moveSectionInResume,
   reorderSectionEntriesInResume
 } from "@/lib/resume/mutations"
@@ -237,33 +236,4 @@ describe("reorderSectionEntriesInResume", () => {
   })
 })
 
-describe("applyToolOutputToResume", () => {
-  it("creates a missing section when an AI add targets a blank resume", () => {
-    const resume: ResumeData = {
-      sectionOrder: [],
-      personalInfo: {
-        entryId: "pi-1",
-        firstName: "Ada",
-        lastName: "Lovelace",
-        email: "ada@example.com",
-        phone: "123"
-      }
-    }
-    const project = {
-      entryId: "project-1",
-      title: "Compiler Notes",
-      role: "Maintainer",
-      content: "Built a tiny compiler.",
-      date: { start: "2024-01", end: "2024-06", isCurrent: false }
-    }
 
-    const nextResume = applyToolOutputToResume(resume, {
-      operation: "add",
-      entity: "projects",
-      newEntry: project
-    })
-
-    expect(nextResume.sectionOrder).toEqual(["projects"])
-    expect(nextResume.projects?.entries).toEqual([project])
-  })
-})

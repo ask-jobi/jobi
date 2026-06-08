@@ -705,8 +705,6 @@ export function extractAiResumeEditOutputs(
   return results
 }
 
-export const extractToolOriginalValues = extractAiResumeEditOutputs
-
 export async function getMessage(messageId: string) {
   const supabase = await createClient()
 

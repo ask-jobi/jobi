@@ -261,29 +261,7 @@ describe("revertAiResumeEdit", () => {
     expect(revertedResume.projects?.entries).toEqual([deletedEntry])
   })
 
-  it("uses a best-effort append for legacy delete output without index metadata", () => {
-    const resume = createResume()
-    const deletedEntry = resume.education!.entries[0]!
-    const currentResume: ResumeData = {
-      ...resume,
-      education: {
-        entries: [resume.education!.entries[1]!]
-      }
-    }
-
-    const revertedResume = revertAiResumeEdit(currentResume, {
-      operation: "delete",
-      entity: "education",
-      id: "edu-1",
-      originalValue: deletedEntry
-    })
-
-    expect(
-      revertedResume.education?.entries.map((entry) => entry.entryId)
-    ).toEqual(["edu-2", "edu-1"])
-  })
-
-  it("throws a clear error when strict revert requires missing metadata", () => {
+  it("throws an error when delete output lacks originalIndex", () => {
     expect(() =>
       revertAiResumeEdit(
         createResume(),
@@ -292,8 +270,7 @@ describe("revertAiResumeEdit", () => {
           entity: "education",
           id: "edu-1",
           originalValue: createResume().education!.entries[0]!
-        },
-        { strictRevert: true }
+        }
       )
     ).toThrow(AiResumeEditError)
   })

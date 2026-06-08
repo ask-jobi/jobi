@@ -21,8 +21,14 @@ describe("resume date ranges", () => {
     })
   })
 
-  it("maps legacy education and employment start/end fields to date ranges", () => {
-    const resume = {
+  it("formats current date ranges as Present", () => {
+    expect(
+      formatDateRange({ start: "2024-01", end: "", isCurrent: true })
+    ).toBe("2024-01 - Present")
+  })
+
+  it("normalizes all date-bearing sections in a resume", () => {
+    const resume: ResumeData = {
       sectionOrder: ["education", "employment"],
       personalInfo: {
         entryId: "pi-1",
@@ -37,8 +43,7 @@ describe("resume date ranges", () => {
             entryId: "edu-1",
             school: "ZJU",
             degree: "BS",
-            start: "2018-09",
-            end: "2022-06",
+            date: { start: "2018-09", end: "present", isCurrent: false },
             content: "CS"
           }
         ]
@@ -49,29 +54,20 @@ describe("resume date ranges", () => {
             entryId: "job-1",
             company: "Acme",
             jobTitle: "Engineer",
-            start: "2022-07",
-            end: "present",
+            date: { start: "2022-07", end: "Present", isCurrent: false },
             content: "Built products."
           }
         ]
       }
-    } as unknown as ResumeData
+    }
 
     const normalizedResume = normalizeResumeDateRanges(resume)
 
     expect(normalizedResume.education?.entries[0]).toMatchObject({
-      date: { start: "2018-09", end: "2022-06", isCurrent: false }
+      date: { start: "2018-09", end: "", isCurrent: true }
     })
     expect(normalizedResume.employment?.entries[0]).toMatchObject({
       date: { start: "2022-07", end: "", isCurrent: true }
     })
-    expect(normalizedResume.education?.entries[0]).not.toHaveProperty("start")
-    expect(normalizedResume.employment?.entries[0]).not.toHaveProperty("end")
-  })
-
-  it("formats current date ranges as Present", () => {
-    expect(
-      formatDateRange({ start: "2024-01", end: "", isCurrent: true })
-    ).toBe("2024-01 - Present")
   })
 })
