@@ -1,6 +1,10 @@
-import { MessagePrimitive, ActionBarPrimitive } from "@assistant-ui/react"
+import {
+  MessagePrimitive,
+  ActionBarPrimitive,
+  useAuiState
+} from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
-import { CopyIcon } from "lucide-react"
+import { AlertCircleIcon, CopyIcon } from "lucide-react"
 import { MarkdownText } from "@/components/assistant-ui/markdown-text"
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback"
 import { Reasoning, ReasoningGroup } from "@/components/assistant-ui/reasoning"
@@ -28,12 +32,37 @@ export function AssistantMessage() {
               }
             }}
           />
+          <AssistantErrorMessage />
         </div>
         <div className="mt-1 flex items-center gap-1">
           <AssistantActionBar />
         </div>
       </div>
     </MessagePrimitive.Root>
+  )
+}
+
+function AssistantErrorMessage() {
+  const status = useAuiState((state) => state.message.status)
+  const isError =
+    status?.type === "incomplete" && status.reason === "error" && status.error
+
+  if (!isError) {
+    return null
+  }
+
+  const errorText =
+    typeof status.error === "string"
+      ? status.error
+      : JSON.stringify(status.error)
+
+  return (
+    <MessagePrimitive.Error>
+      <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>{errorText}</p>
+      </div>
+    </MessagePrimitive.Error>
   )
 }
 

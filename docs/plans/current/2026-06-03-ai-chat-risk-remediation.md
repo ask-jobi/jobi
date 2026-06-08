@@ -250,7 +250,7 @@ Phase 4 实现记录：
 - `lib/agent/resume-editor-execution.ts` 接受 agent-facing 的 `start` / `end`、`date.start` / `date.end`、`isCurrent` 等扁平输入，但输出和 rollback metadata 均保存 canonical `DateRange`。
 - prompt 和 tool examples 已补充日期输入说明，避免模型生成 persisted domain 不支持的裸日期字段。
 - 验证：`pnpm format:check` 通过；生产代码日期残留扫描无 `entry.start` / `entry.end` 等直接消费；改动测试集 28 个文件 / 136 个用例通过。
-- `pnpm exec tsc --noEmit` 已清除 Phase 4 DateRange 迁移相关错误；仍剩既有无关测试类型问题：`components/agent/chat/resume-editor-tool.test.tsx` 的 AI SDK tool part mock shape、`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
+- `pnpm exec tsc --noEmit` 已清除 Phase 4 DateRange 迁移相关错误；仍剩既有无关测试类型问题：`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 5: Resume 写入并发保护
 
@@ -277,74 +277,114 @@ Phase 5 实现记录：
 - truncate rollback 改为通过 `commitResumeOperation()` 在最新 resume 上执行 inverse operation；semantic conflict 会返回 `409`，且不会继续 `truncateMessages()`。
 - 手动编辑保存仍走完整 replacement，但 `useApplicationResume()` 会传当前 `application.resume.current_revision` 作为 `baseRevision`；当前 UI 对 stale save 仍显示保存失败 toast，后续若要自动 rebase 手动表单，需要另开计划把表单保存改为 operation / patch intent。
 - 验证：`pnpm format:check` 通过；改动回归集 28 个测试文件 / 140 个用例通过，覆盖 operation rebase success、stale-json-conflict、semantic-conflict、AI output metadata rebase、rollback conflict 不截断消息。
-- `pnpm exec tsc --noEmit` 没有新增 Phase 5 类型错误；仍剩既有无关测试类型问题：`components/agent/chat/resume-editor-tool.test.tsx` 的 AI SDK tool part mock shape、`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
+- `pnpm exec tsc --noEmit` 没有新增 Phase 5 类型错误；仍剩既有无关测试类型问题：`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 6: Canonical Session 唯一性
 
-- [ ] 写 migration 处理已有重复 `resume_chat_sessions`
-- [ ] 增加 `unique(user_id, resume_id)` 约束或等价唯一 index
-- [ ] 将 `getOrCreateCanonicalSessionSummary()` 改为 upsert / on conflict 流程
-- [ ] 补并发创建 canonical session 的测试
-- [ ] 确认归档 session / 删除 session 不破坏 canonical session 获取语义
+- [x] 写 migration 处理已有重复 `resume_chat_sessions`
+- [x] 增加 `unique(user_id, resume_id)` 约束或等价唯一 index
+- [x] 将 `getOrCreateCanonicalSessionSummary()` 改为 upsert / on conflict 流程
+- [x] 补并发创建 canonical session 的测试
+- [x] 确认归档 session / 删除 session 不破坏 canonical session 获取语义
+
+Phase 6 实现记录：
+
+- 新增 `20260607140052_canonical_resume_chat_sessions.sql`，按当前 resolver 的 `updated_at desc, created_at desc, id desc` 选择规则保留每个 `(user_id, resume_id)` 的 canonical row。
+- 迁移会先把重复 session 的 `resume_chat_messages` / `chat_events` 迁到 canonical row，再删除重复 session；随后在 `resume_chat_sessions(user_id, resume_id)` 上创建唯一 index。
+- 迁移在重算 token totals 时临时关闭 `update_resume_chat_sessions_updated_at` trigger，避免把历史 session 的排序时间改成迁移时间。
+- `getOrCreateCanonicalSessionSummary()` 改为 `upsert(..., { onConflict: "user_id,resume_id", ignoreDuplicates: true })` 后读取 canonical summary，避免两个并发请求都先查空再插入。
+- 归档 session 仍是 canonical session，后续获取会返回归档 row；删除 canonical session 后，该 row 不存在，后续获取会通过同一个 upsert 流程创建新 canonical row。
+- 验证：`pnpm format:check` 通过；`pnpm lint` 在 Node 24.15.0 下通过；`pnpm vitest run server/ai/chat/history.test.ts app/api/chat-sessions/route.test.ts 'app/api/chat-sessions/[id]/route.test.ts' --project server` 21 个用例通过；`supabase migration up --local` 成功；本地 `pg_indexes` 查询确认 unique index 已创建。
+- `pnpm exec tsc --noEmit` 仍失败于既有无关测试类型问题：`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 7: Stream 稳定性与 Token 统计
 
-- [ ] 为 `streamText()` 增加 request abort signal 或固定 timeout
-- [ ] 为 `streamText()` 设置 max output token
-- [ ] 将 stream error 映射为前端可显示、可重试的错误消息
-- [ ] 评估 `updateSessionTokenUsage()` 是否应从 fire-and-forget 改为 awaited 或重试队列
-- [ ] 修复 `/api/chat-sessions/[id]/messages` 忽略 `limit` query 的假契约，或删除前端参数
-- [ ] 确认 message count 是否需要过滤 `truncated = false`
+- [x] 为 `streamText()` 增加 request abort signal 或固定 timeout
+- [x] 为 `streamText()` 设置 max output token
+- [x] 将 stream error 映射为前端可显示、可重试的错误消息
+- [x] 评估 `updateSessionTokenUsage()` 是否应从 fire-and-forget 改为 awaited 或重试队列
+- [x] 修复 `/api/chat-sessions/[id]/messages` 忽略 `limit` query 的假契约，或删除前端参数
+- [x] 确认 message count 是否需要过滤 `truncated = false`
+
+Phase 7 实现记录：
+
+- `/api/chat/resume` 的 `streamText()` 已接入 `request.signal`、`timeout: { totalMs: 120_000, stepMs: 60_000, chunkMs: 30_000 }` 和 `maxOutputTokens: 2048`。
+- UI stream 和 AI SDK stream 均通过统一 mapper 将 stream 错误转成可重试文案；timeout / abort 映射为超时重试文案，其他 provider / stream 错误映射为通用重试文案，同时保留服务端日志。
+- `updateSessionTokenUsage()` 从 fire-and-forget 改为在 message persistence 后 awaited；失败仍只记录日志，不把已完成的 assistant 回复变成失败。扣减 access pass token 会在 session token usage 更新尝试结束后继续执行。
+- `/api/chat-sessions/[id]/messages` 现在读取 `limit` query，默认 100，上限 200；前端 `useChatHistory({ limit })` 的参数契约恢复真实含义。
+- session summary / canonical list 的 `messageCount` 改为只统计 `truncated = false`，与 `loadHistory()`、token usage 明细保持一致。
+- 验证：`pnpm format:check` 通过；`pnpm lint` 在 Node 24.15.0 下通过；`pnpm vitest run app/api/chat/resume/route.test.ts "app/api/chat-sessions/[id]/messages/route.test.ts" server/ai/chat/history.test.ts server/chat-history-token-usage.test.ts --project server` 18 个用例通过，覆盖 stream 参数、可重试错误文案、awaited token usage 顺序、messages limit 和 active message count。
+- `pnpm exec tsc --noEmit` 仍失败于既有无关测试类型问题：`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ### Phase 8: 回归与文档
 
-- [ ] 更新 `docs/specs/ai-chat-system.md` 的 rollback / edit contract 描述
-- [ ] 更新相关 current plan 状态，避免重复追踪同一问题
-- [ ] 跑 chat 相关 vitest 套件
-- [ ] 跑 resume mutation / template schema 相关 vitest 套件
-- [ ] 按 `docs/playwright-session-testing-guide.md` 对 AI Chat 主流程做 targeted UI 回归
+- [x] 更新 `docs/specs/ai-chat-system.md` 的 rollback / edit contract 描述
+- [x] 更新相关 current plan 状态，避免重复追踪同一问题
+- [x] 跑 chat 相关 vitest 套件
+- [x] 跑 resume mutation / template schema 相关 vitest 套件
+- [x] 按 `docs/playwright-session-testing-guide.md` 对 AI Chat 主流程做 targeted UI 回归
+
+Phase 8 实现记录：
+
+- `docs/specs/ai-chat-system.md` 已更新当前 AI Chat contract：canonical session 唯一性、inverse-operation rollback、operation rebase / stale-json-conflict / semantic-conflict、DateRange 持久化、stream timeout / max output / error 文案、awaited token usage。
+- `docs/plans/current/2026-05-20-ai-subsystem-defect-fixes.md` 已同步标记 Phase 7 覆盖的重复项；`generateText` timeout 与 `listSessions` batch query 仍保留未完成。
+- Playwright targeted regression 覆盖：登录、Dashboard、Application `/resume` 自动跳转、token usage header、AI Chat / Evaluation tab 切换、history load、composer enabled/disabled、stream error fallback。
+- UI 回归发现历史数据中存在 `parts: []` 的 assistant 消息，会导致后续 chat `validateUIMessages()` 500；已在 `POST /api/chat/resume` 中过滤历史空 parts，并补测试。
+- UI 回归发现模型认证失败时 assistant message 没有显示 stream error 文案；已为 `AssistantMessage` 增加 `MessagePrimitive.Error` 渲染，并确认 UI 显示 “The chat response could not be completed. Please retry.”
+- UI 回归发现默认标题生成 fire-and-forget 会在模型认证失败时产生 unhandled rejection；已补 `.catch()`，现在只记录 `Failed to generate chat session title`。
+- 2026-06-08 使用补充后的 DeepSeek API 重新回归，普通 assistant 回复成功：`Reply with exactly: Hello!` 返回 `Hello!`，token header 从 `6,259 / 100,000` 更新到 `9,335 / 100,000`。
+- DeepSeek 复测时发现旧的失败 user prompt 会在空 assistant 历史消息后残留进下一次模型上下文，导致纯文本请求仍触发旧编辑工具；`POST /api/chat/resume` 现在会成对丢弃空 assistant 及其前置未完成 user turn，并丢弃末尾 dangling user turn，避免 replay stale prompt。
+- 修复后再次回归 `Reply with exactly: Banana. Do not edit the resume.`，assistant 返回纯文本 `Banana.`，没有新增工具调用卡片；token header 从 `9,335 / 100,000` 更新到 `10,917 / 100,000`，浏览器 console error 为 0，服务端 `POST /api/chat/resume` 返回 200。
+- 2026-06-08 继续补齐剩余测试：AI edit module round-trip 覆盖 personalInfo rewrite、entry rewrite、delete first / middle / last、delete last section entry、add existing / missing section、entry / section reorder；`/api/chat/truncate` 覆盖 add existing、add created section、entry / section reorder authoritative rollback；`/api/chat/resume` 覆盖 output-available tool parts 及 rollback metadata 持久化。
+- Playwright 剩余回归发现 object-valued rewrite tool card 会因 `modified.split is not a function` 触发 client runtime error；`ResumeActionOutputCard` 已将 rewrite diff 值改为安全文本格式化，并补 object DateRange rewrite 组件测试。
+- Playwright 剩余回归发现 DateRange rollback semantic conflict 对象比较受 key 顺序影响，导致语义相同的 `{start,end,isCurrent}` / `{end,start,isCurrent}` 被误判为冲突；`AiResumeEdit` semantic compare 已改为 key-order-insensitive deep equality，并补测试。
+- Playwright targeted regression 继续覆盖：AI 新增不存在的 Projects section 后画布出现新 section，truncate 后移除；AI 改写 `personalInfo.firstName` 后画布更新为 `PhaseTest`，truncate 后恢复空白；AI 删除唯一 education entry 后 section 消失，truncate 后恢复原 section 和 entry。冲突路径通过组件测试覆盖 patch version conflict 会拒绝 stale patch 并 refetch authoritative resume，不静默覆盖本地状态。
+- 验证：chat 相关 vitest 21 个文件 / 104 个用例通过；resume mutation / template schema 相关 vitest 12 个文件 / 53 个用例通过；`pnpm format:check` 与 `pnpm lint` 通过。
+- `pnpm exec tsc --noEmit` 仍失败于既有无关测试类型问题：`server/ai/model.test.ts` 的 readonly `NODE_ENV`、`server/auth-helper.test.ts` 的 `ApiError` matcher、`server/intake/orchestrator.test.ts` 的 mock document / output 类型。
 
 ## 测试计划
 
 ### 单元测试
 
-- [ ] AI edit module round-trip: apply -> revert 后深相等
-- [ ] 单独撤回 AI 修改时保留后续手动编辑
-- [ ] `personalInfo` rewrite round-trip
-- [ ] entry rewrite round-trip
-- [ ] delete first / middle / last entry round-trip
-- [ ] delete 最后一条 entry 后恢复 section round-trip
-- [ ] add 到已有 section round-trip
-- [ ] add 到不存在 section round-trip
-- [ ] reorderEntries / reorderSections round-trip
+- [x] AI edit module round-trip: apply -> revert 后深相等
+- [x] 单独撤回 AI 修改时保留后续手动编辑
+- [x] `personalInfo` rewrite round-trip
+- [x] entry rewrite round-trip
+- [x] delete first / middle / last entry round-trip
+- [x] delete 最后一条 entry 后恢复 section round-trip
+- [x] add 到已有 section round-trip
+- [x] add 到不存在 section round-trip
+- [x] reorderEntries / reorderSections round-trip
 - [x] education / employment / projects / research 均使用 `DateRange` 作为起止时间模型
 - [x] agent-facing 扁平日期输入能 normalize 成 canonical `DateRange`
 - [x] projects / research date schema parse 与模板消费一致
 - [x] `DateRange.isCurrent` 在 education / employment / projects / research 中能正确解析、编辑、渲染为 Present
 - [x] resume 写入覆盖 `operation-rebase-success`、`stale-json-conflict`、`semantic-conflict`
-- [ ] canonical session 并发创建
+- [x] canonical session 并发创建
 
 ### 组件测试
 
-- [ ] `UserActionBar` truncate 后 thread messages 和 `headId` 一致
-- [ ] Chat patch version conflict 后 refetch authoritative resume
-- [ ] Chat pending action 在 thread ready 后只消费一次
+- [x] `UserActionBar` truncate 后 thread messages 和 `headId` 一致
+- [x] Chat patch version conflict 后 refetch authoritative resume
+- [x] Chat pending action 在 thread ready 后只消费一次
 
 ### API 测试
 
-- [ ] `/api/chat/resume` tool success 持久化完整 rollback metadata
-- [ ] `/api/chat/resume` tool failure 持久化 AI SDK error parts
-- [ ] `/api/chat/truncate` 对 personalInfo / add / delete / reorder 均返回正确 authoritative resume
-- [ ] `/api/chat-sessions/[id]/messages` limit 行为与契约一致
+- [x] `/api/chat/resume` tool success 持久化完整 rollback metadata
+- [x] `/api/chat/resume` tool failure 持久化 AI SDK error parts
+- [x] `/api/chat/truncate` 对 personalInfo / add / delete / reorder 均返回正确 authoritative resume
+- [x] `/api/chat-sessions/[id]/messages` limit 行为与契约一致
 
 ### UI 回归
 
-- [ ] 发送普通聊天消息，assistant 正常回复
-- [ ] 让 AI 改写 personalInfo，画布更新，撤回后恢复
-- [ ] 让 AI 新增不存在 section，画布出现新 section，撤回后移除
-- [ ] 让 AI 删除最后一个 entry，section 消失，撤回后恢复原 section 和顺序
-- [ ] 手动编辑与 AI 编辑冲突时，前端不会静默丢数据
-- [ ] token 余额更新与 token usage 面板保持一致
+- [x] 发送普通聊天消息，assistant 正常回复
+- [x] 让 AI 改写 personalInfo，画布更新，撤回后恢复
+- [x] 让 AI 新增不存在 section，画布出现新 section，撤回后移除
+- [x] 让 AI 删除最后一个 entry，section 消失，撤回后恢复原 section 和顺序
+- [x] 手动编辑与 AI 编辑冲突时，前端不会静默丢数据
+- [x] token 余额更新与 token usage 面板保持一致
+
+UI 回归备注：初次回归时 `.env.test` 模型认证失败，已验证失败时前端显示可重试文案，且服务端无 unhandled rejection；2026-06-08 补充 DeepSeek API 后重新回归，普通 assistant 成功回复与 token header 更新均通过。剩余 AI edit / rollback targeted regression 使用 application `4058814d-ab87-4875-9d9d-8c1b2ace983c` 验证；手动编辑与 AI patch 冲突不做高风险浏览器并发伪造，采用组件回归确认 stale patch 被拒绝并 refetch authoritative resume。
 
 ## 风险
 

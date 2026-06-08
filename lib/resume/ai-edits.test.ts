@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   AiResumeEditError,
+  type AiResumeEditOutput,
   applyAiResumeEdit,
   replayAiResumeEdits,
   revertAiResumeEdit,
@@ -53,6 +54,32 @@ function createResume(): ResumeData {
           entryId: "skill-1",
           group: "Languages",
           content: "TypeScript"
+        }
+      ]
+    }
+  }
+}
+
+function createResumeWithThreeEducationEntries(): ResumeData {
+  const resume = createResume()
+  const firstEntry = resume.education!.entries[0]!
+
+  return {
+    ...resume,
+    education: {
+      entries: [
+        firstEntry,
+        {
+          ...firstEntry,
+          entryId: "edu-2",
+          school: "Middle School",
+          degree: "MS"
+        },
+        {
+          ...firstEntry,
+          entryId: "edu-3",
+          school: "Last School",
+          degree: "PhD"
         }
       ]
     }
@@ -288,6 +315,42 @@ describe("revertAiResumeEdit", () => {
     ).toThrow(AiResumeEditError)
   })
 
+  it("does not treat reordered object keys as a semantic conflict", () => {
+    const currentResume = createResume()
+    currentResume.projects!.entries[0]!.date = {
+      start: "2026-01",
+      end: "",
+      isCurrent: true
+    }
+
+    const revertedResume = revertAiResumeEdit(
+      currentResume,
+      {
+        operation: "rewrite",
+        entity: "projects",
+        id: "project-1",
+        field: "date",
+        value: {
+          end: "",
+          start: "2026-01",
+          isCurrent: true
+        },
+        originalValue: {
+          end: "",
+          start: "2026-01",
+          isCurrent: false
+        }
+      } as any,
+      { detectSemanticConflict: true }
+    )
+
+    expect(revertedResume.projects?.entries[0]?.date).toEqual({
+      end: "",
+      start: "2026-01",
+      isCurrent: false
+    })
+  })
+
   it("reverts entry and section reorders", () => {
     const currentResume: ResumeData = {
       ...createResume(),
@@ -350,5 +413,150 @@ describe("replayAiResumeEdits and revertAiResumeEdits", () => {
 
     expect(replayedResume.education?.entries[0]?.school).toBe("Third School")
     expect(revertedResume.education?.entries[0]?.school).toBe("Original School")
+  })
+
+  it.each([
+    [
+      "personalInfo rewrite",
+      createResume(),
+      [
+        {
+          operation: "rewrite",
+          entity: "personalInfo",
+          id: "pi-1",
+          field: "firstName",
+          originalValue: "Ada",
+          value: "Augusta"
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "entry rewrite",
+      createResume(),
+      [
+        {
+          operation: "rewrite",
+          entity: "education",
+          id: "edu-1",
+          field: "school",
+          originalValue: "Original School",
+          value: "Updated School"
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "delete first entry",
+      createResumeWithThreeEducationEntries(),
+      [
+        {
+          operation: "delete",
+          entity: "education",
+          id: "edu-1",
+          originalValue:
+            createResumeWithThreeEducationEntries().education!.entries[0]!,
+          originalIndex: 0
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "delete middle entry",
+      createResumeWithThreeEducationEntries(),
+      [
+        {
+          operation: "delete",
+          entity: "education",
+          id: "edu-2",
+          originalValue:
+            createResumeWithThreeEducationEntries().education!.entries[1]!,
+          originalIndex: 1
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "delete last entry",
+      createResumeWithThreeEducationEntries(),
+      [
+        {
+          operation: "delete",
+          entity: "education",
+          id: "edu-3",
+          originalValue:
+            createResumeWithThreeEducationEntries().education!.entries[2]!,
+          originalIndex: 2
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "delete last section entry",
+      createResume(),
+      [
+        {
+          operation: "delete",
+          entity: "projects",
+          id: "project-1",
+          originalValue: createResume().projects!.entries[0]!,
+          originalIndex: 0,
+          originalSectionOrder: ["education", "projects", "skills"]
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "add to existing section",
+      createResume(),
+      [
+        {
+          operation: "add",
+          entity: "skills",
+          newEntry: {
+            entryId: "skill-2",
+            group: "Tools",
+            content: "Supabase"
+          },
+          createdSection: false,
+          sectionDidNotExistBefore: false
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "add to missing section",
+      {
+        sectionOrder: ["education", "skills"],
+        personalInfo: createResume().personalInfo,
+        education: createResume().education,
+        skills: createResume().skills
+      } satisfies ResumeData,
+      [
+        {
+          operation: "add",
+          entity: "projects",
+          newEntry: createResume().projects!.entries[0]!,
+          createdSection: true,
+          sectionDidNotExistBefore: true
+        }
+      ] satisfies AiResumeEditOutput[]
+    ],
+    [
+      "entry and section reorder",
+      createResume(),
+      [
+        {
+          operation: "reorderEntries",
+          entity: "education",
+          orderedEntryIds: ["edu-2", "edu-1"],
+          originalValue: ["edu-1", "edu-2"]
+        },
+        {
+          operation: "reorderSections",
+          entity: null,
+          orderedSectionIds: ["skills", "projects", "education"],
+          originalValue: ["education", "projects", "skills"]
+        }
+      ] satisfies AiResumeEditOutput[]
+    ]
+  ])("round-trips %s", (_caseName, baseResume, outputs) => {
+    const replayedResume = replayAiResumeEdits(baseResume, outputs)
+    const revertedResume = revertAiResumeEdits(replayedResume, outputs)
+
+    expect(revertedResume).toEqual(baseResume)
   })
 })

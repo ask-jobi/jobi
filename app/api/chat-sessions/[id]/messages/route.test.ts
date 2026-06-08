@@ -49,9 +49,9 @@ describe("GET /api/chat-sessions/[id]/messages", () => {
     vi.restoreAllMocks()
   })
 
-  const createMockRequest = () => {
+  const createMockRequest = (url?: string) => {
     return new NextRequest(
-      "http://localhost:3000/api/chat-sessions/session-1/messages"
+      url ?? "http://localhost:3000/api/chat-sessions/session-1/messages"
     )
   }
 
@@ -91,12 +91,43 @@ describe("GET /api/chat-sessions/[id]/messages", () => {
     expect(data[1].id).toBe("msg-2")
   })
 
-  it("should call loadHistory with sessionId", async () => {
+  it("should call loadHistory with default limit", async () => {
     const params = Promise.resolve({ id: "session-1" })
     await GET(createMockRequest(), { params })
 
     expect(vi.mocked(chatHistoryModule.loadHistory)).toHaveBeenCalledWith(
-      "session-1"
+      "session-1",
+      { limit: 100 }
+    )
+  })
+
+  it("should pass the requested message limit to loadHistory", async () => {
+    const params = Promise.resolve({ id: "session-1" })
+    await GET(
+      createMockRequest(
+        "http://localhost:3000/api/chat-sessions/session-1/messages?limit=25"
+      ),
+      { params }
+    )
+
+    expect(vi.mocked(chatHistoryModule.loadHistory)).toHaveBeenCalledWith(
+      "session-1",
+      { limit: 25 }
+    )
+  })
+
+  it("should cap the requested message limit", async () => {
+    const params = Promise.resolve({ id: "session-1" })
+    await GET(
+      createMockRequest(
+        "http://localhost:3000/api/chat-sessions/session-1/messages?limit=500"
+      ),
+      { params }
+    )
+
+    expect(vi.mocked(chatHistoryModule.loadHistory)).toHaveBeenCalledWith(
+      "session-1",
+      { limit: 200 }
     )
   })
 

@@ -141,11 +141,11 @@ const { data: counts } = await supabase
   - [x] 更新测试用例（少于 3 个 action 的场景）
 - [ ] 为 AI 调用增加超时控制
   - [ ] `generateText` 调用增加 `abortSignal`（从 `request.signal` 传入或设置固定超时）
-  - [ ] `streamText` 增加 `maxTokens` 防止无限生成
+  - [x] `streamText` 增加 `maxTokens` 防止无限生成
 - [ ] 将 `onFinish` 中关键持久化操作从 fire-and-forget 改为同步
-  - [ ] `saveMessage` / `updateMessage` → `await`
-  - [ ] `updateSessionTokenUsage` → `await`
-  - [ ] `consumeChatTokens` → `await`
+  - [x] `saveMessage` / `updateMessage` → `await`
+  - [x] `updateSessionTokenUsage` → `await`
+  - [x] `consumeChatTokens` → `await`
 - [ ] 优化 `lib/agent/chat-history.ts` 中 `listSessions` 的 N+1 查询
   - [ ] 单次 batch query 获取所有 session 的 message count
 
@@ -160,7 +160,13 @@ const { data: counts } = await supabase
   - [ ] 确认 `server/ai/prompts/resume-ops-from-eval.prompt.ts` 是否可删除
   - [ ] 如需要保留，标记 `@deprecated` 或补充 TODO
 - [ ] 流式错误传播
-  - [ ] `POST /api/chat/resume` 中 `streamText` 失败时通过 `dataStream` 发送 error part
+  - [x] `POST /api/chat/resume` 中 `streamText` 失败时通过 `dataStream` 发送 error part
+
+交叉实现记录：
+
+- 2026-06-07 的 AI Chat risk remediation Phase 7 已为 `POST /api/chat/resume` 的 `streamText()` 增加 request abort signal、固定 timeout、`maxOutputTokens: 2048` 与可重试 stream error 文案。
+- 同一改动已将 `updateSessionTokenUsage()` 改为在消息持久化后 awaited；`saveMessage` / `updateMessage` 和 `consumeChatTokens` 在当前 chat route 中也保持 awaited。
+- 本计划中 `generateText` timeout 与 `listSessions` batch query 仍未完成，继续保留追踪。
 
 ## 测试计划
 

@@ -1,9 +1,15 @@
 /**
  * @vitest-environment jsdom
  */
+import type { ComponentType } from "react"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { ResumeEditorToolUI } from "./resume-editor-tool"
+
+const TestResumeEditorToolUI = ResumeEditorToolUI as ComponentType<{
+  isError: boolean
+  result: unknown
+}>
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
@@ -20,7 +26,7 @@ vi.mock("next-intl", () => ({
 describe("ResumeEditorToolUI", () => {
   it("renders AI SDK tool results with the resume output card", () => {
     render(
-      <ResumeEditorToolUI
+      <TestResumeEditorToolUI
         isError={false}
         result={{
           operation: "rewrite",
@@ -39,9 +45,30 @@ describe("ResumeEditorToolUI", () => {
     expect(screen.getByText("Edited School")).toBeInTheDocument()
   })
 
+  it("renders object rewrite values without crashing", () => {
+    render(
+      <TestResumeEditorToolUI
+        isError={false}
+        result={{
+          operation: "rewrite",
+          entity: "education",
+          id: "edu-1",
+          field: "date",
+          originalValue: { start: "2020", end: "2024", isCurrent: false },
+          value: { start: "2020", end: "", isCurrent: true }
+        }}
+      />
+    )
+
+    expect(screen.getByText("Education")).toBeInTheDocument()
+    expect(screen.getByText("date")).toBeInTheDocument()
+    expect(screen.getAllByText(/isCurrent/)).toHaveLength(2)
+    expect(screen.getByText(/2024/)).toBeInTheDocument()
+  })
+
   it("renders inline errors instead of hiding failed tool calls", () => {
     render(
-      <ResumeEditorToolUI
+      <TestResumeEditorToolUI
         isError
         result={{ errorText: "Entry with id missing-entry not found" }}
       />

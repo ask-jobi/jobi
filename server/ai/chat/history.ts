@@ -16,12 +16,7 @@ type ChatSession = Database["public"]["Tables"]["resume_chat_sessions"]["Row"]
 type ChatSessionStatus =
   Database["public"]["Tables"]["resume_chat_sessions"]["Insert"]["status"]
 type ChatMessageRole = ChatMessage["role"]
-
-interface CreateSessionParams {
-  userId: string
-  resumeId: string
-  title?: string
-}
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>
 
 interface GetOrCreateCanonicalSessionParams {
   userId: string
@@ -95,35 +90,6 @@ export interface SessionTokenUsage {
   totalCachedTokens: number
   totalReasoningTokens: number
   messages: SessionTokenUsageMessage[]
-}
-
-/**
- * Create a new chat session (internal).
- * External callers should use getOrCreateCanonicalSessionSummary.
- */
-async function createSession({
-  userId,
-  resumeId,
-  title
-}: CreateSessionParams): Promise<ChatSession> {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from("resume_chat_sessions")
-    .insert({
-      user_id: userId,
-      resume_id: resumeId,
-      title: title || DEFAULT_CHAT_SESSION_TITLE
-    })
-    .select()
-    .single()
-
-  if (error) {
-    console.error("Failed to create chat session:", error)
-    throw new Error(`Failed to create chat session: ${error.message}`)
-  }
-
-  return data
 }
 
 export async function updateMessage({
@@ -283,6 +249,19 @@ export async function loadMessagesAfter(
   }))
 }
 
+async function countActiveMessages(
+  supabase: SupabaseClient,
+  sessionId: string
+): Promise<number> {
+  const { count } = await supabase
+    .from("resume_chat_messages")
+    .select("*", { count: "exact", head: true })
+    .eq("session_id", sessionId)
+    .eq("truncated", false)
+
+  return count ?? 0
+}
+
 /**
  * Get session summary (for listing sessions)
  */
@@ -302,10 +281,7 @@ export async function getSessionSummary(
     throw new Error(`Failed to get session: ${sessionError.message}`)
   }
 
-  const { count } = await supabase
-    .from("resume_chat_messages")
-    .select("*", { count: "exact", head: true })
-    .eq("session_id", sessionId)
+  const messageCount = await countActiveMessages(supabase, sessionId)
 
   return {
     id: session.id,
@@ -314,7 +290,7 @@ export async function getSessionSummary(
     status: session.status,
     createdAt: session.created_at,
     updatedAt: session.updated_at,
-    messageCount: count ?? 0,
+    messageCount,
     conversationSummary: session.conversation_summary || undefined,
     totalTokens: getTotalTokens(session),
     totalInputTokens: session.total_input_tokens ?? 0,
@@ -378,10 +354,7 @@ async function listSessions(
 
   return Promise.all(
     sessions.map(async (session) => {
-      const { count } = await supabase
-        .from("resume_chat_messages")
-        .select("*", { count: "exact", head: true })
-        .eq("session_id", session.id)
+      const messageCount = await countActiveMessages(supabase, session.id)
 
       return {
         id: session.id,
@@ -390,7 +363,7 @@ async function listSessions(
         status: session.status,
         createdAt: session.created_at,
         updatedAt: session.updated_at,
-        messageCount: count ?? 0
+        messageCount
       } as SessionSummary
     })
   )
@@ -400,21 +373,35 @@ export async function getOrCreateCanonicalSessionSummary({
   userId,
   resumeId
 }: GetOrCreateCanonicalSessionParams): Promise<SessionSummary> {
-  const existingSessions = await listSessions(resumeId, { userId, limit: 1 })
-  const existingSession = existingSessions[0]
+  const supabase = await createClient()
 
-  if (existingSession) {
-    return existingSession
+  const { error } = await supabase.from("resume_chat_sessions").upsert(
+    {
+      user_id: userId,
+      resume_id: resumeId,
+      title: DEFAULT_CHAT_SESSION_TITLE
+    },
+    {
+      onConflict: "user_id,resume_id",
+      ignoreDuplicates: true
+    }
+  )
+
+  if (error) {
+    console.error("Failed to resolve canonical chat session:", error)
+    throw new Error(
+      `Failed to resolve canonical chat session: ${error.message}`
+    )
   }
 
-  await createSession({ userId, resumeId })
-
-  const createdSession = (await listSessions(resumeId, { userId, limit: 1 }))[0]
-  if (!createdSession) {
+  const canonicalSession = (
+    await listSessions(resumeId, { userId, limit: 1 })
+  )[0]
+  if (!canonicalSession) {
     throw new Error("Failed to resolve canonical chat session")
   }
 
-  return createdSession
+  return canonicalSession
 }
 
 /**

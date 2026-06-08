@@ -52,6 +52,16 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 const CHAT_TOKEN_LIMIT_MESSAGE =
   "Your token balance is exhausted. Buy another token bundle to continue chatting."
+const CHAT_STREAM_MAX_OUTPUT_TOKENS = 2048
+const CHAT_STREAM_TIMEOUT_MS = {
+  totalMs: 120_000,
+  stepMs: 60_000,
+  chunkMs: 30_000
+}
+const CHAT_STREAM_RETRY_MESSAGE =
+  "The chat response could not be completed. Please retry."
+const CHAT_STREAM_TIMEOUT_MESSAGE =
+  "The chat response took too long. Please retry."
 
 const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
   return {
@@ -59,6 +69,57 @@ const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
     role: msg.role,
     parts: msg.parts
   }
+}
+
+function hasMessageParts(message: ChatUIMessage): boolean {
+  return Array.isArray(message.parts) && message.parts.length > 0
+}
+
+function sanitizeHistoricalContextMessages(
+  messages: ChatUIMessage[]
+): ChatUIMessage[] {
+  const sanitizedMessages: ChatUIMessage[] = []
+
+  for (const message of messages) {
+    if (!hasMessageParts(message)) {
+      if (
+        message.role === "assistant" &&
+        sanitizedMessages.at(-1)?.role === "user"
+      ) {
+        sanitizedMessages.pop()
+      }
+      continue
+    }
+
+    if (message.role === "user" && sanitizedMessages.at(-1)?.role === "user") {
+      sanitizedMessages.pop()
+    }
+
+    sanitizedMessages.push(message)
+  }
+
+  if (sanitizedMessages.at(-1)?.role === "user") {
+    sanitizedMessages.pop()
+  }
+
+  return sanitizedMessages
+}
+
+function getChatStreamErrorMessage(error: unknown): string {
+  console.error("[Resume Chat] Stream error:", error)
+
+  if (
+    error instanceof DOMException &&
+    (error.name === "AbortError" || error.name === "TimeoutError")
+  ) {
+    return CHAT_STREAM_TIMEOUT_MESSAGE
+  }
+
+  if (error instanceof Error && error.name === "AbortError") {
+    return CHAT_STREAM_TIMEOUT_MESSAGE
+  }
+
+  return CHAT_STREAM_RETRY_MESSAGE
 }
 
 async function loadContextMessages(sessionId: string) {
@@ -131,7 +192,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const [currentSession, contextMessages] = await Promise.all([
+    const [currentSession, loadedContextMessages] = await Promise.all([
       getSessionSummary(sessionId),
       loadContextMessages(sessionId)
     ])
@@ -153,16 +214,18 @@ export async function POST(request: NextRequest) {
       .evaluation_report as ResumeEvaluationOutput
 
     const conversationSummary = currentSession?.conversationSummary
-
-    const existingIdx = contextMessages.findIndex((m) => m.id === message.id)
-    if (existingIdx >= 0) {
-      contextMessages[existingIdx] = message
-    } else {
-      contextMessages.push(message)
-    }
+    const persistedCurrentMessage = loadedContextMessages.find(
+      (contextMessage) => contextMessage.id === message.id
+    )
+    const contextMessages = sanitizeHistoricalContextMessages(
+      loadedContextMessages.filter(
+        (contextMessage) => contextMessage.id !== message.id
+      )
+    )
+    contextMessages.push(message)
 
     if (message.role === "user") {
-      if (existingIdx >= 0) {
+      if (persistedCurrentMessage) {
         await updateMessage({
           messageId: message.id,
           parts: message.parts
@@ -199,7 +262,7 @@ export async function POST(request: NextRequest) {
       currentSession?.title
     )
 
-    // 空的message会导致验证失败
+    // Empty or dangling historical turns can make validation fail or replay stale prompts.
     const uiMessages = await validateUIMessages<ChatUIMessage>({
       messages: allMessages,
       tools
@@ -208,6 +271,7 @@ export async function POST(request: NextRequest) {
     const stream = createUIMessageStream({
       originalMessages: uiMessages,
       generateId: generateUUID,
+      onError: getChatStreamErrorMessage,
       execute: async ({ writer: dataStream }) => {
         const assistantMessageId = generateUUID()
         const supabase = await createClient()
@@ -226,14 +290,21 @@ export async function POST(request: NextRequest) {
           model: model,
           stopWhen: stepCountIs(5),
           messages: await convertToModelMessages(uiMessages),
+          abortSignal: request.signal,
+          timeout: CHAT_STREAM_TIMEOUT_MS,
+          maxOutputTokens: CHAT_STREAM_MAX_OUTPUT_TOKENS,
           experimental_transform: smoothStream(),
-          tools: serverTools
+          tools: serverTools,
+          onError: ({ error }) => {
+            getChatStreamErrorMessage(error)
+          }
         })
 
         dataStream.merge(
           result.toUIMessageStream({
             generateMessageId: () => assistantMessageId,
             sendReasoning: true,
+            onError: getChatStreamErrorMessage,
             messageMetadata: ({ part }) => {
               if (part.type !== "finish") {
                 return undefined
@@ -259,13 +330,17 @@ export async function POST(request: NextRequest) {
         )
 
         if (shouldGenerateSessionTitle) {
-          generateChatSessionTitle(message.parts).then(async (title) => {
-            if (!title) {
-              return
-            }
+          void generateChatSessionTitle(message.parts)
+            .then(async (title) => {
+              if (!title) {
+                return
+              }
 
-            await updateSessionTitle(sessionId, title)
-          })
+              await updateSessionTitle(sessionId, title)
+            })
+            .catch((error) => {
+              console.error("Failed to generate chat session title:", error)
+            })
         }
       },
       onFinish: async ({ messages: finishedMessages, responseMessage }) => {
@@ -310,7 +385,7 @@ export async function POST(request: NextRequest) {
         await Promise.all(persistenceTasks)
 
         if (responseUsage && responseUsage.totalTokens > 0) {
-          void updateSessionTokenUsage(sessionId).catch((err) => {
+          await updateSessionTokenUsage(sessionId).catch((err) => {
             console.error("Failed to update session token usage:", err)
           })
 

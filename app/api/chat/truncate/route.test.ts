@@ -503,6 +503,180 @@ describe("POST /api/chat/truncate", () => {
     ).toEqual(["edu-1", "edu-2", "edu-3"])
   })
 
+  it("removes an AI-added entry from an existing section", async () => {
+    const originalEntry = baseResume().education!.entries[0]!
+    const addedEntry = {
+      ...originalEntry,
+      entryId: "edu-added",
+      school: "Added School"
+    }
+
+    mockCurrentResume(
+      baseResume({
+        education: {
+          entries: [originalEntry, addedEntry]
+        }
+      })
+    )
+    vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([
+      {
+        id: "msg-2",
+        session_id: "session-1",
+        role: "assistant" as const,
+        parts: [],
+        truncated: false,
+        has_tools: true,
+        created_at: "2024-01-01T00:01:00Z",
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0
+      }
+    ])
+    vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
+      {
+        operation: "add",
+        entity: "education",
+        newEntry: addedEntry,
+        createdSection: false,
+        sectionDidNotExistBefore: false
+      } as any
+    ])
+
+    const response = await POST(
+      createMockRequest({
+        messageId: "550e8400-e29b-41d4-a716-446655440000"
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(getSavedResume()?.sectionOrder).toEqual(["education"])
+    expect(
+      getSavedResume()?.education?.entries.map((entry) => entry.entryId)
+    ).toEqual(["edu-1"])
+  })
+
+  it("removes an AI-created section when truncating its add output", async () => {
+    const addedProject = {
+      entryId: "project-1",
+      title: "Added Project",
+      role: "Owner",
+      content: "Built a demo",
+      date: { start: "2024", end: "", isCurrent: true }
+    }
+
+    mockCurrentResume(
+      baseResume({
+        sectionOrder: ["education", "projects"],
+        projects: {
+          entries: [addedProject]
+        }
+      })
+    )
+    vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([
+      {
+        id: "msg-2",
+        session_id: "session-1",
+        role: "assistant" as const,
+        parts: [],
+        truncated: false,
+        has_tools: true,
+        created_at: "2024-01-01T00:01:00Z",
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0
+      }
+    ])
+    vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
+      {
+        operation: "add",
+        entity: "projects",
+        newEntry: addedProject,
+        createdSection: true,
+        sectionDidNotExistBefore: true
+      } as any
+    ])
+
+    const response = await POST(
+      createMockRequest({
+        messageId: "550e8400-e29b-41d4-a716-446655440000"
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(getSavedResume()?.sectionOrder).toEqual(["education"])
+    expect(getSavedResume()?.projects).toBeUndefined()
+  })
+
+  it("restores entry and section order after truncating reorder outputs", async () => {
+    const firstEntry = baseResume().education!.entries[0]!
+    const secondEntry = {
+      ...firstEntry,
+      entryId: "edu-2",
+      school: "Second School"
+    }
+
+    mockCurrentResume(
+      baseResume({
+        sectionOrder: ["skills", "education"],
+        education: {
+          entries: [secondEntry, firstEntry]
+        },
+        skills: {
+          entries: [
+            {
+              entryId: "skill-1",
+              group: "Languages",
+              content: "TypeScript"
+            }
+          ]
+        }
+      })
+    )
+    vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([
+      {
+        id: "msg-2",
+        session_id: "session-1",
+        role: "assistant" as const,
+        parts: [],
+        truncated: false,
+        has_tools: true,
+        created_at: "2024-01-01T00:01:00Z",
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0
+      }
+    ])
+    vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
+      {
+        operation: "reorderEntries",
+        entity: "education",
+        orderedEntryIds: ["edu-2", "edu-1"],
+        originalValue: ["edu-1", "edu-2"]
+      } as any,
+      {
+        operation: "reorderSections",
+        entity: null,
+        orderedSectionIds: ["skills", "education"],
+        originalValue: ["education", "skills"]
+      } as any
+    ])
+
+    const response = await POST(
+      createMockRequest({
+        messageId: "550e8400-e29b-41d4-a716-446655440000"
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(getSavedResume()?.sectionOrder).toEqual(["education", "skills"])
+    expect(
+      getSavedResume()?.education?.entries.map((entry) => entry.entryId)
+    ).toEqual(["edu-1", "edu-2"])
+  })
+
   it("does not truncate messages when rollback hits a semantic conflict", async () => {
     mockCurrentResume(
       baseResume({
