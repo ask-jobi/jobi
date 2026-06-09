@@ -36,3 +36,4 @@
 | `resume-chat.md` | chat 能力最终落地结果 |
 | `resume-editor-tools.md` | editor tools 最终落地结果 |
 | `test-patterns.md` | 测试模式约定 |
+| `2026-06-03-ai-chat-risk-remediation.md` | AI Chat 风险修复：AI edit 统一模块、operation rebase 并发保护、canonical session 唯一约束、stream 稳定性、DateRange 归一化 |

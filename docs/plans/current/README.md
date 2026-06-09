@@ -12,6 +12,5 @@
 - [2026-05-23-playwright-e2e-coverage-expansion.md](./2026-05-23-playwright-e2e-coverage-expansion.md) - Playwright E2E 覆盖扩展计划
 - [2026-05-25-auth-helper-optimization.md](./2026-05-25-auth-helper-optimization.md) - Supabase auth-helper 与 proxy 优化计划
 - [2026-06-01-vercel-to-cloudflare-migration.md](./2026-06-01-vercel-to-cloudflare-migration.md) - Vercel 到 Cloudflare 迁移计划
-- [2026-06-03-ai-chat-risk-remediation.md](./2026-06-03-ai-chat-risk-remediation.md) - AI Chat 数据正确性、并发一致性与流式稳定性风险修复计划
 
 已明确完成的 plan 应移动到 `docs/plans/archive/`。

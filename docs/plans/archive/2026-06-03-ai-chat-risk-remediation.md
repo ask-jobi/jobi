@@ -1,5 +1,21 @@
 # AI Chat Risk Remediation
 
+> **已完成** — 归档日期：2026-06-09
+>
+> **实际落地要点：**
+> - AI edit 统一模块：`lib/resume/ai-edits.ts` 提供 `applyAiResumeEdit`、`revertAiResumeEdit`、`replayAiResumeEdits`、`revertAiResumeEdits`
+> - Truncate rollback 改为 inverse operation + semantic conflict 检测，`/api/chat/truncate` 不再维护独立回滚规则
+> - 日期归一化层：`lib/resume/date-ranges.ts` 处理 agent 输入到 canonical 格式的转换；types/resume.ts 仍使用扁平 `start?/end?` 字段（非 plan 描述的 `DateRange` 结构体），但行为层已统一
+> - 服务端并发保护：`server/resume/commit.ts` 新增 `commitResumeOperation()`，支持 operation rebase、stale-json-conflict、semantic-conflict
+> - Canonical session 唯一约束：migration `20260607140052_canonical_resume_chat_sessions.sql` + `unique(user_id, resume_id)` index
+> - Stream 稳定性：`streamText()` 接入 `request.signal`、`timeout`、`maxOutputTokens: 2048`，错误映射为可重试文案
+> - Token 统计：`updateSessionTokenUsage()` 改为 awaited，message count 只统计 `truncated = false`
+> - 测试覆盖：chat 相关 21 文件 / 104 用例，resume mutation/template 12 文件 / 53 用例
+>
+> **与计划的差异：**
+> - Phase 4 描述的"types/resume.ts 统一为 DateRange 结构体"实际以归一化层实现，type 层仍保留扁平字段；行为一致但类型表述不同
+> - Phase 8 Playwright 回归发现并修复了额外问题：历史空 parts 导致 500、模型认证失败时无 error 文案、默认标题生成 unhandled rejection、dangling user turn 残留
+
 **Date:** 2026-06-03
 
 ## 背景
