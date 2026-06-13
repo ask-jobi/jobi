@@ -16,5 +16,31 @@
   ],
   "browser": {
     "binding": "MYBROWSER"
+  },
+  "env": {
+    "staging": {
+      "name": "jobi-staging",
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "jobi-staging"
+        }
+      ],
+      "browser": {
+        "binding": "MYBROWSER"
+      }
+    },
+    "production": {
+      "name": "jobi",
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "jobi"
+        }
+      ],
+      "browser": {
+        "binding": "MYBROWSER"
+      }
+    }
   }
 }
