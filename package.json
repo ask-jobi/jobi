@@ -50,6 +50,8 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@next/env": "^15.4.5",
     "@opennextjs/cloudflare": "^1.15.1",
+    "@paddle/paddle-js": "^1.6.4",
+    "@paddle/paddle-node-sdk": "^3.8.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-focus-scope": "^1.1.7",

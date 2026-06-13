@@ -13,11 +13,13 @@ import { getTranslations } from "next-intl/server"
 export default async function SuccessPage({
   searchParams
 }: {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: Promise<{ session_id?: string; transaction_id?: string }>
 }) {
   const t = await getTranslations()
   const params = await searchParams
   const sessionId = params.session_id
+  const transactionId = params.transaction_id
+  const orderId = transactionId ?? sessionId
   return (
     <LandingPageLayout>
       {/* Success Content */}
@@ -38,7 +40,7 @@ export default async function SuccessPage({
             <CardContent className="space-y-6">
               <div className="bg-muted/50 rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">
-                  {t("paymentSuccess.orderNumber")}: {sessionId || "N/A"}
+                  {t("paymentSuccess.orderNumber")}: {orderId || "N/A"}
                 </p>
               </div>
 
@@ -64,6 +66,7 @@ export default async function SuccessPage({
 
               <PaymentSuccessActions
                 sessionId={sessionId}
+                transactionId={transactionId}
                 checkingLabel={t("paymentSuccess.checkingStatus")}
                 delayedLabel={t("paymentSuccess.processingDelay")}
                 dashboardLabel={t("paymentSuccess.goToDashboard")}

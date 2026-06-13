@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { CheckoutEventNames, initializePaddle } from "@paddle/paddle-js"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -119,40 +120,54 @@ export function PricingCard({
 
   const handlePayment = async () => {
     if (!priceId) return
+    if (!user) {
+      const callbackUrl = encodeURIComponent("/pricing")
+      router.push(`/auth/login?callbackUrl=${callbackUrl}`)
+      return
+    }
 
     setIsLoading(true)
     setError(undefined)
 
     try {
-      const response = await fetch("/api/checkout_sessions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          priceId,
-          plan
-        })
+      const paddle = await initializePaddle({
+        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
+        environment:
+          process.env.NEXT_PUBLIC_PADDLE_ENV === "production"
+            ? "production"
+            : "sandbox",
+        eventCallback: (event) => {
+          if (event.name !== CheckoutEventNames.CHECKOUT_COMPLETED) {
+            return
+          }
+
+          const transactionId = event.data?.transaction_id
+          if (transactionId) {
+            router.push(
+              `/payment/success?transaction_id=${encodeURIComponent(transactionId)}`
+            )
+          }
+        }
       })
 
-      const { url, error } = await response.json()
-
-      if (response.status === 401) {
-        // 如果后端返回401，跳转到登录页面
-        const callbackUrl = encodeURIComponent("/pricing")
-        router.push(`/auth/login?callbackUrl=${callbackUrl}`)
+      if (!paddle) {
+        setError(t("pricing.paymentError"))
         return
       }
 
-      if (error) {
-        console.error("Payment error:", error)
-        setError(error || t("pricing.paymentError"))
-        return
-      }
-
-      if (url) {
-        window.location.href = url
-      }
+      paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: user.email ? { email: user.email } : undefined,
+        settings: {
+          displayMode: "overlay",
+          theme: "light",
+          successUrl: `${window.location.origin}/payment/success`
+        },
+        customData: {
+          supabase_user_id: user.id,
+          plan
+        }
+      })
     } catch (error) {
       console.error("Payment error:", error)
       setError(t("pricing.paymentError"))

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star } from "lucide-react"
 import { PricingCard } from "@/components/client-components/pricing-card"
-import { PRICING_CONFIG } from "@/lib/payment/stripe-config"
+import { PADDLE_PRICING_CONFIG } from "@/lib/payment/paddle-config"
 import { PaymentCancelledAlert } from "@/components/client-components/payment-cancelled-alert"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -79,13 +79,13 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 pb-20">
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Plan */}
-          <PricingCard {...PRICING_CONFIG.FREE} />
+          <PricingCard {...PADDLE_PRICING_CONFIG.FREE} />
 
           {/* Pro Plan */}
-          <PricingCard {...PRICING_CONFIG.PRO} />
+          <PricingCard {...PADDLE_PRICING_CONFIG.PRO} />
 
           {/* Lite Plan */}
-          <PricingCard {...PRICING_CONFIG.LITE} />
+          <PricingCard {...PADDLE_PRICING_CONFIG.LITE} />
         </div>
       </section>
 

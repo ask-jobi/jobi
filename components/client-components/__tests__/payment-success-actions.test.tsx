@@ -49,7 +49,7 @@ describe("PaymentSuccessActions", () => {
 
     render(
       <PaymentSuccessActions
-        sessionId="cs_test_123"
+        transactionId="txn_123"
         checkingLabel="Checking payment status"
         delayedLabel="Payment received. Tokens may take a moment to appear."
         dashboardLabel="Go to dashboard"
@@ -74,7 +74,7 @@ describe("PaymentSuccessActions", () => {
     expect(mockRefresh).toHaveBeenCalledTimes(1)
     expect(global.fetch).toHaveBeenNthCalledWith(
       1,
-      "/api/stripe/checkout-status?session_id=cs_test_123",
+      "/api/paddle/checkout-status?transaction_id=txn_123",
       { cache: "no-store" }
     )
   })

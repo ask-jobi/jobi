@@ -5,6 +5,18 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import { PricingCard } from "../pricing-card"
 
+const { mockCheckoutOpen, mockInitializePaddle } = vi.hoisted(() => ({
+  mockCheckoutOpen: vi.fn(),
+  mockInitializePaddle: vi.fn()
+}))
+
+vi.mock("@paddle/paddle-js", () => ({
+  CheckoutEventNames: {
+    CHECKOUT_COMPLETED: "checkout.completed"
+  },
+  initializePaddle: mockInitializePaddle
+}))
+
 // Mock next/navigation
 const mockPush = vi.fn()
 vi.mock("next/navigation", () => ({
@@ -49,6 +61,13 @@ describe("PricingCard", () => {
     vi.clearAllMocks()
     mockUseAuth.user = null
     mockUseAuth.loading = false
+    process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN = "test_client_token"
+    process.env.NEXT_PUBLIC_PADDLE_ENV = "sandbox"
+    mockInitializePaddle.mockResolvedValue({
+      Checkout: {
+        open: mockCheckoutOpen
+      }
+    })
   })
 
   it("should render pricing card with correct content", () => {
@@ -128,28 +147,25 @@ describe("PricingCard", () => {
     )
   })
 
-  it("should handle paid plan selection", async () => {
-    mockUseAuth.user = { id: "user123" } as any
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () =>
-        Promise.resolve({ url: "https://checkout.stripe.com/pay/cs_test_123" })
-    })
+  it("should open Paddle checkout for paid plan selection", async () => {
+    mockUseAuth.user = { id: "user123", email: "user@example.com" } as any
 
-    render(<PricingCard {...defaultProps} priceId="price_123" />)
+    render(<PricingCard {...defaultProps} priceId="pri_123" />)
 
     const button = screen.getByText("Get Started")
     fireEvent.click(button)
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/checkout_sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        priceId: "price_123",
-        plan: "PRO"
-      })
+    await vi.waitFor(() => {
+      expect(mockCheckoutOpen).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [{ priceId: "pri_123", quantity: 1 }],
+          customer: { email: "user@example.com" },
+          customData: {
+            supabase_user_id: "user123",
+            plan: "PRO"
+          }
+        })
+      )
     })
   })
 
@@ -188,39 +204,34 @@ describe("PricingCard", () => {
     })
   })
 
-  it("should redirect to checkout URL on successful payment", async () => {
+  it("should redirect to success page when Paddle checkout completes", async () => {
     mockUseAuth.user = { id: "user123" } as any
-    let locationHrefValue = ""
-    Object.defineProperty(global, "location", {
-      value: {
-        get href() {
-          return locationHrefValue
-        },
-        set href(value: string) {
-          locationHrefValue = value
+    let eventCallback: ((event: any) => void) | undefined
+    mockInitializePaddle.mockImplementation(async (options: any) => {
+      eventCallback = options.eventCallback
+      return {
+        Checkout: {
+          open: mockCheckoutOpen
         }
-      },
-      writable: true
+      }
     })
 
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () =>
-        Promise.resolve({ url: "https://checkout.stripe.com/pay/cs_test_123" })
-    })
-
-    render(<PricingCard {...defaultProps} priceId="price_123" />)
+    render(<PricingCard {...defaultProps} priceId="pri_123" />)
 
     const button = screen.getByText("Get Started")
     fireEvent.click(button)
 
-    await vi.waitFor(
-      () => {
-        expect(locationHrefValue).toBe(
-          "https://checkout.stripe.com/pay/cs_test_123"
-        )
-      },
-      { timeout: 2000 }
+    await vi.waitFor(() => {
+      expect(mockInitializePaddle).toHaveBeenCalled()
+    })
+
+    eventCallback?.({
+      name: "checkout.completed",
+      data: { transaction_id: "txn_123" }
+    })
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/payment/success?transaction_id=txn_123"
     )
   })
 
@@ -252,22 +263,17 @@ describe("PricingCard", () => {
     })
   })
 
-  it("should handle 401 response by redirecting to login", async () => {
+  it("should show an error when Paddle initialization fails", async () => {
     mockUseAuth.user = { id: "user123" } as any
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      status: 401,
-      json: () => Promise.resolve({ error: "Unauthorized" })
-    })
+    mockInitializePaddle.mockResolvedValue(undefined)
 
-    render(<PricingCard {...defaultProps} priceId="price_123" />)
+    render(<PricingCard {...defaultProps} priceId="pri_123" />)
 
     const button = screen.getByText("Get Started")
     fireEvent.click(button)
 
     await vi.waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(
-        "/auth/login?callbackUrl=%2Fpricing"
-      )
+      expect(screen.getByTestId("payment-error")).toBeInTheDocument()
     })
   })
 })

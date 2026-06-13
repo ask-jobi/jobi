@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 
 type PaymentSuccessActionsProps = {
   sessionId?: string
+  transactionId?: string
   checkingLabel: string
   delayedLabel: string
   dashboardLabel: string
@@ -19,18 +20,25 @@ const MAX_POLL_ATTEMPTS = 15
 
 export function PaymentSuccessActions({
   sessionId,
+  transactionId,
   checkingLabel,
   delayedLabel,
   dashboardLabel,
   homeLabel
 }: PaymentSuccessActionsProps) {
   const router = useRouter()
-  const [isReady, setIsReady] = useState(!sessionId)
+  const checkoutId = transactionId ?? sessionId
+  const statusUrl = transactionId
+    ? `/api/paddle/checkout-status?transaction_id=${encodeURIComponent(transactionId)}`
+    : sessionId
+      ? `/api/stripe/checkout-status?session_id=${encodeURIComponent(sessionId)}`
+      : null
+  const [isReady, setIsReady] = useState(!checkoutId)
   const [isDelayed, setIsDelayed] = useState(false)
   const attemptCountRef = useRef(0)
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!statusUrl) {
       return
     }
 
@@ -39,10 +47,7 @@ export function PaymentSuccessActions({
 
     const checkStatus = async () => {
       try {
-        const response = await fetch(
-          `/api/stripe/checkout-status?session_id=${encodeURIComponent(sessionId)}`,
-          { cache: "no-store" }
-        )
+        const response = await fetch(statusUrl, { cache: "no-store" })
 
         if (!response.ok) {
           throw new Error("Failed to fetch checkout status")
@@ -89,7 +94,7 @@ export function PaymentSuccessActions({
         clearTimeout(timer)
       }
     }
-  }, [router, sessionId])
+  }, [router, statusUrl])
 
   return (
     <div className="flex flex-col gap-4 pt-4">
