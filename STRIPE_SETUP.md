@@ -2,7 +2,7 @@
 
 ## 概述
 
-本项目已集成 Stripe 支付功能，支持订阅和一次性支付。以下是配置步骤：
+本项目已集成 Stripe Checkout 支付功能，当前用于一次性购买 Token 包。以下是配置步骤：
 
 ## 1. 环境变量配置
 
@@ -10,15 +10,12 @@
 
 ```bash
 # Stripe 密钥
-STRIPE_SECRET_KEY=sk_test_...  # 您的 Stripe 密钥
-STRIPE_PUBLISHABLE_KEY=pk_test_...  # 您的 Stripe 公钥？ 没用到 这干啥的啊 搜搜
-STRIPE_WEBHOOK_SECRET=xxx # 给 stripe 服务端回调之后，解密支付信息的密钥
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Stripe 价格 ID（可选，如果未设置将使用默认值）
-STRIPE_PRO_MONTHLY_PRICE_ID=price_...  # 专业版月付价格ID
-STRIPE_PRO_YEARLY_PRICE_ID=price_...   # 专业版年付价格ID
-STRIPE_ENTERPRISE_MONTHLY_PRICE_ID=price_...  # 企业版月付价格ID
-STRIPE_ENTERPRISE_YEARLY_PRICE_ID=price_...   # 企业版年付价格ID
+# Stripe 一次性价格 ID
+STRIPE_LITE_PASS_PRICE_ID=price_...
+STRIPE_PRO_PASS_PRICE_ID=price_...
 ```
 
 ## 2. Stripe 产品配置
@@ -26,29 +23,30 @@ STRIPE_ENTERPRISE_YEARLY_PRICE_ID=price_...   # 企业版年付价格ID
 ### 在 Stripe Dashboard 中创建产品：
 
 1. 登录 [Stripe Dashboard](https://dashboard.stripe.com/)
-2. 进入 "产品" 页面
-3. 创建产品：
+2. 开启 test mode
+3. 进入 "产品" 页面
+4. 创建两个一次性价格：
+   - Lite Token Pack：€19.99，500,000 Tokens
+   - Pro Token Pack：€24.99，1,000,000 Tokens
 
 ### 获取价格 ID
 
-创建产品后，复制价格 ID（格式如：`price_1RfneaQAnDbV3CHRBJiDcgBW`）并更新环境变量。
+创建价格后，复制价格 ID（格式如：`price_1RfneaQAnDbV3CHRBJiDcgBW`）并更新 `STRIPE_LITE_PASS_PRICE_ID` 和 `STRIPE_PRO_PASS_PRICE_ID`。
 
 ## 3. Webhook 配置（推荐）
 
 为了处理支付成功、取消等事件，建议配置 Webhook：
 
 1. 在 Stripe Dashboard 中进入 "Webhooks"
-2. 添加端点：`https://yourdomain.com/api/webhooks/stripe`
-3. 选择以下事件：
+2. 添加端点：`https://yourdomain.com/api/stripe/webhook`
+3. 至少选择以下事件：
    - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
+4. 复制 signing secret（`whsec_...`）并更新 `STRIPE_WEBHOOK_SECRET`
 ### 本地测试 webhook 回调事件
 命令行输入: 
 `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+
+该命令会输出本地临时 webhook signing secret（`whsec_...`），本地测试时需要把它写入 `.env.local` 的 `STRIPE_WEBHOOK_SECRET`。
 
 ## 4. 测试支付
 
@@ -113,7 +111,7 @@ https://docs.stripe.com/testing
 
 ### 修改价格配置
 
-编辑 `lib/stripe-config.ts` 文件来修改价格和功能：
+编辑 `lib/payment/stripe-config.ts` 文件来修改价格和功能：
 
 ```typescript
 export const PRICING_CONFIG = {
