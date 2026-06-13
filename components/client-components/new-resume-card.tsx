@@ -11,18 +11,24 @@ import {
   DialogTrigger
 } from "../ui/dialog"
 import { defineStepper } from "@/components/ui/stepper"
-import JobInformationForm, {
-  formSchema,
-  JobInfoFormType
-} from "@/components/forms/job-information-form"
-import { useState, useEffect } from "react"
+import JobInformationForm from "@/components/forms/job-information-form"
+import {
+  jobInfoFormSchema,
+  type JobInfoFormType
+} from "@/lib/job-info-form-schema"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import ResumeAnalyzeProgress, {
-  ProgressType
+  INTAKE_STEPS,
+  type StepState,
+  type StepStatus
 } from "@/components/resumes/resume-analyze-progress"
-import { fetchEventSource } from "@microsoft/fetch-event-source"
+import {
+  EventStreamContentType,
+  fetchEventSource
+} from "@microsoft/fetch-event-source"
 import { useRouter } from "next/navigation"
 import { FileText } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -35,26 +41,79 @@ import {
 } from "@/lib/user-tracking/user-tracking"
 import ResumeUpload from "@/components/resumes/resume-upload"
 
+// ── SSE Event types ─────────────────────────────────────────────
+// Mirrors the IntakeEvent union from server/intake/types.ts
+
+type SseEvent =
+  | { type: "intake.start"; intakeId: string }
+  | { type: "step.start"; intakeId: string; step: string }
+  | { type: "step.done"; intakeId: string; step: string }
+  | {
+      type: "step.failed"
+      intakeId: string
+      step: string
+      error: { code: string; userMessage: string }
+    }
+  | { type: "rollback.start"; intakeId: string }
+  | {
+      type: "rollback.done"
+      intakeId: string
+      allSucceeded: boolean
+      failureCount: number
+    }
+  | {
+      type: "intake.done"
+      intakeId: string
+      applicationId: string
+      resumeId: string
+    }
+  | {
+      type: "intake.failed"
+      intakeId: string
+      error: { code: string; userMessage: string }
+    }
+  | {
+      type: "intake.cancelled"
+      intakeId: string
+      reason: { code: string; userMessage: string }
+    }
+
 const { Stepper } = defineStepper(
   { id: "step-1", title: "Job Information", i18n: "stepJobInfo" },
   { id: "step-2", title: "Upload Resume", i18n: "stepUpload" },
   { id: "step-3", title: "Analyze Resume", i18n: "stepAnalyze" }
 )
 
-const initialProgress: ProgressType = {
-  step: "upload",
-  status: "pending"
+async function getUploadAndAnalyzeErrorMessage(response: Response) {
+  const contentType = response.headers.get("content-type") ?? ""
+
+  if (contentType.includes("application/json")) {
+    try {
+      const data = await response.clone().json()
+      if (typeof data?.error === "string" && data.error.trim()) {
+        return data.error
+      }
+    } catch {
+      // fall through to generic message
+    }
+  }
+
+  return `Upload failed (${response.status})`
 }
 
 const NewResumeCard = () => {
   const [cardOpen, setCardOpen] = useState<boolean>(false)
-  const [progress, setProgress] = useState<ProgressType>(initialProgress)
+  const [steps, setSteps] = useState<StepState[]>(() =>
+    INTAKE_STEPS.map((s) => ({ ...s }))
+  )
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [resumeFile, setResumeFile] = useState<File>()
   const [controller, setController] = useState<AbortController | null>(null)
+  const activeIntakeIdRef = useRef<string | null>(null)
   const t = useTranslations()
   const form = useForm<JobInfoFormType>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(jobInfoFormSchema),
     defaultValues: {
       name: "",
       company: "",
@@ -64,19 +123,31 @@ const NewResumeCard = () => {
 
   const router = useRouter()
 
-  const resetForm = () => {
-    form.reset()
-    setProgress(initialProgress)
-    setResumeFile(undefined)
+  const resetAnalysisState = useCallback(() => {
+    setSteps(INTAKE_STEPS.map((s) => ({ ...s })))
     setIsAnalyzing(false)
-  }
+    setAnalysisError(null)
+    activeIntakeIdRef.current = null
+  }, [])
+
+  const resetForm = useCallback(() => {
+    form.reset()
+    resetAnalysisState()
+    setResumeFile(undefined)
+  }, [form, resetAnalysisState])
 
   const handleOpenDialog = (open: boolean) => {
     if (!open) {
+      // Abort any in-flight request
+      if (controller) {
+        controller.abort()
+      }
       resetForm()
     }
     setCardOpen(open)
-    trackOpenResumeUploadDialog()
+    if (open) {
+      trackOpenResumeUploadDialog()
+    }
   }
 
   const handleNext = async (methods: any) => {
@@ -114,8 +185,6 @@ const NewResumeCard = () => {
       }
 
       const result = await response.json()
-
-      // 直接跳转到简历编辑页面
       resetForm()
       setCardOpen(false)
       router.push(`/application/${result.data.applicationData.id}`)
@@ -125,15 +194,96 @@ const NewResumeCard = () => {
     }
   }
 
-  const analyzeResume = async () => {
-    if (isAnalyzing) return
+  /** Update a single step's status in the steps array */
+  const updateStepStatus = useCallback((stepId: string, status: StepStatus) => {
+    setSteps((prev) => {
+      const idx = prev.findIndex((s) => s.id === stepId)
+      if (idx < 0) return prev
+      const next = prev.map((s, i) => (i === idx ? { ...s, status } : { ...s }))
+      return next
+    })
+  }, [])
 
+  const handleSseEvent = useCallback(
+    (event: SseEvent) => {
+      if (event.type !== "intake.start") {
+        const activeIntakeId = activeIntakeIdRef.current
+        if (!activeIntakeId || event.intakeId !== activeIntakeId) {
+          return
+        }
+      }
+
+      switch (event.type) {
+        case "intake.start":
+          activeIntakeIdRef.current = event.intakeId
+          setAnalysisError(null)
+          setSteps(INTAKE_STEPS.map((s) => ({ ...s })))
+          break
+
+        case "step.start":
+          updateStepStatus(event.step, "loading")
+          break
+
+        case "step.done":
+          updateStepStatus(event.step, "success")
+          break
+
+        case "step.failed":
+          updateStepStatus(event.step, "error")
+          // Don't show toast here — intake.failed will handle the final message
+          break
+
+        case "rollback.start":
+        case "rollback.done":
+          // Rollback events are internal; frontend ignores them
+          break
+
+        case "intake.done": {
+          activeIntakeIdRef.current = null
+          trackSuccessResumeUpload({
+            fileName: resumeFile?.name || "unknown"
+          })
+          setAnalysisError(null)
+          setIsAnalyzing(false)
+          setTimeout(() => {
+            resetForm()
+            setCardOpen(false)
+            router.push(`/application/${event.applicationId}`)
+          }, 800)
+          break
+        }
+
+        case "intake.failed": {
+          activeIntakeIdRef.current = null
+          trackFailedResumeUpload({
+            fileName: resumeFile?.name || "unknown",
+            error: event.error.userMessage
+          })
+          setAnalysisError(event.error.userMessage)
+          setIsAnalyzing(false)
+          toast.error(event.error.userMessage)
+          break
+        }
+
+        case "intake.cancelled":
+          activeIntakeIdRef.current = null
+          setAnalysisError(null)
+          setIsAnalyzing(false)
+          break
+      }
+    },
+    [resumeFile, router, resetForm, updateStepStatus]
+  )
+
+  const analyzeResume = async () => {
+    if (isAnalyzing || !resumeFile) return
+
+    resetAnalysisState()
     setIsAnalyzing(true)
     const newController = new AbortController()
     setController(newController)
 
     try {
-      // 跟踪开始上传和分析简历的事件
       trackStartResumeUpload({
         fileName: resumeFile?.name || "unknown"
       })
@@ -146,47 +296,50 @@ const NewResumeCard = () => {
         method: "POST",
         body: formData,
         signal: newController.signal,
-        onmessage(event) {
-          const data = JSON.parse(event.data)
-          if (data.error) {
-            toast.error(data.error)
-            setIsAnalyzing(false)
-          }
-          setProgress(data)
+        async onopen(response) {
+          const contentType = response.headers.get("content-type")
 
-          if (data.step === "evaluate" && data.status === "success") {
-            // 跟踪简历上传和分析成功的事件
-            trackSuccessResumeUpload({
-              fileName: resumeFile?.name || "unknown"
-            })
-            setTimeout(() => {
-              resetForm()
-              setCardOpen(false)
-              // 重定向到简历详情页面（右侧面板包含聊天功能）
-              if (data.resumeId && data.applicationId) {
-                router.push(`/application/${data.applicationId}`)
-              } else {
-                router.refresh()
-              }
-            }, 1200)
+          if (response.ok && contentType?.startsWith(EventStreamContentType)) {
+            return
+          }
+
+          throw new Error(await getUploadAndAnalyzeErrorMessage(response))
+        },
+        onmessage(event) {
+          try {
+            const data = JSON.parse(event.data) as SseEvent
+            handleSseEvent(data)
+          } catch {
+            // Ignore unparseable messages
           }
         },
         onerror(err) {
+          const errorMessage =
+            err instanceof Error ? err.message : "unknown error"
+
+          setAnalysisError(errorMessage)
           setIsAnalyzing(false)
-          // 跟踪简历上传失败的事件
           trackFailedResumeUpload({
             fileName: resumeFile?.name || "unknown",
-            error: err instanceof Error ? err.message : "unknown error"
+            error: errorMessage
           })
           throw err
         }
       })
     } catch (error: any) {
       if (error.name === "AbortError") {
-        console.log("Fetch aborted")
+        // User cancelled — already handled by intake.cancelled event
         return
       }
+      // Other errors (network, etc.)
+      setAnalysisError(error.message || "Upload failed")
+      setIsAnalyzing(false)
+      toast.error(error.message || "Upload failed")
     }
+  }
+
+  const handleRetryAnalysis = () => {
+    analyzeResume()
   }
 
   const handleCreateEmpty = () => {
@@ -195,7 +348,6 @@ const NewResumeCard = () => {
 
   const handleSelectFile = (file: File) => {
     setResumeFile(file)
-    // 跟踪用户选择简历文件的事件
     trackSelectResumeFile({
       fileName: file.name,
       fileSize: file.size,
@@ -203,6 +355,7 @@ const NewResumeCard = () => {
     })
   }
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (controller) {
@@ -261,7 +414,16 @@ const NewResumeCard = () => {
                     </div>
                   </div>
                 ),
-                "step-3": () => <ResumeAnalyzeProgress progress={progress} />
+                "step-3": () => (
+                  <div className="space-y-3">
+                    <ResumeAnalyzeProgress steps={steps} />
+                    {analysisError ? (
+                      <p className="text-sm text-destructive">
+                        {analysisError}
+                      </p>
+                    ) : null}
+                  </div>
+                )
               })}
               <Stepper.Controls>
                 {!methods.isLast && (
@@ -286,7 +448,16 @@ const NewResumeCard = () => {
                     >
                       {t("form.startAnalysis")}
                     </Button>
-                  )
+                  ),
+                  "step-3": () =>
+                    analysisError ? (
+                      <Button
+                        onClick={handleRetryAnalysis}
+                        disabled={isAnalyzing}
+                      >
+                        {t("form.retryAnalysis")}
+                      </Button>
+                    ) : null
                 })}
               </Stepper.Controls>
             </>

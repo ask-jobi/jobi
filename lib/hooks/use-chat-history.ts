@@ -7,7 +7,7 @@ import {
   useLayoutEffect,
   useRef
 } from "react"
-import type { ChatHistoryEntry } from "@/lib/agent/chat-history"
+import type { ChatHistoryEntry } from "@/server/ai/chat/history"
 import { useSetChatHistoryLoading } from "@/lib/store/chat"
 import { useChatThreadLifecycle } from "./use-chat-thread-lifecycle"
 

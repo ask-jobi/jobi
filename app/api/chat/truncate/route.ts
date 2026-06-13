@@ -1,123 +1,67 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import {
-  extractToolOriginalValues,
+  extractAiResumeEditOutputs,
   getMessage,
   getMessagesAfter,
   restoreConversationSummaryAfterTruncate,
   truncateMessages
-} from "@/lib/agent/chat-history"
-import {
-  getJobApplicationByResumeId,
-  getApplicationResumeData,
-  saveApplicationResumeChange
-} from "@/server/resume"
+} from "@/server/ai/chat/history"
+import { AiResumeEditError, revertAiResumeEdits } from "@/lib/resume/ai-edits"
+import { getJobApplicationByResumeId } from "@/server/resume"
 import { logRollback } from "@/server/chat-events"
+import { commitResumeOperation } from "@/server/resume/commit"
 import { z } from "zod"
 import {
-  ResumeEditorModifyOutput,
-  ResumeEditorReorderOutput
-} from "@/types/chat"
-import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
-  handleApiError
-} from "@/server/auth-helpers"
-import { ResumeData } from "@/types/resume"
+  handleApiError,
+  ApiError
+} from "@/server/auth-helper"
+import type { AiResumeEditOutput } from "@/lib/resume/ai-edits"
 
 const truncateSchema = z.object({
   messageId: z.uuid()
 })
 
-async function revertToolOutput(
-  toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
-  resumeData: ResumeData
-): Promise<ResumeData> {
-  const updatedResume = structuredClone(resumeData)
-
-  for (const output of toolOutputs) {
-    if (output.operation === "rewrite") {
-      if (!output.field) continue
-
-      const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
-        const entry = section.entries.find((item: any) => item.entryId === output.id)
-        if (entry && output.field in entry) {
-          // @ts-expect-error need fix
-          entry[output.field] = output.originalValue
-        }
-      }
-    }
-
-    if (output.operation === "delete") {
-      const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
-        // @ts-expect-error need fix
-        section.entries.push(output.originalValue)
-      }
-    }
-
-    if (output.operation === "add") {
-      const section = updatedResume[output.entity]
-      if (section && "entries" in section) {
-        const newEntry = output.newEntry
-        const entryIndex = section.entries.findIndex(
-          (item: any) => item.entryId === newEntry?.entryId
-        )
-        if (entryIndex !== -1) {
-          section.entries.splice(entryIndex, 1)
-        }
-      }
-    }
-
-    if (output.operation === "reorderEntries") {
-      const entity = output.entity
-      if (entity) {
-        const section = updatedResume[entity]
-        if (section && "entries" in section) {
-          const currentEntries = [...section.entries]
-          const originalValue = output.originalValue as string[]
-          const orderedEntries = originalValue
-            .map((id: string) => {
-              return currentEntries.find((item: any) => item.entryId === id)
-            })
-            .filter(Boolean)
-          // @ts-expect-error - reordering entries
-          section.entries = orderedEntries
-        }
-      }
-    }
-
-    if (output.operation === "reorderSections") {
-      const originalValue = output.originalValue as string[]
-      updatedResume.sectionOrder = originalValue as any
-    }
-  }
-
-  return updatedResume
-}
-
 async function applyToolReversions(
-  toolOutputs: (ResumeEditorModifyOutput | ResumeEditorReorderOutput)[],
-  resumeId: string
+  toolOutputs: AiResumeEditOutput[],
+  resumeId: string,
+  actorId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
 ) {
-  const jobApp = await getJobApplicationByResumeId(resumeId)
+  try {
+    const authoritativeState = await commitResumeOperation({
+      supabase,
+      actorId,
+      resumeId,
+      operation: ({ resume }) => ({
+        nextResume: revertAiResumeEdits(resume, toolOutputs, {
+          detectSemanticConflict: true
+        }),
+        metadata: undefined
+      })
+    })
 
-  if (!jobApp || !jobApp.resumes.resume_json) {
-    throw new Error("Resume not found")
+    return {
+      resume: authoritativeState.resume,
+      currentRevision: authoritativeState.currentRevision
+    }
+  } catch (error) {
+    if (
+      error instanceof AiResumeEditError &&
+      error.code === "semantic-conflict"
+    ) {
+      throw new ApiError(error.message, 409)
+    }
+
+    throw error
   }
-
-  const updatedResume = await revertToolOutput(
-    toolOutputs,
-    jobApp.resumes.resume_json
-  )
-
-  await saveApplicationResumeChange(resumeId, updatedResume)
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     const supabase = await createClient()
 
     const body = await request.json()
@@ -161,6 +105,26 @@ export async function POST(request: NextRequest) {
       targetMessage.created_at
     )
 
+    const toolsToRevert: AiResumeEditOutput[] = []
+
+    for (const msg of messagesToTruncate) {
+      if (msg.has_tools) {
+        const originalValues = extractAiResumeEditOutputs(msg.parts)
+        toolsToRevert.push(...originalValues)
+      }
+    }
+
+    let authoritativeResume = null
+
+    if (toolsToRevert.length > 0) {
+      authoritativeResume = await applyToolReversions(
+        toolsToRevert,
+        session.resume_id,
+        user.id,
+        supabase
+      )
+    }
+
     await truncateMessages(messagesToTruncate)
 
     await restoreConversationSummaryAfterTruncate(
@@ -168,31 +132,19 @@ export async function POST(request: NextRequest) {
       targetMessage.created_at
     )
 
-    const toolsToRevert: (
-      | ResumeEditorModifyOutput
-      | ResumeEditorReorderOutput
-    )[] = []
-
-    for (const msg of messagesToTruncate) {
-      if (msg.has_tools) {
-        const originalValues = extractToolOriginalValues(msg.parts)
-        toolsToRevert.push(...originalValues)
-      }
-    }
-
-    if (toolsToRevert.length > 0) {
-      await applyToolReversions(toolsToRevert, session.resume_id)
-    }
-
     await logRollback(targetMessage.session_id, messageId)
 
-    const resume = await getApplicationResumeData(session.resume_id)
+    if (authoritativeResume) {
+      return NextResponse.json(authoritativeResume)
+    }
+
+    const currentJobApp = await getJobApplicationByResumeId(session.resume_id)
 
     return NextResponse.json({
-      resume
+      resume: currentJobApp.resumes.resume_json,
+      currentRevision: currentJobApp.resumes.current_revision
     })
   } catch (error) {
-    console.error("Truncate error:", error)
     return handleApiError(error)
   }
 }

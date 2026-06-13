@@ -12,15 +12,11 @@ import type {
   SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
-import { DEFAULT_STARTER_SECTION_IDS } from "@/lib/templates/section-definitions"
-import { getSectionLabel } from "@/lib/templates/section-labels"
 
-function createBaseSection<ID extends SortableSectionKey>(
-  sectionId: ID,
-  language: Locale
-): NonNullable<ResumeData[ID]> {
+function createBaseSection<ID extends SortableSectionKey>(): NonNullable<
+  ResumeData[ID]
+> {
   return {
-    title: getSectionLabel(sectionId, language),
     entries: []
   } as NonNullable<ResumeData[ID]>
 }
@@ -29,7 +25,10 @@ export function createEmptySection<ID extends SortableSectionKey>(
   sectionId: ID,
   language: Locale
 ): NonNullable<ResumeData[ID]> {
-  return createBaseSection(sectionId, language)
+  void sectionId
+  void language
+
+  return createBaseSection()
 }
 
 type EmptyEntryMap = {
@@ -77,10 +76,8 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         title: "",
         role: "",
         content: "",
-        date: {
-          start: "",
-          end: ""
-        }
+        start: "",
+        end: ""
       } as EmptyEntryMap[ID]
     case "research":
       return {
@@ -88,10 +85,8 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
         title: "",
         role: "",
         content: "",
-        date: {
-          start: "",
-          end: ""
-        }
+        start: "",
+        end: ""
       } as EmptyEntryMap[ID]
     case "publications":
       return {
@@ -123,18 +118,18 @@ export function createEmptySectionEntry<ID extends SortableSectionKey>(
 }
 
 export function buildEmptyResumeData(language: Locale): ResumeData {
+  void language
+
   return {
-    sectionOrder: DEFAULT_STARTER_SECTION_IDS,
+    sectionOrder: [],
     personalInfo: {
-      blockId: nanoid(),
+      entryId: nanoid(),
       firstName: "",
       lastName: "",
       email: "",
       phone: "",
       website: "",
       linkedin: ""
-    },
-    education: createEmptySection("education", language),
-    skills: createEmptySection("skills", language)
+    }
   }
 }

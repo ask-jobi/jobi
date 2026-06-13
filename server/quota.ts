@@ -2,6 +2,8 @@ import "server-only"
 import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
 import { Database } from "@/types/supabase"
+import { requireVerifiedUserIdentity } from "@/server/auth-helper"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 export type ChatTokenQuota = {
   limit: number
@@ -26,7 +28,9 @@ const EMPTY_CHAT_TOKENS: ChatTokenQuota = {
 }
 
 const hasRemainingChatTokens = (accessPass: DBAccessPass) => {
-  return (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
+  return (
+    (accessPass.quota_chat_tokens ?? 0) > (accessPass.used_chat_tokens ?? 0)
+  )
 }
 
 const getAccessPassByUserId = async (
@@ -61,16 +65,7 @@ export async function getActiveAccessPass(
 }
 
 export async function getUserTokenBalance(): Promise<UserTokenBalance> {
-  const supabase = await createClient()
-
-  // 获取当前用户
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error("用户未登录")
-  }
+  const user = await requireVerifiedUserIdentity()
 
   const accessPass = await getAccessPassByUserId(user.id)
 
@@ -137,7 +132,7 @@ export async function consumeChatTokens(
   while (attempts < 3) {
     const { data: accessPass, error: selectError } = await supabase
       .from("access_passes")
-      .select("used_chat_tokens")
+      .select("plan, quota_chat_tokens, used_chat_tokens")
       .eq("id", accessPassId)
       .single()
 
@@ -145,7 +140,17 @@ export async function consumeChatTokens(
       throw selectError
     }
 
-    const currentUsedTokens = accessPass?.used_chat_tokens ?? 0
+    const chatTokenQuota = buildChatTokenQuota(accessPass as DBAccessPass)
+    const currentUsedTokens = chatTokenQuota.used
+    const remainingTokens = Math.max(
+      chatTokenQuota.limit - currentUsedTokens,
+      0
+    )
+
+    if (remainingTokens < tokenCount) {
+      return currentUsedTokens
+    }
+
     const nextUsedTokens = currentUsedTokens + tokenCount
 
     const { data: updatedPass, error: updateError } = await supabase
@@ -173,22 +178,16 @@ export async function consumeChatTokens(
 }
 
 // 目前不做配额的限制，但是需要限制用户申请岗位的数量， 未来考虑设计进配额
-export async function verifyJobApplicationLimit() {
-  const supabase = await createClient()
+export async function verifyJobApplicationLimit(
+  userId: string,
+  supabase?: SupabaseClient<Database>
+) {
+  const client = supabase ?? (await createClient())
 
-  // 获取当前用户
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error("User not logged in")
-  }
-
-  const { data: jobApplications, error } = await supabase
+  const { data: jobApplications, error } = await client
     .from("job_applications")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
 
   if (error) {
     throw error

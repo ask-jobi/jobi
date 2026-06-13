@@ -10,6 +10,7 @@ import {
   verifyJobApplicationLimit
 } from "./quota"
 import { createClient } from "@/lib/supabase/server"
+import { AuthRetryableFetchError } from "@supabase/supabase-js"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
 vi.mock("@/lib/supabase/server")
@@ -95,8 +96,13 @@ describe("getUserTokenBalance", () => {
 
     mockCreateClient.mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "user-id",
+              email: "user@example.com"
+            }
+          },
           error: null
         })
       },
@@ -114,8 +120,13 @@ describe("getUserTokenBalance", () => {
   it("returns zeroed token balance when no pass is active", async () => {
     mockCreateClient.mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "user-id",
+              email: "user@example.com"
+            }
+          },
           error: null
         })
       },
@@ -132,6 +143,22 @@ describe("getUserTokenBalance", () => {
       chatTokenLimit: 0,
       chatTokenUsed: 0,
       chatTokenRemaining: 0
+    })
+  })
+
+  it("maps transient auth fetch failures to a 503 error", async () => {
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: null,
+          error: new AuthRetryableFetchError("fetch failed", 503)
+        })
+      }
+    } as unknown as ReturnType<typeof createClient>)
+
+    await expect(getUserTokenBalance()).rejects.toMatchObject({
+      message: "Auth service temporarily unavailable",
+      statusCode: 503
     })
   })
 })
@@ -181,7 +208,11 @@ describe("chat token helpers", () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { used_chat_tokens: 500 },
+              data: {
+                plan: "PRO",
+                quota_chat_tokens: 1_000,
+                used_chat_tokens: 500
+              },
               error: null
             })
           })
@@ -203,6 +234,31 @@ describe("chat token helpers", () => {
 
     await expect(consumeChatTokens("pass-id", 100)).resolves.toBe(600)
   })
+
+  it("does not consume tokens when the remaining quota is insufficient", async () => {
+    const update = vi.fn()
+
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                plan: "CUSTOM",
+                quota_chat_tokens: 550,
+                used_chat_tokens: 500
+              },
+              error: null
+            })
+          })
+        }),
+        update
+      })
+    } as unknown as ReturnType<typeof createClient>)
+
+    await expect(consumeChatTokens("pass-id", 100)).resolves.toBe(500)
+    expect(update).not.toHaveBeenCalled()
+  })
 })
 
 describe("verifyJobApplicationLimit", () => {
@@ -212,12 +268,6 @@ describe("verifyJobApplicationLimit", () => {
 
   it("passes when under the limit", async () => {
     mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
-          error: null
-        })
-      },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({
@@ -228,17 +278,11 @@ describe("verifyJobApplicationLimit", () => {
       })
     } as unknown as ReturnType<typeof createClient>)
 
-    await expect(verifyJobApplicationLimit()).resolves.toBeUndefined()
+    await expect(verifyJobApplicationLimit("user-id")).resolves.toBeUndefined()
   })
 
   it("throws when the user reaches the limit", async () => {
     mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-id" } },
-          error: null
-        })
-      },
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({
@@ -249,7 +293,7 @@ describe("verifyJobApplicationLimit", () => {
       })
     } as unknown as ReturnType<typeof createClient>)
 
-    await expect(verifyJobApplicationLimit()).rejects.toThrow(
+    await expect(verifyJobApplicationLimit("user-id")).rejects.toThrow(
       "You have reached the maximum job application limit"
     )
   })

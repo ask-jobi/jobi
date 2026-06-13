@@ -1,5 +1,5 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { createClient } from "@/lib/supabase/server"
+import { getOptionalVerifiedUserIdentity } from "@/server/auth-helper"
 import { redirect } from "next/navigation"
 import AppSidebar from "@/components/client-components/app-sidebar"
 
@@ -8,10 +8,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
+  const user = await getOptionalVerifiedUserIdentity()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
+  if (!user) {
     redirect("/auth/login")
   }
 

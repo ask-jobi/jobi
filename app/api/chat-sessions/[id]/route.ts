@@ -4,13 +4,13 @@ import {
   updateSessionTitle,
   updateSessionStatus,
   permanentlyDeleteSession
-} from "@/lib/agent/chat-history"
+} from "@/server/ai/chat/history"
 import { z } from "zod"
 import {
-  getAuthenticatedUser,
+  requireVerifiedUserIdentity,
   verifyOwnership,
   handleApiError
-} from "@/server/auth-helpers"
+} from "@/server/auth-helper"
 
 const updateSessionSchema = z.object({
   status: z.enum(["active", "completed", "archived"]).optional(),
@@ -32,7 +32,7 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     const session = await getSessionSummary(sessionId)
@@ -69,7 +69,7 @@ export async function PATCH(
       )
     }
 
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     if (validationResult.data.status) {
@@ -101,7 +101,7 @@ export async function DELETE(
 ) {
   try {
     const { id: sessionId } = await params
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
     await verifyOwnership(sessionId, user.id)
 
     await permanentlyDeleteSession(sessionId)

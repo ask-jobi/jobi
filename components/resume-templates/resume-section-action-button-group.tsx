@@ -4,14 +4,18 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ResumeSectionAddAction } from "@/components/resume-templates/resume-section-add-action"
 import { ResumeSectionDeleteAction } from "@/components/resume-templates/resume-section-delete-action"
 import { ResumeSectionEditAction } from "@/components/resume-templates/resume-section-edit-action"
+import { useIsResumeAiActionActive } from "@/lib/store/chat"
 import { cn } from "@/lib/utils"
 
 const EDIT_ACTION_HIDE_DELAY_MS = 50
 
 interface ResumeSectionActionButtonGroupProps {
   actionClassName?: string
+  actionsDisabled?: boolean
   children: ReactNode
   className?: string
+  customActions?: ReactNode
+  dragHandle?: ReactNode
   id?: string
   isInteractive?: boolean
   onAdd?: () => void
@@ -21,8 +25,11 @@ interface ResumeSectionActionButtonGroupProps {
 
 export function ResumeSectionActionButtonGroup({
   actionClassName,
+  actionsDisabled = false,
   children,
   className,
+  customActions,
+  dragHandle,
   id,
   isInteractive = false,
   onAdd,
@@ -31,7 +38,12 @@ export function ResumeSectionActionButtonGroup({
 }: ResumeSectionActionButtonGroupProps) {
   const [isActionVisible, setIsActionVisible] = useState(false)
   const hideTimerRef = useRef<number | null>(null)
-  const isActionEnabled = isInteractive && (!!onEdit || !!onAdd || !!onDelete)
+  const isResumeAiActionActive = useIsResumeAiActionActive()
+  const isActionDisabled = actionsDisabled || isResumeAiActionActive
+  const hasActionButtons = !!onEdit || !!onAdd || !!onDelete
+  const hasCustomActions = !!customActions
+  const isActionEnabled =
+    isInteractive && (hasActionButtons || hasCustomActions || !!dragHandle)
 
   const clearHideTimer = () => {
     if (hideTimerRef.current !== null) {
@@ -58,13 +70,25 @@ export function ResumeSectionActionButtonGroup({
   return (
     <div
       id={id}
-      className={cn("relative", className)}
+      className={cn("relative overflow-visible", className)}
       onBlurCapture={isActionEnabled ? hideAction : undefined}
       onFocusCapture={isActionEnabled ? showAction : undefined}
       onMouseEnter={isActionEnabled ? showAction : undefined}
       onMouseLeave={isActionEnabled ? hideAction : undefined}
     >
-      {isActionEnabled && (
+      {dragHandle && (
+        <div
+          className={cn(
+            "absolute right-full top-1/2 z-50 -translate-y-1/2 pr-2 transition-all duration-200",
+            isActionVisible
+              ? "pointer-events-auto translate-x-0 opacity-100"
+              : "pointer-events-none -translate-x-2 opacity-0"
+          )}
+        >
+          {dragHandle}
+        </div>
+      )}
+      {(hasActionButtons || hasCustomActions) && (
         <div
           className={cn(
             "absolute z-50 flex items-center gap-2 transition-all duration-200 motion-safe:translate-x-2",
@@ -74,9 +98,25 @@ export function ResumeSectionActionButtonGroup({
             actionClassName
           )}
         >
-          {onEdit && <ResumeSectionEditAction onClick={onEdit} />}
-          {onAdd && <ResumeSectionAddAction onClick={onAdd} />}
-          {onDelete && <ResumeSectionDeleteAction onClick={onDelete} />}
+          {onEdit && (
+            <ResumeSectionEditAction
+              disabled={isActionDisabled}
+              onClick={onEdit}
+            />
+          )}
+          {onAdd && (
+            <ResumeSectionAddAction
+              disabled={isActionDisabled}
+              onClick={onAdd}
+            />
+          )}
+          {onDelete && (
+            <ResumeSectionDeleteAction
+              disabled={isActionDisabled}
+              onClick={onDelete}
+            />
+          )}
+          {customActions}
         </div>
       )}
       {children}

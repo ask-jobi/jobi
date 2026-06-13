@@ -2,12 +2,37 @@
  * @vitest-environment node
  */
 import { GET } from "./route"
+import { ApiError } from "@/server/auth-helper"
 import { getUserTokenBalance } from "@/server/quota"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+import * as authHelpersModule from "@/server/auth-helper"
 
 vi.mock("@/server/quota", () => ({
   getUserTokenBalance: vi.fn()
 }))
+
+vi.mock("@/server/auth-helper", async () => {
+  const actual = await vi.importActual<typeof import("@/server/auth-helper")>(
+    "@/server/auth-helper"
+  )
+
+  return {
+    ...actual,
+    handleApiError: vi.fn((error: unknown) => {
+      if (error instanceof actual.ApiError) {
+        return Response.json(
+          { error: error.message },
+          { status: error.statusCode }
+        )
+      }
+
+      const message =
+        error instanceof Error ? error.message : "Internal server error"
+
+      return Response.json({ error: message }, { status: 500 })
+    })
+  }
+})
 
 describe("GET /api/user/subscription", () => {
   let mockGetUserTokenBalance: any
@@ -71,16 +96,17 @@ describe("GET /api/user/subscription", () => {
   })
 
   describe("Error scenarios", () => {
-    it("should return 500 when getUserTokenBalance throws an error", async () => {
+    it("should return the auth helper status when getUserTokenBalance throws an ApiError", async () => {
       mockGetUserTokenBalance.mockRejectedValue(
-        new Error("Database connection failed")
+        new ApiError("Auth service temporarily unavailable", 503)
       )
 
       const response = await GET()
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(503)
       const data = await response.json()
-      expect(data.error).toBe("Failed to fetch subscription data")
+      expect(data.error).toBe("Auth service temporarily unavailable")
+      expect(authHelpersModule.handleApiError).toHaveBeenCalled()
     })
 
     it("should return 500 for unknown errors", async () => {

@@ -28,11 +28,10 @@ vi.mock("ai", () => ({
 }))
 
 vi.mock("@/lib/agent/tools", () => ({
-  repairToolCall: vi.fn(),
   tools: {}
 }))
 
-vi.mock("@/lib/agent/chat-history", () => ({
+vi.mock("@/server/ai/chat/history", () => ({
   getLatestValidSummaryCheckpoint: vi.fn(),
   loadHistory: vi.fn(),
   loadMessagesAfter: vi.fn(),
@@ -44,11 +43,11 @@ vi.mock("@/lib/agent/chat-history", () => ({
   updateSessionTokenUsage: vi.fn()
 }))
 
-vi.mock("@/lib/agent/chat-session-title-generator", () => ({
+vi.mock("@/server/ai/chat/session-title-generator", () => ({
   generateChatSessionTitle: vi.fn()
 }))
 
-vi.mock("@/lib/agent/conversation-summary", () => ({
+vi.mock("@/server/ai/chat/conversation-summary", () => ({
   generateConversationSummary: vi.fn()
 }))
 
@@ -56,7 +55,7 @@ vi.mock("@/server/resume", () => ({
   getJobApplicationByResumeId: vi.fn()
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {}
 }))
 
@@ -71,15 +70,22 @@ vi.mock("@/server/ai/prompts/resume-chat.prompt", () => ({
 }))
 
 vi.mock("@/server/chat-events", () => ({
-  logSummaryCheckpoint: vi.fn(),
-  logResumeModification: vi.fn()
+  logSummaryCheckpoint: vi.fn()
 }))
 
 vi.mock("@/lib/agent/token-usage", () => ({
   parseTokenUsage: vi.fn()
 }))
 
-vi.mock("@/server/auth-helpers", () => {
+vi.mock("@/server/ai/chat/tools/registry", () => ({
+  createResumeChatServerTools: vi.fn(() => ({}))
+}))
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => ({}))
+}))
+
+vi.mock("@/server/auth-helper", () => {
   class ApiError extends Error {
     constructor(
       message: string,
@@ -91,7 +97,8 @@ vi.mock("@/server/auth-helpers", () => {
 
   return {
     ApiError,
-    getAuthenticatedUser: vi.fn(),
+    requireVerifiedUserIdentity: vi.fn(),
+    verifyOwnership: vi.fn(),
     handleApiError: vi.fn((error: unknown) => {
       if (error instanceof ApiError) {
         return Response.json(
@@ -117,14 +124,50 @@ describe("POST /api/chat/resume", () => {
     vi.clearAllMocks()
   })
 
-  it("should reject sending a message when chat token quota is exhausted", async () => {
-    const authHelpers = await import("@/server/auth-helpers")
+  it("verifies session ownership before loading chat context", async () => {
+    const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
+    const routeModule = await import("./route")
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(authHelpers.verifyOwnership).mockRejectedValueOnce(
+      new authHelpers.ApiError("Forbidden", 403)
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "hello" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+
+    expect(response.status).toBe(403)
+    expect(authHelpers.verifyOwnership).toHaveBeenCalledWith(
+      "session-1",
+      "user-1"
+    )
+    expect(quotaModule.getActiveAccessPass).not.toHaveBeenCalled()
+    expect(chatHistoryModule.getSessionSummary).not.toHaveBeenCalled()
+  })
+
+  it("should reject sending a message when chat token quota is exhausted", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const aiModule = await import("ai")
     const routeModule = await import("./route")
 
-    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
     vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue({
@@ -158,11 +201,11 @@ describe("POST /api/chat/resume", () => {
   })
 
   it("should update session token usage after message persistence completes", async () => {
-    const authHelpers = await import("@/server/auth-helpers")
+    const authHelpers = await import("@/server/auth-helper")
     const quotaModule = await import("@/server/quota")
-    const chatHistoryModule = await import("@/lib/agent/chat-history")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
     const chatSessionTitleModule =
-      await import("@/lib/agent/chat-session-title-generator")
+      await import("@/server/ai/chat/session-title-generator")
     const resumeModule = await import("@/server/resume")
     const aiModule = await import("ai")
     const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
@@ -171,7 +214,7 @@ describe("POST /api/chat/resume", () => {
     const events: string[] = []
     let onFinishPromise: Promise<void> | null = null
 
-    vi.mocked(authHelpers.getAuthenticatedUser).mockResolvedValue({
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
       id: "user-1"
     } as never)
     vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
@@ -196,7 +239,26 @@ describe("POST /api/chat/resume", () => {
     vi.mocked(
       chatSessionTitleModule.generateChatSessionTitle
     ).mockResolvedValue("Tailor resume for PM role")
-    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([
+      {
+        id: "stale-user",
+        role: "user",
+        parts: [{ type: "text", text: "apply an old failed edit" }],
+        createdAt: "2026-01-01T00:00:00Z"
+      },
+      {
+        id: "empty-assistant",
+        role: "assistant",
+        parts: [],
+        createdAt: "2026-01-01T00:00:00Z"
+      },
+      {
+        id: "dangling-user",
+        role: "user",
+        parts: [{ type: "text", text: "old dangling request" }],
+        createdAt: "2026-01-01T00:00:01Z"
+      }
+    ])
     vi.mocked(chatHistoryModule.saveMessage).mockImplementation(async () => {
       events.push("save")
       return {} as never
@@ -288,6 +350,26 @@ describe("POST /api/chat/resume", () => {
     await onFinishPromise
 
     expect(response.status).toBe(200)
+    expect(aiModule.streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        abortSignal: request.signal,
+        maxOutputTokens: 2048,
+        timeout: {
+          totalMs: 120000,
+          stepMs: 60000,
+          chunkMs: 30000
+        }
+      })
+    )
+    expect(aiModule.validateUIMessages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: expect.not.arrayContaining([
+          expect.objectContaining({ id: "stale-user" }),
+          expect.objectContaining({ id: "empty-assistant" }),
+          expect.objectContaining({ id: "dangling-user" })
+        ])
+      })
+    )
     expect(chatHistoryModule.updateMessage).toHaveBeenCalledOnce()
     expect(chatHistoryModule.saveMessage).toHaveBeenCalledTimes(2)
     expect(chatHistoryModule.updateSessionTokenUsage).toHaveBeenCalledWith(
@@ -297,5 +379,488 @@ describe("POST /api/chat/resume", () => {
       "session-1",
       "Tailor resume for PM role"
     )
+  })
+
+  it("persists AI SDK tool output-error and error parts with assistant history", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
+    const resumeModule = await import("@/server/resume")
+    const aiModule = await import("ai")
+    const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
+    const routeModule = await import("./route")
+
+    let onFinishPromise: Promise<void> | null = null
+    const assistantParts = [
+      {
+        type: "tool-resumeEditorModify",
+        toolCallId: "tool-1",
+        state: "output-error",
+        input: {
+          operation: "delete",
+          entity: "education",
+          id: "missing-entry"
+        },
+        errorText: "Entry with id missing-entry not found"
+      },
+      {
+        type: "error",
+        errorText: "The model stopped after a tool failure"
+      }
+    ]
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      resumeId: "resume-1",
+      title: "Existing chat",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 1
+    } as never)
+    vi.mocked(
+      chatHistoryModule.getLatestValidSummaryCheckpoint
+    ).mockResolvedValue(null)
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.saveMessage).mockResolvedValue({} as never)
+    vi.mocked(chatHistoryModule.updateMessage).mockResolvedValue()
+
+    vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
+      resumes: {
+        resume_json: {},
+        current_revision: 1,
+        language: "en",
+        evaluation_report: {}
+      },
+      jobs: "job description"
+    } as never)
+
+    vi.mocked(promptModule.default.format).mockReturnValue("prompt")
+    vi.mocked(aiModule.validateUIMessages).mockImplementation(
+      async ({ messages }) => messages as never
+    )
+    vi.mocked(aiModule.convertToModelMessages).mockResolvedValue([] as never)
+    vi.mocked(aiModule.streamText).mockReturnValue({
+      toUIMessageStream: () => []
+    } as never)
+    vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+      ({ execute, onFinish }) => {
+        onFinishPromise = (async () => {
+          await execute({
+            writer: {
+              write: vi.fn(),
+              merge: vi.fn()
+            }
+          } as never)
+
+          await onFinish?.({
+            messages: [
+              {
+                id: "message-1",
+                role: "user",
+                parts: [{ type: "text", text: "delete missing entry" }]
+              },
+              {
+                id: "assistant-1",
+                role: "assistant",
+                parts: assistantParts
+              }
+            ],
+            responseMessage: {
+              id: "assistant-1",
+              role: "assistant",
+              parts: assistantParts,
+              metadata: {}
+            }
+          } as never)
+        })()
+
+        return [] as never
+      }
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "delete missing entry" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+    await onFinishPromise
+
+    expect(response.status).toBe(200)
+    expect(chatHistoryModule.saveMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "assistant-1",
+        role: "assistant",
+        parts: assistantParts
+      })
+    )
+  })
+
+  it("persists AI SDK tool output-available parts with rollback metadata", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
+    const resumeModule = await import("@/server/resume")
+    const aiModule = await import("ai")
+    const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
+    const routeModule = await import("./route")
+
+    let onFinishPromise: Promise<void> | null = null
+    const assistantParts = [
+      {
+        type: "tool-resumeEditorModify",
+        toolCallId: "tool-1",
+        state: "output-available",
+        input: {
+          operation: "delete",
+          entity: "education",
+          id: "edu-1"
+        },
+        output: {
+          operation: "delete",
+          entity: "education",
+          id: "edu-1",
+          originalValue: {
+            entryId: "edu-1",
+            school: "Original School",
+            degree: "BS",
+            start: "2020",
+            end: "2024",
+            content: "Computer Science"
+          },
+          originalIndex: 0,
+          originalSectionOrder: ["education", "skills"]
+        }
+      }
+    ]
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      resumeId: "resume-1",
+      title: "Existing chat",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 1
+    } as never)
+    vi.mocked(
+      chatHistoryModule.getLatestValidSummaryCheckpoint
+    ).mockResolvedValue(null)
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.saveMessage).mockResolvedValue({} as never)
+    vi.mocked(chatHistoryModule.updateMessage).mockResolvedValue()
+
+    vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
+      resumes: {
+        resume_json: {},
+        current_revision: 1,
+        language: "en",
+        evaluation_report: {}
+      },
+      jobs: "job description"
+    } as never)
+
+    vi.mocked(promptModule.default.format).mockReturnValue("prompt")
+    vi.mocked(aiModule.validateUIMessages).mockImplementation(
+      async ({ messages }) => messages as never
+    )
+    vi.mocked(aiModule.convertToModelMessages).mockResolvedValue([] as never)
+    vi.mocked(aiModule.streamText).mockReturnValue({
+      toUIMessageStream: () => []
+    } as never)
+    vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+      ({ execute, onFinish }) => {
+        onFinishPromise = (async () => {
+          await execute({
+            writer: {
+              write: vi.fn(),
+              merge: vi.fn()
+            }
+          } as never)
+
+          await onFinish?.({
+            messages: [
+              {
+                id: "message-1",
+                role: "user",
+                parts: [{ type: "text", text: "delete education" }]
+              },
+              {
+                id: "assistant-1",
+                role: "assistant",
+                parts: assistantParts
+              }
+            ],
+            responseMessage: {
+              id: "assistant-1",
+              role: "assistant",
+              parts: assistantParts,
+              metadata: {}
+            }
+          } as never)
+        })()
+
+        return [] as never
+      }
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "delete education" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+    await onFinishPromise
+
+    expect(response.status).toBe(200)
+    expect(chatHistoryModule.saveMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "assistant-1",
+        role: "assistant",
+        parts: assistantParts
+      })
+    )
+  })
+
+  it("maps stream errors to a retryable client message", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
+    const resumeModule = await import("@/server/resume")
+    const aiModule = await import("ai")
+    const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
+    const routeModule = await import("./route")
+
+    let streamErrorMapper: (error: unknown) => string = () => ""
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(quotaModule.getActiveAccessPass).mockResolvedValue(null as never)
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      resumeId: "resume-1",
+      title: "Existing chat",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 1
+    } as never)
+    vi.mocked(
+      chatHistoryModule.getLatestValidSummaryCheckpoint
+    ).mockResolvedValue(null)
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.saveMessage).mockResolvedValue({} as never)
+    vi.mocked(chatHistoryModule.updateMessage).mockResolvedValue()
+
+    vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
+      resumes: {
+        resume_json: {},
+        current_revision: 1,
+        language: "en",
+        evaluation_report: {}
+      },
+      jobs: "job description"
+    } as never)
+
+    vi.mocked(promptModule.default.format).mockReturnValue("prompt")
+    vi.mocked(aiModule.validateUIMessages).mockImplementation(
+      async ({ messages }) => messages as never
+    )
+    vi.mocked(aiModule.convertToModelMessages).mockResolvedValue([] as never)
+    vi.mocked(aiModule.streamText).mockReturnValue({
+      toUIMessageStream: () => []
+    } as never)
+    vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+      ({ execute, onError }) => {
+        streamErrorMapper = onError ?? streamErrorMapper
+        void execute({
+          writer: {
+            write: vi.fn(),
+            merge: vi.fn()
+          }
+        } as never)
+
+        return [] as never
+      }
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "hello" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+
+    expect(response.status).toBe(200)
+    expect(streamErrorMapper?.(new Error("provider failed"))).toBe(
+      "The chat response could not be completed. Please retry."
+    )
+    expect(
+      streamErrorMapper?.(new DOMException("timed out", "TimeoutError"))
+    ).toBe("The chat response took too long. Please retry.")
+  })
+
+  it("should re-check quota before consuming tokens on finish", async () => {
+    const authHelpers = await import("@/server/auth-helper")
+    const quotaModule = await import("@/server/quota")
+    const chatHistoryModule = await import("@/server/ai/chat/history")
+    const resumeModule = await import("@/server/resume")
+    const aiModule = await import("ai")
+    const promptModule = await import("@/server/ai/prompts/resume-chat.prompt")
+    const routeModule = await import("./route")
+
+    let onFinishPromise: Promise<void> | null = null
+    const events: string[] = []
+
+    vi.mocked(authHelpers.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "user-1"
+    } as never)
+    vi.mocked(quotaModule.getActiveAccessPass)
+      .mockResolvedValueOnce({ id: "pass-1" } as never)
+      .mockResolvedValueOnce({ id: "pass-1" } as never)
+    vi.mocked(quotaModule.verifyChatTokenQuota).mockImplementation(() => {})
+    vi.mocked(quotaModule.buildChatTokenQuota).mockReturnValue({
+      used: 0,
+      limit: 100
+    })
+    vi.mocked(chatHistoryModule.updateSessionTokenUsage).mockImplementation(
+      async () => {
+        events.push("usage")
+      }
+    )
+    vi.mocked(quotaModule.consumeChatTokens).mockImplementation(async () => {
+      expect(events).toEqual(["usage"])
+      return 30
+    })
+
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      resumeId: "resume-1",
+      title: "New Chat",
+      status: "active",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      messageCount: 1
+    } as never)
+    vi.mocked(
+      chatHistoryModule.getLatestValidSummaryCheckpoint
+    ).mockResolvedValue(null)
+    vi.mocked(chatHistoryModule.loadHistory).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.saveMessage).mockResolvedValue({} as never)
+    vi.mocked(chatHistoryModule.updateMessage).mockResolvedValue()
+
+    vi.mocked(resumeModule.getJobApplicationByResumeId).mockResolvedValue({
+      resumes: {
+        resume_json: {},
+        language: "en",
+        evaluation_report: {}
+      },
+      jobs: "job description"
+    } as never)
+
+    vi.mocked(promptModule.default.format).mockReturnValue("prompt")
+    vi.mocked(aiModule.validateUIMessages).mockImplementation(
+      async ({ messages }) => messages as never
+    )
+    vi.mocked(aiModule.convertToModelMessages).mockResolvedValue([] as never)
+    vi.mocked(aiModule.streamText).mockReturnValue({
+      toUIMessageStream: () => []
+    } as never)
+    vi.mocked(aiModule.createUIMessageStream).mockImplementation(
+      ({ execute, onFinish }) => {
+        onFinishPromise = (async () => {
+          await execute({
+            writer: {
+              write: vi.fn(),
+              merge: vi.fn()
+            }
+          } as never)
+
+          await onFinish?.({
+            messages: [
+              {
+                id: "message-1",
+                role: "user",
+                parts: [{ type: "text", text: "hello" }]
+              },
+              {
+                id: "message-2",
+                role: "assistant",
+                parts: [{ type: "text", text: "hi" }]
+              }
+            ],
+            responseMessage: {
+              id: "message-2",
+              role: "assistant",
+              parts: [{ type: "text", text: "hi" }],
+              metadata: {
+                tokenUsage: {
+                  inputTokens: 10,
+                  outputTokens: 20,
+                  cachedTokens: 0,
+                  reasoningTokens: 0,
+                  totalTokens: 30
+                }
+              }
+            }
+          } as never)
+        })()
+
+        return [] as never
+      }
+    )
+
+    const request = new NextRequest("http://localhost:3000/api/chat/resume", {
+      method: "POST",
+      body: JSON.stringify({
+        id: "session-1",
+        message: {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "hello" }]
+        }
+      })
+    })
+
+    const response = await routeModule.POST(request)
+    await onFinishPromise
+
+    expect(response.status).toBe(200)
+    expect(quotaModule.getActiveAccessPass).toHaveBeenCalledTimes(2)
+    expect(quotaModule.consumeChatTokens).toHaveBeenCalledWith("pass-1", 30)
   })
 })

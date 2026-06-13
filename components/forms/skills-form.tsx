@@ -1,48 +1,40 @@
 "use client"
 
-import { Controller, useFieldArray, useFormContext } from "react-hook-form"
+import { Controller } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { InputTags } from "@/components/ui/input-tags"
-import { ResumeData, SkillEntry } from "@/types/resume"
+import type { SkillEntry } from "@/types/resume"
 
 interface SkillsFormProps {
+  entry: SkillEntry
   focusIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: SkillEntry) => void | Promise<void>
 }
 
 export function SkillsForm({
+  entry,
   focusIndex = null,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: SkillsFormProps) {
-  const { control, getValues } = useFormContext<ResumeData>()
-  const { update } = useFieldArray({
-    control,
-    name: "skills.entries"
-  })
-
   if (typeof focusIndex !== "number") {
-    return null
-  }
-
-  const currentEntry = getValues(`skills.entries.${focusIndex}`)
-
-  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-skills" className="space-y-4">
       <FocusedEntryFormShell<SkillEntry>
-        entry={currentEntry}
+        entry={entry}
         formId={`form-skills-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
-        onSave={(values) => update(focusIndex, values)}
+        onSave={onSaveEntry}
       >
-        {({ register, control: blockControl, setValue }) => (
+        {({ register, control, setValue }) => (
           <>
             <div className="space-y-2">
               <label className="text-sm font-medium">Group</label>
@@ -51,7 +43,7 @@ export function SkillsForm({
             <div className="space-y-2">
               <label className="text-sm font-medium">Skills</label>
               <Controller
-                control={blockControl}
+                control={control}
                 name="content"
                 render={({ field }) => (
                   <InputTags

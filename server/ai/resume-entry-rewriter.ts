@@ -2,7 +2,7 @@ import { generateText, Output } from "ai"
 import { z } from "zod"
 import { resumeRewritePrompt } from "./prompts/resume-rewrite.prompt"
 import { locales } from "@/lib/i18n/config"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 
 // const rewriteResponseSchema = z.object({
 //   optimizedContent: z.string().describe("改写后的内容"),

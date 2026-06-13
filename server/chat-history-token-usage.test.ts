@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   getSessionTokenUsage,
   updateSessionTokenUsage
-} from "@/lib/agent/chat-history"
+} from "@/server/ai/chat/history"
 import * as supabaseModule from "@/lib/supabase/server"
 
 vi.mock("@/lib/supabase/server")

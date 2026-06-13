@@ -27,15 +27,15 @@ describe("evaluation", () => {
   const mockResumeData: ResumeData = {
     sectionOrder: ["education", "employment", "skills"],
     personalInfo: {
-      blockId: "p1",
+      entryId: "p1",
       firstName: "John",
       lastName: "Doe",
       email: "john@example.com",
       phone: ""
     },
-    education: { title: "Education", entries: [] },
-    employment: { title: "Employment", entries: [] },
-    skills: { title: "Skills", entries: [] }
+    education: { entries: [] },
+    employment: { entries: [] },
+    skills: { entries: [] }
   }
 
   const mockReport: ResumeEvaluationOutput = {

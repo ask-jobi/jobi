@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
+import { Provider, createStore } from "jotai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ResumeSectionActionButtonGroup } from "@/components/resume-templates/resume-section-action-button-group"
+import { chatThreadLifecycleAtom } from "@/lib/store/chat"
 
 describe("ResumeSectionActionButtonGroup", () => {
   beforeEach(() => {
@@ -81,6 +83,42 @@ describe("ResumeSectionActionButtonGroup", () => {
     expect(actions).toHaveClass("opacity-100")
   })
 
+  it("keeps a drag handle visible when moving from the entry body toward the handle", () => {
+    render(
+      <ResumeSectionActionButtonGroup
+        isInteractive
+        dragHandle={<button aria-label="reorderEntry">Reorder</button>}
+      >
+        <div>Section body</div>
+      </ResumeSectionActionButtonGroup>
+    )
+
+    const handle = screen.getByRole("button", { name: "reorderEntry" })
+    const handleContainer = handle.parentElement
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(handleContainer).not.toBeNull()
+    expect(surface).not.toBeNull()
+    expect(surface).not.toHaveClass("-ml-10")
+    expect(surface).not.toHaveClass("pl-10")
+    expect(handleContainer).toHaveClass("opacity-0")
+
+    fireEvent.mouseEnter(surface!)
+
+    expect(handleContainer).toHaveClass("opacity-100")
+
+    fireEvent.mouseLeave(surface!)
+    act(() => {
+      vi.advanceTimersByTime(25)
+    })
+    fireEvent.mouseEnter(handle)
+    act(() => {
+      vi.advanceTimersByTime(60)
+    })
+
+    expect(handleContainer).toHaveClass("opacity-100")
+  })
+
   it("shows a tooltip confirmation before deleting an entry", () => {
     const onDelete = vi.fn()
 
@@ -130,5 +168,49 @@ describe("ResumeSectionActionButtonGroup", () => {
     fireEvent.click(screen.getByRole("button", { name: "addEntry" }))
 
     expect(onAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders add/edit/delete actions as disabled while an AI resume action is running", () => {
+    const store = createStore()
+    store.set(chatThreadLifecycleAtom, "running")
+    const onAdd = vi.fn()
+    const onEdit = vi.fn()
+    const onDelete = vi.fn()
+
+    render(
+      <Provider store={store}>
+        <ResumeSectionActionButtonGroup
+          isInteractive
+          onAdd={onAdd}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        >
+          <div>Section body</div>
+        </ResumeSectionActionButtonGroup>
+      </Provider>
+    )
+
+    const surface = screen.getByText("Section body").parentElement
+
+    expect(surface).not.toBeNull()
+
+    fireEvent.mouseEnter(surface!)
+
+    const addButton = screen.getByRole("button", { name: "addEntry" })
+    const editButton = screen.getByRole("button", { name: "editSection" })
+    const deleteButton = screen.getByRole("button", { name: "deleteEntry" })
+
+    expect(addButton).toBeDisabled()
+    expect(editButton).toBeDisabled()
+    expect(deleteButton).toBeDisabled()
+
+    fireEvent.click(addButton)
+    fireEvent.click(editButton)
+    fireEvent.click(deleteButton)
+
+    expect(onAdd).not.toHaveBeenCalled()
+    expect(onEdit).not.toHaveBeenCalled()
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument()
   })
 })

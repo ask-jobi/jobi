@@ -15,15 +15,15 @@ const mockEvaluateAndSave = evaluateAndSaveResume as unknown as ReturnType<
 const mockResumeData: ResumeData = {
   sectionOrder: ["education", "employment", "skills"],
   personalInfo: {
-    blockId: "p1",
+    entryId: "p1",
     firstName: "Ada",
     lastName: "Lovelace",
     email: "ada@example.com",
     phone: "123"
   },
-  education: { title: "Education", entries: [] },
-  employment: { title: "Employment", entries: [] },
-  skills: { title: "Skills", entries: [] }
+  education: { entries: [] },
+  employment: { entries: [] },
+  skills: { entries: [] }
 }
 
 describe("POST /api/evaluation", () => {

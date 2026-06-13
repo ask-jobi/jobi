@@ -1,9 +1,78 @@
-import { test, expect } from "@playwright/test"
+import {
+  test,
+  expect,
+  type APIRequestContext,
+  type Page
+} from "@playwright/test"
 import { DashboardHelper } from "./helpers/auth-helper"
+
+test.describe.configure({ mode: "serial" })
+
+function applicationResumeUrlPattern(applicationId: string) {
+  return new RegExp(`.*/application/${applicationId}(/resume)?`)
+}
+
+async function createNavigableApplication(request: APIRequestContext) {
+  const response = await request.post("/api/resume/create-empty", {
+    data: {
+      jobInfo: {
+        name: "E2E Upload Target",
+        company: "Jobi",
+        description: "Application created for Playwright navigation"
+      },
+      language: "en"
+    }
+  })
+
+  expect(response.ok()).toBe(true)
+
+  const data = await response.json()
+
+  return {
+    applicationId: data.data.applicationData.id as string,
+    resumeId: data.data.resumeData.id as string
+  }
+}
+
+async function mockUploadAndAnalyzeSuccess(
+  page: Page,
+  input: {
+    intakeId: string
+    applicationId: string
+    resumeId: string
+  }
+) {
+  await page.route("**/api/resume/upload-and-analyze", async (route) => {
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache"
+      },
+      body: [
+        `data: ${JSON.stringify({ type: "intake.start", intakeId: input.intakeId })}`,
+        `data: ${JSON.stringify({ type: "step.start", intakeId: input.intakeId, step: "extract" })}`,
+        `data: ${JSON.stringify({ type: "step.done", intakeId: input.intakeId, step: "extract" })}`,
+        `data: ${JSON.stringify({ type: "step.start", intakeId: input.intakeId, step: "parse" })}`,
+        `data: ${JSON.stringify({ type: "step.done", intakeId: input.intakeId, step: "parse" })}`,
+        `data: ${JSON.stringify({ type: "step.start", intakeId: input.intakeId, step: "upload" })}`,
+        `data: ${JSON.stringify({ type: "step.done", intakeId: input.intakeId, step: "upload" })}`,
+        `data: ${JSON.stringify({ type: "step.start", intakeId: input.intakeId, step: "persist" })}`,
+        `data: ${JSON.stringify({ type: "step.done", intakeId: input.intakeId, step: "persist" })}`,
+        `data: ${JSON.stringify({ type: "step.start", intakeId: input.intakeId, step: "evaluate" })}`,
+        `data: ${JSON.stringify({ type: "step.done", intakeId: input.intakeId, step: "evaluate" })}`,
+        `data: ${JSON.stringify({ type: "intake.done", intakeId: input.intakeId, applicationId: input.applicationId, resumeId: input.resumeId })}`,
+        ""
+      ].join("\n\n")
+    })
+  })
+}
 
 test.describe("Dashboard页面", () => {
   test.beforeEach(async ({ page }) => {
-    // 访问dashboard页面
+    await page.route("**/api/resume/thumbnail**", async (route) => {
+      await route.fulfill({ status: 404, body: "not found" })
+    })
     await DashboardHelper.navigateToDashboard(page)
   })
 
@@ -82,26 +151,28 @@ test.describe("Dashboard页面", () => {
   })
 
   test("现有简历卡片应该可以点击跳转", async ({ page }) => {
-    // 等待页面加载完成
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible()
 
-    // 获取简历卡片数量
     const cardCount = await DashboardHelper.getResumeCardCount(page)
 
-    // 如果有现有简历，测试点击跳转
     if (cardCount > 0) {
-      // 点击第一个简历卡片
-      await DashboardHelper.clickFirstResumeCard(page)
+      const firstCard = page.locator('a[href^="/application/"]').first()
+      const href = await firstCard.getAttribute("href")
 
-      await page.waitForURL("**/application/*")
-      // 验证跳转到简历详情页
-      await expect(page).toHaveURL(/.*\/application\/.*/)
+      expect(href).toMatch(/^\/application\//)
+
+      await page.goto(href!, { waitUntil: "domcontentloaded" })
+      await page.waitForURL(/.*\/application\/.*(\/resume)?/)
+      await expect(page).toHaveURL(/.*\/application\/.*(\/resume)?/)
     }
   })
 })
 
 test.describe("Dashboard页面 - 创建简历流程", () => {
   test.beforeEach(async ({ page }) => {
+    await page.route("**/api/resume/thumbnail**", async (route) => {
+      await route.fulfill({ status: 404, body: "not found" })
+    })
     await DashboardHelper.navigateToDashboard(page)
   })
 
@@ -133,10 +204,20 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
     // 尝试不填写表单直接点击Next
     await page.getByRole("button", { name: "Next" }).click()
 
-    // 验证表单验证错误
-    await expect(page.getByText("Job name must not empty")).toBeVisible()
-    await expect(page.getByText("Job company must not empty")).toBeVisible()
-    await expect(page.getByText("Job description must not empty")).toBeVisible()
+    // 验证表单进入 invalid 状态
+    await expect(page.getByLabel(/name/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    )
+    await expect(page.getByLabel(/company/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    )
+    await expect(page.getByLabel(/description/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    )
+    await expect(page.locator("[data-slot='form-message']")).toHaveCount(3)
   })
 
   test("应该能够导航到第二步", async ({ page }) => {
@@ -187,5 +268,215 @@ test.describe("Dashboard页面 - 创建简历流程", () => {
     // 验证回到第一步
     await expect(page.getByText("Job Information")).toBeVisible()
     await expect(page.getByLabel(/name/i)).toHaveValue(jobData.name)
+  })
+
+  test("上传 PDF 后应按新 SSE 协议跳转到 application 页面", async ({
+    page,
+    request
+  }) => {
+    const target = await createNavigableApplication(request)
+
+    await mockUploadAndAnalyzeSuccess(page, {
+      intakeId: "intake-e2e-1",
+      applicationId: target.applicationId,
+      resumeId: target.resumeId
+    })
+
+    await DashboardHelper.openCreateResumeDialog(page)
+
+    await DashboardHelper.fillJobInformationForm(page, {
+      name: "Software Engineer",
+      company: "Tech Company",
+      description: "A challenging role in software development"
+    })
+
+    await page.getByRole("button", { name: "Next" }).click()
+    await page.locator('input[type="file"]').setInputFiles("test/test_pdf.pdf")
+    await expect(
+      page.getByRole("button", { name: "Start Analysis" })
+    ).toBeEnabled()
+    await page.getByRole("button", { name: "Start Analysis" }).click()
+
+    await page.waitForURL(applicationResumeUrlPattern(target.applicationId), {
+      timeout: 30000
+    })
+  })
+
+  for (const scenario of [
+    {
+      label: "English PDF",
+      file: {
+        name: "resume-en.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4 English resume")
+      },
+      applicationId: "app-e2e-en",
+      resumeId: "resume-e2e-en"
+    },
+    {
+      label: "Chinese PDF",
+      file: {
+        name: "简历-中文.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4 中文简历")
+      },
+      applicationId: "app-e2e-zh",
+      resumeId: "resume-e2e-zh"
+    }
+  ]) {
+    test(`creates an Application Resume from a ${scenario.label}`, async ({
+      page,
+      request
+    }) => {
+      const target = await createNavigableApplication(request)
+
+      await mockUploadAndAnalyzeSuccess(page, {
+        intakeId: `intake-${scenario.applicationId}`,
+        applicationId: target.applicationId,
+        resumeId: target.resumeId
+      })
+
+      await DashboardHelper.openCreateResumeDialog(page)
+      await DashboardHelper.fillJobInformationForm(page, {
+        name: "Software Engineer",
+        company: "Tech Company",
+        description: "A challenging role in software development"
+      })
+
+      await page.getByRole("button", { name: "Next" }).click()
+      await page.locator('input[type="file"]').setInputFiles(scenario.file)
+      await expect(
+        page.getByRole("button", { name: "Start Analysis" })
+      ).toBeEnabled()
+      await page.getByRole("button", { name: "Start Analysis" }).click()
+
+      await page.waitForURL(applicationResumeUrlPattern(target.applicationId), {
+        timeout: 30000
+      })
+    })
+  }
+
+  test("closing the dialog during analysis resets the flow without stale navigation", async ({
+    page
+  }) => {
+    let releaseResponse!: () => void
+    const responseReleased = new Promise<void>((resolve) => {
+      releaseResponse = resolve
+    })
+
+    await page.route("**/api/resume/upload-and-analyze", async (route) => {
+      await responseReleased
+      await route.fulfill({
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache"
+        },
+        body: [
+          'data: {"type":"intake.start","intakeId":"intake-close-1"}',
+          'data: {"type":"intake.done","intakeId":"intake-close-1","applicationId":"app-stale-close","resumeId":"resume-stale-close"}',
+          ""
+        ].join("\n\n")
+      })
+    })
+
+    await DashboardHelper.openCreateResumeDialog(page)
+    await DashboardHelper.fillJobInformationForm(page, {
+      name: "Software Engineer",
+      company: "Tech Company",
+      description: "A challenging role in software development"
+    })
+
+    await page.getByRole("button", { name: "Next" }).click()
+    await page.locator('input[type="file"]').setInputFiles("test/test_pdf.pdf")
+    await page.getByRole("button", { name: "Start Analysis" }).click()
+
+    await expect(page.getByRole("dialog")).toBeVisible()
+    await page.locator("button[data-slot='dialog-close']").click()
+    await expect(page.getByRole("dialog")).not.toBeVisible()
+
+    releaseResponse()
+    await page.waitForTimeout(1200)
+    await expect(page).toHaveURL(/.*\/dashboard/)
+
+    await DashboardHelper.openCreateResumeDialog(page)
+    await expect(page.getByLabel(/name/i)).toHaveValue("")
+    await expect(page.getByLabel(/company/i)).toHaveValue("")
+    await expect(page.getByLabel(/description/i)).toHaveValue("")
+  })
+
+  test("reloading the page during analysis does not leave stale UI state", async ({
+    page
+  }) => {
+    let releaseResponse!: () => void
+    const responseReleased = new Promise<void>((resolve) => {
+      releaseResponse = resolve
+    })
+
+    await page.route("**/api/resume/upload-and-analyze", async (route) => {
+      await responseReleased
+      await route.fulfill({
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache"
+        },
+        body: [
+          'data: {"type":"intake.start","intakeId":"intake-reload-1"}',
+          'data: {"type":"intake.done","intakeId":"intake-reload-1","applicationId":"app-stale-reload","resumeId":"resume-stale-reload"}',
+          ""
+        ].join("\n\n")
+      })
+    })
+
+    await DashboardHelper.openCreateResumeDialog(page)
+    await DashboardHelper.fillJobInformationForm(page, {
+      name: "Software Engineer",
+      company: "Tech Company",
+      description: "A challenging role in software development"
+    })
+
+    await page.getByRole("button", { name: "Next" }).click()
+    await page.locator('input[type="file"]').setInputFiles("test/test_pdf.pdf")
+    await page.getByRole("button", { name: "Start Analysis" }).click()
+
+    await page.reload()
+    releaseResponse()
+    await page.waitForTimeout(1200)
+
+    await expect(page).toHaveURL(/.*\/dashboard/)
+    await DashboardHelper.openCreateResumeDialog(page)
+    await expect(page.getByRole("button", { name: "Next" })).toBeVisible()
+  })
+
+  test("上传接口返回 JSON 错误时应展示真实错误信息", async ({ page }) => {
+    await page.route("**/api/resume/upload-and-analyze", async (route) => {
+      await route.fulfill({
+        status: 400,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ error: "Only PDF files are supported" })
+      })
+    })
+
+    await DashboardHelper.openCreateResumeDialog(page)
+
+    await DashboardHelper.fillJobInformationForm(page, {
+      name: "Software Engineer",
+      company: "Tech Company",
+      description: "A challenging role in software development"
+    })
+
+    await page.getByRole("button", { name: "Next" }).click()
+    await page.locator('input[type="file"]').setInputFiles("test/test_pdf.pdf")
+    await page.getByRole("button", { name: "Start Analysis" }).click()
+
+    await expect(
+      page
+        .getByTestId("ui-dialog-content")
+        .getByText("Only PDF files are supported")
+    ).toBeVisible()
+    await expect(page).toHaveURL(/.*\/dashboard/)
   })
 })

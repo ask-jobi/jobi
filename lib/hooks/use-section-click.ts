@@ -1,20 +1,22 @@
 "use client"
 
 import { useCallback } from "react"
-import { editModalOpenAtom } from "@/lib/store/resume"
-import { useResumeEditorState } from "@/lib/hooks/use-resume-editor-state"
+import { useEntryEditWorkflow } from "@/lib/hooks/use-entry-edit-workflow"
 import type { ResumeSectionKey } from "@/types/resume"
-import { useSetAtom } from "jotai"
 
+/**
+ * Hook for template section click handlers.
+ *
+ * Delegates to {@link useEntryEditWorkflow.startExistingEntryEdit}
+ * so section clicks open the local modal form without mutating the resume first.
+ */
 export function useSectionClickHandler() {
-  const setEditModalOpen = useSetAtom(editModalOpenAtom)
-  const { selectTarget } = useResumeEditorState()
+  const { startExistingEntryEdit } = useEntryEditWorkflow()
 
   return useCallback(
     (id: ResumeSectionKey, index?: number) => {
-      selectTarget(id, index)
-      setEditModalOpen(true)
+      startExistingEntryEdit(id, index)
     },
-    [selectTarget, setEditModalOpen]
+    [startExistingEntryEdit]
   )
 }

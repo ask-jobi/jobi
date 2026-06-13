@@ -3,23 +3,22 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { Provider, createStore } from "jotai"
-import { FormProvider, useForm, useFormContext } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
 import { ResumeEditor } from "../resume-editor"
+import { applicationAtom, editModalOpenAtom } from "@/lib/store/resume"
 import {
-  applicationAtom,
-  editModalOpenAtom,
-  editModalRollbackResumeAtom,
   selectedEntryIdAtom,
   selectedEntryIndexAtom,
   selectedSectionIdAtom
-} from "@/lib/store/resume"
+} from "@/lib/store/resume-editor-state"
+import { chatThreadLifecycleAtom } from "@/lib/store/chat"
 import type { ResumeData } from "@/types/resume"
 
 const saveApplicationResumeChangeMock = vi.fn()
 
 vi.mock("@/server/resume", () => ({
-  saveApplicationResumeChange: (...args: unknown[]) => saveApplicationResumeChangeMock(...args)
+  saveApplicationResumeChange: (...args: unknown[]) =>
+    saveApplicationResumeChangeMock(...args)
 }))
 
 vi.mock("@/lib/hooks/use-resume-template", () => ({
@@ -60,50 +59,32 @@ vi.mock("@/components/resumes/resume-canvas-section-entry", () => ({
 }))
 
 function renderEditor(store = createStore()) {
-  function DraftObserver() {
-    const { watch } = useFormContext<ResumeData>()
-    const educationBlocks = watch("education.entries")
-
-    return (
-      <div data-testid="draft-education-block-count">
-        {educationBlocks?.length ?? 0}
-      </div>
-    )
-  }
-
-  function Wrapper() {
-    const methods = useForm<ResumeData>({
-      defaultValues: store.get(applicationAtom)?.resume.resume_json
-    })
-
-    return (
-      <Provider store={store}>
-        <FormProvider {...methods}>
-          <DraftObserver />
-          <ResumeEditor />
-        </FormProvider>
-      </Provider>
-    )
-  }
-
-  return render(<Wrapper />)
+  return render(
+    <Provider store={store}>
+      <ResumeEditor />
+    </Provider>
+  )
 }
 
 describe("ResumeEditor add entry", () => {
-  it("adds the entry to the draft before opening the modal without mutating persisted resume", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+  it("opens the modal for a new entry without mutating the persisted resume", async () => {
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const store = createStore()
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
         phone: ""
       },
       education: {
-        title: "Education",
         entries: [
           {
             entryId: "edu-1",
@@ -116,7 +97,6 @@ describe("ResumeEditor add entry", () => {
         ]
       },
       skills: {
-        title: "Skills",
         entries: []
       }
     }
@@ -128,6 +108,7 @@ describe("ResumeEditor add entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -146,31 +127,31 @@ describe("ResumeEditor add entry", () => {
       expect(store.get(editModalOpenAtom)).toBe(true)
       expect(store.get(selectedSectionIdAtom)).toBe("education")
       expect(store.get(selectedEntryIndexAtom)).toBe(1)
-      expect(store.get(selectedEntryIdAtom)).toBeTruthy()
-      expect(store.get(editModalRollbackResumeAtom)).toEqual(originalResume)
+      expect(store.get(selectedEntryIdAtom)).toBeNull()
       expect(
-        screen.getByTestId("draft-education-block-count")
-      ).toHaveTextContent("2")
-      expect(
-        store.get(applicationAtom)?.resume.resume_json.education.entries
+        store.get(applicationAtom)?.resume.resume_json.education?.entries
       ).toHaveLength(1)
     })
   })
 
-  it("persists entry deletion immediately after updating the draft", async () => {
-    saveApplicationResumeChangeMock.mockResolvedValue(undefined)
+  it("does not open the modal for manual editing while an AI edit is running", async () => {
+    saveApplicationResumeChangeMock.mockImplementation(
+      async (_resumeId: string, nextResume: ResumeData) => ({
+        resume: nextResume,
+        currentRevision: 1
+      })
+    )
     const store = createStore()
     const originalResume: ResumeData = {
       sectionOrder: ["education", "skills"],
       personalInfo: {
-        blockId: "pi-1",
+        entryId: "pi-1",
         firstName: "",
         lastName: "",
         email: "",
         phone: ""
       },
       education: {
-        title: "Education",
         entries: [
           {
             entryId: "edu-1",
@@ -183,7 +164,6 @@ describe("ResumeEditor add entry", () => {
         ]
       },
       skills: {
-        title: "Skills",
         entries: []
       }
     }
@@ -195,6 +175,79 @@ describe("ResumeEditor add entry", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
+        resume_json: originalResume
+      },
+      job: {
+        id: "job-1",
+        name: "",
+        company: "",
+        description: ""
+      }
+    })
+    store.set(chatThreadLifecycleAtom, "running")
+
+    renderEditor(store)
+
+    fireEvent.click(screen.getByRole("button", { name: "Trigger Add Entry" }))
+
+    await waitFor(() => {
+      expect(store.get(editModalOpenAtom)).toBe(false)
+      expect(store.get(selectedSectionIdAtom)).toBeNull()
+      expect(store.get(selectedEntryIndexAtom)).toBeNull()
+      expect(store.get(selectedEntryIdAtom)).toBeNull()
+      expect(saveApplicationResumeChangeMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("keeps the persisted resume unchanged until entry deletion save succeeds", async () => {
+    let resolveSave!: (value: {
+      resume: ResumeData
+      currentRevision: number
+    }) => void
+    saveApplicationResumeChangeMock.mockImplementation(
+      () =>
+        new Promise<{ resume: ResumeData; currentRevision: number }>(
+          (resolve) => {
+            resolveSave = resolve
+          }
+        )
+    )
+    const store = createStore()
+    const originalResume: ResumeData = {
+      sectionOrder: ["education", "skills"],
+      personalInfo: {
+        entryId: "pi-1",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: ""
+      },
+      education: {
+        entries: [
+          {
+            entryId: "edu-1",
+            school: "School 1",
+            degree: "Degree 1",
+            start: "2020-01",
+            end: "2021-01",
+            content: ""
+          }
+        ]
+      },
+      skills: {
+        entries: []
+      }
+    }
+
+    store.set(applicationAtom, {
+      id: "app-1",
+      resume: {
+        id: "resume-1",
+        language: "en",
+        evaluation_report: null,
+        evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: originalResume
       },
       job: {
@@ -211,20 +264,33 @@ describe("ResumeEditor add entry", () => {
       screen.getByRole("button", { name: "Trigger Delete Entry" })
     )
 
+    const expectedResume: ResumeData = {
+      sectionOrder: ["skills"],
+      personalInfo: originalResume.personalInfo,
+      skills: originalResume.skills
+    }
+
+    await waitFor(() => {
+      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith(
+        "resume-1",
+        expectedResume,
+        { baseRevision: 1 }
+      )
+    })
+
+    expect(
+      store.get(applicationAtom)?.resume.resume_json.education?.entries
+    ).toHaveLength(1)
+
+    resolveSave({ resume: expectedResume, currentRevision: 2 })
+
     await waitFor(() => {
       expect(
-        screen.getByTestId("draft-education-block-count")
-      ).toHaveTextContent("0")
+        store.get(applicationAtom)?.resume.resume_json.education
+      ).toBeUndefined()
       expect(
-        store.get(applicationAtom)?.resume.resume_json.education.entries
-      ).toHaveLength(0)
-      expect(saveApplicationResumeChangeMock).toHaveBeenCalledWith("resume-1", {
-        ...originalResume,
-        education: {
-          ...originalResume.education,
-          entries: []
-        }
-      })
+        store.get(applicationAtom)?.resume.resume_json.sectionOrder
+      ).toEqual(["skills"])
     })
   })
 })

@@ -8,7 +8,7 @@ import {
   streamText,
   validateUIMessages
 } from "ai"
-import { repairToolCall, tools } from "@/lib/agent/tools"
+import { tools } from "@/lib/agent/tools"
 import {
   getLatestValidSummaryCheckpoint,
   loadHistory,
@@ -20,20 +20,22 @@ import {
   getSessionSummary,
   updateSessionTokenUsage,
   updateSessionTitle
-} from "@/lib/agent/chat-history"
-import { generateConversationSummary } from "@/lib/agent/conversation-summary"
+} from "@/server/ai/chat/history"
+import { generateConversationSummary } from "@/server/ai/chat/conversation-summary"
 import { getJobApplicationByResumeId } from "@/server/resume"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 import { generateUUID } from "@/lib/utils"
 import chatPrompt from "@/server/ai/prompts/resume-chat.prompt"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { ResumeEvaluationOutput } from "@/types/evaluation"
-import {
-  logSummaryCheckpoint,
-  logResumeModification
-} from "@/server/chat-events"
+import { logSummaryCheckpoint } from "@/server/chat-events"
 import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
-import { getAuthenticatedUser, handleApiError } from "@/server/auth-helpers"
+import {
+  requireVerifiedUserIdentity,
+  handleApiError,
+  verifyOwnership,
+  ApiError
+} from "@/server/auth-helper"
 import { parseTokenUsage } from "@/lib/agent/token-usage"
 import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
 import {
@@ -42,12 +44,24 @@ import {
   getActiveAccessPass,
   verifyChatTokenQuota
 } from "@/server/quota"
-import { generateChatSessionTitle } from "@/lib/agent/chat-session-title-generator"
+import { generateChatSessionTitle } from "@/server/ai/chat/session-title-generator"
+import { createResumeChatServerTools } from "@/server/ai/chat/tools/registry"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 const CHAT_TOKEN_LIMIT_MESSAGE =
   "Your token balance is exhausted. Buy another token bundle to continue chatting."
+const CHAT_STREAM_MAX_OUTPUT_TOKENS = 2048
+const CHAT_STREAM_TIMEOUT_MS = {
+  totalMs: 120_000,
+  stepMs: 60_000,
+  chunkMs: 30_000
+}
+const CHAT_STREAM_RETRY_MESSAGE =
+  "The chat response could not be completed. Please retry."
+const CHAT_STREAM_TIMEOUT_MESSAGE =
+  "The chat response took too long. Please retry."
 
 const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
   return {
@@ -55,6 +69,57 @@ const convertUIMessage = (msg: ChatHistoryEntry): ChatUIMessage => {
     role: msg.role,
     parts: msg.parts
   }
+}
+
+function hasMessageParts(message: ChatUIMessage): boolean {
+  return Array.isArray(message.parts) && message.parts.length > 0
+}
+
+function sanitizeHistoricalContextMessages(
+  messages: ChatUIMessage[]
+): ChatUIMessage[] {
+  const sanitizedMessages: ChatUIMessage[] = []
+
+  for (const message of messages) {
+    if (!hasMessageParts(message)) {
+      if (
+        message.role === "assistant" &&
+        sanitizedMessages.at(-1)?.role === "user"
+      ) {
+        sanitizedMessages.pop()
+      }
+      continue
+    }
+
+    if (message.role === "user" && sanitizedMessages.at(-1)?.role === "user") {
+      sanitizedMessages.pop()
+    }
+
+    sanitizedMessages.push(message)
+  }
+
+  if (sanitizedMessages.at(-1)?.role === "user") {
+    sanitizedMessages.pop()
+  }
+
+  return sanitizedMessages
+}
+
+function getChatStreamErrorMessage(error: unknown): string {
+  console.error("[Resume Chat] Stream error:", error)
+
+  if (
+    error instanceof DOMException &&
+    (error.name === "AbortError" || error.name === "TimeoutError")
+  ) {
+    return CHAT_STREAM_TIMEOUT_MESSAGE
+  }
+
+  if (error instanceof Error && error.name === "AbortError") {
+    return CHAT_STREAM_TIMEOUT_MESSAGE
+  }
+
+  return CHAT_STREAM_RETRY_MESSAGE
 }
 
 async function loadContextMessages(sessionId: string) {
@@ -103,10 +168,13 @@ async function createTokenLimitReachedResponse() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await requireVerifiedUserIdentity()
 
     const { message, id: sessionId }: { message: ChatUIMessage; id: string } =
       await request.json()
+
+    await verifyOwnership(sessionId, user.id)
+
     const activeAccessPass = await getActiveAccessPass(user.id)
 
     if (activeAccessPass) {
@@ -124,28 +192,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const [currentSession, contextMessages] = await Promise.all([
+    const [currentSession, loadedContextMessages] = await Promise.all([
       getSessionSummary(sessionId),
       loadContextMessages(sessionId)
     ])
 
+    if (!currentSession) {
+      throw new ApiError("Chat session not found", 404)
+    }
+
     const jobApplication = await getJobApplicationByResumeId(
-      currentSession!!.resumeId
+      currentSession.resumeId
     )
 
+    const resumeId = currentSession.resumeId
     const resumeData = jobApplication.resumes.resume_json as ResumeData
+    const currentRevision = jobApplication.resumes.current_revision
     const resumeLang = jobApplication.resumes.language
     const jobDescription = jobApplication.jobs as ResumeJobDescription
     const evaluationReport = jobApplication.resumes
       .evaluation_report as ResumeEvaluationOutput
 
     const conversationSummary = currentSession?.conversationSummary
+    const persistedCurrentMessage = loadedContextMessages.find(
+      (contextMessage) => contextMessage.id === message.id
+    )
+    const contextMessages = sanitizeHistoricalContextMessages(
+      loadedContextMessages.filter(
+        (contextMessage) => contextMessage.id !== message.id
+      )
+    )
+    contextMessages.push(message)
 
-    const existingIdx = contextMessages.findIndex((m) => m.id === message.id)
-    if (existingIdx >= 0) {
-      contextMessages[existingIdx] = message
-    } else {
-      contextMessages.push(message)
+    if (message.role === "user") {
+      if (persistedCurrentMessage) {
+        await updateMessage({
+          messageId: message.id,
+          parts: message.parts
+        })
+      } else {
+        await saveMessage({
+          id: message.id,
+          sessionId,
+          role: "user",
+          parts: message.parts
+        })
+      }
     }
 
     const systemMessage = {
@@ -170,16 +262,7 @@ export async function POST(request: NextRequest) {
       currentSession?.title
     )
 
-    if (message.role === "user") {
-      void saveMessage({
-        id: message.id,
-        sessionId,
-        role: "user",
-        parts: message.parts
-      })
-    }
-
-    // 空的message会导致验证失败
+    // Empty or dangling historical turns can make validation fail or replay stale prompts.
     const uiMessages = await validateUIMessages<ChatUIMessage>({
       messages: allMessages,
       tools
@@ -188,19 +271,40 @@ export async function POST(request: NextRequest) {
     const stream = createUIMessageStream({
       originalMessages: uiMessages,
       generateId: generateUUID,
+      onError: getChatStreamErrorMessage,
       execute: async ({ writer: dataStream }) => {
+        const assistantMessageId = generateUUID()
+        const supabase = await createClient()
+        const serverTools = createResumeChatServerTools({
+          supabase,
+          userId: user.id,
+          resumeId,
+          sessionId,
+          assistantMessageId,
+          initialResume: resumeData,
+          initialRevision: currentRevision,
+          writer: dataStream
+        })
+
         const result = streamText({
           model: model,
           stopWhen: stepCountIs(5),
           messages: await convertToModelMessages(uiMessages),
+          abortSignal: request.signal,
+          timeout: CHAT_STREAM_TIMEOUT_MS,
+          maxOutputTokens: CHAT_STREAM_MAX_OUTPUT_TOKENS,
           experimental_transform: smoothStream(),
-          tools,
-          experimental_repairToolCall: repairToolCall
+          tools: serverTools,
+          onError: ({ error }) => {
+            getChatStreamErrorMessage(error)
+          }
         })
 
         dataStream.merge(
           result.toUIMessageStream({
+            generateMessageId: () => assistantMessageId,
             sendReasoning: true,
+            onError: getChatStreamErrorMessage,
             messageMetadata: ({ part }) => {
               if (part.type !== "finish") {
                 return undefined
@@ -226,13 +330,17 @@ export async function POST(request: NextRequest) {
         )
 
         if (shouldGenerateSessionTitle) {
-          generateChatSessionTitle(message.parts).then(async (title) => {
-            if (!title) {
-              return
-            }
+          void generateChatSessionTitle(message.parts)
+            .then(async (title) => {
+              if (!title) {
+                return
+              }
 
-            await updateSessionTitle(sessionId, title)
-          })
+              await updateSessionTitle(sessionId, title)
+            })
+            .catch((error) => {
+              console.error("Failed to generate chat session title:", error)
+            })
         }
       },
       onFinish: async ({ messages: finishedMessages, responseMessage }) => {
@@ -277,31 +385,30 @@ export async function POST(request: NextRequest) {
         await Promise.all(persistenceTasks)
 
         if (responseUsage && responseUsage.totalTokens > 0) {
-          void updateSessionTokenUsage(sessionId).catch((err) => {
+          await updateSessionTokenUsage(sessionId).catch((err) => {
             console.error("Failed to update session token usage:", err)
           })
 
           if (activeAccessPass) {
-            void consumeChatTokens(
-              activeAccessPass.id,
-              responseUsage.totalTokens
-            ).catch((err) => {
+            try {
+              const latestAccessPass = await getActiveAccessPass(user.id)
+
+              if (latestAccessPass) {
+                const latestQuota = buildChatTokenQuota(latestAccessPass)
+                const remainingTokens = Math.max(
+                  latestQuota.limit - latestQuota.used,
+                  0
+                )
+
+                if (remainingTokens >= responseUsage.totalTokens) {
+                  await consumeChatTokens(
+                    latestAccessPass.id,
+                    responseUsage.totalTokens
+                  )
+                }
+              }
+            } catch (err) {
               console.error("Failed to update access pass token usage:", err)
-            })
-          }
-        }
-        if (responseMessage) {
-          for (const part of responseMessage.parts) {
-            if (
-              (part.type === "tool-resumeEditorModify" ||
-                part.type === "tool-resumeEditorReorder") &&
-              part.state === "output-available"
-            ) {
-              void logResumeModification(
-                sessionId,
-                responseMessage.id,
-                part.output as Record<string, unknown>
-              )
             }
           }
         }
@@ -327,7 +434,6 @@ export async function POST(request: NextRequest) {
 
     return createUIMessageStreamResponse({ stream })
   } catch (error) {
-    console.error("Chat API error:", error)
     return handleApiError(error)
   }
 }

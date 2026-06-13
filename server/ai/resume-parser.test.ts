@@ -2,22 +2,45 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { parseResume } from "./resume-parser"
+import { parseResume, parseResumeWithTokenUsage } from "./resume-parser"
 import { generateText } from "ai"
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
   wrapLanguageModel: vi.fn((config: any) => config.model),
+  NoObjectGeneratedError: class NoObjectGeneratedError extends Error {
+    static isInstance(error: unknown) {
+      return error instanceof NoObjectGeneratedError
+    }
+  },
   Output: {
-    object: vi.fn()
+    object: vi.fn(),
+    text: vi.fn()
   }
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: {
     "MiniMax-M2.1": {}
   }
 }))
+
+function mockTotalUsage(totalTokens: number) {
+  return {
+    inputTokens: Math.floor(totalTokens / 2),
+    inputTokenDetails: {
+      noCacheTokens: Math.floor(totalTokens / 2),
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0
+    },
+    outputTokens: Math.ceil(totalTokens / 2),
+    outputTokenDetails: {
+      textTokens: Math.ceil(totalTokens / 2),
+      reasoningTokens: 0
+    },
+    totalTokens
+  }
+}
 
 describe("parseResume", () => {
   beforeEach(() => {
@@ -57,7 +80,8 @@ describe("parseResume", () => {
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const resumeText = `
@@ -78,6 +102,7 @@ Programming: JavaScript, TypeScript
       const [resumeData, language] = result
 
       expect(language).toBe("en")
+      expect(resumeData.personalInfo.entryId).toEqual(expect.any(String))
       expect(resumeData.personalInfo.firstName).toBe("John")
       expect(resumeData.personalInfo.lastName).toBe("Doe")
       expect(resumeData.personalInfo.email).toBe("john@example.com")
@@ -108,7 +133,9 @@ Programming: JavaScript, TypeScript
         skills: {
           title: "技能",
           order: 2,
-          entries: [{ group: "编程", content: "JavaScript, TypeScript, Python" }]
+          entries: [
+            { group: "编程", content: "JavaScript, TypeScript, Python" }
+          ]
         },
         _metadata: {
           language: "zh"
@@ -116,7 +143,8 @@ Programming: JavaScript, TypeScript
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const resumeText = `
@@ -186,7 +214,8 @@ zhangsan@example.com
               title: "AI Research",
               content: "Published paper on ML",
               role: "Researcher",
-              date: { start: "2018-01", end: "2019-06", isCurrent: false }
+              start: "2018-01",
+              end: "2019-06"
             }
           ]
         },
@@ -198,7 +227,8 @@ zhangsan@example.com
               title: "E-commerce Platform",
               content: "Built full-stack application",
               role: "Lead Developer",
-              date: { start: "2020-01", end: "2020-12", isCurrent: false }
+              start: "2020-01",
+              end: "2020-12"
             }
           ]
         },
@@ -208,7 +238,8 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const result = await parseResume("Resume content")
@@ -248,15 +279,14 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
-      const result = await parseResume("")
-
-      expect(result).toHaveLength(2)
-      const [resumeData] = result
-      expect(resumeData.education.entries).toHaveLength(0)
-      expect(resumeData.skills.entries).toHaveLength(0)
+      await expect(parseResume("")).rejects.toThrow(
+        "Could not extract text from the uploaded PDF"
+      )
+      expect(generateText).not.toHaveBeenCalled()
     })
 
     it("should return empty arrays when no data provided", async () => {
@@ -283,13 +313,14 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData
+        output: mockResumeData,
+        totalUsage: mockTotalUsage(2)
       })
 
       const result = await parseResume("No content")
 
       expect(result).toHaveLength(2)
-      expect(result[0].education.entries).toEqual([])
+      expect(result[0]!.education!.entries).toEqual([])
     })
   })
 
@@ -314,6 +345,7 @@ zhangsan@example.com
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
           temperature: 0,
+          maxRetries: 3,
           model: expect.any(Object)
         })
       )
@@ -346,6 +378,80 @@ zhangsan@example.com
   })
 
   describe("error handling", () => {
+    it("should throw error when resume text is empty", async () => {
+      await expect(parseResume("   ")).rejects.toThrow(
+        "Could not extract text from the uploaded PDF"
+      )
+      expect(generateText).not.toHaveBeenCalled()
+    })
+
+    it("should rethrow structured parsing errors without fallback", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      ;(generateText as any).mockRejectedValueOnce(
+        new Error("No object generated")
+      )
+
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("No object generated")
+
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed",
+        "No object generated"
+      )
+
+      warnSpy.mockRestore()
+    })
+
+    it("should rethrow gateway response format errors without fallback", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      ;(generateText as any).mockRejectedValueOnce(
+        new Error("Invalid error response format: Gateway request failed")
+      )
+
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed",
+        "Invalid error response format: Gateway request failed"
+      )
+
+      warnSpy.mockRestore()
+    })
+
+    it("should log top-level error message on parse failure", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      const socketError = new Error("other side closed")
+      const apiError = new Error("Cannot connect to API: other side closed", {
+        cause: socketError
+      })
+      const gatewayError = new Error(
+        "Invalid error response format: Gateway request failed",
+        { cause: apiError }
+      )
+
+      ;(generateText as any).mockRejectedValueOnce(gatewayError)
+
+      await expect(
+        parseResumeWithTokenUsage("Jane Doe resume")
+      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+
+      expect(generateText).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Structured resume parsing failed",
+        "Invalid error response format: Gateway request failed"
+      )
+
+      warnSpy.mockRestore()
+    })
+
     it("should throw error when AI service fails", async () => {
       ;(generateText as any).mockRejectedValue(
         new Error("AI service unavailable")
@@ -362,6 +468,51 @@ zhangsan@example.com
       })
 
       await expect(parseResume("Resume content")).rejects.toThrow()
+    })
+
+    it("should treat empty optional sections as absent", async () => {
+      ;(generateText as any).mockResolvedValue({
+        output: {
+          personalInfo: {
+            firstName: "Jane",
+            lastName: "Doe",
+            email: "jane@example.com",
+            phone: ""
+          },
+          education: {
+            entries: []
+          },
+          skills: {
+            entries: []
+          },
+          research: {
+            entries: []
+          },
+          projects: {
+            entries: []
+          },
+          publications: {
+            entries: []
+          },
+          awards: {
+            entries: []
+          },
+          certifications: {
+            entries: []
+          },
+          _metadata: {
+            language: "en"
+          }
+        }
+      })
+
+      const result = await parseResume("Resume content")
+
+      expect(result[0].research).toBeUndefined()
+      expect(result[0].projects).toBeUndefined()
+      expect(result[0].publications).toBeUndefined()
+      expect(result[0].awards).toBeUndefined()
+      expect(result[0].certifications).toBeUndefined()
     })
   })
 

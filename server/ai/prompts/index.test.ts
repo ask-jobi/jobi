@@ -53,6 +53,13 @@ describe("Prompt", () => {
       expect(result).toBe("Test is Test")
     })
 
+    it("should preserve dollar signs in replacement values", () => {
+      const prompt = Prompt.of("Price: {{value}}")
+      const result = prompt.format({ value: "$1, $&, $$" })
+
+      expect(result).toBe("Price: $1, $&, $$")
+    })
+
     it("should replace multiple different placeholders", () => {
       const prompt = Prompt.of("{{greeting}} {{name}}, welcome to {{place}}")
       const result = prompt.format({

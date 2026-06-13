@@ -1,25 +1,30 @@
 import "server-only"
-import puppeteer from "puppeteer-core"
-import chromium from "@sparticuz/chromium"
-import { cookies, headers } from "next/headers"
+import puppeteer, { type BrowserWorker } from "@cloudflare/puppeteer"
+import { getCloudflareContext } from "@opennextjs/cloudflare"
+import { cookies } from "next/headers"
 import { NextRequest } from "next/server"
 
 export const runtime = "nodejs"
 
-const isVercel = !!process.env.VERCEL
+type CloudflareBrowserEnv = {
+  MYBROWSER?: BrowserWorker
+}
+
+function getBaseUrl(request: NextRequest) {
+  return new URL(request.url).origin
+}
+
 async function launchBrowser() {
-  if (!isVercel) {
-    const puppeteerLocal = await import("puppeteer")
-    return puppeteerLocal.launch({
-      headless: true
-    })
+  const { env } = getCloudflareContext()
+  const browserBinding = (env as CloudflareBrowserEnv).MYBROWSER
+
+  if (!browserBinding) {
+    throw new Error(
+      "Cloudflare Browser Run binding MYBROWSER is not configured"
+    )
   }
 
-  return puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: true
-  })
+  return puppeteer.launch(browserBinding)
 }
 
 export async function GET(request: NextRequest) {
@@ -30,27 +35,29 @@ export async function GET(request: NextRequest) {
     return new Response("Missing resume id", { status: 400 })
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
+  const baseUrl = getBaseUrl(request)
   const targetUrl = `${baseUrl}/resume-print/${resumeId}`
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined
 
   try {
-    const browser = await launchBrowser()
+    browser = await launchBrowser()
+    const page = await browser.newPage()
 
-    const domain = (await headers()).get("host")?.split(":")[0]
     const cookieStore = await cookies()
     const allCookies = cookieStore.getAll()
-    await browser.setCookie(
-      ...allCookies.map((c) => ({
-        name: c.name,
-        value: c.value,
-        domain: domain ?? "localhost",
-        path: "/"
-      }))
-    )
 
-    const page = await browser.newPage()
+    if (allCookies.length > 0) {
+      await page.setCookie(
+        ...allCookies.map((cookie) => ({
+          name: cookie.name,
+          value: cookie.value,
+          url: baseUrl,
+          path: "/"
+        }))
+      )
+    }
+
     await page.goto(targetUrl, { waitUntil: "networkidle0" })
-
     await page.evaluateHandle("document.fonts.ready")
     await page.waitForSelector("[data-resume-ready]", {
       timeout: 10_000
@@ -67,7 +74,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    await browser.close()
     return new Response(Buffer.from(pdf), {
       headers: {
         "Content-Type": "application/pdf"
@@ -76,5 +82,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("export resume failed: ", err)
     return new Response("export resume failed", { status: 500 })
+  } finally {
+    await browser?.close()
   }
 }

@@ -18,8 +18,8 @@ describe("GET /api/stripe/checkout-status", () => {
   it("returns 401 when user is not logged in", async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: null },
           error: null
         })
       }
@@ -37,8 +37,8 @@ describe("GET /api/stripe/checkout-status", () => {
   it("returns processed true when checkout event exists for the session", async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user_123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user_123" } },
           error: null
         })
       },
@@ -69,8 +69,8 @@ describe("GET /api/stripe/checkout-status", () => {
   it("returns processed false when checkout event is not found", async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user_123" } },
+        getClaims: vi.fn().mockResolvedValue({
+          data: { claims: { sub: "user_123" } },
           error: null
         })
       },

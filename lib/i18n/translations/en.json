@@ -46,7 +46,7 @@
     "readyToStart": "Less busywork. More interview chances.",
     "ctaDescription": "Claim a one-time free token bundle and see if it helps you send stronger applications faster.",
     "getStarted": "Claim Free Tokens",
-    "copyright": "© 2025 Jobi. All rights reserved."
+    "copyright": "© 2026 Jobi. All rights reserved."
   },
 
   "language": "Language",
@@ -106,10 +106,10 @@
     "stepUpload": "Upload Resume",
     "stepAnalyze": "Analyze Resume",
     "progress": {
-      "upload": "Upload Resume File",
-      "load": "Read Resume File",
+      "extract": "Extract PDF Text",
       "parse": "Parse Your Resume",
-      "prepare": "Generate Resume Data",
+      "upload": "Upload Resume File",
+      "persist": "Save Application Data",
       "evaluate": "Evaluate Resume and Job Match"
     },
     "job": {
@@ -126,7 +126,8 @@
 
     "previous": "Previous",
     "next": "Next",
-    "startAnalysis": "Start Analysis"
+    "startAnalysis": "Start Analysis",
+    "retryAnalysis": "Retry Analysis"
   },
 
   "monthPicker": {
@@ -213,6 +214,9 @@
     "editSection": "Edit Section",
     "addEntry": "Add Entry",
     "deleteEntry": "Delete Entry",
+    "reorderEntry": "Reorder Entry",
+    "moveSectionUp": "Move Section Up",
+    "moveSectionDown": "Move Section Down",
     "confirmDeleteEntry": "Click again to delete this entry",
     "evaluationTabLabel": "Evaluation Report",
     "chatTitle": "AI chat",
@@ -340,6 +344,7 @@
     "cancel": "Cancel",
     "update": "Update",
     "processing": "Processing...",
+    "toolError": "Resume tool failed",
     "truncate": "Truncate",
     "stopGenerating": "Stop generating",
     "tokenUsage": "Chat token usage",

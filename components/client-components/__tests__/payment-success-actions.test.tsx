@@ -94,4 +94,28 @@ describe("PaymentSuccessActions", () => {
     ).toBeEnabled()
     expect(global.fetch).not.toHaveBeenCalled()
   })
+
+  it("uses constrained responsive action sizing", () => {
+    render(
+      <PaymentSuccessActions
+        checkingLabel="Checking payment status"
+        delayedLabel="Payment received. Tokens may take a moment to appear."
+        dashboardLabel="Go to dashboard"
+        homeLabel="Back to home"
+      />
+    )
+
+    expect(screen.getByTestId("payment-success-actions")).toHaveClass(
+      "grid",
+      "sm:grid-cols-2"
+    )
+    expect(screen.getByRole("button", { name: "Go to dashboard" })).toHaveClass(
+      "min-w-0",
+      "whitespace-normal"
+    )
+    expect(screen.getByRole("button", { name: "Back to home" })).toHaveClass(
+      "min-w-0",
+      "whitespace-normal"
+    )
+  })
 })

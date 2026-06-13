@@ -1,46 +1,37 @@
 "use client"
 
-import { useFieldArray, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Textarea } from "@/components/ui/textarea"
-import { PublicationEntry, ResumeData } from "@/types/resume"
+import type { PublicationEntry } from "@/types/resume"
 
 interface PublicationsFormProps {
+  entry: PublicationEntry
   focusIndex?: number | null
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: PublicationEntry) => void | Promise<void>
 }
 
 export function PublicationsForm({
+  entry,
   focusIndex = null,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: PublicationsFormProps) {
-  const { control, getValues } = useFormContext<ResumeData>()
-  const { update } = useFieldArray({
-    control,
-    name: "publications.entries"
-  })
-
   if (typeof focusIndex !== "number") {
-    return null
-  }
-
-  const currentEntry = getValues(`publications.entries.${focusIndex}`)
-
-  if (!currentEntry) {
     return null
   }
 
   return (
     <div id="form-publications" className="space-y-4">
       <FocusedEntryFormShell<PublicationEntry>
-        entry={currentEntry}
+        entry={entry}
         formId={`form-publications-${focusIndex}`}
         onCancel={onCancel}
         onSaveComplete={onSaveComplete}
-        onSave={(values) => update(focusIndex, values)}
+        onSave={onSaveEntry}
       >
         {({ register }) => (
           <>

@@ -2,75 +2,45 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { FormProvider, UseFormReturn, useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
 import { AwardsForm } from "../awards-form"
-import { ResumeData } from "@/types/resume"
+import type { AwardEntry } from "@/types/resume"
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key
 }))
 
+const originalEntry: AwardEntry = {
+  entryId: "award-1",
+  title: "Original Award",
+  issuer: "Original Issuer",
+  date: "2024-01",
+  description: "Original description"
+}
+
 function renderFocusedAwardsForm({
   onCancel = vi.fn(),
-  onSaveComplete = vi.fn()
+  onSaveComplete = vi.fn(),
+  onSaveEntry = vi.fn()
 }: {
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry?: (values: AwardEntry) => void | Promise<void>
 } = {}) {
-  let methods: UseFormReturn<ResumeData> | null = null
-
-  function Wrapper() {
-    methods = useForm<ResumeData>({
-      defaultValues: {
-        sectionOrder: ["awards"],
-        personalInfo: {
-          blockId: "pi-1",
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: ""
-        },
-        education: {
-          title: "Education",
-          entries: []
-        },
-        skills: {
-          title: "Skills",
-          entries: []
-        },
-        awards: {
-          title: "Awards",
-          entries: [
-            {
-              entryId: "award-1",
-              title: "Original Award",
-              issuer: "Original Issuer",
-              date: "2024-01",
-              description: "Original description"
-            }
-          ]
-        }
-      }
-    })
-
-    return (
-      <FormProvider {...methods}>
-        <AwardsForm
-          focusIndex={0}
-          onCancel={onCancel}
-          onSaveComplete={onSaveComplete}
-        />
-      </FormProvider>
-    )
-  }
-
-  render(<Wrapper />)
+  render(
+    <AwardsForm
+      entry={originalEntry}
+      focusIndex={0}
+      onCancel={onCancel}
+      onSaveComplete={onSaveComplete}
+      onSaveEntry={onSaveEntry}
+    />
+  )
 
   return {
-    methods: methods as unknown as UseFormReturn<ResumeData>,
     onCancel,
-    onSaveComplete
+    onSaveComplete,
+    onSaveEntry
   }
 }
 
@@ -89,7 +59,7 @@ describe("AwardsForm", () => {
   })
 
   it("commits focused edits only when save is clicked", async () => {
-    const { methods, onSaveComplete } = renderFocusedAwardsForm()
+    const { onSaveEntry, onSaveComplete } = renderFocusedAwardsForm()
 
     fireEvent.change(screen.getByDisplayValue("Original Award"), {
       target: { value: "Updated Award" }
@@ -100,26 +70,26 @@ describe("AwardsForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "button.save" }))
 
     await waitFor(() => {
-      expect(methods.getValues("awards.entries.0.title")).toBe("Updated Award")
-      expect(methods.getValues("awards.entries.0.description")).toBe(
-        "Updated description"
-      )
+      expect(onSaveEntry).toHaveBeenCalledWith({
+        ...originalEntry,
+        title: "Updated Award",
+        description: "Updated description"
+      })
       expect(onSaveComplete).toHaveBeenCalledOnce()
     })
   })
 
   it("discards focused edits when cancel is clicked", () => {
-    const { methods, onCancel } = renderFocusedAwardsForm()
+    const { onCancel, onSaveEntry } = renderFocusedAwardsForm()
 
     fireEvent.change(screen.getByDisplayValue("Original Award"), {
       target: { value: "Discarded Award" }
     })
     fireEvent.click(screen.getByRole("button", { name: "button.cancel" }))
 
-    expect(methods.getValues("awards.entries.0.title")).toBe("Original Award")
-    expect(methods.getValues("awards.entries.0.description")).toBe(
-      "Original description"
-    )
+    expect(screen.getByDisplayValue("Original Award")).toBeInTheDocument()
+    expect(screen.getByDisplayValue("Original description")).toBeInTheDocument()
+    expect(onSaveEntry).not.toHaveBeenCalled()
     expect(onCancel).toHaveBeenCalledOnce()
   })
 })

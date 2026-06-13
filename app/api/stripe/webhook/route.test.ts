@@ -2,17 +2,20 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { stripe } from "@/lib/payment/stripe"
 import { QUOTA } from "@/lib/payment/quota"
 import { createServerRoleClient } from "@/lib/supabase/server-role-client"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
+const { mockConstructEvent } = vi.hoisted(() => ({
+  mockConstructEvent: vi.fn()
+}))
+
 vi.mock("@/lib/payment/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn(() => ({
     webhooks: {
-      constructEvent: vi.fn()
+      constructEvent: mockConstructEvent
     }
-  }
+  }))
 }))
 
 vi.mock("@/lib/payment/quota", () => ({
@@ -77,15 +80,11 @@ const createCheckoutSession = (
   ...overrides
 })
 
-const buildWebhookSupabaseClient = (
-  options: WebhookSupabaseOptions = {}
-) => {
+const buildWebhookSupabaseClient = (options: WebhookSupabaseOptions = {}) => {
   const checkoutEventInsertMock = vi
     .fn()
     .mockResolvedValue({ error: options.checkoutEventInsertError ?? null })
-  const checkoutEventDeleteEqMock = vi
-    .fn()
-    .mockResolvedValue({ error: null })
+  const checkoutEventDeleteEqMock = vi.fn().mockResolvedValue({ error: null })
   const checkoutEventDeleteMock = vi.fn().mockReturnValue({
     eq: checkoutEventDeleteEqMock
   })
@@ -173,14 +172,12 @@ const buildWebhookSupabaseClient = (
 }
 
 describe("POST /api/stripe/webhook", () => {
-  let mockConstructEvent: ReturnType<typeof vi.mocked<typeof stripe.webhooks.constructEvent>>
   let mockCreateServerRoleClient: ReturnType<
     typeof vi.mocked<typeof createServerRoleClient>
   >
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockConstructEvent = vi.mocked(stripe.webhooks.constructEvent)
     mockCreateServerRoleClient = vi.mocked(createServerRoleClient)
   })
 

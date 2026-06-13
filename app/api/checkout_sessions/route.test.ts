@@ -2,10 +2,13 @@
  * @vitest-environment node
  */
 import { POST } from "./route"
-import { stripe } from "@/lib/payment/stripe"
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
+
+const { mockStripeCreate } = vi.hoisted(() => ({
+  mockStripeCreate: vi.fn()
+}))
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -14,13 +17,13 @@ vi.mock("next/headers", () => ({
 
 // Mock stripe
 vi.mock("@/lib/payment/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn(() => ({
     checkout: {
       sessions: {
-        create: vi.fn()
+        create: mockStripeCreate
       }
     }
-  }
+  }))
 }))
 
 // Mock supabase server client
@@ -31,13 +34,11 @@ vi.mock("@/lib/supabase/server", () => ({
 import { headers } from "next/headers"
 
 describe("POST /api/checkout_sessions", () => {
-  let mockStripeCreate: any
   let mockCreateClient: any
   let mockHeaders: any
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockStripeCreate = vi.mocked(stripe.checkout.sessions.create)
     mockCreateClient = vi.mocked(createClient)
     mockHeaders = vi.mocked(headers)
 
@@ -93,8 +94,8 @@ describe("POST /api/checkout_sessions", () => {
     it("should return 401 when user is not authenticated", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: null },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: null },
             error: new Error("Not authenticated")
           })
         }
@@ -105,15 +106,15 @@ describe("POST /api/checkout_sessions", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("请先登录后再进行购买")
+      expect(data.error).toBe("Unauthorized")
       expect(mockStripeCreate).not.toHaveBeenCalled()
     })
 
     it("should return 401 when getUser returns error", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: null },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: null },
             error: { message: "Session expired" }
           })
         }
@@ -124,7 +125,7 @@ describe("POST /api/checkout_sessions", () => {
 
       expect(response.status).toBe(401)
       const data = await response.json()
-      expect(data.error).toBe("请先登录后再进行购买")
+      expect(data.error).toBe("Unauthorized")
     })
   })
 
@@ -137,8 +138,8 @@ describe("POST /api/checkout_sessions", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -203,8 +204,8 @@ describe("POST /api/checkout_sessions", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -257,8 +258,8 @@ describe("POST /api/checkout_sessions", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -319,8 +320,8 @@ describe("POST /api/checkout_sessions", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },
@@ -381,8 +382,8 @@ describe("POST /api/checkout_sessions", () => {
     it("should return 500 when stripe checkout session creation fails", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: { id: "user_123", email: "test@example.com" } },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: "user_123", email: "test@example.com" } },
             error: null
           })
         },
@@ -417,8 +418,8 @@ describe("POST /api/checkout_sessions", () => {
     it("should return 500 when stripe throws error with statusCode", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: { id: "user_123", email: "test@example.com" } },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: "user_123", email: "test@example.com" } },
             error: null
           })
         },
@@ -455,8 +456,8 @@ describe("POST /api/checkout_sessions", () => {
     it("should handle unknown errors gracefully", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: { id: "user_123", email: "test@example.com" } },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: "user_123", email: "test@example.com" } },
             error: null
           })
         },
@@ -491,8 +492,8 @@ describe("POST /api/checkout_sessions", () => {
     it("should handle request without plan in body", async () => {
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: { id: "user_123", email: "test@example.com" } },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: "user_123", email: "test@example.com" } },
             error: null
           })
         },
@@ -538,8 +539,8 @@ describe("POST /api/checkout_sessions", () => {
 
       mockCreateClient.mockResolvedValue({
         auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: mockUser },
+          getClaims: vi.fn().mockResolvedValue({
+            data: { claims: { sub: mockUser.id, email: mockUser.email } },
             error: null
           })
         },

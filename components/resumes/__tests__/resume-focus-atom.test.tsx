@@ -3,17 +3,17 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createStore } from "jotai"
+import { applicationAtom } from "@/lib/store/resume"
 import {
-  applicationAtom,
   focusSectionAtom,
   selectedEntryIdAtom,
   selectedEntryIndexAtom,
   selectedSectionIdAtom
-} from "@/lib/store/resume"
+} from "@/lib/store/resume-editor-state"
 
 describe("focusSectionAtom", () => {
   beforeEach(() => {
-    document.body.innerHTML = ""
+    document.body.replaceChildren()
   })
 
   it("updates selection for a block target without touching DOM scrolling", () => {
@@ -30,17 +30,17 @@ describe("focusSectionAtom", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",
             phone: ""
           },
           education: {
-            title: "Education",
             entries: [
               {
                 entryId: "edu-1",
@@ -61,7 +61,6 @@ describe("focusSectionAtom", () => {
             ]
           },
           skills: {
-            title: "Skills",
             entries: []
           }
         }
@@ -91,21 +90,20 @@ describe("focusSectionAtom", () => {
         language: "en",
         evaluation_report: null,
         evaluation_report_refresh_flag: false,
+        current_revision: 1,
         resume_json: {
           sectionOrder: ["education", "skills"],
           personalInfo: {
-            blockId: "pi-1",
+            entryId: "pi-1",
             firstName: "",
             lastName: "",
             email: "",
             phone: ""
           },
           education: {
-            title: "Education",
             entries: []
           },
           skills: {
-            title: "Skills",
             entries: []
           }
         }

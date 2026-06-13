@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import {
+  handleApiError,
+  requireVerifiedAuthContext
+} from "@/server/auth-helper"
 
 export async function GET(request: Request) {
   try {
@@ -14,15 +17,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { supabase, user } = await requireVerifiedAuthContext()
 
     const { data: checkoutEvent, error } = await supabase
       .from("stripe_checkout_events")
@@ -37,10 +32,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ processed: Boolean(checkoutEvent) })
   } catch (error) {
-    console.error("Error fetching checkout status:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch checkout status" },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }

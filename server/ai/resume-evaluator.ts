@@ -5,7 +5,7 @@ import { ResumeData } from "@/types/resume"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { resumeFormat } from "@/lib/utils"
 import { resumeEvaluationPrompt } from "@/server/ai/prompts/resume-evaluation.prompt"
-import { model } from "@/lib/agent/model"
+import { model } from "@/server/ai/model"
 
 // New unified evaluation schema for structured output
 export const evaluationSchema = z.object({
@@ -45,7 +45,8 @@ export const evaluationSchema = z.object({
         instruction: z.string().min(1)
       })
     )
-    .length(3, "actions must contain exactly 3 items")
+    .min(1, "actions must contain at least 1 item")
+    .max(3, "actions must contain at most 3 items")
 })
 
 type EvaluationSchemaType = ResumeEvaluationOutput

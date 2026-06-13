@@ -1,31 +1,53 @@
 "use server"
 
-import { nanoid } from "nanoid"
 import { createClient } from "@/lib/supabase/server"
-import { ResumeData, ResumeJobDescription } from "@/types/resume"
+import {
+  AuthoritativeResumeState,
+  ResumeData,
+  ResumeJobDescription
+} from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
-import { JobInfoFormType } from "@/components/forms/job-information-form"
-import { rollbackStorage } from "@/server/rollback"
-import { buildEmptyResumeData } from "@/lib/templates/section-factories"
+import type { RollbackRegistry } from "@/server/intake/types"
+import { requireVerifiedAuthContext } from "@/server/auth-helper"
 import {
   BUCKET_NAME,
   extractFilePathFromPublicUrl,
-  getUniqueFileName
+  generateUploadedResumeFileName
 } from "./utils"
+import { commitResumeChange } from "./resume/commit"
+import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
+
+function normalizeJobApplicationResumeJson<
+  T extends { resumes?: Record<string, unknown> }
+>(jobApplication: T): T {
+  const resumeJson = jobApplication.resumes?.resume_json
+
+  if (!resumeJson) {
+    return jobApplication
+  }
+
+  return {
+    ...jobApplication,
+    resumes: {
+      ...jobApplication.resumes,
+      resume_json: normalizeResumeDateRanges(resumeJson as ResumeData)
+    }
+  }
+}
 
 export async function fetchJobApplication() {
   const supabase = await createClient()
 
-  const { data: jobApplications, error } = await supabase.from(
-    "job_applications"
-  ).select(`
+  const { data: jobApplications } = await supabase.from("job_applications")
+    .select(`
             id,
             optimized_resume_url,
             created_at,
             resumes:resume_id (
                 id,
                 upload_url,
-                resume_json
+                resume_json,
+                current_revision
             ),
             jobs:job_id (
                 id,
@@ -53,7 +75,8 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
               upload_url,
               evaluation_report,
               language,
-              resume_json
+              resume_json,
+              current_revision
           ),
           jobs:job_id (
               id,
@@ -70,7 +93,9 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
   }
 
   if (!jobApplications || jobApplications.length === 0) {
-    throw new Error(`No job application found with resume id: ${applicationResumeId}`)
+    throw new Error(
+      `No job application found with resume id: ${applicationResumeId}`
+    )
   }
 
   if (jobApplications.length > 1) {
@@ -78,7 +103,9 @@ export async function getJobApplicationByResumeId(applicationResumeId: string) {
       `Multiple job applications found with resume id: ${applicationResumeId}`
     )
   }
-  return jobApplications[0]
+
+  const jobApplication = jobApplications[0]
+  return normalizeJobApplicationResumeJson(jobApplication)
 }
 
 export async function getJobApplication(jobApplicationId: string) {
@@ -96,7 +123,8 @@ export async function getJobApplication(jobApplicationId: string) {
               upload_url,
               evaluation_report,
               language,
-              resume_json
+              resume_json,
+              current_revision
           ),
           jobs:job_id (
               id,
@@ -121,10 +149,14 @@ export async function getJobApplication(jobApplicationId: string) {
       `Multiple job applications found with id: ${jobApplicationId}`
     )
   }
-  return jobApplications[0]
+
+  const jobApplication = jobApplications[0]
+  return normalizeJobApplicationResumeJson(jobApplication)
 }
 
-export async function getApplicationResumeData(id: string): Promise<ResumeData> {
+export async function getApplicationResumeData(
+  id: string
+): Promise<AuthoritativeResumeState> {
   const supabase = await createClient()
 
   const { data: resume, error } = await supabase
@@ -132,7 +164,8 @@ export async function getApplicationResumeData(id: string): Promise<ResumeData> 
     .select(
       `
       id,
-      resume_json
+      resume_json,
+      current_revision
     `
     )
     .eq("id", id)
@@ -149,7 +182,10 @@ export async function getApplicationResumeData(id: string): Promise<ResumeData> 
     throw new Error(`Multiple resume found with id: ${id}`)
   }
 
-  return resume[0].resume_json as ResumeData
+  return {
+    resume: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
+    currentRevision: resume[0].current_revision
+  }
 }
 
 export async function getApplicationResumeForPrint(id: string): Promise<{
@@ -182,27 +218,20 @@ export async function getApplicationResumeForPrint(id: string): Promise<{
   }
 
   return {
-    resumeData: resume[0].resume_json as ResumeData,
+    resumeData: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
     language: resume[0].language as Locale
   }
 }
 
-export async function uploadResumeFile(resumeFile: File) {
-  const supabase = await createClient()
-  const user = await supabase.auth.getUser()
+export async function uploadResumeFile(
+  resumeFile: File,
+  rollback?: RollbackRegistry
+) {
+  const { supabase, user } = await requireVerifiedAuthContext()
 
-  if (!user.data.user) {
-    throw new Error("User not authenticated")
-  }
+  const fileName = generateUploadedResumeFileName(user.id, resumeFile.name)
 
-  // 获取唯一的文件名
-  const fileName = await getUniqueFileName(
-    supabase,
-    user.data.user.id,
-    resumeFile.name
-  )
-
-  const { data: uploadData, error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(fileName, resumeFile)
 
@@ -210,11 +239,11 @@ export async function uploadResumeFile(resumeFile: File) {
     throw new Error(`Failed to upload file: ${uploadError.message}`)
   }
 
-  // 注册回滚：删除文件
-  const rollbackCtx = rollbackStorage.getStore()
-  rollbackCtx?.addRollback(async () => {
-    await supabase.storage.from(BUCKET_NAME).remove([fileName])
-  })
+  if (rollback) {
+    rollback.register("storage", "delete-uploaded-file", async () => {
+      await supabase.storage.from(BUCKET_NAME).remove([fileName])
+    })
+  }
 
   const {
     data: { publicUrl }
@@ -223,81 +252,7 @@ export async function uploadResumeFile(resumeFile: File) {
   return {
     fileName,
     publicUrl,
-    userId: user.data.user.id
-  }
-}
-
-export async function createApplicationResumeRecord(
-  jobInfos: JobInfoFormType,
-  uploadResult: {
-    fileName: string
-    publicUrl: string
-    userId: string
-  },
-  resumeJsonData: ResumeData,
-  language: Locale
-) {
-  const supabase = await createClient()
-  const rollbackCtx = rollbackStorage.getStore()
-
-  try {
-    const { data: jobData, error: jobError } = await supabase
-      .from("jobs")
-      .insert(jobInfos)
-      .select()
-      .single()
-
-    if (jobError) throw jobError
-
-    const savedJobId = jobData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase.from("jobs").delete().eq("id", savedJobId)
-    })
-
-    const { data: resumeData, error: resumeError } = await supabase
-      .from("resumes")
-      .insert({
-        user_id: uploadResult.userId,
-        job_id: jobData.id,
-        upload_url: uploadResult.publicUrl,
-        language: language,
-        resume_json: resumeJsonData
-      })
-      .select()
-      .single()
-
-    if (resumeError) throw resumeError
-
-    const savedResumeId = resumeData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase.from("resumes").delete().eq("id", savedResumeId)
-    })
-
-    const { data: applicationData, error: applicationError } = await supabase
-      .from("job_applications")
-      .insert({
-        user_id: uploadResult.userId,
-        resume_id: resumeData.id,
-        job_id: jobData.id,
-        optimized_resume_url: null
-      })
-      .select()
-      .single()
-
-    if (applicationError) throw applicationError
-
-    const savedApplicationId = applicationData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase
-        .from("job_applications")
-        .delete()
-        .eq("id", savedApplicationId)
-    })
-
-    return { jobData, resumeData, applicationData }
-  } catch (error: any) {
-    // 错误会由外层 rollbackStorage.run() 的回滚逻辑处理
-    throw new Error(`Failed to create resume record: ${error.message}`)
+    userId: user.id
   }
 }
 
@@ -322,104 +277,24 @@ export async function updateResumeJobDescription(
   }
 }
 
-export async function saveApplicationResumeChange(resumeId: string, data: ResumeData) {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("resumes")
-    .update({ resume_json: data, evaluation_report_refresh_flag: true })
-    .eq("id", resumeId)
-
-  if (error) throw error
-}
-
-export async function createEmptyApplicationResumeRecord(
-  jobInfos: JobInfoFormType,
-  language: Locale = "en"
+export async function saveApplicationResumeChange(
+  resumeId: string,
+  data: ResumeData,
+  options: { baseRevision?: number | null } = {}
 ) {
-  const supabase = await createClient()
-  const user = await supabase.auth.getUser()
-  const rollbackCtx = rollbackStorage.getStore()
+  const { supabase, user } = await requireVerifiedAuthContext()
 
-  if (!user.data.user) {
-    throw new Error("User not authenticated")
-  }
-
-  try {
-    const { data: jobData, error: jobError } = await supabase
-      .from("jobs")
-      .insert(jobInfos)
-      .select()
-      .single()
-
-    if (jobError) throw jobError
-
-    const savedJobId = jobData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase.from("jobs").delete().eq("id", savedJobId)
-    })
-
-    const emptyResumeData = buildEmptyResumeData(language)
-
-    const { data: resumeData, error: resumeError } = await supabase
-      .from("resumes")
-      .insert({
-        user_id: user.data.user.id,
-        job_id: jobData.id,
-        upload_url: null, // 空简历没有上传文件
-        language,
-        resume_json: emptyResumeData
-      })
-      .select()
-      .single()
-
-    if (resumeError) throw resumeError
-
-    const savedResumeId = resumeData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase.from("resumes").delete().eq("id", savedResumeId)
-    })
-
-    const { data: applicationData, error: applicationError } = await supabase
-      .from("job_applications")
-      .insert({
-        user_id: user.data.user.id,
-        resume_id: resumeData.id,
-        job_id: jobData.id,
-        optimized_resume_url: null
-      })
-      .select()
-      .single()
-
-    if (applicationError) throw applicationError
-
-    const savedApplicationId = applicationData.id
-    rollbackCtx?.addRollback(async () => {
-      await supabase
-        .from("job_applications")
-        .delete()
-        .eq("id", savedApplicationId)
-    })
-
-    // TODO Evaluate and save (do not block user in empty creation; still await here to persist immediately)
-    // await evaluateAndSaveResume(resumeData.id, emptyResumeData, jobData.description)
-
-    return {
-      jobData,
-      resumeData,
-      applicationData
-    }
-  } catch (error: any) {
-    throw new Error(`Failed to create empty resume record: ${error.message}`)
-  }
+  return commitResumeChange({
+    supabase,
+    actorId: user.id,
+    resumeId,
+    nextResume: data,
+    baseRevision: options.baseRevision
+  })
 }
 
 export async function deleteJobApplication(jobApplicationId: string) {
-  const supabase = await createClient()
-  const user = await supabase.auth.getUser()
-
-  if (!user.data.user) {
-    throw new Error("User not authenticated")
-  }
+  const { supabase, user } = await requireVerifiedAuthContext()
 
   // 先验证该 jobApplication 是否存在且属于当前用户，同时获取关联的 resume 信息
   const { data: jobApplication, error: fetchError } = await supabase

@@ -64,6 +64,7 @@ export function ApplicationTokenUsage() {
   const [error, setError] = useState<Error | null>(null)
   const requestIdRef = useRef(0)
   const isMountedRef = useRef(true)
+  const tokenBalanceRef = useRef<TokenBalance | null>(null)
 
   useEffect(() => {
     isMountedRef.current = true
@@ -72,6 +73,10 @@ export function ApplicationTokenUsage() {
       isMountedRef.current = false
     }
   }, [])
+
+  useEffect(() => {
+    tokenBalanceRef.current = tokenBalance
+  }, [tokenBalance])
 
   const fetchTokenBalance = useCallback(async () => {
     const requestId = requestIdRef.current + 1
@@ -97,11 +102,13 @@ export function ApplicationTokenUsage() {
         return
       }
 
-      setError(
-        fetchError instanceof Error
-          ? fetchError
-          : new Error("Failed to fetch token balance")
-      )
+      if (tokenBalanceRef.current === null) {
+        setError(
+          fetchError instanceof Error
+            ? fetchError
+            : new Error("Failed to fetch token balance")
+        )
+      }
     } finally {
       if (isMountedRef.current && requestId === requestIdRef.current) {
         setIsLoading(false)
@@ -185,7 +192,9 @@ export function ApplicationTokenUsage() {
       </TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="w-56 p-3">
         {error ? (
-          <p className="text-xs leading-relaxed">{t("failedToLoadTokenBalance")}</p>
+          <p className="text-xs leading-relaxed">
+            {t("failedToLoadTokenBalance")}
+          </p>
         ) : (
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between gap-3">
@@ -196,14 +205,20 @@ export function ApplicationTokenUsage() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">{t("tokenTotal")}</span>
-              <span className="tabular-nums">{formatTokenCount(tokenTotal)}</span>
+              <span className="tabular-nums">
+                {formatTokenCount(tokenTotal)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">{t("tokenUsed")}</span>
-              <span className="tabular-nums">{formatTokenCount(tokenUsed)}</span>
+              <span className="tabular-nums">
+                {formatTokenCount(tokenUsed)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">{t("tokenRemaining")}</span>
+              <span className="text-muted-foreground">
+                {t("tokenRemaining")}
+              </span>
               <span className="tabular-nums">
                 {formatTokenCount(tokenRemaining)}
               </span>

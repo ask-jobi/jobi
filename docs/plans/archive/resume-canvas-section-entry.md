@@ -1,5 +1,7 @@
 # Resume Canvas Section Entry
 
+> ⚠️ **已过期（superseded）** — `blank-resume-defaults.md` 已落地了画布 Add Section 入口，`2026-05-20-resume-section-manual-reorder.md` 进一步统一了 section 生命周期。本文件的方案已被后续实现完全覆盖，不应作为参考。
+
 ## 背景
 
 当前 section 管理已经具备底层 helper，但主要入口放在右侧 form 面板中。
@@ -8,7 +10,7 @@
 
 - 默认进入简历页时，右侧常停留在 `evaluation` 视图
 - 空白简历的左侧画布几乎没有可点击内容
-- 用户很难自然发现“在哪里添加 section”
+- 用户很难自然发现"在哪里添加 section"
 
 ## 目标
 
@@ -42,4 +44,4 @@
 - 空白简历左侧中央可直接看到添加入口
 - 非空简历左侧可直接看到添加入口
 - 点击入口后可选择并添加 optional section
-- 添加后数据成功保存，页面无明显错位或报错
+- 添加后数据成功保存,页面无明显错位或报错

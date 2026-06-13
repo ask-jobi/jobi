@@ -8,11 +8,17 @@ export type ResumeJobDescription = {
   description: string
 }
 
+export type AuthoritativeResumeState = {
+  resume: ResumeData
+  currentRevision: number
+}
+
 export type JobApplication = {
   id: string
   resume: {
     id: string
     resume_json: ResumeData
+    current_revision: number
     language: Locale
     evaluation_report: ResumeEvaluationOutput | null
     evaluation_report_refresh_flag: boolean
@@ -21,12 +27,11 @@ export type JobApplication = {
 }
 
 export interface ResumeSection<T = any> {
-  title: string
   entries: Array<T>
 }
 
 export interface PersonalInfo {
-  blockId: string
+  entryId: string
   firstName: string
   lastName: string
   email: string
@@ -40,17 +45,17 @@ export interface EducationEntry {
   content: string
   school: string
   degree: string
-  start: string
-  end: string
+  start?: string
+  end?: string
 }
-// TODO: 改为用 DateRange 类型
+
 export interface EmploymentEntry {
   entryId: string
   content: string
   company: string
   jobTitle: string
-  start: string
-  end: string
+  start?: string
+  end?: string
 }
 
 export interface SkillEntry {
@@ -59,18 +64,13 @@ export interface SkillEntry {
   content: string
 }
 
-export interface DateRange {
-  start?: string
-  end?: string
-  isCurrent?: boolean
-}
-
 export interface ProjectEntry {
   entryId: string
   title: string
   content: string
   role?: string
-  date?: DateRange
+  start?: string
+  end?: string
 }
 
 export interface ResearchEntry {
@@ -78,7 +78,8 @@ export interface ResearchEntry {
   title: string
   content: string
   role?: string
-  date: DateRange
+  start?: string
+  end?: string
 }
 
 export interface PublicationEntry {
@@ -121,11 +122,9 @@ export type CertificationsSection = ResumeSection<CertificationEntry>
 
 export interface ResumeData {
   sectionOrder: SortableSectionKey[]
-  // required
   personalInfo: PersonalInfo
-  education: EducationSection
-  skills: SkillsSection
-  // optional
+  education?: EducationSection
+  skills?: SkillsSection
   employment?: EmploymentSection
   research?: ResearchSection
   projects?: ProjectsSection

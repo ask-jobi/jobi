@@ -2,169 +2,154 @@
  * @vitest-environment node
  */
 import { NextRequest } from "next/server"
-import { vi, describe, it, expect, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-// Define mockLaunchBrowser at module scope
-const mockLaunchBrowser = vi.fn()
+const mockLaunch = vi.fn()
+const mockGetCloudflareContext = vi.fn()
+const mockGetAllCookies = vi.fn()
 
-// Mock puppeteer-core before importing the route
-vi.mock("puppeteer-core", () => ({
+vi.mock("@cloudflare/puppeteer", () => ({
   default: {
-    launch: vi.fn()
+    launch: mockLaunch
   }
 }))
 
-vi.mock("@sparticuz/chromium", () => ({
-  default: {
-    args: [],
-    executablePath: vi.fn()
-  }
+vi.mock("@opennextjs/cloudflare", () => ({
+  getCloudflareContext: mockGetCloudflareContext
 }))
 
-vi.mock("./route", async () => {
-  const actual = await vi.importActual("./route")
-  return {
-    ...actual,
-    launchBrowser: mockLaunchBrowser
-  }
-})
+vi.mock("next/headers", () => ({
+  cookies: () =>
+    Promise.resolve({
+      getAll: mockGetAllCookies
+    })
+}))
 
-// Import after mocking
 const { GET } = await import("./route")
+
+function createSuccessfulBrowser(pdf = new Uint8Array([37, 80, 68, 70])) {
+  const page = {
+    setCookie: vi.fn().mockResolvedValue(undefined),
+    goto: vi.fn().mockResolvedValue(undefined),
+    evaluateHandle: vi.fn().mockResolvedValue(undefined),
+    waitForSelector: vi.fn().mockResolvedValue(undefined),
+    pdf: vi.fn().mockResolvedValue(pdf)
+  }
+  const browser = {
+    newPage: vi.fn().mockResolvedValue(page),
+    close: vi.fn().mockResolvedValue(undefined)
+  }
+
+  return { browser, page, pdf }
+}
 
 describe("GET /api/resume/print", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-  })
-
-  describe("Validation", () => {
-    it("should return 400 when resume id is missing", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/resume/print",
-        { method: "GET" }
-      )
-
-      const response = await GET(request)
-      expect(response.status).toBe(400)
-      const text = await response.text()
-      expect(text).toBe("Missing resume id")
-    })
-
-    it("should return 400 when resume id is empty string", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/resume/print?id=",
-        { method: "GET" }
-      )
-
-      const response = await GET(request)
-      expect(response.status).toBe(400)
-    })
-
-    it("should accept valid resume id", async () => {
-      // This will fail due to browser dependency, but we can verify the validation passes
-      const request = new NextRequest(
-        "http://localhost:3000/api/resume/print?id=valid-resume-id",
-        { method: "GET" }
-      )
-
-      // The request should not return 400, meaning validation passed
-      const response = await GET(request)
-      expect(response.status).not.toBe(400)
-    })
-  })
-
-  describe("URL construction", () => {
-    it("should construct target URL with resume id", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/resume/print?id=test-resume-123",
-        { method: "GET" }
-      )
-
-      // If validation passes, it should proceed to browser launch
-      // This tests that the URL is properly constructed
-      const { searchParams } = new URL(request.url)
-      const resumeId = searchParams.get("id")
-      expect(resumeId).toBe("test-resume-123")
-    })
-
-    it("should use NEXT_PUBLIC_BASE_URL environment variable", async () => {
-      const originalUrl = process.env.NEXT_PUBLIC_BASE_URL
-      process.env.NEXT_PUBLIC_BASE_URL = "https://custom-domain.com"
-
-      try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
-        expect(baseUrl).toBe("https://custom-domain.com")
-      } finally {
-        if (originalUrl) {
-          process.env.NEXT_PUBLIC_BASE_URL = originalUrl
-        } else {
-          delete process.env.NEXT_PUBLIC_BASE_URL
-        }
-      }
-    })
-
-    it("should use localhost as default base URL when env var not set", async () => {
-      const originalUrl = process.env.NEXT_PUBLIC_BASE_URL
-      delete process.env.NEXT_PUBLIC_BASE_URL
-
-      try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
-        expect(baseUrl).toBe("http://localhost:3000")
-      } finally {
-        if (originalUrl) {
-          process.env.NEXT_PUBLIC_BASE_URL = originalUrl
-        }
+    delete process.env.NEXT_PUBLIC_BASE_URL
+    mockGetAllCookies.mockReturnValue([])
+    mockGetCloudflareContext.mockReturnValue({
+      env: {
+        MYBROWSER: { fetch: vi.fn() }
       }
     })
   })
 
-  describe("Error handling", () => {
-    it("should return 500 when browser launch fails", async () => {
-      const mockRequest = new NextRequest(
-        "http://localhost:3000/api/resume/print?id=test-resume-123",
-        { method: "GET" }
-      )
-
-      // Mock launchBrowser to throw an error
-      mockLaunchBrowser.mockRejectedValue(new Error("Browser launch failed"))
-
-      const response = await GET(mockRequest)
-      expect(response.status).toBe(500)
-      const text = await response.text()
-      expect(text).toBe("export resume failed")
-
-      // Clean up
-      mockLaunchBrowser.mockReset()
+  it("returns 400 when resume id is missing", async () => {
+    const request = new NextRequest("http://localhost:3000/api/resume/print", {
+      method: "GET"
     })
 
-    it("should return 500 when PDF generation fails", async () => {
-      const mockRequest = new NextRequest(
-        "http://localhost:3000/api/resume/print?id=test-resume-123",
-        { method: "GET" }
-      )
+    const response = await GET(request)
 
-      // Mock launchBrowser to return a browser that throws on PDF generation
-      const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue({
-          goto: vi.fn().mockResolvedValue(undefined),
-          evaluateHandle: vi.fn().mockResolvedValue(undefined),
-          waitForSelector: vi.fn().mockResolvedValue(undefined),
-          pdf: vi.fn().mockRejectedValue(new Error("PDF generation failed"))
-        }),
-        close: vi.fn().mockResolvedValue(undefined)
-      }
+    expect(response.status).toBe(400)
+    await expect(response.text()).resolves.toBe("Missing resume id")
+    expect(mockLaunch).not.toHaveBeenCalled()
+  })
 
-      mockLaunchBrowser.mockResolvedValue(mockBrowser as any)
+  it("renders the print page through Cloudflare Browser Run and returns a PDF", async () => {
+    const { browser, page, pdf } = createSuccessfulBrowser()
+    mockLaunch.mockResolvedValue(browser)
+    mockGetAllCookies.mockReturnValue([
+      { name: "sb-session", value: "session-token" }
+    ])
 
-      const response = await GET(mockRequest)
-      expect(response.status).toBe(500)
-      const text = await response.text()
-      expect(text).toBe("export resume failed")
+    const request = new NextRequest(
+      "https://jobi-validation.workers.dev/api/resume/print?id=resume-123",
+      { method: "GET" }
+    )
 
-      // Clean up
-      mockLaunchBrowser.mockReset()
+    const response = await GET(request)
+
+    expect(mockLaunch).toHaveBeenCalledWith(
+      mockGetCloudflareContext().env.MYBROWSER
+    )
+    expect(page.setCookie).toHaveBeenCalledWith({
+      name: "sb-session",
+      value: "session-token",
+      url: "https://jobi-validation.workers.dev",
+      path: "/"
     })
+    expect(page.goto).toHaveBeenCalledWith(
+      "https://jobi-validation.workers.dev/resume-print/resume-123",
+      { waitUntil: "networkidle0" }
+    )
+    expect(page.waitForSelector).toHaveBeenCalledWith("[data-resume-ready]", {
+      timeout: 10_000
+    })
+    expect(response.status).toBe(200)
+    expect(response.headers.get("Content-Type")).toBe("application/pdf")
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(pdf)
+    expect(browser.close).toHaveBeenCalled()
+  })
+
+  it("uses the request origin even when NEXT_PUBLIC_BASE_URL was inlined at build time", async () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000"
+    const { browser, page } = createSuccessfulBrowser()
+    mockLaunch.mockResolvedValue(browser)
+
+    const request = new NextRequest(
+      "https://preview.jobi.workers.dev/api/resume/print?id=resume-123",
+      { method: "GET" }
+    )
+
+    await GET(request)
+
+    expect(page.goto).toHaveBeenCalledWith(
+      "https://preview.jobi.workers.dev/resume-print/resume-123",
+      { waitUntil: "networkidle0" }
+    )
+  })
+
+  it("returns 500 when the Browser Run binding is missing", async () => {
+    mockGetCloudflareContext.mockReturnValue({ env: {} })
+
+    const request = new NextRequest(
+      "https://jobi-validation.workers.dev/api/resume/print?id=resume-123",
+      { method: "GET" }
+    )
+
+    const response = await GET(request)
+
+    expect(response.status).toBe(500)
+    await expect(response.text()).resolves.toBe("export resume failed")
+    expect(mockLaunch).not.toHaveBeenCalled()
+  })
+
+  it("closes the browser when PDF generation fails", async () => {
+    const { browser, page } = createSuccessfulBrowser()
+    page.pdf.mockRejectedValue(new Error("PDF generation failed"))
+    mockLaunch.mockResolvedValue(browser)
+
+    const request = new NextRequest(
+      "https://jobi-validation.workers.dev/api/resume/print?id=resume-123",
+      { method: "GET" }
+    )
+
+    const response = await GET(request)
+
+    expect(response.status).toBe(500)
+    await expect(response.text()).resolves.toBe("export resume failed")
+    expect(browser.close).toHaveBeenCalled()
   })
 })

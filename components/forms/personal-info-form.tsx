@@ -1,35 +1,29 @@
 "use client"
 
-import { useFormContext } from "react-hook-form"
 import { FocusedEntryFormShell } from "@/components/forms/focused-entry-form-shell"
 import { Input } from "@/components/ui/input"
-import { PersonalInfo, ResumeData } from "@/types/resume"
+import type { PersonalInfo } from "@/types/resume"
 
 interface PersonalInfoFormProps {
+  entry: PersonalInfo
   onCancel?: () => void
   onSaveComplete?: () => void
+  onSaveEntry: (values: PersonalInfo) => void | Promise<void>
 }
 
 export function PersonalInfoForm({
+  entry,
   onCancel,
-  onSaveComplete
+  onSaveComplete,
+  onSaveEntry
 }: PersonalInfoFormProps) {
-  const { getValues, setValue } = useFormContext<ResumeData>()
-  const personalInfo = getValues("personalInfo") as PersonalInfo
-
   return (
     <FocusedEntryFormShell
-      entry={personalInfo}
+      entry={entry}
       formId="form-personalInfo"
       onCancel={onCancel}
       onSaveComplete={onSaveComplete}
-      onSave={(values) => {
-        setValue("personalInfo", values, {
-          shouldDirty: true,
-          shouldTouch: true,
-          shouldValidate: true
-        })
-      }}
+      onSave={onSaveEntry}
     >
       {({ register }) => (
         <>

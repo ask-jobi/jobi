@@ -1,36 +1,20 @@
+import { nanoid } from "nanoid"
+
 export const BUCKET_NAME = "upload-resumes"
 
-export async function getUniqueFileName(
-  supabase: any,
+export function generateUploadedResumeFileName(
   userId: string,
   originalFileName: string
-): Promise<string> {
-  const fileExt = originalFileName.split(".").pop()
-  const baseName = originalFileName.slice(0, -(fileExt!.length + 1))
-  let counter = 0
-  let fileName = `${userId}/${originalFileName}`
+): string {
+  const lastDotIndex = originalFileName.lastIndexOf(".")
+  const hasExtension =
+    lastDotIndex > 0 && lastDotIndex < originalFileName.length - 1
+  const extension = hasExtension ? originalFileName.slice(lastDotIndex + 1) : ""
+  const generatedName = nanoid()
 
-  while (true) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .list(userId, {
-        search:
-          counter === 0 ? originalFileName : `${baseName}-${counter}.${fileExt}`
-      })
-
-    if (error) {
-      throw new Error(`Failed to check file existence: ${error.message}`)
-    }
-
-    if (!data || data.length === 0) {
-      break
-    }
-
-    counter++
-    fileName = `${userId}/${baseName}-${counter}.${fileExt}`
-  }
-
-  return fileName
+  return extension
+    ? `${userId}/resume_${generatedName}.${extension}`
+    : `${userId}/resume_${generatedName}`
 }
 
 export function extractFilePathFromPublicUrl(publicUrl: string): string | null {

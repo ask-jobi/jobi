@@ -1,182 +1,252 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createApplicationResumeRecord, uploadResumeFile } from "@/server/resume"
-import { parseResumeWithTokenUsage } from "@/server/ai/resume-parser"
 import {
-  buildChatTokenQuota,
-  consumeChatTokens,
-  getActiveAccessPass,
-  verifyChatTokenQuota,
-  verifyJobApplicationLimit
-} from "@/server/quota"
+  jobInfoFormSchema,
+  type JobInfoFormType
+} from "@/lib/job-info-form-schema"
+import { verifyJobApplicationLimit } from "@/server/quota"
+import { runUploadedResumeIntake } from "@/server/intake/orchestrator"
+import { RollbackRegistryImpl } from "@/server/intake/rollback"
+import type { IntakeEvent } from "@/server/intake/types"
 import {
-  registerWriter,
-  sendData,
-  closeWriter
-} from "@/server/sse/writer-manager"
-import { evaluateAndSaveResume } from "@/server/evaluation"
-import { loadPdfToDoc } from "@/server/ai/tools"
-import { JobInfoFormType } from "@/components/forms/job-information-form"
-import { RollbackContext, rollbackStorage } from "@/server/rollback"
+  handleApiError,
+  requireVerifiedAuthContext
+} from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: NextRequest) {
-  const processId = Date.now().toString()
-  const responseStream = new TransformStream()
-  const writer = responseStream.writable.getWriter()
-  registerWriter(processId, writer)
+function isPdfUpload(file: File) {
+  const normalizedType = file.type.toLowerCase()
+  const hasPdfExtension = file.name.toLowerCase().endsWith(".pdf")
 
-  try {
-    await verifyJobApplicationLimit()
+  return (
+    normalizedType === "application/pdf" ||
+    normalizedType === "application/x-pdf" ||
+    ((normalizedType === "" || normalizedType === "application/octet-stream") &&
+      hasPdfExtension)
+  )
+}
 
-    const formData = await request.formData()
-    const file = formData.get("file") as File
-    const jobInfo = JSON.parse(
-      formData.get("jobInfo") as string
-    ) as JobInfoFormType
-
-    if (!file) {
-      closeWriter(processId)
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+function parseJobInfoField(
+  field: FormDataEntryValue | null
+):
+  | { ok: true; jobInfo: JobInfoFormType }
+  | { ok: false; error: string; details?: unknown } {
+  if (typeof field !== "string") {
+    return {
+      ok: false,
+      error: "Invalid job info: expected a text field named jobInfo"
     }
-
-    request.signal.onabort = async () => {
-      closeWriter(processId)
-    }
-
-    processFile(processId, file, jobInfo).catch(async (error) => {
-      console.log("error", error)
-      await sendData(processId, {
-        error: error.message
-      })
-      closeWriter(processId)
-    })
-  } catch (error: any) {
-    console.log("error", error)
-    await sendData(processId, {
-      error: error.message
-    })
-    closeWriter(processId)
   }
 
-  return new NextResponse(responseStream.readable, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      Connection: "keep-alive",
-      "Cache-Control": "no-cache, no-transform",
-      "X-Accel-Buffering": "no", // 禁用 nginx 缓冲
-      "Transfer-Encoding": "chunked" // 启用分块传输
+  let raw: unknown
+  try {
+    raw = JSON.parse(field)
+  } catch {
+    return {
+      ok: false,
+      error: "Invalid job info: malformed JSON"
     }
+  }
+
+  const result = jobInfoFormSchema.safeParse(raw)
+  if (!result.success) {
+    return {
+      ok: false,
+      error: "Invalid job info: must include name, company, and description",
+      details: result.error.flatten().fieldErrors
+    }
+  }
+
+  return { ok: true, jobInfo: result.data }
+}
+
+function recordSseTransportFailure(input: {
+  phase: "pre-commit" | "post-commit"
+  intakeId: string
+  eventType: IntakeEvent["type"]
+  error: unknown
+}) {
+  console.error("resume_intake_sse_transport_failure", {
+    phase: input.phase,
+    intakeId: input.intakeId,
+    eventType: input.eventType,
+    error:
+      input.error instanceof Error
+        ? {
+            name: input.error.name,
+            message: input.error.message,
+            stack: input.error.stack
+          }
+        : input.error
   })
 }
 
-async function processFile(
-  processId: string,
-  file: File,
-  jobInfo: JobInfoFormType
-) {
-  await rollbackStorage.run(new RollbackContext(), async () => {
+// ── POST /api/resume/upload-and-analyze ─────────────────────────
+//
+// Thin HTTP/SSE adapter:
+//   1. Authenticate & parse multipart
+//   2. Validate file (exists, PDF) and jobInfo (schema)
+//   3. Create SSE stream
+//   4. Delegate to UploadedResumeIntakeOrchestrator
+//   5. Map orchestrator events to SSE payloads
+
+export async function POST(request: NextRequest) {
+  try {
+    const { supabase, user } = await requireVerifiedAuthContext()
+
+    // ── Parse multipart ──
+    let formData: FormData
     try {
-      if (file.type !== "application/pdf") {
-        throw new Error("Only support upload pdf file as resume")
-      }
-
-      // 更新状态
-      await sendData(processId, {
-        step: "upload",
-        status: "loading"
-      })
-      const uploadResult = await uploadResumeFile(file)
-      await sendData(processId, {
-        step: "upload",
-        status: "success"
-      })
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      await sendData(processId, {
-        step: "load",
-        status: "loading"
-      })
-      const docs = await loadPdfToDoc(file, {
-        splitPages: false
-      })
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      await sendData(processId, {
-        step: "load",
-        status: "success"
-      })
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      await sendData(processId, {
-        step: "parse",
-        status: "loading"
-      })
-      const activeAccessPass = await getActiveAccessPass(uploadResult.userId)
-      if (activeAccessPass) {
-        const chatTokenQuota = buildChatTokenQuota(activeAccessPass)
-        verifyChatTokenQuota(chatTokenQuota.used, chatTokenQuota.limit)
-      }
-
-      const { resumeData: resumeTextData, language, tokenUsage } =
-        await parseResumeWithTokenUsage(docs[0].pageContent)
-
-      if (activeAccessPass && tokenUsage.totalTokens > 0) {
-        await consumeChatTokens(activeAccessPass.id, tokenUsage.totalTokens)
-      }
-
-      await sendData(processId, {
-        step: "parse",
-        status: "success"
-      })
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      await sendData(processId, {
-        step: "prepare",
-        status: "loading"
-      })
-      const { resumeData, jobData, applicationData } = await createApplicationResumeRecord(
-        jobInfo,
-        uploadResult,
-        resumeTextData,
-        language
+      formData = await request.formData()
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid multipart form data" },
+        { status: 400 }
       )
-      await sendData(processId, {
-        step: "prepare",
-        status: "success"
-      })
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      await sendData(processId, {
-        step: "evaluate",
-        status: "loading"
-      })
-      await evaluateAndSaveResume(
-        resumeData.id,
-        resumeData.resume_json!!,
-        jobData.description
-      )
-      await sendData(processId, {
-        step: "evaluate",
-        status: "success",
-        resumeId: resumeData.id,
-        applicationId: applicationData.id
-      })
-    } catch (error: any) {
-      console.error(error)
-
-      // 执行回滚
-      const rollbackCtx = rollbackStorage.getStore()
-      if (rollbackCtx) {
-        await rollbackCtx.executeRollback()
-      }
-
-      await sendData(processId, {
-        error: error.message
-      })
-      throw error
-    } finally {
-      closeWriter(processId)
     }
-  })
+
+    const file = formData.get("file") as File | null
+
+    // ── Validate file ──
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    }
+
+    if (!isPdfUpload(file)) {
+      return NextResponse.json(
+        { error: "Only PDF files are supported" },
+        { status: 400 }
+      )
+    }
+
+    // ── Validate jobInfo ──
+    const jobInfoResult = parseJobInfoField(formData.get("jobInfo"))
+    if (!jobInfoResult.ok) {
+      console.error("resume_intake_invalid_job_info", {
+        receivedType: typeof formData.get("jobInfo"),
+        details: jobInfoResult.details
+      })
+
+      return NextResponse.json(
+        {
+          error: jobInfoResult.error,
+          details: jobInfoResult.details
+        },
+        { status: 400 }
+      )
+    }
+    const jobInfo = jobInfoResult.jobInfo
+
+    // ── Application limit guard (peripheral) ──
+    try {
+      await verifyJobApplicationLimit(user.id, supabase)
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 403 })
+    }
+
+    // ── Set up SSE stream ──
+    const responseStream = new TransformStream()
+    const writer = responseStream.writable.getWriter()
+    const encoder = new TextEncoder()
+
+    let emitFailed = false
+    let writerClosed = false
+    let committed = false
+
+    const closeWriterSafely = async () => {
+      if (writerClosed) return
+      writerClosed = true
+      try {
+        await writer.close()
+      } catch {
+        // ignore - writer may already be closed
+      }
+    }
+
+    // ── Cancellation signal ──
+    const cancellationController = new AbortController()
+    const abortCancellation = () => {
+      if (!cancellationController.signal.aborted) {
+        cancellationController.abort()
+      }
+    }
+
+    cancellationController.signal.addEventListener(
+      "abort",
+      () => {
+        void closeWriterSafely()
+      },
+      { once: true }
+    )
+
+    if (request.signal.aborted) {
+      abortCancellation()
+    } else {
+      request.signal.addEventListener("abort", abortCancellation, {
+        once: true
+      })
+    }
+
+    // ── Emit function ──
+    const emit = async (event: IntakeEvent): Promise<void> => {
+      if (emitFailed) return
+
+      const phase: "pre-commit" | "post-commit" =
+        committed || event.type === "intake.done" ? "post-commit" : "pre-commit"
+
+      try {
+        await writer.ready
+        await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+        if (event.type === "intake.done") {
+          committed = true
+        }
+      } catch (err) {
+        emitFailed = true
+        abortCancellation()
+        recordSseTransportFailure({
+          phase,
+          intakeId: event.intakeId,
+          eventType: event.type,
+          error: err
+        })
+      }
+    }
+
+    // ── Rollback registry ──
+    const rollback = new RollbackRegistryImpl()
+
+    // ── Fire-and-forget orchestration ──
+    runUploadedResumeIntake(
+      {
+        jobInfo,
+        file
+      },
+      {
+        userId: user.id,
+        emit,
+        signal: cancellationController.signal,
+        rollback
+      }
+    )
+      .catch((err) => {
+        console.error("Unhandled intake error:", err)
+      })
+      .finally(() => {
+        closeWriterSafely()
+      })
+
+    // ── Return SSE response ──
+    return new NextResponse(responseStream.readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        Connection: "keep-alive",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+        "Transfer-Encoding": "chunked"
+      }
+    })
+  } catch (error) {
+    return handleApiError(error)
+  }
 }

@@ -32,8 +32,10 @@ export default defineConfig({
           include: [
             "server/**/*.test.{ts,tsx}",
             "app/api/**/*.test.{ts,tsx}",
+            "app/auth/**/*.test.{ts,tsx}",
             "components/editor/**/*.test.{ts,tsx}",
             "lib/hooks/**/*.test.{ts,tsx}",
+            "lib/resume/**/*.test.{ts,tsx}",
             "lib/templates/**/*.test.{ts,tsx}"
           ],
           exclude: ["server/ai/prompts/**", "components/ui/**"]

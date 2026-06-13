@@ -15,11 +15,13 @@ const DELETE_CONFIRM_TIMEOUT_MS = 2500
 
 interface ResumeSectionDeleteActionProps {
   className?: string
+  disabled?: boolean
   onClick: () => void
 }
 
 export function ResumeSectionDeleteAction({
   className,
+  disabled = false,
   onClick
 }: ResumeSectionDeleteActionProps) {
   const t = useTranslations("rightPanel")
@@ -73,6 +75,7 @@ export function ResumeSectionDeleteAction({
           size="icon-sm"
           aria-label={t("deleteEntry")}
           data-resume-delete-action={actionId}
+          disabled={disabled}
           className={cn(
             "rounded-full border-destructive/30 bg-background/95 p-0 text-destructive shadow-sm hover:bg-destructive/5 hover:text-destructive",
             className
@@ -80,6 +83,11 @@ export function ResumeSectionDeleteAction({
           onClick={(event) => {
             event.preventDefault()
             event.stopPropagation()
+
+            if (disabled) {
+              setIsConfirming(false)
+              return
+            }
 
             if (isConfirming) {
               setIsConfirming(false)

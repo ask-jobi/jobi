@@ -6,60 +6,71 @@ describe("getResumeThumbnailSections", () => {
   it("returns every populated section in section order", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.education.entries.push({
-      entryId: "edu-1",
-      school: "ZJU",
-      degree: "BS CS",
-      start: "2018",
-      end: "2022",
-      content: "Computer Science"
-    })
+    resume.education = {
+      entries: [
+        {
+          entryId: "edu-1",
+          school: "ZJU",
+          degree: "BS CS",
+          start: "2018",
+          end: "2022",
+          content: "Computer Science"
+        }
+      ]
+    }
     resume.projects = {
-      title: "Projects",
       entries: [
         {
           entryId: "project-1",
           title: "Jobi",
           role: "Founder",
-          date: { start: "2024-01", end: "2025-01" },
+          start: "2024-01",
+          end: "2025-01",
           content: "Built an AI resume workflow."
         }
       ]
     }
-    resume.skills.entries.push({
-      entryId: "skill-1",
-      group: "Languages",
-      content: "TypeScript, React, Node.js"
-    })
+    resume.skills = {
+      entries: [
+        {
+          entryId: "skill-1",
+          group: "Languages",
+          content: "TypeScript, React, Node.js"
+        }
+      ]
+    }
     resume.sectionOrder = ["education", "projects", "skills"]
 
     expect(
-      getResumeThumbnailSections(resume).map((section) => section.id)
+      getResumeThumbnailSections(resume, "en").map((section) => section.id)
     ).toEqual(["education", "projects", "skills"])
   })
 
   it("omits empty sections and excludes content summaries", () => {
     const resume = buildEmptyResumeData("en")
 
-    resume.skills.entries.push(
-      {
-        entryId: "skill-1",
-        group: "Frontend",
-        content: "TypeScript, React, Next.js, Tailwind CSS"
-      },
-      {
-        entryId: "skill-2",
-        group: "Backend",
-        content: "Node.js, PostgreSQL"
-      },
-      {
-        entryId: "skill-3",
-        group: "Infra",
-        content: "Docker, Vercel"
-      }
-    )
+    resume.skills = {
+      entries: [
+        {
+          entryId: "skill-1",
+          group: "Frontend",
+          content: "TypeScript, React, Next.js, Tailwind CSS"
+        },
+        {
+          entryId: "skill-2",
+          group: "Backend",
+          content: "Node.js, PostgreSQL"
+        },
+        {
+          entryId: "skill-3",
+          group: "Infra",
+          content: "Docker, Vercel"
+        }
+      ]
+    }
+    resume.sectionOrder = ["skills"]
 
-    const sections = getResumeThumbnailSections(resume)
+    const sections = getResumeThumbnailSections(resume, "en")
 
     expect(sections).toHaveLength(1)
     expect(sections[0].id).toBe("skills")

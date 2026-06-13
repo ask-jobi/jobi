@@ -30,7 +30,7 @@ export function Composer({ lifecycle }: ComposerProps) {
   )
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    if (lifecycle === "ready") {
+    if (lifecycle === "ready" || lifecycle === "error") {
       return
     }
 

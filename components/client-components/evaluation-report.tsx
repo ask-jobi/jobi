@@ -116,7 +116,10 @@ export function EvaluationReport({ evaluation }: EvaluationReportProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button onClick={handleOptimizeViaChat} className="flex items-center gap-2">
+        <Button
+          onClick={handleOptimizeViaChat}
+          className="flex items-center gap-2"
+        >
           <Sparkles className="w-4 h-4" />
           {t("oneClickOptimize")}
         </Button>

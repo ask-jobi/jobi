@@ -10,6 +10,12 @@ import type {
   SkillEntry,
   SortableSectionKey
 } from "@/types/resume"
+import type { Locale } from "@/lib/i18n/config"
+import { getSectionLabel } from "@/lib/templates/section-labels"
+import {
+  formatDateRange,
+  normalizeResumeDateRanges
+} from "@/lib/resume/date-ranges"
 
 const MAX_SKILL_TAGS = 6
 
@@ -24,17 +30,6 @@ export type ThumbnailSectionSummary = {
   id: SortableSectionKey
   title: string
   entries: ThumbnailEntrySummary[]
-}
-
-function formatDateRange(start?: string, end?: string, isCurrent?: boolean) {
-  const startValue = start?.trim()
-  const endValue = isCurrent ? "Present" : end?.trim()
-
-  if (startValue && endValue) {
-    return `${startValue} - ${endValue}`
-  }
-
-  return startValue || endValue || undefined
 }
 
 function splitSkillTags(content: string) {
@@ -72,11 +67,7 @@ function buildProjectSummary(entry: ProjectEntry): ThumbnailEntrySummary {
   return {
     heading: entry.title,
     subheading: entry.role,
-    meta: formatDateRange(
-      entry.date?.start,
-      entry.date?.end,
-      entry.date?.isCurrent
-    )
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
@@ -84,11 +75,7 @@ function buildResearchSummary(entry: ResearchEntry): ThumbnailEntrySummary {
   return {
     heading: entry.title,
     subheading: entry.role,
-    meta: formatDateRange(
-      entry.date?.start,
-      entry.date?.end,
-      entry.date?.isCurrent
-    )
+    meta: formatDateRange(entry.start, entry.end)
   }
 }
 
@@ -152,10 +139,13 @@ function buildEntrySummary(
 }
 
 export function getResumeThumbnailSections(
-  resumeData: ResumeData
+  resumeData: ResumeData,
+  language: Locale
 ): ThumbnailSectionSummary[] {
-  return resumeData.sectionOrder.flatMap((sectionId) => {
-    const section = resumeData[sectionId]
+  const normalizedResumeData = normalizeResumeDateRanges(resumeData)
+
+  return normalizedResumeData.sectionOrder.flatMap((sectionId) => {
+    const section = normalizedResumeData[sectionId]
 
     if (!section || section.entries.length === 0) {
       return []
@@ -168,7 +158,7 @@ export function getResumeThumbnailSections(
     return [
       {
         id: sectionId,
-        title: section.title,
+        title: getSectionLabel(sectionId, language),
         entries
       }
     ]

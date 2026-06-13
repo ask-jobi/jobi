@@ -34,6 +34,7 @@ function ResumeUpload(props: ResumeUploadProps) {
 
   return (
     <FileUpload
+      accept="application/pdf,.pdf"
       maxSize={5 * 1024 * 1024}
       className="w-full"
       value={props.file ? [props.file] : []}

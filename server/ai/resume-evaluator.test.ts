@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { evaluateResume } from "./resume-evaluator"
+import { evaluateResume, evaluationSchema } from "./resume-evaluator"
 import type { ResumeData } from "@/types/resume"
 import { generateText } from "ai"
 
@@ -14,7 +14,7 @@ vi.mock("ai", () => ({
   }
 }))
 
-vi.mock("@/lib/agent/model", () => ({
+vi.mock("@/server/ai/model", () => ({
   model: vi.fn()
 }))
 
@@ -26,14 +26,13 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
   ({
     sectionOrder: ["education", "employment", "skills", "research", "projects"],
     personalInfo: {
-      blockId: "p1",
+      entryId: "p1",
       firstName: "John",
       lastName: "Doe",
       email: "john@example.com",
       phone: "123-456-7890"
     },
     education: {
-      title: "Education",
       entries: [
         {
           entryId: "e-b1",
@@ -46,7 +45,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     employment: {
-      title: "Work Experience",
       entries: [
         {
           entryId: "emp-b1",
@@ -59,7 +57,6 @@ const createMockResumeData = (overrides?: Partial<ResumeData>): ResumeData =>
       ]
     },
     skills: {
-      title: "Skills",
       entries: [
         {
           entryId: "s-b1",
@@ -107,18 +104,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -129,7 +124,7 @@ describe("evaluateResume", () => {
       expect(result.actions).toHaveLength(1)
     })
 
-    it("should return exactly 3 actions as required by schema", async () => {
+    it("should return up to 3 actions as allowed by schema", async () => {
       const mockEvaluationResult = {
         gates: {
           ats: "pass",
@@ -173,7 +168,6 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         education: {
-          title: "Education",
           entries: [
             {
               entryId: "e-b1",
@@ -186,7 +180,6 @@ describe("evaluateResume", () => {
           ]
         },
         skills: {
-          title: "Skills",
           entries: [
             { entryId: "s-b1", group: "General", content: "Problem solving" }
           ]
@@ -232,18 +225,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -291,18 +282,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -349,18 +338,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "John",
           lastName: "Doe",
           email: "john@example.com",
           phone: "123"
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -416,18 +403,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -496,18 +481,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -567,18 +550,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -591,6 +572,45 @@ describe("evaluateResume", () => {
     })
   })
 
+  describe("actions validation", () => {
+    it("should accept a single action", () => {
+      const result = evaluationSchema.parse({
+        gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+        gaps: [],
+        actions: [
+          {
+            priority: "1",
+            targetSection: "skills",
+            instruction: "Add Python skill"
+          }
+        ]
+      })
+
+      expect(result.actions).toHaveLength(1)
+    })
+
+    it("should accept two actions", () => {
+      const result = evaluationSchema.parse({
+        gates: { ats: "pass", hr: "pass", hiringManager: "pass" },
+        gaps: [],
+        actions: [
+          {
+            priority: "1",
+            targetSection: "skills",
+            instruction: "Add Python skill"
+          },
+          {
+            priority: "2",
+            targetSection: "work_experience",
+            instruction: "Add AWS experience"
+          }
+        ]
+      })
+
+      expect(result.actions).toHaveLength(2)
+    })
+  })
+
   describe("error handling", () => {
     it("should throw error when generateText fails", async () => {
       ;(generateText as any).mockRejectedValue(
@@ -599,18 +619,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })
@@ -625,18 +643,16 @@ describe("evaluateResume", () => {
 
       const mockResume = createMockResumeData({
         personalInfo: {
-          blockId: "p1",
+          entryId: "p1",
           firstName: "Test",
           lastName: "User",
           email: "test@test.com",
           phone: ""
         },
         education: {
-          title: "Education",
           entries: []
         },
         skills: {
-          title: "Skills",
           entries: []
         }
       })

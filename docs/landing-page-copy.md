@@ -1,99 +1,102 @@
 # Landing Page 文案
 
-> 本文档记录落地页采用的文案版本，供后续开发时更新翻译文件与页面内容使用。
-> 所有文案对应 `lib/i18n/translations/zh.json` 中 `landingPage` 节点。
+> 本文档记录当前已落地的首页结构与文案承载点，便于后续同步翻译与页面实现。
+> 当前首页文案主要来自 `lib/i18n/translations/*.{json}` 的 `landingPage` 节点。
+
+## 当前已实现结构
+
+首页当前只有 4 个主要区块：
+
+1. Hero
+2. Problem
+3. Features
+4. CTA
+
+> 说明：旧版草稿里提到的 Value Prop Block 和“按钮下方注释”目前并未在 `app/page.tsx` 中落地，不应再作为当前实现文档的一部分。
 
 ---
 
 ## Hero Section（首屏）
 
-| 字段 | 文案 |
-|------|------|
-| 主标语（大标题）| 让每一份简历都命中靶心 |
-| 副标语（小标题）| 少改简历，多拿面试 |
-| 价值主张（描述）| 不用再为每个岗位从头改简历。上传你现有的简历，粘贴职位描述，Jobi 会帮你更快做出更贴岗的版本，把时间留给更值得投的机会。 |
-| 主 CTA 按钮 | 开始免费试用 |
-| 次 CTA 按钮 | 查看它如何工作 |
-| 按钮下方注释 | 3 天免费体验，无需从零重写简历 |
+对应 key：
 
----
+- `landingPage.hero.slogan`
+- `landingPage.hero.valueProposition`
+- `landingPage.getStarted`
+- `landingPage.hero.learnMore`
 
-## Value Prop Block（价值定位区块）
+当前行为：
 
-位于 Hero 下方，独立卡片区域。
-
-**标题：**
-> 你真正想买的，不是一份「被优化的简历」
-> 而是更省力的投递过程，和更有希望的面试结果。
-
-**三条价值点：**
-
-| 标题 | 描述 |
-|------|------|
-| 不用从零重写 | 基于你已有的经历开始修改，而不是每次重新写一份。 |
-| 几分钟出岗位定制版 | 把时间花在投递高价值岗位，而不是机械改字句。 |
-| 每次投递都更有针对性 | 让你的简历更像「这个岗位的人」，而不是一份通用模板。 |
+- 主 CTA：未登录跳 `/auth/sign-up`，已登录跳 `/dashboard`
+- 次 CTA：锚点跳到 `#features`
 
 ---
 
 ## Problem Section（问题区）
 
-| 字段 | 文案 |
-|------|------|
-| 标题 | 为什么投了很多，还是没有回音？ |
-| 副标题 | 很多时候，不是你不够努力，而是你把时间花在了低回报的修改上。 |
+对应 key：
 
-**三个问题卡片：**
+- `landingPage.problem.title`
+- `landingPage.problem.subtitle`
+- `landingPage.problem.problem1`
+- `landingPage.problem.problem1Desc`
+- `landingPage.problem.problem2`
+- `landingPage.problem.problem2Desc`
+- `landingPage.problem.problem3`
+- `landingPage.problem.problem3Desc`
+- `landingPage.problem.atsExplanation`
 
-| # | 标题 | 描述 |
-|---|------|------|
-| 1 | 你的简历看起来太像群发 | HR 很难一眼看出你为什么适合这个岗位，简历很容易在初筛里被快速略过。 |
-| 2 | 你把精力耗在重复改写里 | 每看到一个新岗位，就要手动删改重写。越投越累，越改越乱，却不一定更有效。 |
-| 3 | 你还没被看到，就先被 ATS 筛掉 | 关键词、表达方式或结构不够贴岗时，系统和初筛环节就可能先把你挡在外面。 |
+实现说明：
+
+- 当前是 3 张 problem card
+- 第 3 张卡片里的 `ATS` 带 tooltip 解释
+- 卡片在滚动进入视口时有轻量位移动画
 
 ---
 
 ## Features Section（功能展示区）
 
-| 字段 | 文案 |
-|------|------|
-| 标题 | 不是把简历改得更长，而是改得更像这个岗位要的人 |
-| 描述 | Jobi 帮你在已有经历的基础上，快速做出更贴岗、更容易被看见的版本。 |
+对应 key：
 
-**改写对比示例（内嵌 Demo）：**
+- `landingPage.features.title`
+- `landingPage.features.description`
+- `landingPage.features.feature1`
+- `landingPage.features.feature1Desc`
+- `landingPage.features.feature2`
+- `landingPage.features.feature2Desc`
+- `landingPage.features.feature3`
+- `landingPage.features.feature3Desc`
 
-目标岗位：`Growth Marketing Manager`
+当前配图：
 
-- **改写前（像通用简历）**
-  - 负责公司社媒运营，发布内容并跟进数据。
-  - 参与市场活动，和团队协作完成推广任务。
-  - 熟悉多种营销工具，学习能力强。
+- `/public/landing-page/一键导入.png`
+- `/public/landing-page/岗位定制.png`
+- `/public/landing-page/真实表达.png`
 
-- **改写后（像在投这个岗位）**
-  - 负责社媒增长与内容分发，围绕获客目标持续优化内容表现。
+实现说明：
 
-**三个功能亮点（Feature 1–3）：**
-
-| # | 标题 | 描述 |
-|---|------|------|
-| 01 | 一键导入 | 不用重新填写一遍。上传你已有的 PDF 简历，马上进入可编辑版本，直接开始针对岗位修改。 |
-| 02 | 岗位定制 | 根据职位描述重写重点经历、关键词和表达方式，让你的简历更像在投这个岗位，而不是一份通用版本。 |
-| 03 | 真实表达 | 所有建议都围绕你已有的真实经历展开，减少模板感和 AI 味，写出来的内容更像你，也更像一个靠谱候选人。 |
+- 当前是 3 个 feature block
+- 左右图文交替布局
+- 图片本身就是页面叙事的一部分，更新文案时通常也要一起检查截图是否仍匹配
 
 ---
 
 ## CTA Section（结尾行动区）
 
-| 字段 | 文案 |
-|------|------|
-| 标题 | 少一点无效修改，多一点面试机会 |
-| 描述 | 3 天免费体验，无需绑卡。先试试它能不能帮你更快投出更像样的一版。 |
-| 按钮 | 开始免费试用 |
+对应 key：
+
+- `landingPage.readyToStart`
+- `landingPage.ctaDescription`
+- `landingPage.getStarted`
+
+当前行为：
+
+- CTA 跳转逻辑与 Hero 主按钮一致
 
 ---
 
-## 实现说明
+## 更新方式
 
-- 当前代码使用 `next-intl` 的 `t()` 调用，对应 `lib/i18n/translations/zh.json` 中 `landingPage` 节点。
-- 更新文案时，直接修改 `zh.json`（及对应的 `en.json`），无需改动页面组件逻辑。
-- Value Prop Block 为新增区块，需同步添加对应的 i18n key 和组件代码。
+- 优先修改 `lib/i18n/translations/zh.json` 和 `lib/i18n/translations/en.json`
+- 如果文案调整会改变首页结构，再同步更新 `app/page.tsx`
+- 如果替换功能截图，同时更新 `public/landing-page/` 下资源

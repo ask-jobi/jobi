@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef } from "react"
-import type { SessionSummary } from "@/lib/agent/chat-history"
+import type { SessionSummary } from "@/server/ai/chat/history"
 import { useApplicationResume } from "@/lib/store/resume"
 import {
   useChatSessionErrorValue,

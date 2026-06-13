@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 import { QUOTA } from "@/lib/payment/quota"
+import {
+  handleApiError,
+  requireVerifiedAuthContext
+} from "@/server/auth-helper"
 
 export async function POST() {
   try {
-    const supabase = await createClient()
-
-    // 获取当前用户
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "用户未登录" }, { status: 401 })
-    }
+    const { supabase, user } = await requireVerifiedAuthContext()
 
     // 只允许从未拥有过任何 access pass 历史的用户领取一次免费包
     const { data: accessPassHistory, error: historyError } = await supabase
@@ -69,8 +63,7 @@ export async function POST() {
       message: "Free token grant created successfully",
       accessPass
     })
-  } catch (error: any) {
-    console.error("Create free access pass failed:", error.message)
-    return NextResponse.json({ error: "创建免费通行证失败" }, { status: 500 })
+  } catch (error) {
+    return handleApiError(error)
   }
 }

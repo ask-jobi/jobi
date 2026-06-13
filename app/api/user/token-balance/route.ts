@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+
+import { handleApiError } from "@/server/auth-helper"
 import { getUserTokenBalance } from "@/server/quota"
 
 export async function GET() {
@@ -6,10 +8,6 @@ export async function GET() {
     const tokenBalance = await getUserTokenBalance()
     return NextResponse.json(tokenBalance)
   } catch (error) {
-    console.error("Error fetching token balance:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch token balance" },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
