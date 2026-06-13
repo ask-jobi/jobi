@@ -86,6 +86,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | Staging Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Staging Supabase publishable key |
 | `NEXT_PUBLIC_BASE_URL` | `https://staging.hellojobi.com` |
+| `NEXT_PUBLIC_ENVIRONMENT` | `staging` |
 | `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | Staging Umami site ID |
 | `NEXT_PUBLIC_UMAMI_SCRIPT_URL` | Umami script URL |
 

@@ -26,10 +26,18 @@ export const Header = memo(function Header({
   const t = useTranslations()
   const { user, loading } = useAuth()
 
+  const isStaging = process.env.NEXT_PUBLIC_ENVIRONMENT === "staging"
+
   return (
-    <header
-      className={`border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 ${className}`}
-    >
+    <>
+      {isStaging && (
+        <div className="bg-amber-500 text-amber-900 text-center text-xs font-semibold py-0.5 tracking-wider">
+          STAGING
+        </div>
+      )}
+      <header
+        className={`border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 ${className}`}
+      >
       <div className="container mx-auto px-16 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Logo size="lg" href="/" />
@@ -72,5 +80,6 @@ export const Header = memo(function Header({
         </div>
       </div>
     </header>
+    </>
   )
 })
