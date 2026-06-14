@@ -8,11 +8,11 @@
   "scripts": {
     "check:node-version": "node scripts/check-node-version.js",
     "prepare": "husky",
-    "dev": "pnpm run check:node-version && next dev --turbopack",
-    "dev:test": "pnpm run check:node-version && NODE_ENV=test next dev -p 3001 --turbopack",
-    "build": "pnpm run check:node-version && next build",
-    "start": "pnpm run check:node-version && next start",
-    "cf:preview": "pnpm run check:node-version && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "dev": "scripts/use-project-node.sh next dev --turbopack",
+    "dev:test": "NODE_ENV=test scripts/use-project-node.sh next dev -p 3001 --turbopack",
+    "build": "scripts/use-project-node.sh next build",
+    "start": "scripts/use-project-node.sh next start",
+    "cf:preview": "scripts/use-project-node.sh opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy:staging": "opennextjs-cloudflare deploy --env staging",
     "cf:deploy:production": "opennextjs-cloudflare deploy --env production",
     "cf:build:staging": "opennextjs-cloudflare build --env staging",
@@ -20,12 +20,12 @@
     "cf:upload:staging": "wrangler deploy --env staging --keep-vars",
     "cf:upload:production": "wrangler deploy --env production --keep-vars",
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "lint": "pnpm run check:node-version && next lint",
+    "lint": "scripts/use-project-node.sh next lint",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "pnpm run check:node-version && vitest",
-    "e2e-test": "pnpm run check:node-version && NODE_ENV=test pnpm exec playwright test --ui",
-    "e2e-test-headless": "pnpm run check:node-version && NODE_ENV=test pnpm exec playwright test"
+    "test": "scripts/use-project-node.sh vitest",
+    "e2e-test": "NODE_ENV=test scripts/use-project-node.sh pnpm exec playwright test --ui",
+    "e2e-test-headless": "NODE_ENV=test scripts/use-project-node.sh pnpm exec playwright test"
   },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,json,css}": [
