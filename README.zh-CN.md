@@ -104,7 +104,7 @@ pnpm dev
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 公开 | 可安全用于浏览器的 Supabase publishable key |
 | `SUPABASE_SECRET_KEY` | 仅服务端 | 供可信服务端代码使用的 Supabase 特权访问密钥 |
 
-`NEXT_PUBLIC_BASE_URL` 是应用的公开来源地址，例如 `http://localhost:3000`。`NEXT_PUBLIC_ENVIRONMENT` 是用于标记预发布环境的可选公开变量；仅在该环境中将其设为 `staging`。
+`NEXT_PUBLIC_BASE_URL` 是应用的公开访问地址（origin），例如 `http://localhost:3000`。`NEXT_PUBLIC_ENVIRONMENT` 是用于标记预发布环境的可选公开变量；仅在该环境中将其设为 `staging`。
 
 ### AI 提供方
 
@@ -117,7 +117,7 @@ Jobi 当前配置的 AI 提供方是 DeepSeek：
 
 ### 可选支付功能
 
-仓库包含 Stripe 和 Paddle 集成。基本的本地开发无需启用它们，但其结账、Webhook 和访问通行证流程需要完整的对应提供方配置。
+仓库包含 Stripe 和 Paddle 集成。基本的本地开发无需启用它们，但其结账、Webhook 和访问权限发放流程需要完整的对应提供方配置。
 
 Stripe 使用以下仅服务端变量：
 
@@ -154,7 +154,7 @@ Jobi 的设计目标是配合你自己的 Supabase 项目和服务提供方账�
 - 配有所需 OpenNext 绑定的 Cloudflare Worker；
 - 用于 PDF 导出的 `MYBROWSER` Browser Rendering 绑定；
 - 启用 AI 功能时所需的 DeepSeek 凭据；
-- 仅在启用支付功能时配置对应提供方的 Webhook 和结账流程。
+- 仅在启用支付功能时完成对应服务商的 Webhook 与结账配置。
 
 请将本地、预发布和生产环境的凭据、数据库、回调 URL、支付模式和分析站点相互隔离。在部署到生产环境之前，先验证预发布部署。有关持续维护的部署详情，请参阅[开发指南](docs/development.md)和 [Cloudflare Workers Builds 指南](docs/cloudflare-workers-builds.md)。
 
