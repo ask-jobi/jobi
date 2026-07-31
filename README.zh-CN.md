@@ -189,7 +189,7 @@ pnpm e2e-test-headless
 
 欢迎参与贡献。在进行重大变更之前：
 
-1. 阅读[开发指南](docs/development.md)和 [`docs/`](docs/) 中的相关文档。
+1. 阅读[开发指南](docs/development.md)、根目录的 [Agent 指南](AGENTS.md)、根目录的[项目上下文](CONTEXT.md)，以及 [`docs/` 中的相关项目文档](docs/)。
 2. 创建 issue，讨论变更范围和计划采用的方法。
 3. 保持变更聚焦，并补充适当的测试或文档。
 4. 创建 pull request 前，运行上述质量检查。

@@ -189,7 +189,7 @@ The [development guide](docs/development.md) documents local services, Supabase 
 
 Contributions are welcome. Before making a substantial change:
 
-1. Read the [development guide](docs/development.md) and relevant documents in [`docs/`](docs/).
+1. Read the [development guide](docs/development.md), the root [agent guidance](AGENTS.md), the root [project context](CONTEXT.md), and the relevant [project documentation](docs/).
 2. Open an issue to discuss the scope and intended approach.
 3. Keep changes focused and include appropriate tests or documentation.
 4. Run the quality checks above before opening a pull request.
