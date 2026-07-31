@@ -6,7 +6,7 @@
   <img src="public/jobi-logo/vector/default.svg" alt="Jobi logo" width="180">
 </p>
 
-Jobi is a self-hostable, AI-assisted workspace for managing job applications and resumes. It brings application tracking, PDF resume import and structured editing, job-specific tailoring, resume evaluation, and PDF export into one workflow while leaving deployment and provider choices under the operator's control.
+Jobi is a self-hostable, AI-assisted workspace for managing job applications and resumes. It brings application tracking, PDF resume import and structured editing, job-specific tailoring, resume evaluation, and PDF export into one workflow while leaving deployment and the accounts used with its currently supported Supabase, DeepSeek, Stripe, Paddle, and Umami integrations under the operator's control.
 
 ## Preview
 
@@ -63,11 +63,27 @@ nvm use
 pnpm install
 ```
 
-Create the local environment file, start Supabase, apply migrations and seed data, then start Jobi:
+Create the local environment file, start Supabase, and inspect its local credentials:
 
 ```bash
 cp .env.example .env.local
 supabase start
+supabase status
+```
+
+Use the local values reported by `supabase status` to replace these placeholders in `.env.local`:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=<SUBSTITUTE_SUPABASE_URL>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<SUPABASE_PUBLISHABLE_KEY>
+SUPABASE_SECRET_KEY=<SUPABASE_SECRET_KEY>
+```
+
+Do not copy real credentials into documentation or commit them. If payments or analytics are disabled, remove, comment out, or leave blank their placeholder entries in `.env.local`; placeholder strings are not safe runtime configuration.
+
+Apply migrations and seed data, then start Jobi:
+
+```bash
 supabase db reset
 pnpm dev
 ```
@@ -78,7 +94,7 @@ For environment-specific workflows and troubleshooting, see the [development gui
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and replace placeholders only for the integrations you enable. `.env.example` is the canonical inventory of current variable names.
+Copy `.env.example` to `.env.local` and replace placeholders only for the integrations you enable. Remove, comment out, or blank optional payment and analytics entries when those integrations are disabled. `.env.example` is the canonical inventory of current variable names, but its placeholders are not valid configuration values.
 
 ### Required Supabase settings
 
@@ -119,10 +135,11 @@ Use test or sandbox credentials outside production.
 
 ### Optional analytics
 
-Umami analytics is disabled when its configuration is absent:
+The current application enables Umami only when this public variable is set:
 
 - `NEXT_PUBLIC_UMAMI_WEBSITE_ID`
-- `NEXT_PUBLIC_UMAMI_SCRIPT_URL`
+
+The runtime currently loads the script from `https://cloud.umami.is/script.js`. Although `.env.example` also lists `NEXT_PUBLIC_UMAMI_SCRIPT_URL`, the current application code does not consume it, so setting it does not change the script URL. Remove, comment out, or leave both Umami entries blank when analytics is disabled.
 
 Variables prefixed with `NEXT_PUBLIC_` are bundled into browser code and can be read by users. Never place secrets in public variables. Keep service keys, API keys, and webhook secrets server-only, and never commit `.env.local` or real credentials.
 
