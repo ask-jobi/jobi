@@ -80,8 +80,14 @@ Cloudflare deployments need variables at two stages:
 - **Runtime variables and secrets** provide the Worker with public application
   settings plus server-only Supabase, AI, and payment credentials.
 
-See [Cloudflare Workers Builds](cloudflare-workers-builds.md) for the exact
-staging and production dashboard configuration.
+Treat `.env.example` as the canonical inventory of application variables. Each
+enabled integration requires its complete provider-specific set from that file;
+for example, enabling a payment provider requires its API credentials, webhook
+secret, and applicable server-side and public checkout/price settings.
+
+See [Cloudflare Workers Builds](cloudflare-workers-builds.md) for staging and
+production dashboard setup examples. Its variable tables highlight deployment
+configuration but do not replace the complete inventory in `.env.example`.
 
 ## Supabase development
 
@@ -96,18 +102,35 @@ npx supabase gen types typescript --local --schema public > types/supabase.ts
 ```
 
 For a linked Supabase project, explicitly link the intended environment before
-pulling or pushing migrations. Use the remote project reference supplied by
+choosing a migration direction. Use the remote project reference supplied by
 Supabase:
 
 ```bash
 supabase link --project-ref <project-ref>
-supabase db pull
-supabase db push
-npx supabase gen types typescript --project-id "$PROJECT_REF" --schema public > types/supabase.ts
 ```
 
-Review migration direction and the linked project before `db push`. Do not use a
-production project merely as a substitute for local development.
+To capture remote schema changes as a local migration, pull from the linked
+project:
+
+```bash
+supabase db pull
+```
+
+Alternatively, to apply reviewed local migrations to the linked project, verify
+the target project first and then push:
+
+```bash
+supabase db push
+```
+
+Generate types directly from the same remote project when required:
+
+```bash
+npx supabase gen types typescript --project-id <project-ref> --schema public > types/supabase.ts
+```
+
+Review the migration direction and linked target before every `db push`. Do not
+use a production project merely as a substitute for local development.
 
 ## Cloudflare Workers
 
@@ -121,11 +144,16 @@ Workers. The Worker configuration defines these runtime bindings:
 It also enables the `nodejs_compat` and `global_fetch_strictly_public`
 compatibility flags.
 
+Regenerate TypeScript declarations after changing bindings:
+
+```bash
+pnpm cf:typegen
+```
+
 Validate the Worker runtime locally without deploying:
 
 ```bash
 pnpm cf:preview
-pnpm cf:typegen
 ```
 
 Cloudflare Workers Builds should use the environment-specific scripts:
