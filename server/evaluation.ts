@@ -1,36 +1,41 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { and, eq } from "drizzle-orm"
+
+import { getDatabase } from "@/lib/db/client"
+import { resumes } from "@/lib/db/schema"
+import { requireVerifiedUserIdentity } from "@/server/auth-helper"
 import { evaluateResume } from "@/server/ai/resume-evaluator"
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import type { ResumeData } from "@/types/resume"
+
+async function saveEvaluation(
+  resumeId: string,
+  report: ResumeEvaluationOutput
+) {
+  const user = await requireVerifiedUserIdentity()
+  const db = await getDatabase()
+  const updated = await db
+    .update(resumes)
+    .set({
+      evaluationReport: report,
+      evaluationReportRefreshFlag: false
+    })
+    .where(and(eq(resumes.id, resumeId), eq(resumes.userId, user.id)))
+    .returning({ id: resumes.id })
+
+  if (updated.length === 0) {
+    throw new Error(`Resume not found with id: ${resumeId}`)
+  }
+}
 
 export async function evaluateAndSaveResume(
   resumeId: string,
   resumeData: ResumeData,
   jobDescription?: string
 ) {
-  const supabase = await createClient()
-
-  // Run LLM evaluation
-  const report: ResumeEvaluationOutput = await evaluateResume(
-    resumeData,
-    jobDescription
-  )
-
-  // Update resumes table with evaluation report
-  const { error } = await supabase
-    .from("resumes")
-    .update({
-      evaluation_report: report,
-      evaluation_report_refresh_flag: false
-    } as any)
-    .eq("id", resumeId)
-
-  if (error) {
-    throw new Error(`Failed to save resume evaluation: ${error.message}`)
-  }
-
+  const report = await evaluateResume(resumeData, jobDescription)
+  await saveEvaluation(resumeId, report)
   return report
 }
 
@@ -38,20 +43,7 @@ export async function updateResumeEvaluationReport(
   resumeId: string,
   report: ResumeEvaluationOutput
 ) {
-  const supabase = await createClient()
-
-  const { error } = await supabase
-    .from("resumes")
-    .update({
-      evaluation_report: report,
-      evaluation_report_refresh_flag: false
-    } as any)
-    .eq("id", resumeId)
-
-  if (error) {
-    throw new Error(`Failed to update resume evaluation: ${error.message}`)
-  }
-
+  await saveEvaluation(resumeId, report)
   return report
 }
 
@@ -59,13 +51,15 @@ export async function updateResumeEvaluationReportRefreshFlag(
   resumeId: string,
   flag: boolean = true
 ) {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("resumes")
-    .update({ evaluation_report_refresh_flag: flag })
-    .eq("id", resumeId)
+  const user = await requireVerifiedUserIdentity()
+  const db = await getDatabase()
+  const updated = await db
+    .update(resumes)
+    .set({ evaluationReportRefreshFlag: flag })
+    .where(and(eq(resumes.id, resumeId), eq(resumes.userId, user.id)))
+    .returning({ id: resumes.id })
 
-  if (error) {
-    throw new Error(`Failed to update resume evaluation: ${error.message}`)
+  if (updated.length === 0) {
+    throw new Error(`Resume not found with id: ${resumeId}`)
   }
 }

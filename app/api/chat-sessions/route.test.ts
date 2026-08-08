@@ -95,7 +95,7 @@ describe("POST /api/chat-sessions", () => {
     const response = await POST(request)
 
     expect(response.status).toBe(400)
-    const data = await response.json()
+    const data = (await response.json()) as any
     expect(data.error).toBe("Invalid request parameters")
   })
 

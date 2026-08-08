@@ -31,10 +31,9 @@
 
 - 测试目录：`test/e2e/`
 - 默认 baseURL：`http://localhost:3001`
-- `setup` project 会先准备登录态
-- 主要浏览器项目：
-  - `chromium`（复用 `test/e2e/.auth/user.json`）
-  - `chromium-no-auth`（当前主要给未登录 chat 场景）
+- 测试从空白 browser context 进入应用，由 middleware 自动建立签名 workspace cookie
+- 涉及 ownership 时，应使用两个隔离的 browser context 验证数据不可互见
+- 不再维护邮箱密码登录 setup 或“已登录/未登录”两套业务分支
 
 ### 新增测试时的建议
 
@@ -42,11 +41,11 @@
 - 新增复杂组件、交互组件时，优先补 `*.test.tsx`
 - 修改 `app/api/*` 时，至少覆盖：
   - 参数校验
-  - 鉴权 / ownership
+  - 匿名 identity / ownership
   - success path
   - error path
-- 当前 route test 并不默认要求连真实 Supabase；大多数测试允许 mock `createClient()`、fetch、Stripe 或 AI 依赖
-- 影响主流程 UI（dashboard、create resume、application、pricing、auth）时，应补一轮 Playwright 回归或 session 检查
+- 当前 route test 并不默认要求连接真实 D1；大多数测试 mock repository、`getDatabase()`、fetch 或 AI 依赖
+- 影响主流程 UI（dashboard、create resume、application、workspace cookie）时，应补一轮 Playwright 回归或 identity 检查
 
 ### 测试风格
 
@@ -56,7 +55,17 @@
   - 保存前后状态
   - section/entry 变更结果
   - chat tool 输出后的 resume 更新
-  - token / evaluation 联动
+  - evaluation 刷新联动
+
+### 匿名身份测试
+
+- 无 cookie 时生成高熵 workspace id，并写入 HMAC 签名的 HttpOnly cookie
+- 已有有效 cookie 时复用 workspace；签名被篡改时创建新 workspace
+- 所有用户数据查询必须显式带 workspace id，不能依赖隐式 RLS
+- 新 browser context 不能读取另一 context 创建的 Job Application
+- Job Application 固定数量上限按当前匿名 identity 统计
+- `/auth/*`、`/pricing`、`/payment/*` 等已删除页面返回 404
+- 页面和 API 不包含套餐、余额或 token usage 字段
 
 ## 国际化（i18n）
 

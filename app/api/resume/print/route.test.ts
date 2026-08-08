@@ -46,7 +46,8 @@ function createSuccessfulBrowser(pdf = new Uint8Array([37, 80, 68, 70])) {
 describe("GET /api/resume/print", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    delete process.env.NEXT_PUBLIC_BASE_URL
+    delete (process.env as Record<string, string | undefined>)
+      .NEXT_PUBLIC_BASE_URL
     mockGetAllCookies.mockReturnValue([])
     mockGetCloudflareContext.mockReturnValue({
       env: {

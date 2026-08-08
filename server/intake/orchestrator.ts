@@ -2,11 +2,10 @@ import { nanoid } from "nanoid"
 import type { IntakeContext, IntakeResult, IntakeError, StepId } from "./types"
 import { IntakeErrors } from "./errors"
 import { loadPdfToDoc } from "@/server/ai/tools"
-import { parseResumeWithTokenUsage } from "@/server/ai/resume-parser"
+import { parseResume } from "@/server/ai/resume-parser"
 import { uploadResumeFile } from "@/server/resume"
 import { evaluateAndSaveResume } from "@/server/evaluation"
 import { persistApplicationResume } from "./persist"
-import { authorizeUsage, recordAuthorizedUsage } from "./quota"
 
 export type UploadedResumeIntakeInput = {
   jobInfo: { name: string; company: string; description: string }
@@ -75,7 +74,7 @@ function mapStepError(step: StepId, err: unknown): IntakeError {
 
   switch (step) {
     case "extract":
-      return IntakeErrors.emptyPdfText()
+      return IntakeErrors.pdfExtractionFailed(message)
     case "parse":
       return IntakeErrors.parseFailed(message)
     case "upload":
@@ -98,7 +97,6 @@ function mapStepError(step: StepId, err: unknown): IntakeError {
  * - Returns explicit union (done | cancelled | failed), never throws
  * - Commit point is after evaluate succeeds
  * - Cancellation before commit triggers rollback
- * - Token usage is never rolled back
  */
 export async function runUploadedResumeIntake(
   input: UploadedResumeIntakeInput,
@@ -110,16 +108,6 @@ export async function runUploadedResumeIntake(
   try {
     await ctx.emit({ type: "intake.start", intakeId })
 
-    const authorization = await authorizeUsage(ctx.userId, "resume-parse")
-    if (authorization && !authorization.authorized) {
-      const error = IntakeErrors.quotaExceeded({
-        used: authorization.used,
-        limit: authorization.limit
-      })
-      await ctx.emit({ type: "intake.failed", intakeId, error })
-      return { status: "failed", intakeId, error }
-    }
-
     // ── Step 1: extract ──
     const docs = await runStep(ctx, intakeId, "extract", async () => {
       const result = await loadPdfToDoc(input.file, { splitPages: false })
@@ -130,24 +118,8 @@ export async function runUploadedResumeIntake(
     })
 
     // ── Step 2: parse ──
-    const { parsedResume, language } = await runStep(
-      ctx,
-      intakeId,
-      "parse",
-      async () => {
-        const {
-          resumeData,
-          language: resumeLang,
-          tokenUsage
-        } = await parseResumeWithTokenUsage(docs[0].pageContent)
-
-        // Soft cap: once the run is authorized to start, record full actual usage.
-        if (authorization && tokenUsage.totalTokens > 0) {
-          await recordAuthorizedUsage(authorization, tokenUsage)
-        }
-
-        return { parsedResume: resumeData, language: resumeLang }
-      }
+    const [parsedResume, language] = await runStep(ctx, intakeId, "parse", () =>
+      parseResume(docs[0].pageContent)
     )
 
     // ── Step 3: upload ──
@@ -164,7 +136,7 @@ export async function runUploadedResumeIntake(
           jobInfo: input.jobInfo,
           resumeData: parsedResume,
           resumeLanguage: language,
-          uploadedResumePublicUrl: uploadResult.publicUrl
+          uploadedResumeFilePath: uploadResult.filePath
         },
         ctx.rollback
       )

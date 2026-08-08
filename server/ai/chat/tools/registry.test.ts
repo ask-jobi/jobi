@@ -65,7 +65,7 @@ function mockCommitOperationWithResume({
 function createTools() {
   const write = vi.fn()
   const tools = createResumeChatServerTools({
-    supabase: {} as never,
+    db: {} as never,
     userId: "user-1",
     resumeId: "resume-1",
     sessionId: "session-1",

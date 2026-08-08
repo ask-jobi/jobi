@@ -1,50 +1,21 @@
 import React from "react"
-import { notFound, redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
 import { Provider } from "jotai"
+
 import { ResumeInitializer, store } from "@/components/resumes/resume-context"
-import { getOptionalVerifiedUserIdentity } from "@/server/auth-helper"
+import { requireVerifiedUserIdentity } from "@/server/auth-helper"
+import { getApplicationEditorData } from "@/server/data/applications"
 
 async function Layout(props: {
   children: React.ReactNode
   params: Promise<{ id: string }>
 }) {
   const { children, params } = props
-  const user = await getOptionalVerifiedUserIdentity()
-
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  const supabase = await createClient()
   const { id } = await params
+  const user = await requireVerifiedUserIdentity()
+  const jobApplication = await getApplicationEditorData(user.id, id)
 
-  const { data: jobApplication, error } = await supabase
-    .from("job_applications")
-    .select(
-      `
-      id,
-      resume:resume_id (
-        id,
-        language,
-        resume_json,
-        current_revision,
-        evaluation_report,
-        evaluation_report_refresh_flag
-      ),
-      job:job_id (
-        id,
-        name,
-        company,
-        description
-      )
-    `
-    )
-    .eq("id", id)
-    .single()
-  // console.info(`Job application: ${JSON.stringify(jobApplication)}`)
-
-  if (error || !jobApplication) {
+  if (!jobApplication) {
     notFound()
   }
 

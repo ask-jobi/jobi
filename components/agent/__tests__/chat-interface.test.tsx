@@ -111,10 +111,6 @@ vi.mock("../chat", () => ({
   toUIMessage: vi.fn()
 }))
 
-vi.mock("@/lib/token-balance-events", () => ({
-  notifyTokenBalanceUpdated: vi.fn()
-}))
-
 function renderChatInterface({
   modalOpen = false
 }: { modalOpen?: boolean } = {}) {

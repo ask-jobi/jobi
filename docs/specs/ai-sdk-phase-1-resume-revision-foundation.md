@@ -11,7 +11,7 @@ Resume 当前态现在由 `resumes.resume_json + resumes.current_revision` 共�
 
 | 文件 | 职责 |
 |---|---|
-| `supabase/migrations/20260523000000_add_resume_revisions_and_snapshots.sql` | 增加 `current_revision`、创建 `resumes_snapshot`、补齐索引与 RLS |
+| `db/migrations/0001_initial.sql` | 增加 `current_revision`、创建 `resumes_snapshot`、补齐 SQLite 索引 |
 | `server/resume/commit.ts` | authoritative resume 提交入口：深比较 no-op、推进 revision、置 `evaluation_report_refresh_flag=true` |
 | `server/resume/snapshots.ts` | `resumes_snapshot` 写入 helper |
 | `server/resume.ts` | 读取 authoritative current resume；手动保存返回 `{ resume, currentRevision }` |

@@ -89,7 +89,7 @@ async function getUploadAndAnalyzeErrorMessage(response: Response) {
 
   if (contentType.includes("application/json")) {
     try {
-      const data = await response.clone().json()
+      const data = (await response.clone().json()) as { error?: string }
       if (typeof data?.error === "string" && data.error.trim()) {
         return data.error
       }
@@ -180,11 +180,13 @@ const NewResumeCard = () => {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = (await response.json()) as { error?: string }
         throw new Error(errorData.error || "create empty resume failed")
       }
 
-      const result = await response.json()
+      const result = (await response.json()) as {
+        data: { applicationData: { id: string } }
+      }
       resetForm()
       setCardOpen(false)
       router.push(`/application/${result.data.applicationData.id}`)

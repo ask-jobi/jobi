@@ -1,5 +1,13 @@
 # auth-helper 优化计划
 
+> 2026-08-05 更新：Supabase Auth 已由 `2026-08-05-supabase-to-d1-sqlite.md`
+> 替换为签名 workspace cookie；本计划中的 Supabase helper/proxy 优化不再适用。
+
+> 2026-07-31 更新：用户可见的注册、登录、登出与认证回跳已被
+> `2026-07-31-open-source-loginless-cleanup.md` 取代。服务端 identity/ownership 校验
+> 仍保留，但由 proxy 自动建立匿名 Supabase session；本计划中的登录页重定向、
+> pricing、Stripe、quota 与 token balance 条目不再执行。
+
 **Date:** 2026-05-25
 
 ## 背景

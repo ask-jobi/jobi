@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getDatabase, type AppDatabase } from "@/lib/db/client"
 import {
   extractAiResumeEditOutputs,
   getMessage,
   getMessagesAfter,
+  getSessionSummary,
   restoreConversationSummaryAfterTruncate,
   truncateMessages
 } from "@/server/ai/chat/history"
@@ -28,11 +29,11 @@ async function applyToolReversions(
   toolOutputs: AiResumeEditOutput[],
   resumeId: string,
   actorId: string,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  db: AppDatabase
 ) {
   try {
     const authoritativeState = await commitResumeOperation({
-      supabase,
+      db,
       actorId,
       resumeId,
       operation: ({ resume }) => ({
@@ -62,7 +63,7 @@ async function applyToolReversions(
 export async function POST(request: NextRequest) {
   try {
     const user = await requireVerifiedUserIdentity()
-    const supabase = await createClient()
+    const db = await getDatabase()
 
     const body = await request.json()
     const parseResult = truncateSchema.safeParse(body)
@@ -76,29 +77,21 @@ export async function POST(request: NextRequest) {
 
     const { messageId } = parseResult.data
 
-    const { data: message, error: messageError } = await supabase
-      .from("resume_chat_messages")
-      .select("session_id")
-      .eq("id", messageId)
-      .single()
+    const message = await getMessage(messageId)
 
-    if (messageError || !message) {
+    if (!message) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 })
     }
 
     await verifyOwnership(message.session_id, user.id)
 
-    const { data: session, error: sessionError } = await supabase
-      .from("resume_chat_sessions")
-      .select("resume_id")
-      .eq("id", message.session_id)
-      .single()
+    const session = await getSessionSummary(message.session_id)
 
-    if (sessionError || !session) {
+    if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 })
     }
 
-    const targetMessage = await getMessage(messageId)
+    const targetMessage = message
 
     const messagesToTruncate = await getMessagesAfter(
       targetMessage.session_id,
@@ -119,9 +112,9 @@ export async function POST(request: NextRequest) {
     if (toolsToRevert.length > 0) {
       authoritativeResume = await applyToolReversions(
         toolsToRevert,
-        session.resume_id,
+        session.resumeId,
         user.id,
-        supabase
+        db
       )
     }
 
@@ -138,7 +131,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(authoritativeResume)
     }
 
-    const currentJobApp = await getJobApplicationByResumeId(session.resume_id)
+    const currentJobApp = await getJobApplicationByResumeId(session.resumeId)
 
     return NextResponse.json({
       resume: currentJobApp.resumes.resume_json,

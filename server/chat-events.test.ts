@@ -1,167 +1,67 @@
 /**
  * @vitest-environment node
  */
-import { describe, expect, it, vi, beforeEach } from "vitest"
-import { logChatEvent, logSummaryCheckpoint } from "./chat-events"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { mockInsert, mockSingle } = vi.hoisted(() => {
-  const singleMock = vi.fn().mockResolvedValue({
-    data: { id: "event-1" },
-    error: null
-  })
-  const insertMock = vi.fn().mockReturnValue({
-    select: vi.fn().mockReturnValue({
-      single: singleMock
-    })
-  })
-  return { mockInsert: insertMock, mockSingle: singleMock }
-})
+import { getDatabase } from "@/lib/db/client"
+import { logChatEvent } from "./chat-events"
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn().mockResolvedValue({
-    from: vi.fn().mockReturnValue({
-      insert: mockInsert
-    })
-  })
-}))
+const values = vi.fn()
+const returning = vi.fn(async () => [{ id: "event-1" }])
 
-vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn()
-}))
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("@/lib/db/client", () => ({ getDatabase: vi.fn() }))
 
-beforeEach(() => {
-  vi.clearAllMocks()
-  mockInsert.mockReturnValue({
-    select: vi.fn().mockReturnValue({
-      single: mockSingle
-    })
+describe("logChatEvent", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    values.mockReturnValue({ returning })
+    vi.mocked(getDatabase).mockResolvedValue({
+      insert: vi.fn(() => ({ values }))
+    } as never)
   })
-  mockSingle.mockResolvedValue({
-    data: { id: "event-1" },
-    error: null
-  })
-})
 
-describe("chat_events", () => {
-  describe("logChatEvent", () => {
-    it("validates tool_call event data", async () => {
-      await logChatEvent({
+  it("validates and writes a tool_call event", async () => {
+    await expect(
+      logChatEvent({
         sessionId: "session-1",
-        messageId: "msg-1",
+        messageId: "message-1",
         eventType: "tool_call",
         eventData: {
-          toolCallId: "tc-1",
           toolName: "resumeEditorModify",
-          input: { operation: "rewrite" },
+          toolCallId: "call-1",
+          input: {},
           baseVersion: 1
         }
       })
+    ).resolves.toBe("event-1")
 
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "tool_call",
-          event_data: expect.objectContaining({
-            toolCallId: "tc-1",
-            toolName: "resumeEditorModify"
-          })
-        })
-      )
-    })
-
-    it("rejects tool_call event data missing required fields", async () => {
-      await expect(
-        logChatEvent({
-          sessionId: "session-1",
-          messageId: "msg-1",
-          eventType: "tool_call",
-          eventData: {
-            missingToolCallId: true
-          } as unknown as Record<string, unknown>
-        })
-      ).rejects.toThrow()
-    })
-
-    it("validates tool_result event data", async () => {
-      await logChatEvent({
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
         sessionId: "session-1",
-        messageId: "msg-1",
-        eventType: "tool_result",
-        eventData: {
-          toolCallId: "tc-1",
-          toolName: "resumeEditorModify",
-          output: { operation: "rewrite" },
-          snapshotId: "resume-1:2",
-          baseVersion: 1,
-          nextVersion: 2
-        }
+        eventType: "tool_call"
       })
-
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "tool_result",
-          event_data: expect.objectContaining({
-            snapshotId: "resume-1:2",
-            baseVersion: 1,
-            nextVersion: 2
-          })
-        })
-      )
-    })
-
-    it("validates tool_failed event data", async () => {
-      await logChatEvent({
-        sessionId: "session-1",
-        messageId: "msg-1",
-        eventType: "tool_failed",
-        eventData: {
-          toolCallId: "tc-1",
-          toolName: "resumeEditorModify",
-          input: { operation: "rewrite" },
-          baseVersion: 1,
-          error: "Personal info only supports rewrite"
-        }
-      })
-
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "tool_failed",
-          event_data: expect.objectContaining({
-            toolCallId: "tc-1",
-            error: "Personal info only supports rewrite"
-          })
-        })
-      )
-    })
-
-    it("passes through unknown event types without validation", async () => {
-      await logChatEvent({
-        sessionId: "session-1",
-        messageId: "msg-1",
-        eventType: "unknown_type" as any,
-        eventData: {
-          customField: "any-value"
-        }
-      })
-
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "unknown_type",
-          event_data: { customField: "any-value" }
-        })
-      )
-    })
+    )
   })
 
-  describe("logSummaryCheckpoint", () => {
-    it("validates summary_checkpoint event data", async () => {
-      await logSummaryCheckpoint("session-1", "msg-1", "This is a summary")
+  it("rejects invalid tool event data before writing", async () => {
+    await expect(
+      logChatEvent({
+        sessionId: "session-1",
+        eventType: "tool_call",
+        eventData: {}
+      })
+    ).rejects.toThrow()
 
-      expect(mockInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "summary_checkpoint",
-          event_data: { summary_text: "This is a summary" }
-        })
-      )
-    })
+    expect(values).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["summary_checkpoint" as const, { summary_text: "summary" }],
+    ["rollback" as const, {}]
+  ])("writes valid %s event data", async (eventType, eventData) => {
+    await expect(
+      logChatEvent({ sessionId: "session-1", eventType, eventData })
+    ).resolves.toBe("event-1")
   })
 })

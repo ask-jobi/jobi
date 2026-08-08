@@ -184,65 +184,6 @@
 - **Leverage** 更高：新增 edit operation 时，不需要同步修改多个分散解释器。
 - 测试更扎实：可以围绕一个稳定的 **interface** 做 apply/replay/revert 测试，而不是只测局部 adapter。
 
----
-
-## 候选项 4: Access Pass Lifecycle Module ❌ 未开始
-
-**进度**：无实质性架构变更。Routes 仍直接操作 Supabase，未使用统一的 lifecycle module。
-
-### 已完成 ✅
-
-- （无）
-
-### 待完成 ❌
-
-- ❌ `app/api/access-passes/create-free/route.ts` — 自行调用 `supabase.auth.getUser()`，未使用 `getAuthenticatedUser()`
-- ❌ `app/api/checkout_sessions/route.ts` — 同上
-- ❌ `server/quota.ts` 的 `verifyJobApplicationLimit()` — 自行认证，未使用 auth helpers
-- ❌ 付费购买发放、token 消耗、active/inactive 判定仍分散在多个 route 和 helper 中
-
-**Files**
-
-- `app/api/access-passes/create-free/route.ts`
-- `app/api/checkout_sessions/route.ts`
-- `app/api/stripe/webhook/route.ts`
-- `server/quota.ts`
-- `server/auth-helpers.ts`
-
-**Problem**
-
-`access pass`、`token balance`、免费试用领取、付费购买发放、token 消耗这些规则，目前分散在多个 route 和 helper 中。
-
-尤其是这些 invariant 没有被一个深的 **module** 收住：
-
-- 一个用户当前只有一条 `access pass`
-- `FREE` 只能领取一次
-- 付费购买会向现有额度叠加
-- "active" 取决于剩余 token
-- 某些 route 直接绕过现有 auth helper，自行做 `supabase.auth.getUser()`
-
-这里的 **seam** 仍然是 route 层直接操作 Supabase，而不是一个拥有 access-pass 生命周期的 **module**。删除任一路由 helper 后，复杂度不会真正集中，只会分散到别的调用方里，说明当前 **depth** 不足。
-
-**Solution**
-
-引入一个更深的 `access pass lifecycle` **module**，统一拥有：
-
-- free-trial eligibility
-- paid purchase fulfillment
-- token charging
-- active/inactive 判定
-- auth-aware access rules
-
-route 只负责参数校验和调用，不再直接编排业务规则。
-
-**Benefits**
-
-- **Locality** 更强：支付、试用、配额规则修改时，不需要跨多个 route 同步排查。
-- **Leverage** 更高：所有触达 `token balance` 的调用方都可以通过同一条 **interface** 获得一致行为。
-- 测试更清晰：可以围绕 access-pass 生命周期做规则测试，而不是在每个 route test 里重复 mock 表级行为。
-
----
-
 ## 候选项对比（更新至 2026-05-18）
 
 ### 当前进度总览
@@ -252,7 +193,6 @@ route 只负责参数校验和调用，不再直接编排业务规则。
 | 1. Resume Edit Flow Layering | ✅ 完成   | 全部四层分离完成 ✅                      | —                                 |
 | 2. Section Catalog Module    | 🔄 进行中 | 命名收口 ✅, helper 提炼 ✅              | 建立集中 module，消除 4 处 switch |
 | 3. Resume AI Edit Log/Replay | 🔄 进行中 | chat_events 基础设施 ✅, 工具执行集中 ✅ | contract 四层统一                 |
-| 4. Access Pass Lifecycle     | ❌ 未开始 | —                                        | 全部                              |
 
 ### 更新后的优先级建议
 
@@ -265,13 +205,9 @@ route 只负责参数校验和调用，不再直接编排业务规则。
 2. **Resume AI Edit Log/Replay**（Candidate 3 剩余部分）
    - 基础设施已就位，下一步是把 tool schema + execute + apply + persist 的 contract 统一到一个 interface 后面
    - 建议等 Section Catalog 稳定后再做，因为 AI tools 会受益于统一的 section 语义
-3. **Access Pass Lifecycle**（Candidate 4）
-   - 仍建议推迟，至少先把 route 中的 `supabase.auth.getUser()` 统一为 `getAuthenticatedUser()`（零风险 bug fix，可作为独立小 PR）
-   - 架构层面的 lifecycle module 等 resume 域稳定后再议
-
 ## 下一步建议
 
-后续如果要继续推进，建议从上面的 4 个候选项里挑 1 个，进入下一轮更细的 grilling：
+后续如果要继续推进，建议从上面的候选项里挑 1 个，进入下一轮更细的 grilling：
 
 - 明确这个 **module** 的目标 **interface**
 - 明确哪些规则应该藏在 **implementation** 后面

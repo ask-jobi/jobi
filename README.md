@@ -6,21 +6,7 @@
   <img src="public/jobi-logo/vector/default.svg" alt="Jobi logo" width="180">
 </p>
 
-Jobi is a self-hostable, AI-assisted workspace for managing job applications and resumes. It brings application tracking, PDF resume import and structured editing, job-specific tailoring, resume evaluation, and PDF export into one workflow while leaving deployment and the accounts used with its currently supported Supabase, DeepSeek, Stripe, Paddle, and Umami integrations under the operator's control.
-
-## Preview
-
-### Import a resume
-
-![Import an existing resume into Jobi](public/landing-page/一键导入.png)
-
-### Keep your experience authentic
-
-![Edit and improve resume content in Jobi](public/landing-page/真实表达.png)
-
-### Tailor it to the role
-
-![Tailor a resume to a job description in Jobi](public/landing-page/岗位定制.png)
+Jobi is a self-hostable, AI-assisted workspace for managing job applications and resumes. It brings application tracking, PDF resume import and structured editing, job-specific tailoring, resume evaluation, and PDF export into one workflow. Cloudflare D1 provides SQLite persistence, an application-signed cookie provides anonymous workspace identity, and DeepSeek powers the AI-assisted features. Deployment and any external-service accounts remain under the operator's control.
 
 ## Features
 
@@ -40,7 +26,7 @@ AI suggestions and evaluations are aids for review, not guarantees of hiring out
 - [Next.js 15](https://nextjs.org/) App Router and React 19
 - TypeScript, Tailwind CSS v4, shadcn/ui, and Radix
 - Jotai, React Hook Form, and Zod
-- Supabase for authentication, database, and storage
+- Cloudflare D1 (SQLite) with Drizzle ORM for persistence
 - Vercel AI SDK with the direct DeepSeek provider
 - OpenNext and Cloudflare Workers for deployment
 - Vitest and Playwright for testing
@@ -51,8 +37,6 @@ AI suggestions and evaluations are aids for review, not guarantees of hiring out
 
 - Node.js `24.15.0`
 - [pnpm](https://pnpm.io/)
-- A Docker-compatible runtime
-- [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started)
 
 ### Local setup
 
@@ -61,50 +45,30 @@ Use the repository's pinned Node.js version and install dependencies:
 ```bash
 nvm use
 pnpm install
-```
 
-Create the local environment file, start Supabase, and inspect its local credentials:
-
-```bash
-cp .env.example .env.local
-supabase start
-supabase status
-```
-
-Use the local values reported by `supabase status` to replace these placeholders in `.env.local`:
-
-```dotenv
-NEXT_PUBLIC_SUPABASE_URL=<SUBSTITUTE_SUPABASE_URL>
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<SUPABASE_PUBLISHABLE_KEY>
-SUPABASE_SECRET_KEY=<SUPABASE_SECRET_KEY>
-```
-
-Do not copy real credentials into documentation or commit them. If payments or analytics are disabled, remove, comment out, or leave blank their placeholder entries in `.env.local`; placeholder strings are not safe runtime configuration.
-
-Apply migrations and seed data, then start Jobi:
-
-```bash
-supabase db reset
+pnpm db:migrate:local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Payments and analytics are not required for the basic local workflow. AI-assisted features require the DeepSeek settings described below.
+Open [http://localhost:3000](http://localhost:3000). Analytics are not required for the basic local workflow. AI-assisted features require the DeepSeek settings described below.
+
+The app creates an anonymous workspace identity automatically. There is no account login or recovery flow, so clearing browser site data also removes access to that browser's existing workspace.
 
 For environment-specific workflows and troubleshooting, see the [development guide](docs/development.md).
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and replace placeholders only for the integrations you enable. Remove, comment out, or blank optional payment and analytics entries when those integrations are disabled. `.env.example` is the canonical inventory of current variable names, but its placeholders are not valid configuration values.
-
-### Required Supabase settings
-
-| Variable | Visibility | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public | Browser-safe Supabase publishable key |
-| `SUPABASE_SECRET_KEY` | Server only | Privileged Supabase access for trusted server code |
+Copy `.env.example` to `.env.local` and replace placeholders only for the integrations you enable. Remove, comment out, or blank optional analytics entries when that integration is disabled. `.env.example` is the canonical inventory of current variable names, but its placeholders are not valid configuration values.
 
 `NEXT_PUBLIC_BASE_URL` is the public application origin, such as `http://localhost:3000`. `NEXT_PUBLIC_ENVIRONMENT` is an optional public marker used for staging; set it to `staging` only in that environment.
+
+### Required Cloudflare runtime settings
+
+- Worker Browser Run binding: `MYBROWSER`
+- D1 binding: `DB`
+- Compatibility flags: `nodejs_compat`, `global_fetch_strictly_public`
+- Secrets: `WORKSPACE_COOKIE_SECRET` and `DEEPSEEK_API_KEY`
+- Variables: DeepSeek model, Umami, and `NEXT_PUBLIC_BASE_URL`
 
 ### AI provider
 
@@ -115,23 +79,21 @@ Jobi's configured AI provider is DeepSeek:
 | `DEEPSEEK_API_KEY` | Server only | DeepSeek API credential |
 | `DEEPSEEK_MODEL_ID` | Server only | Model identifier; the example defaults to `deepseek-v4-flash` |
 
-### Optional payments
+## SQLite / D1 development
 
-The repository includes Stripe and Paddle integrations. They are optional for basic local development, but their checkout, webhook, and access-pass flows require the complete provider-specific configuration.
+SQLite migrations live in `db/migrations/`. Apply them before starting a fresh local environment:
 
-Stripe uses these server-only variables:
+```bash
+pnpm db:migrate:local
+pnpm db:migrations:list
+```
 
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_LITE_PASS_PRICE_ID`
-- `STRIPE_PRO_PASS_PRICE_ID`
+The local database is persisted under `.wrangler/`. Production and staging use separate D1 databases configured in `wrangler.jsonc`; create those databases, copy their IDs into the matching environment bindings, then apply migrations with `--remote` before deployment.
 
-Paddle uses:
-
-- Server only: `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_LITE_PRICE_ID`, `PADDLE_PRO_PRICE_ID`
-- Public: `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `NEXT_PUBLIC_PADDLE_ENV`, `NEXT_PUBLIC_PADDLE_LITE_PRICE_ID`, `NEXT_PUBLIC_PADDLE_PRO_PRICE_ID`
-
-Use test or sandbox credentials outside production.
+```bash
+pnpm exec wrangler d1 migrations apply jobi-production --remote --env production
+pnpm exec wrangler d1 migrations apply jobi-staging --remote --env staging
+```
 
 ### Optional analytics
 
@@ -147,22 +109,22 @@ See [docs/development.md](docs/development.md) for detailed environment, Cloudfl
 
 ## Self-hosting
 
-Jobi is designed to be operated with your own Supabase project and provider accounts. The included deployment path targets Cloudflare Workers through OpenNext. A complete deployment needs:
+Jobi is designed to be operated with your own Cloudflare account and provider accounts. The included deployment path targets Cloudflare Workers through OpenNext. A complete deployment needs:
 
 - environment-specific public variables and server secrets;
-- a Supabase project with the repository's migrations applied and authentication redirects configured;
+- Cloudflare D1 databases (production and staging) with the repository's migrations applied;
 - a Cloudflare Worker with the required OpenNext bindings;
 - the `MYBROWSER` Browser Rendering binding for PDF export;
 - DeepSeek credentials if AI features are enabled;
-- provider-specific webhook and checkout configuration only when payments are enabled.
+- Umami credentials only when analytics are enabled.
 
-Keep local, staging, and production credentials, databases, callback URLs, payment modes, and analytics sites separate. Validate a staging deployment before production. See the [development guide](docs/development.md) and [Cloudflare Workers Builds guide](docs/cloudflare-workers-builds.md) for the maintained deployment details.
+Keep local, staging, and production credentials, databases, callback URLs, and analytics sites separate. Validate a staging deployment before production. See the [development guide](docs/development.md) and [Cloudflare Workers Builds guide](docs/cloudflare-workers-builds.md) for the maintained deployment details.
 
 ## Privacy and data responsibility
 
 Resumes and AI conversations may contain personal or sensitive data. Each operator is responsible for the privacy, security, retention, deletion, subprocessors, cross-border transfers, access controls, and local-law obligations of their deployment.
 
-Before processing real personal data, review the policies and data-handling practices of every enabled AI, storage, analytics, and payment provider. Self-hosting Jobi does not by itself make a deployment compliant with GDPR or any other privacy framework.
+Before processing real personal data, review the policies and data-handling practices of every enabled AI, storage, and analytics provider. Self-hosting Jobi does not by itself make a deployment compliant with GDPR or any other privacy framework.
 
 ## Development and testing
 
@@ -183,7 +145,7 @@ pnpm test --project components --run
 pnpm e2e-test-headless
 ```
 
-The [development guide](docs/development.md) documents local services, Supabase migrations, Cloudflare validation, test selection, and deployment commands.
+The [development guide](docs/development.md) documents local services, D1 migrations, Cloudflare validation, test selection, and deployment commands.
 
 ## Contributing
 

@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { evaluateAndSaveResume } from "@/server/evaluation"
+import type { ResumeData } from "@/types/resume"
 
 export async function POST(request: NextRequest) {
   try {
-    const { resumeId, resumeData, jobDescription } = await request.json()
+    const { resumeId, resumeData, jobDescription } = (await request.json()) as {
+      resumeId?: string
+      resumeData?: ResumeData
+      jobDescription?: string
+    }
 
     if (!resumeId) {
       return NextResponse.json(

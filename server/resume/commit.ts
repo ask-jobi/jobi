@@ -1,9 +1,11 @@
 import { isDeepStrictEqual } from "node:util"
-import type { Database } from "@/types/supabase"
-import type { AuthoritativeResumeState, ResumeData } from "@/types/resume"
-import type { SupabaseClient } from "@supabase/supabase-js"
-import { insertResumeSnapshot } from "./snapshots"
+import { and, eq } from "drizzle-orm"
+
+import type { AppDatabase } from "@/lib/db/client"
+import { resumes } from "@/lib/db/schema"
 import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
+import type { AuthoritativeResumeState, ResumeData } from "@/types/resume"
+import { insertResumeSnapshot } from "./snapshots"
 
 export class ResumeCommitError extends Error {
   constructor(
@@ -22,9 +24,9 @@ export class ResumeCommitError extends Error {
 
 type CurrentResumeRow = {
   id: string
-  user_id: string | null
-  resume_json: unknown
-  current_revision: number
+  userId: string
+  resumeJson: ResumeData
+  currentRevision: number
 }
 
 type ResumeCommitResult<TMetadata = undefined> = AuthoritativeResumeState & {
@@ -38,135 +40,134 @@ type ResumeOperationResult<TMetadata> = {
 }
 
 async function readCurrentResume({
-  supabase,
+  db,
   actorId,
   resumeId
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   actorId: string
   resumeId: string
 }): Promise<CurrentResumeRow> {
-  const { data: currentResume, error: currentResumeError } = await supabase
-    .from("resumes")
-    .select("id, user_id, resume_json, current_revision")
-    .eq("id", resumeId)
-    .single()
-
-  if (currentResumeError) {
-    throw currentResumeError
-  }
+  const [currentResume] = await db
+    .select({
+      id: resumes.id,
+      userId: resumes.userId,
+      resumeJson: resumes.resumeJson,
+      currentRevision: resumes.currentRevision
+    })
+    .from(resumes)
+    .where(eq(resumes.id, resumeId))
+    .limit(1)
 
   if (!currentResume) {
     throw new Error(`No resume found with id: ${resumeId}`)
   }
 
-  if (currentResume.user_id !== actorId) {
+  if (currentResume.userId !== actorId) {
     throw new Error("Forbidden: You do not own this resume")
   }
 
-  if (!currentResume.resume_json) {
+  if (!currentResume.resumeJson) {
     throw new Error(`Resume data not found for id: ${resumeId}`)
   }
 
   return {
     ...currentResume,
-    resume_json: normalizeResumeDateRanges(
-      currentResume.resume_json as ResumeData
-    )
+    resumeJson: normalizeResumeDateRanges(currentResume.resumeJson)
   }
 }
 
 async function rollbackCommittedResumeUpdate({
-  supabase,
+  db,
   resumeId,
   expectedRevision,
   previousResume,
   previousRevision
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   resumeId: string
   expectedRevision: number
   previousResume: ResumeData
   previousRevision: number
 }) {
-  await supabase
-    .from("resumes")
-    .update({
-      resume_json: previousResume,
-      current_revision: previousRevision,
-      evaluation_report_refresh_flag: true
+  await db
+    .update(resumes)
+    .set({
+      resumeJson: previousResume,
+      currentRevision: previousRevision,
+      evaluationReportRefreshFlag: true
     })
-    .eq("id", resumeId)
-    .eq("current_revision", expectedRevision)
+    .where(
+      and(
+        eq(resumes.id, resumeId),
+        eq(resumes.currentRevision, expectedRevision)
+      )
+    )
 }
 
 async function updateResumeAtRevision({
-  supabase,
+  db,
   resumeId,
   expectedRevision,
   nextRevision,
   nextResume
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   resumeId: string
   expectedRevision: number
   nextRevision: number
   nextResume: ResumeData
 }) {
-  const updateQuery = supabase
-    .from("resumes")
-    .update(
-      {
-        resume_json: nextResume,
-        current_revision: nextRevision,
-        evaluation_report_refresh_flag: true
-      },
-      { count: "exact" }
+  const updated = await db
+    .update(resumes)
+    .set({
+      resumeJson: nextResume,
+      currentRevision: nextRevision,
+      evaluationReportRefreshFlag: true
+    })
+    .where(
+      and(
+        eq(resumes.id, resumeId),
+        eq(resumes.currentRevision, expectedRevision)
+      )
     )
-    .eq("id", resumeId)
-    .eq("current_revision", expectedRevision)
+    .returning({ id: resumes.id })
 
-  const { error, count } = await updateQuery
-
-  if (error) {
-    throw error
-  }
-
-  return count !== 0
+  return updated.length !== 0
 }
 
 async function commitNormalizedResume<TMetadata>({
-  supabase,
+  db,
   resumeId,
   currentResume,
   nextResume,
   eventId,
   metadata
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   resumeId: string
   currentResume: CurrentResumeRow
   nextResume: ResumeData
   eventId?: string | null
   metadata: TMetadata
 }): Promise<ResumeCommitResult<TMetadata> | null> {
-  const normalizedCurrentResume = currentResume.resume_json as ResumeData
+  const normalizedCurrentResume = currentResume.resumeJson
   const normalizedNextResume = normalizeResumeDateRanges(nextResume)
 
   if (isDeepStrictEqual(normalizedCurrentResume, normalizedNextResume)) {
     return {
       resume: normalizedCurrentResume,
-      currentRevision: currentResume.current_revision,
-      baseRevision: currentResume.current_revision,
+      currentRevision: currentResume.currentRevision,
+      baseRevision: currentResume.currentRevision,
       metadata
     }
   }
 
-  const nextRevision = currentResume.current_revision + 1
+  const nextRevision = currentResume.currentRevision + 1
   const didUpdate = await updateResumeAtRevision({
-    supabase,
+    db,
     resumeId,
-    expectedRevision: currentResume.current_revision,
+    expectedRevision: currentResume.currentRevision,
     nextRevision,
     nextResume: normalizedNextResume
   })
@@ -177,7 +178,7 @@ async function commitNormalizedResume<TMetadata>({
 
   try {
     await insertResumeSnapshot({
-      supabase,
+      db,
       resumeId,
       revision: nextRevision,
       resume: normalizedNextResume,
@@ -185,11 +186,11 @@ async function commitNormalizedResume<TMetadata>({
     })
   } catch (error) {
     await rollbackCommittedResumeUpdate({
-      supabase,
+      db,
       resumeId,
       expectedRevision: nextRevision,
       previousResume: normalizedCurrentResume,
-      previousRevision: currentResume.current_revision
+      previousRevision: currentResume.currentRevision
     }).catch((rollbackError) => {
       console.error(
         "Failed to compensate resume snapshot failure:",
@@ -207,20 +208,20 @@ async function commitNormalizedResume<TMetadata>({
   return {
     resume: normalizedNextResume,
     currentRevision: nextRevision,
-    baseRevision: currentResume.current_revision,
+    baseRevision: currentResume.currentRevision,
     metadata
   }
 }
 
 export async function commitResumeChange({
-  supabase,
+  db,
   actorId,
   resumeId,
   nextResume,
   eventId,
   baseRevision
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   actorId: string
   resumeId: string
   nextResume: ResumeData
@@ -228,23 +229,23 @@ export async function commitResumeChange({
   baseRevision?: number | null
 }): Promise<AuthoritativeResumeState> {
   const currentResume = await readCurrentResume({
-    supabase,
+    db,
     actorId,
     resumeId
   })
 
   if (
     typeof baseRevision === "number" &&
-    currentResume.current_revision !== baseRevision
+    currentResume.currentRevision !== baseRevision
   ) {
     throw new ResumeCommitError(
-      `Resume changed from revision ${baseRevision} to ${currentResume.current_revision}. Please reload before saving.`,
+      `Resume changed from revision ${baseRevision} to ${currentResume.currentRevision}. Please reload before saving.`,
       "stale-json-conflict"
     )
   }
 
   const commitResult = await commitNormalizedResume({
-    supabase,
+    db,
     resumeId,
     currentResume,
     nextResume,
@@ -266,14 +267,14 @@ export async function commitResumeChange({
 }
 
 export async function commitResumeOperation<TMetadata>({
-  supabase,
+  db,
   actorId,
   resumeId,
   eventId,
   operation,
   maxAttempts = 3
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   actorId: string
   resumeId: string
   eventId?: string | null
@@ -287,17 +288,17 @@ export async function commitResumeOperation<TMetadata>({
 }): Promise<ResumeCommitResult<TMetadata>> {
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const currentResume = await readCurrentResume({
-      supabase,
+      db,
       actorId,
       resumeId
     })
     const { nextResume, metadata } = await operation({
-      resume: currentResume.resume_json as ResumeData,
-      currentRevision: currentResume.current_revision
+      resume: currentResume.resumeJson,
+      currentRevision: currentResume.currentRevision
     })
 
     const commitResult = await commitNormalizedResume({
-      supabase,
+      db,
       resumeId,
       currentResume,
       nextResume,

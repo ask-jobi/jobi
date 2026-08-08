@@ -41,7 +41,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(validRequestBody)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(200)
       expect(data).toEqual(mockResponse)
@@ -66,7 +66,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(englishRequestBody)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(200)
       expect(data).toEqual(mockResponse)
@@ -82,7 +82,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(invalidBody as RewriteEntryRequest)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("required fields are missed")
@@ -97,7 +97,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(invalidBody as RewriteEntryRequest)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("required fields are missed")
@@ -112,7 +112,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(invalidBody as RewriteEntryRequest)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("required fields are missed")
@@ -127,7 +127,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(invalidBody as RewriteEntryRequest)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("required fields are missed")
@@ -142,7 +142,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(validRequestBody)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(500)
       expect(data.error).toBe("internal server error")
@@ -161,7 +161,7 @@ describe("POST /api/resume/rewrite-entry", () => {
       )
 
       const response = await POST(invalidRequest)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(500)
       expect(data.error).toBe("internal server error")
@@ -184,7 +184,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(specialCharBody)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(200)
       expect(data).toEqual(mockResponse)
@@ -203,7 +203,7 @@ describe("POST /api/resume/rewrite-entry", () => {
 
       const request = createMockRequest(longBody)
       const response = await POST(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(200)
       expect(data).toEqual(mockResponse)

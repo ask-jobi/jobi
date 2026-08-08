@@ -1,257 +1,100 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getDatabase } from "@/lib/db/client"
 import {
+  deleteApplication,
+  findApplicationById,
+  findApplicationByResumeId,
+  getResumeForPrint,
+  getResumeState,
+  listApplications,
+  updateJobDescription
+} from "@/server/data/applications"
+import {
+  requireVerifiedAuthContext,
+  requireVerifiedUserIdentity
+} from "@/server/auth-helper"
+import { commitResumeChange } from "@/server/resume/commit"
+import type {
   AuthoritativeResumeState,
   ResumeData,
   ResumeJobDescription
 } from "@/types/resume"
-import { Locale } from "@/lib/i18n/config"
+import type { Locale } from "@/lib/i18n/config"
 import type { RollbackRegistry } from "@/server/intake/types"
-import { requireVerifiedAuthContext } from "@/server/auth-helper"
-import {
-  BUCKET_NAME,
-  extractFilePathFromPublicUrl,
-  generateUploadedResumeFileName
-} from "./utils"
-import { commitResumeChange } from "./resume/commit"
-import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
-
-function normalizeJobApplicationResumeJson<
-  T extends { resumes?: Record<string, unknown> }
->(jobApplication: T): T {
-  const resumeJson = jobApplication.resumes?.resume_json
-
-  if (!resumeJson) {
-    return jobApplication
-  }
-
-  return {
-    ...jobApplication,
-    resumes: {
-      ...jobApplication.resumes,
-      resume_json: normalizeResumeDateRanges(resumeJson as ResumeData)
-    }
-  }
-}
 
 export async function fetchJobApplication() {
-  const supabase = await createClient()
-
-  const { data: jobApplications } = await supabase.from("job_applications")
-    .select(`
-            id,
-            optimized_resume_url,
-            created_at,
-            resumes:resume_id (
-                id,
-                upload_url,
-                resume_json,
-                current_revision
-            ),
-            jobs:job_id (
-                id,
-                name,
-                company,
-                description
-            )
-        `)
-
-  return jobApplications
+  const user = await requireVerifiedUserIdentity()
+  return listApplications(user.id)
 }
 
 export async function getJobApplicationByResumeId(applicationResumeId: string) {
-  const supabase = await createClient()
+  const user = await requireVerifiedUserIdentity()
+  const application = await findApplicationByResumeId(
+    user.id,
+    applicationResumeId
+  )
 
-  const { data: jobApplications, error } = await supabase
-    .from("job_applications")
-    .select(
-      `
-          id,
-          optimized_resume_url,
-          created_at,
-          resumes:resume_id (
-              id,
-              upload_url,
-              evaluation_report,
-              language,
-              resume_json,
-              current_revision
-          ),
-          jobs:job_id (
-              id,
-              name,
-              company,
-              description
-          )
-      `
-    )
-    .eq("resume_id", applicationResumeId)
-
-  if (error) {
-    throw new Error(`Failed to fetch job application: ${error.message}`)
-  }
-
-  if (!jobApplications || jobApplications.length === 0) {
+  if (!application) {
     throw new Error(
       `No job application found with resume id: ${applicationResumeId}`
     )
   }
 
-  if (jobApplications.length > 1) {
-    throw new Error(
-      `Multiple job applications found with resume id: ${applicationResumeId}`
-    )
-  }
-
-  const jobApplication = jobApplications[0]
-  return normalizeJobApplicationResumeJson(jobApplication)
+  return application
 }
 
 export async function getJobApplication(jobApplicationId: string) {
-  const supabase = await createClient()
+  const user = await requireVerifiedUserIdentity()
+  const application = await findApplicationById(user.id, jobApplicationId)
 
-  const { data: jobApplications, error } = await supabase
-    .from("job_applications")
-    .select(
-      `
-          id,
-          optimized_resume_url,
-          created_at,
-          resumes:resume_id (
-              id,
-              upload_url,
-              evaluation_report,
-              language,
-              resume_json,
-              current_revision
-          ),
-          jobs:job_id (
-              id,
-              name,
-              company,
-              description
-          )
-      `
-    )
-    .eq("id", jobApplicationId)
-
-  if (error) {
-    throw new Error(`Failed to fetch job application: ${error.message}`)
-  }
-
-  if (!jobApplications || jobApplications.length === 0) {
+  if (!application) {
     throw new Error(`No job application found with id: ${jobApplicationId}`)
   }
 
-  if (jobApplications.length > 1) {
-    throw new Error(
-      `Multiple job applications found with id: ${jobApplicationId}`
-    )
-  }
-
-  const jobApplication = jobApplications[0]
-  return normalizeJobApplicationResumeJson(jobApplication)
+  return application
 }
 
 export async function getApplicationResumeData(
   id: string
 ): Promise<AuthoritativeResumeState> {
-  const supabase = await createClient()
+  const user = await requireVerifiedUserIdentity()
+  const state = await getResumeState(user.id, id)
 
-  const { data: resume, error } = await supabase
-    .from("resumes")
-    .select(
-      `
-      id,
-      resume_json,
-      current_revision
-    `
-    )
-    .eq("id", id)
-
-  if (error) {
-    throw new Error(`Failed to fetch resume: ${error.message}`)
-  }
-
-  if (!resume || resume.length === 0) {
+  if (!state) {
     throw new Error(`No resume found with id: ${id}`)
   }
 
-  if (resume.length > 1) {
-    throw new Error(`Multiple resume found with id: ${id}`)
-  }
-
-  return {
-    resume: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
-    currentRevision: resume[0].current_revision
-  }
+  return state
 }
 
 export async function getApplicationResumeForPrint(id: string): Promise<{
   resumeData: ResumeData
   language: Locale
 }> {
-  const supabase = await createClient()
+  const user = await requireVerifiedUserIdentity()
+  const result = await getResumeForPrint(user.id, id)
 
-  const { data: resume, error } = await supabase
-    .from("resumes")
-    .select(
-      `
-      id,
-      language,
-      resume_json
-    `
-    )
-    .eq("id", id)
-
-  if (error) {
-    throw new Error(`Failed to fetch resume: ${error.message}`)
-  }
-
-  if (!resume || resume.length === 0) {
+  if (!result) {
     throw new Error(`No resume found with id: ${id}`)
   }
 
-  if (resume.length > 1) {
-    throw new Error(`Multiple resume found with id: ${id}`)
-  }
-
-  return {
-    resumeData: normalizeResumeDateRanges(resume[0].resume_json as ResumeData),
-    language: resume[0].language as Locale
-  }
+  return result
 }
 
 export async function uploadResumeFile(
-  resumeFile: File,
-  rollback?: RollbackRegistry
-) {
-  const { supabase, user } = await requireVerifiedAuthContext()
-
-  const fileName = generateUploadedResumeFileName(user.id, resumeFile.name)
-
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(fileName, resumeFile)
-
-  if (uploadError) {
-    throw new Error(`Failed to upload file: ${uploadError.message}`)
-  }
-
-  if (rollback) {
-    rollback.register("storage", "delete-uploaded-file", async () => {
-      await supabase.storage.from(BUCKET_NAME).remove([fileName])
-    })
-  }
-
-  const {
-    data: { publicUrl }
-  } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName)
+  _resumeFile: File,
+  _rollback?: RollbackRegistry
+): Promise<{
+  fileName: string | null
+  filePath: string | null
+  userId: string
+}> {
+  const user = await requireVerifiedUserIdentity()
 
   return {
-    fileName,
-    publicUrl,
+    fileName: null,
+    filePath: null,
     userId: user.id
   }
 }
@@ -259,22 +102,8 @@ export async function uploadResumeFile(
 export async function updateResumeJobDescription(
   jobDescription: ResumeJobDescription
 ) {
-  const supabase = await createClient()
-  const { id, ...payload } = jobDescription
-  const { error } = await supabase.from("jobs").update(payload).eq("id", id)
-
-  if (error) throw error
-
-  const { error: flagError } = await supabase
-    .from("resumes")
-    .update({ evaluation_report_refresh_flag: true })
-    .eq("job_id", id)
-
-  if (flagError) {
-    throw new Error(
-      `Failed to mark evaluation refresh flag: ${flagError.message}`
-    )
-  }
+  const user = await requireVerifiedUserIdentity()
+  await updateJobDescription(user.id, jobDescription)
 }
 
 export async function saveApplicationResumeChange(
@@ -282,10 +111,10 @@ export async function saveApplicationResumeChange(
   data: ResumeData,
   options: { baseRevision?: number | null } = {}
 ) {
-  const { supabase, user } = await requireVerifiedAuthContext()
+  const { db, user } = await requireVerifiedAuthContext()
 
   return commitResumeChange({
-    supabase,
+    db,
     actorId: user.id,
     resumeId,
     nextResume: data,
@@ -294,78 +123,6 @@ export async function saveApplicationResumeChange(
 }
 
 export async function deleteJobApplication(jobApplicationId: string) {
-  const { supabase, user } = await requireVerifiedAuthContext()
-
-  // 先验证该 jobApplication 是否存在且属于当前用户，同时获取关联的 resume 信息
-  const { data: jobApplication, error: fetchError } = await supabase
-    .from("job_applications")
-    .select(
-      `
-      id, 
-      resumes:resume_id (
-        id,
-        upload_url
-      ),
-      jobs:job_id (
-        id
-      )
-    `
-    )
-    .eq("id", jobApplicationId)
-    .single()
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch job application: ${fetchError.message}`)
-  }
-
-  if (!jobApplication) {
-    throw new Error(`Job application not found with id: ${jobApplicationId}`)
-  }
-
-  console.log(jobApplication)
-
-  const { error: deleteError } = await supabase
-    .from("job_applications")
-    .delete()
-    .eq("id", jobApplicationId)
-
-  if (deleteError) {
-    throw new Error(`Failed to delete job application: ${deleteError.message}`)
-  }
-
-  const { error: deleteResumeError } = await supabase
-    .from("resumes")
-    .delete()
-    .eq("id", jobApplication.resumes.id)
-
-  if (deleteResumeError) {
-    throw new Error(`Failed to delete resume: ${deleteResumeError.message}`)
-  }
-
-  const { error: deleteJobError } = await supabase
-    .from("jobs")
-    .delete()
-    .eq("id", jobApplication.jobs.id)
-
-  if (deleteJobError) {
-    throw new Error(`Failed to delete job: ${deleteJobError.message}`)
-  }
-
-  if (jobApplication.resumes.upload_url) {
-    const filePath = extractFilePathFromPublicUrl(
-      jobApplication.resumes.upload_url
-    )
-    if (filePath) {
-      const { error: fileDeleteError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove([filePath])
-
-      if (fileDeleteError) {
-        console.warn(
-          `Failed to delete resume file (${filePath}):`,
-          fileDeleteError.message
-        )
-      }
-    }
-  }
+  const user = await requireVerifiedUserIdentity()
+  await deleteApplication(user.id, jobApplicationId)
 }

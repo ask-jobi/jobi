@@ -6,7 +6,6 @@ import { resumeParsePrompt } from "./prompts/resume-parse.prompt"
 import { Locale } from "@/lib/i18n/config"
 import { model } from "@/server/ai/model"
 import { nanoid } from "nanoid"
-import { parseTokenUsage, type TokenUsage } from "@/lib/agent/token-usage"
 import { normalizeDateEnd } from "@/lib/resume/date-ranges"
 
 const EMPTY_RESUME_TEXT_ERROR =
@@ -219,18 +218,6 @@ const resumeSchema = z.object({
 export const parseResume = async (
   resumeText: string
 ): Promise<[ResumeData, Locale]> => {
-  const { resumeData, language } = await parseResumeWithTokenUsage(resumeText)
-
-  return [resumeData, language]
-}
-
-export const parseResumeWithTokenUsage = async (
-  resumeText: string
-): Promise<{
-  resumeData: ResumeData
-  language: Locale
-  tokenUsage: TokenUsage
-}> => {
   const normalizedResumeText = resumeText.trim()
   if (!normalizedResumeText) {
     throw new Error(EMPTY_RESUME_TEXT_ERROR)
@@ -241,7 +228,6 @@ export const parseResumeWithTokenUsage = async (
   })
 
   let validatedData: z.infer<typeof resumeSchema>
-  let totalUsage: TokenUsage
 
   try {
     const structured = await generateText({
@@ -254,7 +240,6 @@ export const parseResumeWithTokenUsage = async (
       maxRetries: 3
     })
     validatedData = resumeSchema.parse(structured.output)
-    totalUsage = parseTokenUsage(structured.totalUsage)
   } catch (error) {
     console.warn(
       "Structured resume parsing failed",
@@ -289,12 +274,7 @@ export const parseResumeWithTokenUsage = async (
     certifications: applyEntryId(validatedData.certifications)
   }
 
-  // TODO 当存在别的metadata时，优化这里的返回值
-  return {
-    resumeData,
-    language: validatedData._metadata.language as Locale,
-    tokenUsage: totalUsage
-  }
+  return [resumeData, validatedData._metadata.language as Locale]
 }
 
 const applyEntryId = (section: ResumeSection<any> | undefined) => {

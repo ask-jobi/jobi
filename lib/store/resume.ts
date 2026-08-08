@@ -9,7 +9,6 @@ import {
 import type { ResumeEvaluationOutput } from "@/types/evaluation"
 import { toast } from "sonner"
 import { saveApplicationResumeChange } from "@/server/resume"
-import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
 import { normalizeResumeDateRanges } from "@/lib/resume/date-ranges"
 
 export const applicationAtom = atom<JobApplication | null>(null)
@@ -171,13 +170,14 @@ export function useApplicationResume() {
         jobDescription: jobDescription
       })
     })
-    const result = await response.json()
+    const result = (await response.json()) as
+      | ResumeEvaluationOutput
+      | { error?: string }
     if (!response.ok) {
-      toast.error(result.error)
+      toast.error("error" in result ? result.error : "Evaluation failed")
     } else {
-      setResumeEvaluation(result)
+      setResumeEvaluation(result as ResumeEvaluationOutput)
       setEvaluationRefreshFlag(false)
-      notifyTokenBalanceUpdated()
     }
   }
 

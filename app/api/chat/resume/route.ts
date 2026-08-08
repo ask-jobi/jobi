@@ -18,7 +18,6 @@ import {
   updateConversationSummary,
   type ChatHistoryEntry,
   getSessionSummary,
-  updateSessionTokenUsage,
   updateSessionTitle
 } from "@/server/ai/chat/history"
 import { generateConversationSummary } from "@/server/ai/chat/conversation-summary"
@@ -29,29 +28,20 @@ import chatPrompt from "@/server/ai/prompts/resume-chat.prompt"
 import { ResumeData, ResumeJobDescription } from "@/types/resume"
 import { ResumeEvaluationOutput } from "@/types/evaluation"
 import { logSummaryCheckpoint } from "@/server/chat-events"
-import { ChatTokenUsage, ChatUIMessage } from "@/types/chat"
+import { ChatUIMessage } from "@/types/chat"
 import {
   requireVerifiedUserIdentity,
   handleApiError,
   verifyOwnership,
   ApiError
 } from "@/server/auth-helper"
-import { parseTokenUsage } from "@/lib/agent/token-usage"
 import { isDefaultChatSessionTitle } from "@/lib/chat-session-title"
-import {
-  buildChatTokenQuota,
-  consumeChatTokens,
-  getActiveAccessPass,
-  verifyChatTokenQuota
-} from "@/server/quota"
 import { generateChatSessionTitle } from "@/server/ai/chat/session-title-generator"
 import { createResumeChatServerTools } from "@/server/ai/chat/tools/registry"
-import { createClient } from "@/lib/supabase/server"
+import { getDatabase } from "@/lib/db/client"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-const CHAT_TOKEN_LIMIT_MESSAGE =
-  "Your token balance is exhausted. Buy another token bundle to continue chatting."
 const CHAT_STREAM_MAX_OUTPUT_TOKENS = 2048
 const CHAT_STREAM_TIMEOUT_MS = {
   totalMs: 120_000,
@@ -134,38 +124,6 @@ async function loadContextMessages(sessionId: string) {
   }
 }
 
-async function createTokenLimitReachedResponse() {
-  const assistantMessageId = generateUUID()
-  const textPartId = generateUUID()
-
-  const stream = createUIMessageStream<ChatUIMessage>({
-    execute: ({ writer }) => {
-      writer.write({
-        type: "start",
-        messageId: assistantMessageId
-      })
-      writer.write({
-        type: "text-start",
-        id: textPartId
-      })
-      writer.write({
-        type: "text-delta",
-        id: textPartId,
-        delta: CHAT_TOKEN_LIMIT_MESSAGE
-      })
-      writer.write({
-        type: "text-end",
-        id: textPartId
-      })
-      writer.write({
-        type: "finish"
-      })
-    }
-  })
-
-  return createUIMessageStreamResponse({ stream })
-}
-
 export async function POST(request: NextRequest) {
   try {
     const user = await requireVerifiedUserIdentity()
@@ -174,23 +132,6 @@ export async function POST(request: NextRequest) {
       await request.json()
 
     await verifyOwnership(sessionId, user.id)
-
-    const activeAccessPass = await getActiveAccessPass(user.id)
-
-    if (activeAccessPass) {
-      try {
-        const chatTokenQuota = buildChatTokenQuota(activeAccessPass)
-        verifyChatTokenQuota(chatTokenQuota.used, chatTokenQuota.limit)
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message === "Chat token limit reached"
-        ) {
-          return createTokenLimitReachedResponse()
-        }
-        throw error
-      }
-    }
 
     const [currentSession, loadedContextMessages] = await Promise.all([
       getSessionSummary(sessionId),
@@ -274,9 +215,9 @@ export async function POST(request: NextRequest) {
       onError: getChatStreamErrorMessage,
       execute: async ({ writer: dataStream }) => {
         const assistantMessageId = generateUUID()
-        const supabase = await createClient()
+        const db = await getDatabase()
         const serverTools = createResumeChatServerTools({
-          supabase,
+          db,
           userId: user.id,
           resumeId,
           sessionId,
@@ -304,28 +245,7 @@ export async function POST(request: NextRequest) {
           result.toUIMessageStream({
             generateMessageId: () => assistantMessageId,
             sendReasoning: true,
-            onError: getChatStreamErrorMessage,
-            messageMetadata: ({ part }) => {
-              if (part.type !== "finish") {
-                return undefined
-              }
-
-              const normalizedUsage = parseTokenUsage(part.totalUsage)
-
-              if (normalizedUsage.totalTokens <= 0) {
-                return undefined
-              }
-
-              const tokenUsage: ChatTokenUsage = {
-                inputTokens: normalizedUsage.inputTokens,
-                outputTokens: normalizedUsage.outputTokens,
-                cachedTokens: normalizedUsage.cachedTokens,
-                reasoningTokens: normalizedUsage.reasoningTokens,
-                totalTokens: normalizedUsage.totalTokens
-              }
-
-              return { tokenUsage }
-            }
+            onError: getChatStreamErrorMessage
           })
         )
 
@@ -343,29 +263,18 @@ export async function POST(request: NextRequest) {
             })
         }
       },
-      onFinish: async ({ messages: finishedMessages, responseMessage }) => {
-        const responseUsage = responseMessage.metadata?.tokenUsage
+      onFinish: async ({ messages: finishedMessages }) => {
         const persistenceTasks: Promise<void | unknown>[] = []
 
         for (const finishedMsg of finishedMessages.filter(
           (msg) => msg.id !== "system"
         )) {
-          const usageForMessage =
-            responseUsage && responseMessage.id === finishedMsg.id
-              ? {
-                  inputTokens: responseUsage.inputTokens,
-                  outputTokens: responseUsage.outputTokens,
-                  cachedTokens: responseUsage.cachedTokens,
-                  reasoningTokens: responseUsage.reasoningTokens
-                }
-              : {}
           const existingMsg = allMessages.find((m) => m.id === finishedMsg.id)
           if (existingMsg) {
             persistenceTasks.push(
               updateMessage({
                 messageId: existingMsg.id,
-                parts: finishedMsg.parts,
-                ...usageForMessage
+                parts: finishedMsg.parts
               })
             )
           } else {
@@ -375,43 +284,13 @@ export async function POST(request: NextRequest) {
                 id: finishedMsg.id,
                 sessionId,
                 role: finishedMsg.role,
-                parts: finishedMsg.parts,
-                ...usageForMessage
+                parts: finishedMsg.parts
               })
             )
           }
         }
 
         await Promise.all(persistenceTasks)
-
-        if (responseUsage && responseUsage.totalTokens > 0) {
-          await updateSessionTokenUsage(sessionId).catch((err) => {
-            console.error("Failed to update session token usage:", err)
-          })
-
-          if (activeAccessPass) {
-            try {
-              const latestAccessPass = await getActiveAccessPass(user.id)
-
-              if (latestAccessPass) {
-                const latestQuota = buildChatTokenQuota(latestAccessPass)
-                const remainingTokens = Math.max(
-                  latestQuota.limit - latestQuota.used,
-                  0
-                )
-
-                if (remainingTokens >= responseUsage.totalTokens) {
-                  await consumeChatTokens(
-                    latestAccessPass.id,
-                    responseUsage.totalTokens
-                  )
-                }
-              }
-            } catch (err) {
-              console.error("Failed to update access pass token usage:", err)
-            }
-          }
-        }
 
         if (contextMessages.length >= 10) {
           void generateConversationSummary(

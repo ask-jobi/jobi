@@ -5,12 +5,20 @@ import { POST } from "./route"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as chatHistoryModule from "@/server/ai/chat/history"
-import * as supabaseModule from "@/lib/supabase/server"
+import * as authModule from "@/server/auth-helper"
 import * as resumeModule from "@/server/resume"
 import * as commitModule from "@/server/resume/commit"
 import type { ResumeData } from "@/types/resume"
 
-vi.mock("@/lib/supabase/server")
+vi.mock("@/lib/db/client", () => ({ getDatabase: vi.fn(async () => ({})) }))
+vi.mock("@/server/auth-helper", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/auth-helper")>()
+  return {
+    ...actual,
+    requireVerifiedUserIdentity: vi.fn(),
+    verifyOwnership: vi.fn()
+  }
+})
 vi.mock("@/server/ai/chat/history")
 vi.mock("@/server/resume")
 vi.mock("@/server/resume/commit")
@@ -27,32 +35,10 @@ describe("POST /api/chat/truncate", () => {
     currentResume = baseResume()
     committedResume = undefined
 
-    const mockSupabaseClient = {
-      auth: {
-        getClaims: vi.fn()
-      },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: "msg-1",
-                session_id: "session-1"
-              },
-              error: null
-            })
-          })
-        })
-      })
-    } as any
-    vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
-
-    vi.mocked(mockSupabaseClient.auth.getClaims).mockResolvedValue({
-      data: { claims: { sub: "test-user-id" } },
-      error: null
+    vi.mocked(authModule.requireVerifiedUserIdentity).mockResolvedValue({
+      id: "test-user-id"
     })
-
-    vi.mocked(chatHistoryModule.verifySessionOwnership).mockResolvedValue(true)
+    vi.mocked(authModule.verifyOwnership).mockResolvedValue()
     vi.mocked(chatHistoryModule.getMessage).mockResolvedValue({
       id: "msg-1",
       session_id: "session-1",
@@ -60,13 +46,18 @@ describe("POST /api/chat/truncate", () => {
       parts: [],
       truncated: false,
       has_tools: false,
-      created_at: "2024-01-01T00:00:00Z",
-      input_tokens: 0,
-      output_tokens: 0,
-      cached_tokens: 0,
-      reasoning_tokens: 0
+      created_at: "2024-01-01T00:00:00Z"
     })
     vi.mocked(chatHistoryModule.getMessagesAfter).mockResolvedValue([])
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue({
+      id: "session-1",
+      title: null,
+      resumeId: "resume-1",
+      status: "active",
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z",
+      messageCount: 0
+    })
     vi.mocked(chatHistoryModule.truncateMessages).mockResolvedValue()
     vi.mocked(
       chatHistoryModule.restoreConversationSummaryAfterTruncate
@@ -165,14 +156,9 @@ describe("POST /api/chat/truncate", () => {
   })
 
   it("should return 401 when user is not authenticated", async () => {
-    vi.mocked(supabaseModule.createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: null },
-          error: new Error("Not authenticated")
-        })
-      }
-    } as any)
+    vi.mocked(authModule.requireVerifiedUserIdentity).mockRejectedValue(
+      new authModule.ApiError("Unauthorized", 401)
+    )
 
     const request = createMockRequest({
       messageId: "550e8400-e29b-41d4-a716-446655440000"
@@ -192,24 +178,7 @@ describe("POST /api/chat/truncate", () => {
   })
 
   it("should return 404 when message not found", async () => {
-    vi.mocked(supabaseModule.createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: { sub: "test-user-id" } },
-          error: null
-        })
-      },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: new Error("Not found")
-            })
-          })
-        })
-      })
-    } as any)
+    vi.mocked(chatHistoryModule.getMessage).mockResolvedValue(null)
 
     const request = createMockRequest({
       messageId: "550e8400-e29b-41d4-a716-446655440000"
@@ -220,7 +189,9 @@ describe("POST /api/chat/truncate", () => {
   })
 
   it("should return 403 when user does not own the session", async () => {
-    vi.mocked(chatHistoryModule.verifySessionOwnership).mockResolvedValue(false)
+    vi.mocked(authModule.verifyOwnership).mockRejectedValue(
+      new authModule.ApiError("Forbidden", 403)
+    )
 
     const request = createMockRequest({
       messageId: "550e8400-e29b-41d4-a716-446655440000"
@@ -231,24 +202,7 @@ describe("POST /api/chat/truncate", () => {
   })
 
   it("should return 404 when session not found", async () => {
-    vi.mocked(supabaseModule.createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: { sub: "test-user-id" } },
-          error: null
-        })
-      },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: new Error("Session not found")
-            })
-          })
-        })
-      })
-    } as any)
+    vi.mocked(chatHistoryModule.getSessionSummary).mockResolvedValue(null)
 
     const request = createMockRequest({
       messageId: "550e8400-e29b-41d4-a716-446655440000"
@@ -267,11 +221,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -317,11 +267,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -370,11 +316,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -419,11 +361,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -476,11 +414,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -528,11 +462,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -584,11 +514,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -645,11 +571,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -705,11 +627,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: true,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
     vi.mocked(chatHistoryModule.extractAiResumeEditOutputs).mockReturnValue([
@@ -743,11 +661,7 @@ describe("POST /api/chat/truncate", () => {
         parts: [],
         truncated: false,
         has_tools: false,
-        created_at: "2024-01-01T00:01:00Z",
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0
+        created_at: "2024-01-01T00:01:00Z"
       }
     ])
 

@@ -29,12 +29,7 @@ async function createEmptyApplication(request: APIRequestContext) {
 }
 
 test.describe("Chat Feature", () => {
-  test.beforeEach(async ({ page, request }, testInfo) => {
-    if (testInfo.project.name === "chromium-no-auth") {
-      await page.goto("/auth/login")
-      return
-    }
-
+  test.beforeEach(async ({ page, request }) => {
     const applicationId = await createEmptyApplication(request)
     await page.goto(`/application/${applicationId}/resume`, {
       waitUntil: "domcontentloaded"
@@ -43,25 +38,14 @@ test.describe("Chat Feature", () => {
     await page.getByRole("button", { name: "AI Chat" }).click()
   })
 
-  test("should load chat page without error", async ({ page }, testInfo) => {
+  test("should load chat page without error", async ({ page }) => {
     await expect(page.locator("body")).toBeVisible()
-
-    if (testInfo.project.name === "chromium-no-auth") {
-      await expect(page).toHaveURL(/.*\/auth\/login/)
-      return
-    }
 
     await page.waitForURL(/.*\/application\/.*\/resume/, { timeout: 15000 })
     await expect(page.getByLabel("Message input")).toBeVisible()
   })
 
-  test("should have form structure", async ({ page }, testInfo) => {
-    if (testInfo.project.name === "chromium-no-auth") {
-      await expect(page.locator("form")).toBeVisible()
-      await expect(page.getByRole("button", { name: "Login" })).toBeVisible()
-      return
-    }
-
+  test("should have form structure", async ({ page }) => {
     await expect(page.getByLabel("Message input")).toBeVisible()
     await expect(
       page.getByRole("button", { name: "Send message" })
@@ -70,25 +54,15 @@ test.describe("Chat Feature", () => {
 })
 
 test.describe("Application Chat Tab", () => {
-  test.beforeEach(async ({ page, request }, testInfo) => {
-    if (testInfo.project.name === "chromium-no-auth") {
-      await page.goto("/application/test-id")
-      return
-    }
-
+  test.beforeEach(async ({ page, request }) => {
     const applicationId = await createEmptyApplication(request)
     await page.goto(`/application/${applicationId}`, {
       waitUntil: "domcontentloaded"
     })
   })
 
-  test("should load application page", async ({ page }, testInfo) => {
+  test("should load application page", async ({ page }) => {
     await expect(page.locator("body")).toBeVisible()
-
-    if (testInfo.project.name === "chromium-no-auth") {
-      await expect(page).toHaveURL(/.*\/auth\/login/)
-      return
-    }
 
     await page.waitForURL(/.*\/application\/.*\/resume/, { timeout: 15000 })
     await expect(page.getByRole("button", { name: "AI Chat" })).toBeVisible()

@@ -19,7 +19,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Keep local E2E stable against a shared Next dev server + local Supabase stack. */
+  /* Keep local E2E stable against a shared Next dev server + local D1 database. */
   workers: process.env.PW_E2E_WORKERS ? Number(process.env.PW_E2E_WORKERS) : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
@@ -34,21 +34,11 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
       use: {
-        ...devices["Desktop Chrome"],
-        storageState: "test/e2e/.auth/user.json"
-      },
-      dependencies: ["setup"]
-    },
-    {
-      name: "chromium-no-auth",
-      use: {
         ...devices["Desktop Chrome"]
-      },
-      testMatch: /.*chat\.spec\.ts/
+      }
     }
 
     // {

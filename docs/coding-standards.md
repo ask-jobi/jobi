@@ -6,19 +6,19 @@
 - 优先精确定义类型，避免 `any`；确实需要边界兜底时优先用 `unknown` + 类型守卫
 - 共享领域模型集中在 `types/`，其中简历核心类型以 `types/resume.ts` 为准
 - 新增 resume 相关代码时，优先使用 `Application Resume / Section / Entry / Job Description` 这套术语，和 `CONTEXT.md` 保持一致
-- Supabase schema 变更后，必须同步更新 `types/supabase.ts`
+- D1 schema 变更必须同时更新 `db/migrations/` 与 `lib/db/schema.ts`
 
 ## 目录约定
 
 - `app/`：App Router 页面、布局、路由处理器
 - `components/ui/`：基础 UI 组件与 layout primitives
-- `components/client-components/`：跨页面客户端壳层组件（如 sidebar、pricing、登录状态相关）
+- `components/client-components/`：跨页面客户端壳层组件（如 sidebar、header）
 - `components/resumes/`：简历编辑器页面级组件
 - `components/resume-templates/`：模板渲染、section action、打印相关视图
-- `components/forms/`：各 section/JD/auth 表单
+- `components/forms/`：各 section 与 JD 表单
 - `components/agent/`：聊天与 AI 工具输出 UI
-- `lib/`：前端可复用逻辑、store、hooks、template helpers、i18n、payment helpers
-- `server/`：服务端业务逻辑、AI 编排、quota、rollback、auth helpers
+- `lib/`：前端可复用逻辑、store、hooks、template helpers、i18n、D1 client/schema
+- `server/`：服务端业务逻辑、AI 编排、rollback、identity/ownership helpers
 
 ## 导出约定
 

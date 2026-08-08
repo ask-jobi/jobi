@@ -1,7 +1,8 @@
 import "server-only"
 
 import { tool, type UIMessageStreamWriter } from "ai"
-import type { SupabaseClient } from "@supabase/supabase-js"
+
+import type { AppDatabase } from "@/lib/db/client"
 import {
   resumeEditorModifyInputExamples,
   resumeEditorModifyInputSchema,
@@ -24,7 +25,6 @@ import type {
   ResumeEditorModifyInput,
   ResumeEditorReorderInput
 } from "@/types/chat"
-import type { Database } from "@/types/supabase"
 import type { ResumeData } from "@/types/resume"
 
 type ResumeEditorToolOutput =
@@ -32,7 +32,7 @@ type ResumeEditorToolOutput =
   | Awaited<ReturnType<typeof executeResumeEditorReorderTool>>
 
 export function createResumeChatServerTools({
-  supabase,
+  db,
   userId,
   resumeId,
   sessionId,
@@ -41,7 +41,7 @@ export function createResumeChatServerTools({
   initialRevision,
   writer
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   userId: string
   resumeId: string
   sessionId: string
@@ -86,7 +86,7 @@ export function createResumeChatServerTools({
     })
 
     const authoritativeState = await commitResumeOperation({
-      supabase,
+      db,
       actorId: userId,
       resumeId,
       eventId: toolCallEventId,

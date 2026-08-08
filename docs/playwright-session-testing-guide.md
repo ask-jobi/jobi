@@ -1,6 +1,6 @@
 # Playwright UI 回归检查指引
 
-这份文档用于指导 Agent 在完成代码修改后，快速做一轮页面级 UI 检查，确认主要功能和关键流程没有受到影响。
+这份文档用于指导 Agent 在完成代码修改后做页面级 UI 检查，确认主要功能、匿名 workspace identity 和关键流程没有受到影响。
 
 如需先了解页面结构、路由关系和主要业务路径，请先阅读 `docs/web-structure.md`。
 
@@ -21,7 +21,7 @@ export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 ```
 
-如果环境里已经配置好了 `PWCLI`，后续命令应直接复用，不要在每次调用前重复拼接 `export ...`。
+如果环境里已经配置好了 `PWCLI`，后续命令应直接复用。
 
 ## 建议流程
 
@@ -48,39 +48,20 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - 优先使用已配置好的 `PWCLI`
 - 如果 `PWCLI` 调用失败，先报告错误并停止，不要自动 fallback 到临时脚本
 - 只有用户明确要求编写或运行 Playwright test 文件时，才切换到 `@playwright/test` 工作流
+- 不要预制邮箱密码登录态；使用全新的 browser context 验证匿名 session 初始化
 
 ## 优先检查页面
 
-### 1. 首页 `/`
+### 1. 入口 `/`
 
 重点看：
 
-- 顶部导航是否正常显示
-- Hero 标题、说明、CTA 是否正常
-- `Learn More` 是否跳到 features 区块
-- 三张 feature 截图是否正常加载
+- 是否自动进入 `/dashboard`
+- 是否没有登录、注册、定价、套餐或余额 UI
+- 新浏览器上下文是否能自动建立匿名 session
+- 刷新后是否保持在同一 workspace
 
-### 2. 登录页 `/auth/login`
-
-重点看：
-
-- 输入框、按钮、忘记密码入口是否正常
-- 登录成功后是否进入 `/dashboard`
-
-当前测试账号：
-
-- Email: `mock_normal@mail.com`
-- Password: `mock_normal`
-
-### 3. 定价页 `/pricing`
-
-重点看：
-
-- 3 张 plan card 是否正常展示
-- 未登录点击 CTA 是否跳登录
-- 已登录状态下按钮、提示条、FAQ 是否排版正常
-
-### 4. Dashboard `/dashboard`
+### 2. Dashboard `/dashboard`
 
 重点看：
 
@@ -88,28 +69,35 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - `Create New Resume` 卡片是否可见
 - 历史卡片缩略图、hover 删除按钮是否正常
 - 页面是否存在布局错位或明显空状态异常
+- sidebar 中是否不存在登录、登出、套餐或用量入口
 
-### 5. Application `/application/[id]/resume`
+### 3. Application `/application/[id]/resume`
 
 重点看：
 
 - 进入 `/application/[id]` 后是否自动跳 `/resume`
 - A4 画布是否正常渲染
 - 右侧 `AI Chat` / `Evaluation` tab 是否可切换
-- header 中导出按钮、token usage 是否正常显示
+- header 中导出按钮是否正常显示
+- 页面中是否不存在 token 用量 UI
 - section hover 后编辑操作是否出现
 
 ## 必查主流程
+
+### 匿名 workspace 隔离
+
+- 在 context A 创建一份空白简历
+- 刷新 context A，确认数据仍可访问
+- 新建 context B 打开 `/dashboard`
+- 确认 context B 看不到 context A 的数据
+- 确认整个流程没有显式登录页面或登录弹窗
 
 ### Create New Resume
 
 点击 `Create New Resume` 后，重点检查：
 
 - 弹窗是否正常打开
-- 三步流程是否存在
-  - `Job Information`
-  - `Upload Resume`
-  - `Analyze Resume`
+- 三步流程是否存在：`Job Information`、`Upload Resume`、`Analyze Resume`
 - 空表单点 `Next` 是否出现校验
 - `Create Empty Resume` 是否可走通
 - 上传 PDF 分支的进度条 / 状态切换是否正常
@@ -124,7 +112,7 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - 修改内容并保存
 - 保存后画布内容是否更新
 
-> 当前实现是 **modal 保存**，不是旧版右侧表单直改模式。
+当前实现是 **modal 保存**，不是旧版右侧表单直改模式。
 
 ### JD 编辑
 
@@ -134,19 +122,30 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - `Save` 是否可点击
 - 保存成功后是否出现 toast
 
+## 删除路由检查
+
+确认下列路由返回 404，而不是跳回已删除页面：
+
+- `/auth/login`
+- `/auth/sign-up`
+- `/pricing`
+- `/payment/success`
+
+对已删除的付费、账号和用量 API，可按改动范围补充同类 404 检查。
+
 ## 特别注意
 
-- 这个项目里受控输入框有时对 `fill` 不够稳定，优先用 `click + type`
+- 受控输入框有时对 `fill` 不够稳定，优先用 `click + type`
 - 页面结构变化后，旧元素引用可能失效，记得重新 `snapshot`
-- 如果改动涉及首页、Dashboard、定价页、申请详情、弹窗、表单、登录流、支付流、关键跳转路径，必须做 UI 巡检
+- 如果改动涉及 Dashboard、申请详情、弹窗、表单、匿名 session、导出或关键跳转，必须做 UI 巡检
 - 如果改动影响 resume editor，至少检查一次：打开 modal、保存、evaluation/chat 切换、返回 Dashboard
 - 如果发现错误提示直接暴露原始技术文案，需要记录为 UI/UX 问题
 
 ## 当前已知风险点
 
-- 首页滚动区块和截图区对视口宽度较敏感
 - Dashboard 空状态和有数据状态需要分别观察
-- `test/e2e/helpers/auth-helper.ts` 中仍有旧的 `/resume/` 选择器，需要注意不要照抄
+- 清除 cookie/site data 后会创建新的匿名 workspace，旧 workspace 当前无法恢复
+- 生产环境缺少 `WORKSPACE_COOKIE_SECRET` 或 D1 `DB` binding 时，首次数据请求会失败
 - 空白简历首次进入时，用户视线可能先落到 `Evaluation` 而不是“开始编辑”入口
 
 ## 产物说明

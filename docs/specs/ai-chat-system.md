@@ -8,23 +8,22 @@
 
 每份 `Application Resume` 对应一个 canonical chat session。聊天面板不展示 session 列表/新建入口。右侧工作面板承载 AI Chat 与 Evaluation 两个视图。
 
-Canonical session 由数据库唯一 index `resume_chat_sessions(user_id, resume_id)` 保障。服务端通过 `getOrCreateCanonicalSessionSummary()` 的 upsert / on-conflict 流程获取或创建 session；归档 session 仍是该 resume 的 canonical session，删除后再次获取会创建新的 canonical row。
+Canonical session 由数据库唯一 index `resume_chat_sessions(resume_id)` 保障。服务端通过 `getOrCreateCanonicalSessionSummary()` 的 insert-or-read 流程获取或创建 session；workspace ownership 由关联 resume 和 session 的 `user_id` 显式校验。归档 session 仍是该 resume 的 canonical session，删除后再次获取会创建新的 canonical row。
 
 ## 关键文件
 
 | 文件 | 职责 |
 |---|---|
-| `app/api/chat/resume/route.ts` | Chat API — 额度检查、模型调用、token 记录 |
+| `app/api/chat/resume/route.ts` | Chat API — identity/ownership 校验、模型调用、消息持久化 |
 | `app/api/chat/truncate/route.ts` | 消息截断/撤回 — 通过 inverse operation 恢复 resume 数据 |
 | `lib/agent/tools.ts` | AI SDK tool 定义（resumeEditorModify + resumeEditorReorder） |
 | `lib/agent/schema.ts` | Agent-facing schema 与 tool output schema |
-| `server/ai/chat/history.ts` | Chat history 管理 — 消息过滤、session 维护、token usage 聚合 |
+| `server/ai/chat/history.ts` | Chat history 管理 — 消息过滤、session 维护 |
 | `server/ai/chat/tools/registry.ts` | Server-side tool runtime — 执行工具并提交 authoritative resume patch |
 | `lib/resume/ai-edits.ts` | AI edit apply / invert / rollback metadata 语义 |
 | `server/resume/commit.ts` | Resume 写入并发保护 — revision 条件更新、operation rebase、snapshot |
 | `lib/store/chat.ts` | 前端 chat 状态管理 — thread 生命周期、AI action 状态 |
 | `components/agent/chat-interface.tsx` | Chat UI — 消息渲染、tool output card、input composer |
-| `server/quota.ts` | Token 额度查询 — `getActiveAccessPass`、剩余额度 |
 | `server/resume.ts` | 手动编辑保存入口 — 完整 `resume_json` replacement |
 
 ## Chat 消息
@@ -44,21 +43,8 @@ Canonical session 由数据库唯一 index `resume_chat_sessions(user_id, resume
 - 应用层过滤 `truncated = false`（RLS 不负责）
 - `has_tools` 字段在消息保存/更新时自动维护
 - 截断后恢复 conversation summary 到合适状态
-- session summary / canonical list 的 `messageCount` 只统计 `truncated = false` 的消息，与 history / token usage 口径一致
-
-### Token 统计
-
-| 字段 | 说明 |
-|---|---|
-| `input_tokens` | 输入 token |
-| `output_tokens` | 输出 token |
-| `cached_tokens` | 缓存 token（当前只记录 `cacheReadTokens`） |
-| `reasoning_tokens` | 推理 token |
-
-- Session 级统计基于未截断消息重新聚合
-- 成功响应持久化消息后，`updateSessionTokenUsage()` 会被 awaited；失败仅记录日志，不把已完成 assistant 回复变成失败
-- token usage 聚合尝试结束后，继续按本次响应 `totalTokens` 扣减 `used_chat_tokens`
-- 当 `used_chat_tokens >= quota_chat_tokens` 时拒绝新请求
+- session summary / canonical list 的 `messageCount` 只统计 `truncated = false` 的消息，与 history 口径一致
+- Chat 不采集、持久化或返回 provider token usage，也不按 token 额度阻止请求
 
 ### Stream 稳定性
 
@@ -66,14 +52,6 @@ Canonical session 由数据库唯一 index `resume_chat_sessions(user_id, resume
 - `streamText()` 使用固定 timeout：`totalMs = 120_000`、`stepMs = 60_000`、`chunkMs = 30_000`
 - `streamText()` 设置 `maxOutputTokens = 2048`
 - stream error 通过统一 mapper 转成前端可显示的重试文案；timeout / abort 使用超时重试文案，其他 provider / stream error 使用通用重试文案，同时保留服务端日志
-
-### Token 配额
-
-| Plan | 配额 |
-|---|---|
-| FREE | 100,000 |
-| LITE | 1,000,000 |
-| PRO | 100,000,000 |
 
 ## Thread 生命周期
 
@@ -86,7 +64,7 @@ Canonical session 由数据库唯一 index `resume_chat_sessions(user_id, resume
 
 - "一键润色简历"切换到 chat 视图，不走旧的 preview/apply 流程
 - 预定义消息在 chat thread ready 后通过 pending action 机制发送
-- 该流程不消耗 `fullOptimize` quota，走 resume chat token 额度
+- 该流程直接复用 resume chat，不涉及套餐或配额分支
 
 ## Editor Tools
 

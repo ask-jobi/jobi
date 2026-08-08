@@ -12,14 +12,6 @@ import type {
   SortableSectionKey
 } from "@/types/resume"
 
-export interface ChatTokenUsage {
-  inputTokens: number
-  outputTokens: number
-  cachedTokens: number
-  reasoningTokens: number
-  totalTokens: number
-}
-
 export const authoritativeResumePatchSchema = z.object({
   snapshotId: z.string(),
   messageId: z.string(),
@@ -48,9 +40,7 @@ export interface ChatDataParts {
   "resume-patch": AuthoritativeResumePatch
 }
 
-export interface ChatMessageMetadata {
-  tokenUsage?: ChatTokenUsage
-}
+export type ChatMessageMetadata = Record<string, never>
 
 export const chatDataPartSchemas = {
   sessionTitle: z.object({

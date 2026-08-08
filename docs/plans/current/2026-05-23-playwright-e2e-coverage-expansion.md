@@ -1,5 +1,13 @@
 # Playwright E2E Coverage Expansion
 
+> 2026-08-05 更新：E2E 数据基础已迁移为本地 D1/SQLite，global setup 会应用 D1
+> migrations；identity 回归验证签名 workspace cookie，不再启动或检查本地 Supabase。
+
+> 2026-07-31 更新：landing、账号登录、pricing、payment 与 token UI 已从产品中移除，
+> 本计划中对应 spec、setup 和登录前后分支不再执行。认证类覆盖改为“自动建立匿名
+> workspace session + 跨 browser context ownership 隔离”，详见
+> `2026-07-31-open-source-loginless-cleanup.md`。
+
 **Date:** 2026-05-23
 
 ## 背景

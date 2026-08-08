@@ -9,6 +9,7 @@ import {
 } from "@assistant-ui/react"
 import { Button } from "@/components/ui/button"
 import { useApplicationResume } from "@/lib/store/resume"
+import type { AuthoritativeResumeState } from "@/types/resume"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 import { Undo2 } from "lucide-react"
@@ -52,11 +53,11 @@ export function UserActionBar() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
+        const error = (await response.json()) as { error?: string }
         throw new Error(error.error || "Failed to truncate")
       }
 
-      const result = await response.json()
+      const result = (await response.json()) as AuthoritativeResumeState
 
       if (result.resume) {
         replaceAuthoritativeResume(result)

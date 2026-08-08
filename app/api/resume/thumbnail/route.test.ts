@@ -4,17 +4,15 @@
 import { NextRequest } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const mockSingle = vi.fn()
-const mockEq = vi.fn(() => ({ single: mockSingle }))
-const mockSelect = vi.fn(() => ({ eq: mockEq }))
-const mockFrom = vi.fn(() => ({ select: mockSelect }))
 const mockGetResumeThumbnailSections = vi.fn()
+const mockGetResumeThumbnailData = vi.fn()
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: () =>
-    Promise.resolve({
-      from: mockFrom
-    })
+vi.mock("@/server/auth-helper", () => ({
+  requireVerifiedUserIdentity: vi.fn(async () => ({ id: "workspace-1" }))
+}))
+
+vi.mock("@/server/data/applications", () => ({
+  getResumeThumbnailData: mockGetResumeThumbnailData
 }))
 
 vi.mock("@/lib/resume-thumbnail", () => ({
@@ -41,8 +39,8 @@ describe("GET /api/resume/thumbnail", () => {
     await expect(response.text()).resolves.toBe("Missing resume data")
   })
 
-  it("returns 500 when resume data cannot be loaded", async () => {
-    mockSingle.mockResolvedValue({ data: null })
+  it("returns 404 when resume data cannot be loaded", async () => {
+    mockGetResumeThumbnailData.mockResolvedValue(null)
     const request = new NextRequest(
       "https://jobi-validation.workers.dev/api/resume/thumbnail?resume_id=missing",
       { method: "GET" }
@@ -50,8 +48,8 @@ describe("GET /api/resume/thumbnail", () => {
 
     const response = await GET(request)
 
-    expect(response.status).toBe(500)
-    await expect(response.text()).resolves.toBe("Error fetching resume data")
+    expect(response.status).toBe(404)
+    await expect(response.text()).resolves.toBe("Resume not found")
   })
 
   it("generates a realtime escaped SVG thumbnail for an existing resume", async () => {
@@ -63,11 +61,9 @@ describe("GET /api/resume/thumbnail", () => {
         phone: "123 > 456"
       }
     }
-    mockSingle.mockResolvedValue({
-      data: {
-        language: "en",
-        resume_json: resumeJson
-      }
+    mockGetResumeThumbnailData.mockResolvedValue({
+      language: "en",
+      resumeData: resumeJson
     })
     mockGetResumeThumbnailSections.mockReturnValue([
       {
@@ -91,9 +87,10 @@ describe("GET /api/resume/thumbnail", () => {
     const response = await GET(request)
     const svg = await response.text()
 
-    expect(mockFrom).toHaveBeenCalledWith("resumes")
-    expect(mockSelect).toHaveBeenCalledWith("resume_json, language")
-    expect(mockEq).toHaveBeenCalledWith("id", "resume-123")
+    expect(mockGetResumeThumbnailData).toHaveBeenCalledWith(
+      "workspace-1",
+      "resume-123"
+    )
     expect(mockGetResumeThumbnailSections).toHaveBeenCalledWith(
       resumeJson,
       "en"

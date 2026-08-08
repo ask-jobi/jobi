@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { parseResume, parseResumeWithTokenUsage } from "./resume-parser"
+import { parseResume } from "./resume-parser"
 import { generateText } from "ai"
 
 vi.mock("ai", () => ({
@@ -24,23 +24,6 @@ vi.mock("@/server/ai/model", () => ({
     "MiniMax-M2.1": {}
   }
 }))
-
-function mockTotalUsage(totalTokens: number) {
-  return {
-    inputTokens: Math.floor(totalTokens / 2),
-    inputTokenDetails: {
-      noCacheTokens: Math.floor(totalTokens / 2),
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0
-    },
-    outputTokens: Math.ceil(totalTokens / 2),
-    outputTokenDetails: {
-      textTokens: Math.ceil(totalTokens / 2),
-      reasoningTokens: 0
-    },
-    totalTokens
-  }
-}
 
 describe("parseResume", () => {
   beforeEach(() => {
@@ -80,8 +63,7 @@ describe("parseResume", () => {
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData,
-        totalUsage: mockTotalUsage(2)
+        output: mockResumeData
       })
 
       const resumeText = `
@@ -143,8 +125,7 @@ Programming: JavaScript, TypeScript
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData,
-        totalUsage: mockTotalUsage(2)
+        output: mockResumeData
       })
 
       const resumeText = `
@@ -214,8 +195,10 @@ zhangsan@example.com
               title: "AI Research",
               content: "Published paper on ML",
               role: "Researcher",
-              start: "2018-01",
-              end: "2019-06"
+              date: {
+                start: "2018-01",
+                end: "2019-06"
+              }
             }
           ]
         },
@@ -227,8 +210,10 @@ zhangsan@example.com
               title: "E-commerce Platform",
               content: "Built full-stack application",
               role: "Lead Developer",
-              start: "2020-01",
-              end: "2020-12"
+              date: {
+                start: "2020-01",
+                end: "2020-12"
+              }
             }
           ]
         },
@@ -238,8 +223,7 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData,
-        totalUsage: mockTotalUsage(2)
+        output: mockResumeData
       })
 
       const result = await parseResume("Resume content")
@@ -279,8 +263,7 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData,
-        totalUsage: mockTotalUsage(2)
+        output: mockResumeData
       })
 
       await expect(parseResume("")).rejects.toThrow(
@@ -313,8 +296,7 @@ zhangsan@example.com
       }
 
       ;(generateText as any).mockResolvedValue({
-        output: mockResumeData,
-        totalUsage: mockTotalUsage(2)
+        output: mockResumeData
       })
 
       const result = await parseResume("No content")
@@ -392,9 +374,9 @@ zhangsan@example.com
         new Error("No object generated")
       )
 
-      await expect(
-        parseResumeWithTokenUsage("Jane Doe resume")
-      ).rejects.toThrow("No object generated")
+      await expect(parseResume("Jane Doe resume")).rejects.toThrow(
+        "No object generated"
+      )
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(
@@ -412,9 +394,9 @@ zhangsan@example.com
         new Error("Invalid error response format: Gateway request failed")
       )
 
-      await expect(
-        parseResumeWithTokenUsage("Jane Doe resume")
-      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+      await expect(parseResume("Jane Doe resume")).rejects.toThrow(
+        "Invalid error response format: Gateway request failed"
+      )
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(
@@ -439,9 +421,9 @@ zhangsan@example.com
 
       ;(generateText as any).mockRejectedValueOnce(gatewayError)
 
-      await expect(
-        parseResumeWithTokenUsage("Jane Doe resume")
-      ).rejects.toThrow("Invalid error response format: Gateway request failed")
+      await expect(parseResume("Jane Doe resume")).rejects.toThrow(
+        "Invalid error response format: Gateway request failed"
+      )
 
       expect(generateText).toHaveBeenCalledTimes(1)
       expect(warnSpy).toHaveBeenCalledWith(

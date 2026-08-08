@@ -1,136 +1,55 @@
 import "server-only"
 
-import { createClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
+
+import { getDatabase, type AppDatabase } from "@/lib/db/client"
+import { verifyWorkspaceToken, workspaceCookie } from "@/lib/workspace/session"
 import { verifySessionOwnership } from "@/server/ai/chat/history"
-import type { Database } from "@/types/supabase"
-import {
-  isAuthRetryableFetchError,
-  isAuthSessionMissingError,
-  type AuthError,
-  type SupabaseClient
-} from "@supabase/supabase-js"
 
-type AuthenticatedUserIdentity = {
+export type AuthenticatedUserIdentity = {
   id: string
-  email?: string
 }
 
-type VerifiedAuthContext = {
-  supabase: SupabaseClient<Database>
-  user: AuthenticatedUserIdentity | null
-  error: AuthError | null
+async function getWorkspaceIdentity(): Promise<AuthenticatedUserIdentity | null> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get(workspaceCookie.name)?.value
+  const workspaceId = await verifyWorkspaceToken(token)
+
+  return workspaceId ? { id: workspaceId } : null
 }
 
-function isSupabaseAuthError(error: unknown): error is AuthError {
-  return typeof error === "object" && error !== null && "__isAuthError" in error
+export async function getOptionalVerifiedUserIdentity() {
+  return getWorkspaceIdentity()
 }
 
-function mapAuthErrorToApiError(
-  error: AuthError | null | unknown
-): ApiError | null {
-  if (!error) {
-    return null
-  }
-
-  if (isAuthRetryableFetchError(error)) {
-    return new ApiError("Auth service temporarily unavailable", 503)
-  }
-
-  if (isAuthSessionMissingError(error)) {
-    return new ApiError("Unauthorized", 401)
-  }
-
-  if (!isSupabaseAuthError(error)) {
-    return new ApiError("Unauthorized", 401)
-  }
-
-  return new ApiError(error.message || "Unauthorized", 401)
-}
-
-function claimsToUserIdentity(
-  claims: unknown
-): AuthenticatedUserIdentity | null {
-  const authClaims = claims as { sub?: unknown; email?: unknown } | null
-
-  if (typeof authClaims?.sub !== "string") {
-    return null
-  }
-
-  return {
-    id: authClaims.sub,
-    email: typeof authClaims.email === "string" ? authClaims.email : undefined
-  }
-}
-
-function isMissingVerifiedIdentity(
-  error: AuthError | null,
-  user: AuthenticatedUserIdentity | null
-): boolean {
-  return isAuthSessionMissingError(error) || (!error && !user)
-}
-
-function requireVerifiedIdentityFromContext(context: VerifiedAuthContext): {
-  supabase: SupabaseClient<Database>
-  user: AuthenticatedUserIdentity
-} {
-  if (isMissingVerifiedIdentity(context.error, context.user)) {
-    throw new ApiError("Unauthorized", 401)
-  }
-
-  const apiError = mapAuthErrorToApiError(context.error)
-
-  if (apiError) {
-    throw apiError
-  }
-
-  if (!context.user) {
-    throw new ApiError("Unauthorized", 401)
-  }
-
-  return {
-    supabase: context.supabase,
-    user: context.user
-  }
-}
-
-async function getVerifiedAuthContext(): Promise<VerifiedAuthContext> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getClaims()
-
-  return {
-    supabase,
-    user: claimsToUserIdentity(data?.claims ?? null),
-    error
-  }
-}
-
-export async function getOptionalVerifiedUserIdentity(): Promise<AuthenticatedUserIdentity | null> {
-  const context = await getVerifiedAuthContext()
-
-  if (isMissingVerifiedIdentity(context.error, context.user)) {
-    return null
-  }
-
-  const apiError = mapAuthErrorToApiError(context.error)
-
-  if (apiError) {
-    throw apiError
-  }
-
-  return context.user
-}
-
-export async function requireVerifiedAuthContext(): Promise<{
-  supabase: SupabaseClient<Database>
-  user: AuthenticatedUserIdentity
-}> {
-  const context = await getVerifiedAuthContext()
-  return requireVerifiedIdentityFromContext(context)
+export async function getOptionalExistingUserIdentity() {
+  return getWorkspaceIdentity()
 }
 
 export async function requireVerifiedUserIdentity(): Promise<AuthenticatedUserIdentity> {
-  const { user } = await requireVerifiedAuthContext()
+  const user = await getWorkspaceIdentity()
+
+  if (!user) {
+    throw new ApiError("Unauthorized", 401)
+  }
+
   return user
+}
+
+async function requireWorkspaceContext(): Promise<{
+  db: AppDatabase
+  user: AuthenticatedUserIdentity
+}> {
+  const user = await requireVerifiedUserIdentity()
+  return { db: await getDatabase(), user }
+}
+
+export async function requireVerifiedAuthContext() {
+  return requireWorkspaceContext()
+}
+
+export async function requireExistingAuthContext() {
+  return requireWorkspaceContext()
 }
 
 export async function verifyOwnership(sessionId: string, userId: string) {

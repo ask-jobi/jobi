@@ -2,238 +2,109 @@
  * @vitest-environment node
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { getDatabase } from "@/lib/db/client"
 import {
-  getOrCreateCanonicalSessionSummary,
-  getSessionSummary
-} from "@/server/ai/chat/history"
-import * as supabaseModule from "@/lib/supabase/server"
+  extractAiResumeEditOutputs,
+  loadHistory,
+  saveMessage,
+  verifySessionOwnership
+} from "./history"
 
-vi.mock("@/lib/supabase/server")
+vi.mock("@/lib/db/client", () => ({ getDatabase: vi.fn() }))
 
-describe("chat history canonical sessions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+describe("chat history D1 persistence", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("saves JSON message parts and maps the database row", async () => {
+    const row = {
+      id: "message-1",
+      sessionId: "session-1",
+      role: "assistant" as const,
+      parts: [{ type: "text" as const, text: "Hello" }],
+      truncated: false,
+      hasTools: false,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    }
+    const returning = vi.fn(async () => [row])
+    vi.mocked(getDatabase).mockResolvedValue({
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({ returning }))
+      }))
+    } as never)
+
+    await expect(
+      saveMessage({
+        id: row.id,
+        sessionId: row.sessionId,
+        role: row.role,
+        parts: row.parts
+      })
+    ).resolves.toEqual({
+      id: row.id,
+      session_id: row.sessionId,
+      role: row.role,
+      parts: row.parts,
+      truncated: false,
+      has_tools: false,
+      created_at: row.createdAt
+    })
   })
 
-  it("resolves concurrent canonical session creation through an idempotent upsert", async () => {
-    const sessionRow = {
-      id: "session-1",
-      user_id: "user-1",
-      resume_id: "resume-1",
-      status: "active",
-      title: "New Chat",
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-      conversation_summary: null,
-      total_input_tokens: 0,
-      total_output_tokens: 0,
-      total_cached_tokens: 0,
-      total_reasoning_tokens: 0
-    }
-
-    const upsert = vi.fn().mockResolvedValue({ error: null })
-    const sessionsRange = vi.fn().mockResolvedValue({
-      data: [sessionRow],
-      error: null
-    })
-    const sessionsQuery = {
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnValue({
-        range: sessionsRange
-      })
-    }
-    const messagesCountEq = vi.fn().mockResolvedValue({
-      count: 0,
-      error: null
-    })
-    const messagesCountQuery = {
-      eq: vi
-        .fn()
-        .mockReturnValueOnce({ eq: messagesCountEq })
-        .mockReturnValueOnce({ eq: messagesCountEq })
-    }
-
-    const mockSupabaseClient = {
-      from: vi.fn((table: string) => {
-        if (table === "resume_chat_sessions") {
-          return {
-            upsert,
-            select: vi.fn().mockReturnValue(sessionsQuery)
-          }
-        }
-
-        if (table === "resume_chat_messages") {
-          return {
-            select: vi.fn().mockReturnValue(messagesCountQuery)
-          }
-        }
-
-        throw new Error(`Unexpected table: ${table}`)
-      })
-    } as any
-
-    vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
-
-    const [first, second] = await Promise.all([
-      getOrCreateCanonicalSessionSummary({
-        userId: "user-1",
-        resumeId: "resume-1"
-      }),
-      getOrCreateCanonicalSessionSummary({
-        userId: "user-1",
-        resumeId: "resume-1"
-      })
-    ])
-
-    expect(upsert).toHaveBeenCalledTimes(2)
-    expect(upsert).toHaveBeenCalledWith(
+  it("loads active messages with pagination", async () => {
+    const offset = vi.fn(async () => [
       {
-        user_id: "user-1",
-        resume_id: "resume-1",
-        title: "New Chat"
-      },
-      {
-        onConflict: "user_id,resume_id",
-        ignoreDuplicates: true
+        id: "message-1",
+        sessionId: "session-1",
+        role: "user",
+        parts: [],
+        truncated: false,
+        hasTools: false,
+        createdAt: "2026-01-01T00:00:00.000Z"
       }
-    )
-    expect(first).toEqual(second)
-    expect(first).toMatchObject({
-      id: "session-1",
-      title: "New Chat",
-      resumeId: "resume-1",
-      status: "active",
-      messageCount: 0
-    })
-    expect(messagesCountEq).toHaveBeenCalledWith("truncated", false)
+    ])
+    vi.mocked(getDatabase).mockResolvedValue({
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            orderBy: vi.fn(() => ({
+              limit: vi.fn(() => ({ offset }))
+            }))
+          }))
+        }))
+      }))
+    } as never)
+
+    const messages = await loadHistory("session-1", { limit: 10, offset: 5 })
+    expect(messages[0].id).toBe("message-1")
+    expect(offset).toHaveBeenCalledWith(5)
   })
 
-  it("returns archived canonical sessions instead of creating replacements", async () => {
-    const sessionRow = {
-      id: "session-archived",
-      user_id: "user-1",
-      resume_id: "resume-1",
-      status: "archived",
-      title: "Earlier chat",
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-02T00:00:00Z",
-      conversation_summary: null,
-      total_input_tokens: 4,
-      total_output_tokens: 3,
-      total_cached_tokens: 0,
-      total_reasoning_tokens: 1
-    }
+  it("checks workspace ownership in the query result", async () => {
+    const limit = vi.fn(async () => [{ id: "session-1" }])
+    vi.mocked(getDatabase).mockResolvedValue({
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({ limit }))
+        }))
+      }))
+    } as never)
 
-    const upsert = vi.fn().mockResolvedValue({ error: null })
-    const messagesCountEq = vi.fn().mockResolvedValue({
-      count: 2,
-      error: null
-    })
-    const sessionsQuery = {
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnValue({
-        range: vi.fn().mockResolvedValue({
-          data: [sessionRow],
-          error: null
-        })
-      })
-    }
-
-    const mockSupabaseClient = {
-      from: vi.fn((table: string) => {
-        if (table === "resume_chat_sessions") {
-          return {
-            upsert,
-            select: vi.fn().mockReturnValue(sessionsQuery)
-          }
-        }
-
-        if (table === "resume_chat_messages") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: messagesCountEq
-              })
-            })
-          }
-        }
-
-        throw new Error(`Unexpected table: ${table}`)
-      })
-    } as any
-
-    vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
-
-    const session = await getOrCreateCanonicalSessionSummary({
-      userId: "user-1",
-      resumeId: "resume-1"
-    })
-
-    expect(session).toMatchObject({
-      id: "session-archived",
-      title: "Earlier chat",
-      status: "archived",
-      messageCount: 2
-    })
-    expect(messagesCountEq).toHaveBeenCalledWith("truncated", false)
+    await expect(
+      verifySessionOwnership("session-1", "workspace-1")
+    ).resolves.toBe(true)
   })
 
-  it("counts only non-truncated messages in a session summary", async () => {
-    const messagesCountEq = vi.fn().mockResolvedValue({
-      count: 3,
-      error: null
-    })
-
-    const mockSupabaseClient = {
-      from: vi.fn((table: string) => {
-        if (table === "resume_chat_sessions") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: "session-1",
-                    user_id: "user-1",
-                    resume_id: "resume-1",
-                    status: "active",
-                    title: "New Chat",
-                    created_at: "2026-01-01T00:00:00Z",
-                    updated_at: "2026-01-01T00:00:00Z",
-                    conversation_summary: null,
-                    total_input_tokens: 4,
-                    total_output_tokens: 3,
-                    total_cached_tokens: 0,
-                    total_reasoning_tokens: 1
-                  },
-                  error: null
-                })
-              })
-            })
-          }
-        }
-
-        if (table === "resume_chat_messages") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: messagesCountEq
-              })
-            })
-          }
-        }
-
-        throw new Error(`Unexpected table: ${table}`)
-      })
-    } as any
-
-    vi.mocked(supabaseModule.createClient).mockResolvedValue(mockSupabaseClient)
-
-    const session = await getSessionSummary("session-1")
-
-    expect(session).toMatchObject({
-      id: "session-1",
-      messageCount: 3
-    })
-    expect(messagesCountEq).toHaveBeenCalledWith("truncated", false)
+  it("extracts completed resume edit tool outputs", () => {
+    const output = { operation: "delete", sectionId: "education" } as never
+    expect(
+      extractAiResumeEditOutputs([
+        {
+          type: "tool-resumeEditorModify",
+          state: "output-available",
+          output
+        } as never
+      ])
+    ).toEqual([output])
   })
 })

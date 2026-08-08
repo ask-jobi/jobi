@@ -68,15 +68,6 @@ export interface IntakeContext {
   rollback: RollbackRegistry
 }
 
-// ── Usage authorization ─────────────────────────────────────────
-
-export type UsageAuthorization = {
-  accessPassId: string
-  authorized: boolean
-  used: number
-  limit: number
-}
-
 // ── Orchestrator results ────────────────────────────────────────
 
 export type IntakeResult =
@@ -101,7 +92,7 @@ export type PersistInput = {
   /** Normalized resume data persisted as the authoritative revision 1 state. */
   resumeData: ResumeData
   resumeLanguage: Locale
-  uploadedResumePublicUrl: string | null
+  uploadedResumeFilePath: string | null
 }
 
 export type PersistOutput = {

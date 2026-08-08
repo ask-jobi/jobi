@@ -1,28 +1,25 @@
-import type { Database } from "@/types/supabase"
+import type { AppDatabase } from "@/lib/db/client"
+import { resumeSnapshots } from "@/lib/db/schema"
 import type { ResumeData } from "@/types/resume"
-import type { SupabaseClient } from "@supabase/supabase-js"
 
 export async function insertResumeSnapshot({
-  supabase,
+  db,
   resumeId,
   revision,
   resume,
   eventId
 }: {
-  supabase: SupabaseClient<Database>
+  db: AppDatabase
   resumeId: string
   revision: number
   resume: ResumeData
   eventId?: string | null
 }) {
-  const { error } = await supabase.from("resumes_snapshot").insert({
-    resume_id: resumeId,
+  await db.insert(resumeSnapshots).values({
+    id: crypto.randomUUID(),
+    resumeId,
     revision,
-    resume_json: resume,
-    event_id: eventId ?? null
+    resumeJson: resume,
+    eventId: eventId ?? null
   })
-
-  if (error) {
-    throw error
-  }
 }

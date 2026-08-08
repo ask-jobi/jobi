@@ -29,8 +29,8 @@ describe("server AI model", () => {
   beforeEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    delete process.env.DEEPSEEK_API_KEY
-    process.env.NODE_ENV = "test"
+    delete (process.env as Record<string, string | undefined>).DEEPSEEK_API_KEY
+    vi.stubEnv("NODE_ENV", "test")
   })
 
   it("uses the direct DeepSeek provider model", async () => {

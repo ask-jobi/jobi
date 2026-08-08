@@ -1,51 +1,29 @@
 # 网页结构与主要业务路径
 
-这份文档用于帮助 Agent 快速理解 Jobi 当前页面结构、关键导航关系、主业务流和测试注意点。
+这份文档用于帮助 Agent 快速理解 Jobi 当前页面结构、关键导航关系、匿名 workspace identity、主业务流和测试注意点。
 
 ## 文档目的
 
-- 快速区分公开页、认证页、受保护页
+- 明确应用直接进入 Dashboard，不再经过 landing 或登录流程
 - 明确 Job Application 工作区的实际入口与跳转关系
 - 为 Playwright / 手动回归提供稳定的巡检顺序
 
 ## 整体结构
 
-应用目前主要分为四层：
+应用主要分为两层：
 
-1. 公开营销页
-2. 认证页与认证回调
-3. 登录后主工作台
-4. 单个 Job Application 工作区
+1. Dashboard 工作台
+2. 单个 Job Application 工作区
 
-其中第 4 层是核心产品区域。
+访问者无需注册或输入密码。首次请求会自动创建签名的匿名 workspace cookie；该 identity 只用于 SQLite 数据 ownership 隔离，不产生用户可见的账号流程。
 
 ## 路由地图
 
-### 公开页面
-
-| 路径                 | 作用         | 备注                                      |
-| -------------------- | ------------ | ----------------------------------------- |
-| `/`                  | Landing Page | Hero、Problem、Features、CTA              |
-| `/pricing`           | 定价页       | 展示 FREE / LITE / PRO token bundle       |
-| `/payment/success`   | 支付成功页   | 展示 session id，并引导回首页或 Dashboard |
-| `/resume-print/[id]` | 打印渲染页   | 供 PDF 导出使用，也可单独打开预览         |
-
-### 认证相关
-
-| 路径                    | 作用           | 备注                             |
-| ----------------------- | -------------- | -------------------------------- |
-| `/auth/login`           | 登录页         | 支持 `callbackUrl` 回跳          |
-| `/auth/sign-up`         | 注册页         | 成功后跳 `/auth/sign-up-success` |
-| `/auth/sign-up-success` | 注册成功提示页 | 等待邮件确认                     |
-| `/auth/forgot-password` | 忘记密码页     | 发送重置邮件                     |
-| `/auth/update-password` | 重置密码页     | 邮件回链进入                     |
-| `/auth/error`           | 认证错误页     | 认证异常兜底                     |
-| `/auth/confirm`         | 邮件确认回调   | route，不是 page                 |
-
-### 登录后主工作台
+### 工作台与入口
 
 | 路径         | 作用                   | 备注                      |
 | ------------ | ---------------------- | ------------------------- |
+| `/`          | 应用入口               | 重定向到 `/dashboard`     |
 | `/dashboard` | Job Application 列表页 | 主入口                    |
 | `/jobs`      | 旧入口                 | 当前重定向到 `/dashboard` |
 | `/settings`  | 设置页                 | 当前只有语言切换          |
@@ -57,6 +35,9 @@
 | `/application/[id]`        | 申请详情入口           | 自动重定向到 `/application/[id]/resume` |
 | `/application/[id]/resume` | 简历编辑页             | 核心工作区                              |
 | `/application/[id]/jd`     | Job Description 编辑页 | 与 resume 共用同一 application layout   |
+| `/resume-print/[id]`       | 打印渲染页             | 供 PDF 导出使用                         |
+
+`/auth/*`、`/pricing` 与 `/payment/*` 已从产品路由中移除，访问应返回 404。
 
 ## 布局与导航关系
 
@@ -69,86 +50,40 @@
 - sonner toast
 - Umami 统计
 
-### 登录后主工作台布局
+middleware 在请求进入页面/API 前验证签名 cookie，或为新浏览器创建匿名 workspace identity。
+
+### Dashboard 布局
 
 `app/(protected)/(main)/layout.tsx` 负责：
 
-- 鉴权
+- 确保请求拥有匿名 workspace identity
 - 渲染 sidebar shell
 - 包裹 `/dashboard` / `/settings`
 
-Sidebar 当前稳定入口：
+Sidebar 稳定入口：
 
 - `/dashboard`
 - `/settings`
-- plan/token badge 弹窗
-- logout
+
+目录名中的 `protected` 表示仍有内部 ownership 边界，不代表页面要求显式登录。Sidebar 不展示登录、登出、套餐或用量入口。
 
 ### 单个申请布局
 
 `app/(protected)/(individual)/application/[id]/layout.tsx` 负责：
 
-- 拉取单个 Job Application（resume + job）
+- 校验当前匿名 identity 对 Job Application 的 ownership
+- 拉取 Job Application（resume + job）
 - 初始化 Jotai store
 
-`app/(protected)/(individual)/application/[id]/template.tsx` 顶部 header 当前包含：
+`app/(protected)/(individual)/application/[id]/template.tsx` 顶部 header 包含：
 
 - 返回 Dashboard 按钮
 - `resume` / `job description` 两个 tab
-- 在 resume tab 下显示：
-  - 导出按钮
-  - token 使用概览
+- resume tab 下的导出按钮
 
 ## 各页面结构
 
-### 1. Landing Page `/`
-
-当前内容结构：
-
-- Hero
-- Problem 区
-- Features 区（3 张产品截图）
-- CTA 尾部
-
-行为：
-
-- 主 CTA：未登录去 `/auth/sign-up`，已登录去 `/dashboard`
-- `Learn More` 通过锚点跳到 `#features`
-
-### 2. 定价页 `/pricing`
-
-内容结构：
-
-- Hero
-- 3 张 Pricing Card：`FREE`、`LITE`、`PRO`
-- FAQ
-- CTA
-
-行为分支：
-
-- 未登录点击套餐：跳 `/auth/login?callbackUrl=%2Fpricing`
-- 已登录点击 FREE：调用 `/api/access-passes/create-free`
-- 已登录点击 LITE/PRO：调用 `/api/checkout_sessions`
-- 支付取消后会以 `?cancelled=true` 回到当前页，并展示提示条
-
-### 3. 登录页 `/auth/login`
-
-关键元素：
-
-- Email
-- Password
-- `Forgot your password?`
-- `Login`
-- `Sign up`
-
-行为：
-
-- 登录成功默认去 `/dashboard`
-- 若有 `callbackUrl`，优先回跳
-
-### 4. Dashboard `/dashboard`
-
-这是登录后最重要的列表页。
+### 1. Dashboard `/dashboard`
 
 页面结构：
 
@@ -159,14 +94,14 @@ Sidebar 当前稳定入口：
 卡片类型：
 
 - 第一张固定是 `Create New Resume`
-- 其余卡片是历史 Job Application
+- 其余卡片是当前匿名 workspace 的历史 Job Application
   - 卡面通过 `/api/resume/thumbnail` 渲染缩略图
   - 点击卡片进入 `/application/[id]`
   - 右上角可删除申请
 
-### 5. Create New Resume 弹窗
+### 2. Create New Resume 弹窗
 
-这是 Dashboard 最关键的创建流，当前是三步：
+Dashboard 的创建流分三步：
 
 1. `Job Information`
 2. `Upload Resume`
@@ -175,29 +110,22 @@ Sidebar 当前稳定入口：
 行为细节：
 
 - Step 1 复用 `JobInformationForm`
-- Step 2 可以：
-  - 上传 PDF 简历
-  - 点击 `Create Empty Resume`
-- 上传分支会走 SSE 进度流：
-  - `upload`
-  - `load`
-  - `parse`
-  - `prepare`
-  - `evaluate`
-- 空白简历分支会创建仅含 `personalInfo + sectionOrder=[]` 的最小 resume，并跳转到 application
+- Step 2 可以上传 PDF 简历或点击 `Create Empty Resume`
+- 上传分支使用 SSE 事件协议驱动进度
+- 空白简历分支创建仅含 `personalInfo + sectionOrder=[]` 的最小 resume，并跳转到 application
 - 关闭弹窗会 reset 表单和进度状态
+- 创建和分析流程不做付费或 token 额度检查，也不展示或记录 token 用量
+- 每个匿名 workspace 仍受固定的 Job Application 数量上限保护
 
-### 6. Application `/application/[id]/resume`
-
-这是核心工作页。
+### 3. Application `/application/[id]/resume`
 
 当前布局：
 
 - 左侧/中间：A4 resume canvas
 - 右侧：工作面板（chat / evaluation）
-- 页面底部外层还有 section 编辑 modal（按需打开）
+- 页面底部外层：按需打开的 section 编辑 modal
 
-#### 6.1 Resume canvas
+#### Resume canvas
 
 当前默认渲染 `default` 模板。
 
@@ -216,16 +144,15 @@ Sidebar 当前稳定入口：
 规则：
 
 - `personalInfo` 固定在顶部，单独渲染，不参与 section 排序
-- 其他 section 都按 `sectionOrder` 渲染；空白简历初始 `sectionOrder = []`
-- 任一 section 都是按需创建；新增后默认追加到 `sectionOrder` 末尾
-- 删除任一 section 的最后一个 entry，会把该 section 从 resume data 与 `sectionOrder` 一并移除
+- 其他 section 按 `sectionOrder` 渲染；空白简历初始 `sectionOrder = []`
+- section 按需创建；新增后默认追加到 `sectionOrder` 末尾
+- 删除任一 section 的最后一个 entry，会从 resume data 与 `sectionOrder` 一并移除该 section
 
 交互：
 
 - hover section / entry 会出现操作按钮
-- section title 旁支持 `Move Up / Move Down`，桌面端可单步调整 section 顺序
-- 点击编辑会打开 modal，而不是直接在右侧表单里编辑
-- `personalInfo` 作为非 repeatable section 单独编辑
+- section title 旁支持 `Move Up / Move Down`
+- 点击编辑会打开 modal
 - 画布根节点有稳定选择器：`[data-testid="resume-canvas"]`
 
 当前 DOM id 规律：
@@ -233,98 +160,78 @@ Sidebar 当前稳定入口：
 - section 容器：`section-${sectionId}`
 - entry 容器：`section-${sectionId}-${index}`
 
-#### 6.2 Section 编辑弹窗
+#### Section 编辑弹窗
 
-当前通过 `ResumeSectionEditModal` 打开，保存时才真正落库。
+`ResumeSectionEditModal` 在保存时持久化修改。当前不存在页面级整份 resume draft 表单。
 
-支持的表单：
-
-- `personalInfo`
-- `education`
-- `employment`
-- `research`
-- `projects`
-- `publications`
-- `awards`
-- `certifications`
-- `skills`
-
-这是当前 resume 编辑器的重要事实：**不再存在页面级整份 resume draft 表单**。
-
-#### 6.3 右侧工作面板
+#### 右侧工作面板
 
 面板有两个 tab：
 
 - `AI Chat`
 - `Evaluation`
 
-##### Evaluation 视图
+Evaluation 视图：
 
-- 若已有评估结果：显示 `EvaluationReport`
-- 若没有：显示空态和 `Evaluate Resume`
+- 已有评估结果时显示 `EvaluationReport`
+- 没有结果时显示空态和 `Evaluate Resume`
 - 顶部按钮支持首次生成或刷新评估
 - 评估调用 `/api/evaluation`
 
-##### Chat 视图
+Chat 视图：
 
 - 聊天 UI 由 `ChatInterface` 提供
 - 每份 resume 只维护一个 canonical chat session
-- AI tool 修改 resume 后，会把结果同步回 persisted resume
+- AI tool 修改 resume 后同步回 persisted resume
 - 截断/回滚走 `/api/chat/truncate`
+- UI 和 API 不包含 token 用量或额度信息
 
-### 7. Application `/application/[id]/jd`
-
-这是 Job Description 编辑页。
-
-当前结构：
+### 4. Application `/application/[id]/jd`
 
 - 复用 `JobInformationForm`
-- `Save` 按钮在底部右侧
-
-行为：
-
 - 首次加载从当前 application 的 job 数据回填
-- 保存调用 `updateResumeJobDescription()`
-- 保存成功 toast
-- 同时把 `evaluation_report_refresh_flag` 置为 `true`
+- `Save` 调用 `updateResumeJobDescription()`
+- 保存成功显示 toast，并把 `evaluation_report_refresh_flag` 置为 `true`
 
-### 8. 设置页 `/settings`
+### 5. 设置页 `/settings`
 
 当前只有语言切换：
 
 - `zh`
 - `en`
 
-行为：
+使用 cookie `NEXT_LOCALE`；切换后页面文案按 locale 刷新。
 
-- 使用 cookie `NEXT_LOCALE`
-- 切换后页面文案按 locale 刷新
-
-### 9. 打印与导出
+### 6. 打印与导出
 
 - 页面预览：`/resume-print/[id]`
 - 下载 PDF：`/api/resume/print?id=<resumeId>`
-- 导出逻辑会用 Puppeteer 打开打印页再生成 PDF
+- 导出逻辑使用 Puppeteer 打开打印页并生成 PDF
 
 ## 主要业务路径
 
-### 路径一：未登录用户进入并注册 / 登录
+### 路径一：首次进入匿名 workspace
 
-1. 打开 `/`
-2. 进入 `/auth/login` 或 `/auth/sign-up`
-3. 登录成功后进入 `/dashboard`
-4. 如果是从 `/pricing` 跳过去的，登录成功应回到 `/pricing`
+1. 在新浏览器上下文打开 `/`
+2. middleware 自动创建签名 workspace cookie
+3. `/` 重定向到 `/dashboard`
+4. 页面不要求邮箱、密码或账号操作
+5. 刷新页面后仍能访问同一 workspace 数据
+
+校验点：
+
+- workspace cookie 创建不应造成重定向循环
+- cookie 签名或 D1 binding 失败时显示明确错误，不能放开跨用户数据访问
+- 新浏览器上下文看不到其他 workspace 的数据
 
 ### 路径二：从 Dashboard 创建新简历
 
 1. 打开 `/dashboard`
 2. 点击 `Create New Resume`
 3. Step 1 填写 Job Information
-4. Step 2 选择：
-   - 上传 PDF
-   - `Create Empty Resume`
-5. 上传 PDF 分支进入 Step 3，观察 SSE 进度（新事件协议：`intake.start` → `step.*` → `intake.done` / `intake.failed` / `intake.cancelled`）
-6. 成功后（收到 `intake.done`）跳转 `/application/[applicationId]`
+4. Step 2 选择上传 PDF 或 `Create Empty Resume`
+5. 上传 PDF 分支观察 SSE 进度：`intake.start` → `step.*` → `intake.done` / `intake.failed` / `intake.cancelled`
+6. 成功后跳转 `/application/[applicationId]`
 7. 空白简历分支直接跳转 `/application/[applicationId]`
 
 校验点：
@@ -338,13 +245,10 @@ Sidebar 当前稳定入口：
 
 1. 打开 `/dashboard`
 2. 点击历史卡片
-3. 先进入 `/application/[id]`
+3. 进入 `/application/[id]`
 4. 自动重定向到 `/application/[id]/resume`
 
-补充分支：
-
-- 删除按钮可删除整个 Job Application
-- 删除后列表应刷新
+删除按钮可删除整个 Job Application；删除后列表应刷新。
 
 ### 路径四：编辑简历内容
 
@@ -354,24 +258,14 @@ Sidebar 当前稳定入口：
 4. modal 中修改并保存
 5. 保存成功后画布更新
 
-重点覆盖：
-
-- `personalInfo`
-- 从空白状态新增任意 section
-- section 的新增、编辑、删除、上移、下移
-- 删除最后一个 entry 后的 section 真正移除行为
+重点覆盖 `personalInfo`、从空白状态新增任意 section、section/entry 的新增编辑删除和排序，以及删除最后一个 entry 后的 section 移除。
 
 ### 路径五：查看或刷新评估
 
 1. 进入 `/application/[id]/resume`
 2. 切到 `Evaluation`
-3. 若为空，点击 `Evaluate Resume`
-4. 若已有结果，点击刷新按钮
-
-联动规则：
-
-- 修改 resume 或 JD 后，评估刷新标记会置为 true
-- 回归时应覆盖“修改后重新评估”链路
+3. 首次点击 `Evaluate Resume`，已有结果时点击刷新
+4. 验证修改 resume 或 JD 后可重新评估
 
 ### 路径六：与 AI 对话改写简历
 
@@ -380,13 +274,7 @@ Sidebar 当前稳定入口：
 3. 输入改写指令
 4. 等待 assistant 输出与 tool 调用
 5. 观察画布内容是否同步变化
-
-重点：
-
-- 聊天 UI 正常打开
-- 消息可发送
-- tool 调用后 resume 内容更新
-- 如支持 truncate/rollback，需验证回滚后内容恢复
+6. 验证 truncate/rollback 后内容恢复
 
 ### 路径七：编辑 Job Description
 
@@ -411,22 +299,21 @@ Sidebar 当前稳定入口：
 
 ## 建议的自主测试顺序
 
-1. 首页 `/`
-2. 登录 `/auth/login`
-3. 定价页 `/pricing`
-4. Dashboard `/dashboard`
-5. Create New Resume 弹窗
-6. 空白简历创建分支
-7. Application resume 页
-8. section modal 编辑
-9. evaluation tab
-10. chat tab
-11. JD 编辑页
-12. 设置页 `/settings`
+1. 新浏览器打开 `/` 并进入 `/dashboard`
+2. Dashboard
+3. Create New Resume 弹窗
+4. 空白简历创建分支
+5. Application resume 页
+6. section modal 编辑
+7. evaluation tab
+8. chat tab
+9. JD 编辑页
+10. 设置页
+11. 新浏览器上下文的数据隔离
 
 ## 选择器与测试注意事项
 
-### 推荐优先使用
+推荐优先使用：
 
 - `getByRole`
 - `getByLabel`
@@ -435,7 +322,7 @@ Sidebar 当前稳定入口：
 - `data-testid="resume-canvas"`
 - dialog role
 
-### 当前可依赖的稳定文案
+当前可依赖的稳定文案：
 
 - `Create New Resume`
 - `Job Information`
@@ -443,24 +330,16 @@ Sidebar 当前稳定入口：
 - `Analyze Resume`
 - `Evaluate Resume`
 - `Save`
-- `Login`
-- `Sign up`
 
-### 已知结构特点
+已知结构特点：
 
-- `/application/[id]` 本身不是最终页，会重定向到 `/resume`
+- `/application/[id]` 会重定向到 `/resume`
 - `/jobs` 只是兼容入口
-- Dashboard 卡片依赖真实数据，空列表与有数据要分开处理
+- Dashboard 卡片依赖当前匿名 workspace 的真实数据
 - chat / evaluation 共用右侧面板，只显示一个 tab 内容
-- resume 编辑改为 modal 保存，不是旧的右侧表单直改模式
-
-### 已知选择器风险
-
-- `test/e2e/helpers/auth-helper.ts` 的 `getResumeCardCount()` 仍在使用 `a[href^="/resume/"]`
-- 当前 Dashboard 卡片真实链接是 `a[href^="/application/"]`
-- 如果继续扩展 E2E，优先改成语义化选择器或更新到当前路由前缀
+- resume 编辑使用 modal 保存
 
 ## 与其他测试文档的关系
 
 - 页面级 Playwright 操作方式参考 `docs/playwright-session-testing-guide.md`
-- 本文更强调“页面结构、跳转关系、主流程和测什么”
+- 本文更强调页面结构、跳转关系、匿名身份边界和主流程

@@ -17,9 +17,15 @@ export function generateUploadedResumeFileName(
     : `${userId}/resume_${generatedName}`
 }
 
-export function extractFilePathFromPublicUrl(publicUrl: string): string | null {
+export function resolveUploadedResumeFilePath(
+  storedLocation: string
+): string | null {
+  if (!storedLocation.includes("://")) {
+    return storedLocation.startsWith("/") ? null : storedLocation
+  }
+
   try {
-    const url = new URL(publicUrl)
+    const url = new URL(storedLocation)
     // 提取路径部分，格式: /storage/v1/object/public/upload-resumes/userId/filename.pdf
     const pathParts = url.pathname.split("/")
     // 找到 BUCKET_NAME 的索引，然后取后面的部分
@@ -31,7 +37,7 @@ export function extractFilePathFromPublicUrl(publicUrl: string): string | null {
     const filePath = pathParts.slice(bucketIndex + 1).join("/")
     return filePath || null
   } catch (error) {
-    console.error("Failed to extract file path from publicUrl:", error)
+    console.error("Failed to resolve uploaded resume file path:", error)
     return null
   }
 }

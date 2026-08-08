@@ -28,7 +28,7 @@ describe("DELETE /api/application/delete", () => {
     it("should return 400 when id is missing", async () => {
       const request = createMockRequest({})
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("Invalid request parameters")
@@ -38,7 +38,7 @@ describe("DELETE /api/application/delete", () => {
     it("should return 400 when id is invalid UUID format", async () => {
       const request = createMockRequest({ id: "invalid-uuid" })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(400)
       expect(data.error).toBe("Invalid request parameters")
@@ -63,7 +63,7 @@ describe("DELETE /api/application/delete", () => {
         id: "550e8400-e29b-41d4-a716-446655440000"
       })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
@@ -84,7 +84,7 @@ describe("DELETE /api/application/delete", () => {
         id: "550e8400-e29b-41d4-a716-446655440000"
       })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(401)
       expect(data.error).toBe("User not authenticated")
@@ -99,7 +99,7 @@ describe("DELETE /api/application/delete", () => {
         id: "550e8400-e29b-41d4-a716-446655440000"
       })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(403)
       expect(data.error).toBe("Unauthorized access")
@@ -114,7 +114,7 @@ describe("DELETE /api/application/delete", () => {
         id: "550e8400-e29b-41d4-a716-446655440000"
       })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(404)
       expect(data.error).toBe("Application not found")
@@ -129,7 +129,7 @@ describe("DELETE /api/application/delete", () => {
         id: "550e8400-e29b-41d4-a716-446655440000"
       })
       const response = await DELETE(request)
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       expect(response.status).toBe(500)
       expect(data.error).toBe("Database connection failed")

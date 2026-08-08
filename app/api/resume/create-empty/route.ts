@@ -3,7 +3,7 @@ import { JobInfoFormType } from "@/components/forms/job-information-form"
 import { defaultLocale, locales, type Locale } from "@/lib/i18n/config"
 import { createEmptyResume } from "@/server/intake/empty-orchestrator"
 import {
-  getOptionalVerifiedUserIdentity,
+  getOptionalExistingUserIdentity,
   handleApiError
 } from "@/server/auth-helper"
 
@@ -11,15 +11,18 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getOptionalVerifiedUserIdentity()
+    const user = await getOptionalExistingUserIdentity()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = (await request.json()) as {
+      jobInfo?: JobInfoFormType | null
+      language?: unknown
+    }
     const jobInfo = body.jobInfo as JobInfoFormType
-    const language = locales.includes(body.language)
+    const language = locales.includes(body.language as Locale)
       ? body.language
       : defaultLocale
 

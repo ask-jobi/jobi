@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server"
 import { ResumeData } from "@/types/resume"
 import { Locale } from "@/lib/i18n/config"
-import { createClient } from "@/lib/supabase/server"
 import {
   getResumeThumbnailSections,
   type ThumbnailEntrySummary
 } from "@/lib/resume-thumbnail"
+import { requireVerifiedUserIdentity } from "@/server/auth-helper"
+import { getResumeThumbnailData } from "@/server/data/applications"
 
 const THUMBNAIL_WIDTH = 600
 const THUMBNAIL_HEIGHT = 824
@@ -235,18 +236,14 @@ export async function GET(request: NextRequest) {
       return new Response("Missing resume data", { status: 400 })
     }
 
-    const supabase = await createClient()
-    const { data: resumeData } = await supabase
-      .from("resumes")
-      .select("resume_json, language")
-      .eq("id", resumeId)
-      .single()
+    const user = await requireVerifiedUserIdentity()
+    const resumeData = await getResumeThumbnailData(user.id, resumeId)
 
     if (!resumeData) {
-      return new Response("Error fetching resume data", { status: 500 })
+      return new Response("Resume not found", { status: 404 })
     }
 
-    const parsedData: ResumeData = resumeData.resume_json!!
+    const parsedData: ResumeData = resumeData.resumeData
     const language = (resumeData.language as Locale) ?? "en"
     const svg = renderResumeThumbnailSvg(parsedData, language)
 

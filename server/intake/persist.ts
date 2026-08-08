@@ -1,95 +1,70 @@
-import { createClient } from "@/lib/supabase/server"
-import { insertResumeSnapshot } from "@/server/resume/snapshots"
+import { and, eq } from "drizzle-orm"
+
+import { getDatabase } from "@/lib/db/client"
+import {
+  jobApplications,
+  jobs,
+  resumes,
+  resumeSnapshots
+} from "@/lib/db/schema"
 import type { PersistInput, PersistOutput, RollbackRegistry } from "./types"
 
 /**
  * Shared persist capability for both uploaded intake and empty creation.
- * Receives normalized input, creates DB records, and registers rollback
- * via the provided RollbackRegistry.
- *
- * Does NOT depend on AsyncLocalStorage or any orchestration context.
+ * Database records are inserted atomically through a D1 batch.
  */
 export async function persistApplicationResume(
   input: PersistInput,
   rollback: RollbackRegistry
 ): Promise<PersistOutput> {
-  const supabase = await createClient()
+  const db = await getDatabase()
+  const jobId = crypto.randomUUID()
+  const resumeId = crypto.randomUUID()
+  const applicationId = crypto.randomUUID()
 
-  // 1. Create Job Description
-  const { data: jobData, error: jobError } = await supabase
-    .from("jobs")
-    .insert({
+  await db.batch([
+    db.insert(jobs).values({
+      id: jobId,
+      userId: input.userId,
       name: input.jobInfo.name,
       company: input.jobInfo.company,
       description: input.jobInfo.description
-    })
-    .select("id")
-    .single()
-
-  if (jobError) {
-    throw new Error(`Failed to create job: ${jobError.message}`)
-  }
-
-  rollback.register("db", "delete-job", async () => {
-    await supabase.from("jobs").delete().eq("id", jobData.id)
-  })
-
-  // 2. Create Application Resume
-  const { data: resumeData, error: resumeError } = await supabase
-    .from("resumes")
-    .insert({
-      user_id: input.userId,
-      job_id: jobData.id,
-      upload_url: input.uploadedResumePublicUrl,
+    }),
+    db.insert(resumes).values({
+      id: resumeId,
+      userId: input.userId,
+      jobId,
       language: input.resumeLanguage,
-      resume_json: input.resumeData as unknown as Record<string, unknown>
-    } as any)
-    .select("id")
-    .single()
-
-  if (resumeError) {
-    throw new Error(`Failed to create resume: ${resumeError.message}`)
-  }
-
-  rollback.register("db", "delete-resume", async () => {
-    await supabase.from("resumes").delete().eq("id", resumeData.id)
-  })
-
-  await insertResumeSnapshot({
-    supabase,
-    resumeId: resumeData.id,
-    revision: 1,
-    resume: input.resumeData
-  })
-
-  // 3. Create Job Application
-  const { data: applicationData, error: applicationError } = await supabase
-    .from("job_applications")
-    .insert({
-      user_id: input.userId,
-      resume_id: resumeData.id,
-      job_id: jobData.id,
-      optimized_resume_url: null
+      resumeJson: input.resumeData
+    }),
+    db.insert(resumeSnapshots).values({
+      id: crypto.randomUUID(),
+      resumeId,
+      revision: 1,
+      resumeJson: input.resumeData
+    }),
+    db.insert(jobApplications).values({
+      id: applicationId,
+      userId: input.userId,
+      resumeId,
+      jobId
     })
-    .select("id")
-    .single()
+  ])
 
-  if (applicationError) {
-    throw new Error(
-      `Failed to create job application: ${applicationError.message}`
-    )
-  }
-
-  rollback.register("db", "delete-application", async () => {
-    await supabase
-      .from("job_applications")
-      .delete()
-      .eq("id", applicationData.id)
+  rollback.register("db", "delete-application-data", async () => {
+    await db.batch([
+      db
+        .delete(resumes)
+        .where(and(eq(resumes.id, resumeId), eq(resumes.userId, input.userId))),
+      db
+        .delete(jobs)
+        .where(and(eq(jobs.id, jobId), eq(jobs.userId, input.userId)))
+    ])
   })
 
   return {
-    jobData: { id: jobData.id },
-    resumeData: { id: resumeData.id },
-    applicationData: { id: applicationData.id }
+    jobData: { id: jobId },
+    resumeData: { id: resumeId },
+    applicationData: { id: applicationId }
   }
 }

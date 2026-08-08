@@ -11,7 +11,7 @@
 
 | 文件 | 职责 |
 |---|---|
-| `supabase/migrations/20260523000000_add_resume_revisions_and_snapshots.sql` | `current_revision` 字段 + `resumes_snapshot` 表 |
+| `db/migrations/0001_initial.sql` | D1/SQLite `current_revision` 字段 + `resumes_snapshot` 表 |
 | `server/resume/commit.ts` | 统一 resume 提交入口：推进 revision / snapshot |
 | `server/resume/snapshots.ts` | Snapshot 底层写入 helper |
 | `server/ai/chat/tools/registry.ts` | 服务端 tool runtime registry (含 execute) |
@@ -29,7 +29,7 @@
 - **前端消费者**: `onData` 消费 patch，版本冲突时拒绝应用并触发 authoritative refetch
 - **Schema 单一来源**: entry schemas + tool I/O schemas + event data schemas 统一在 `lib/agent/schema.ts`
 - **AI provider**: 通过 direct DeepSeek API provider 调用 `DEEPSEEK_MODEL_ID`（默认 `deepseek-v4-flash`）
-- **Token 统计**: 信任 provider 总量，reasoning 作为 breakdown 不计入
+- **Usage 边界**: 当前产品不持久化或展示 provider token usage
 
 ## 数据 / 接口约定
 

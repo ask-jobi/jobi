@@ -1,8 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
-import type { Database } from "@/types/supabase"
 import { revalidatePath } from "next/cache"
+
 import {
   toolCallEventDataSchema,
   toolResultEventDataSchema,
@@ -10,9 +9,15 @@ import {
   summaryCheckpointEventDataSchema,
   rollbackEventDataSchema
 } from "@/lib/agent/schema"
+import { getDatabase } from "@/lib/db/client"
+import { chatEvents } from "@/lib/db/schema"
 
 type ChatEventType =
-  Database["public"]["Tables"]["chat_events"]["Insert"]["event_type"]
+  | "summary_checkpoint"
+  | "rollback"
+  | "tool_call"
+  | "tool_result"
+  | "tool_failed"
 
 function validateEventData(
   eventType: ChatEventType,
@@ -45,30 +50,25 @@ export async function logChatEvent({
   eventType: ChatEventType
   eventData?: Record<string, unknown>
 }) {
-  const supabase = await createClient()
+  const db = await getDatabase()
 
   const validatedEventData = eventData
     ? validateEventData(eventType, eventData)
     : {}
 
-  const { data, error } = await supabase
-    .from("chat_events")
-    .insert({
-      session_id: sessionId,
-      message_id: messageId ?? null,
-      event_type: eventType,
-      event_data: validatedEventData
+  const [event] = await db
+    .insert(chatEvents)
+    .values({
+      id: crypto.randomUUID(),
+      sessionId,
+      messageId: messageId ?? null,
+      eventType,
+      eventData: validatedEventData
     })
-    .select("id")
-    .single()
-
-  if (error) {
-    console.error("Failed to log chat event:", error)
-    throw new Error(`Failed to log event: ${error.message}`)
-  }
+    .returning({ id: chatEvents.id })
 
   revalidatePath(`/chat/${sessionId}`)
-  return data.id
+  return event.id
 }
 
 export async function logSummaryCheckpoint(

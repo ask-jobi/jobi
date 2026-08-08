@@ -15,11 +15,15 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
 // ── Mocks ───────────────────────────────────────────────────────
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn()
-}))
+vi.mock("@/server/auth-helper", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/auth-helper")>()
+  return {
+    ...actual,
+    requireExistingAuthContext: vi.fn()
+  }
+})
 
-vi.mock("@/server/quota", () => ({
+vi.mock("@/server/job-application-limit", () => ({
   verifyJobApplicationLimit: vi.fn()
 }))
 
@@ -27,8 +31,10 @@ vi.mock("@/server/intake/orchestrator", () => ({
   runUploadedResumeIntake: vi.fn()
 }))
 
-const { createClient } = await import("@/lib/supabase/server")
-const { verifyJobApplicationLimit } = await import("@/server/quota")
+const { ApiError, requireExistingAuthContext } =
+  await import("@/server/auth-helper")
+const { verifyJobApplicationLimit } =
+  await import("@/server/job-application-limit")
 const { runUploadedResumeIntake } = await import("@/server/intake/orchestrator")
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -60,25 +66,16 @@ function createRawMultipartRequest(parts: string[], boundary: string) {
 }
 
 function mockAuth(userId = "test-user-id") {
-  vi.mocked(createClient).mockResolvedValue({
-    auth: {
-      getClaims: vi.fn().mockResolvedValue({
-        data: { claims: { sub: userId } },
-        error: null
-      })
-    }
-  } as any)
+  vi.mocked(requireExistingAuthContext).mockResolvedValue({
+    db: {} as never,
+    user: { id: userId }
+  })
 }
 
 function mockNoAuth() {
-  vi.mocked(createClient).mockResolvedValue({
-    auth: {
-      getClaims: vi.fn().mockResolvedValue({
-        data: { claims: null },
-        error: null
-      })
-    }
-  } as any)
+  vi.mocked(requireExistingAuthContext).mockRejectedValue(
+    new ApiError("Unauthorized", 401)
+  )
 }
 
 const validJobInfo = {
@@ -150,13 +147,30 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
     expect(response.status).toBe(401)
   })
 
+  it("returns 401 before starting intake when the claimed user no longer exists", async () => {
+    vi.mocked(requireExistingAuthContext).mockRejectedValue(
+      new ApiError("Unauthorized", 401)
+    )
+
+    const response = await POST(
+      createFormRequest(
+        new File(["test"], "resume.pdf", { type: "application/pdf" }),
+        validJobInfo
+      )
+    )
+
+    expect(response.status).toBe(401)
+    expect(verifyJobApplicationLimit).not.toHaveBeenCalled()
+    expect(runUploadedResumeIntake).not.toHaveBeenCalled()
+  })
+
   // ── File validation ───────────────────────────────────────────
 
   it("returns 400 when file is missing", async () => {
     const request = createFormRequest(undefined, validJobInfo)
     const response = await POST(request)
     expect(response.status).toBe(400)
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(body.error).toContain("No file")
   })
 
@@ -167,7 +181,7 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
     )
     const response = await POST(request)
     expect(response.status).toBe(400)
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(body.error).toContain("PDF")
   })
 
@@ -208,7 +222,7 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
       { method: "POST", body: formData }
     )
     const response = await POST(request)
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(response.status).toBe(400)
     expect(body.error).toBe("Invalid job info: malformed JSON")
   })
@@ -220,7 +234,7 @@ describe("POST /api/resume/upload-and-analyze (adapter)", () => {
     )
     const response = await POST(request)
     expect(response.status).toBe(400)
-    const body = await response.json()
+    const body = (await response.json()) as any
     expect(body.error).toContain("job info")
     expect(body.details).toMatchObject({
       name: expect.any(Array),

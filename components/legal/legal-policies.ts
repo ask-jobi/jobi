@@ -1,5 +1,5 @@
 export type LegalPolicy = {
-  slug: "terms-and-conditions" | "privacy-policy" | "refund-policy"
+  slug: "terms-and-conditions" | "privacy-policy"
   title: string
   description: string
   lastUpdated: string
@@ -13,8 +13,7 @@ export const legalPolicies: LegalPolicy[] = [
   {
     slug: "terms-and-conditions",
     title: "Terms and Conditions",
-    description:
-      "These terms explain the rules for using Jobi and purchasing token bundles.",
+    description: "These terms explain the rules for using Jobi.",
     lastUpdated: "June 13, 2026",
     sections: [
       {
@@ -29,13 +28,6 @@ export const legalPolicies: LegalPolicy[] = [
         paragraphs: [
           "You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account.",
           "You agree to provide accurate information and to use Jobi only for lawful purposes."
-        ]
-      },
-      {
-        heading: "Purchases and Tokens",
-        paragraphs: [
-          "Jobi sells token bundles that can be used for eligible AI-powered product features. Token bundles are not cash, stored value, or transferable currency.",
-          "Prices, token amounts, and available plans are shown at checkout. Paid tokens are added to your account after successful payment processing."
         ]
       },
       {
@@ -90,14 +82,8 @@ export const legalPolicies: LegalPolicy[] = [
       {
         heading: "How We Use Information",
         paragraphs: [
-          "We use information to provide Jobi, process uploads, generate resume suggestions, maintain account access, process payments, respond to support requests, improve reliability, and prevent misuse.",
+          "We use information to provide Jobi, process uploads, generate resume suggestions, maintain workspace access, respond to support requests, improve reliability, and prevent misuse.",
           "We may use aggregated or de-identified information to understand product usage and improve features."
-        ]
-      },
-      {
-        heading: "Payments",
-        paragraphs: [
-          "Payments are processed by third-party payment providers. Jobi does not store full payment card numbers. Payment providers may collect and process payment information according to their own terms and privacy policies."
         ]
       },
       {
@@ -110,7 +96,7 @@ export const legalPolicies: LegalPolicy[] = [
       {
         heading: "Sharing Information",
         paragraphs: [
-          "We share information with service providers that help us operate Jobi, such as hosting, authentication, analytics, payment, storage, email, and AI infrastructure providers.",
+          "We share information with service providers that help us operate Jobi, such as hosting, analytics, storage, email, and AI infrastructure providers.",
           "We may disclose information if required by law, to protect rights and safety, or in connection with a business transfer."
         ]
       },
@@ -131,60 +117,6 @@ export const legalPolicies: LegalPolicy[] = [
         heading: "Contact",
         paragraphs: [
           "Questions about this privacy policy can be sent to support@askjobi.com."
-        ]
-      }
-    ]
-  },
-  {
-    slug: "refund-policy",
-    title: "Refund Policy",
-    description:
-      "This policy explains how refunds work for Jobi token bundle purchases.",
-    lastUpdated: "June 13, 2026",
-    sections: [
-      {
-        heading: "7-Day Refund Window",
-        paragraphs: [
-          "We offer a 7-day no-questions-asked refund for paid Jobi token bundle purchases if you are not satisfied with the service.",
-          "The refund window starts on the date your payment is successfully completed."
-        ]
-      },
-      {
-        heading: "Eligibility",
-        paragraphs: [
-          "Refunds are available for paid Lite and Pro token bundle purchases made within the last 7 days.",
-          "Free token grants, promotional credits, and tokens issued at no charge are not refundable."
-        ]
-      },
-      {
-        heading: "How to Request a Refund",
-        paragraphs: [
-          "To request a refund, contact support@askjobi.com with the email address used for your Jobi account and any payment or order information available.",
-          "We may ask for basic information needed to locate the payment and process the refund."
-        ]
-      },
-      {
-        heading: "Processing Time",
-        paragraphs: [
-          "Approved refunds are returned to the original payment method when possible. Your bank, card network, wallet provider, or payment provider may take additional time to post the refund."
-        ]
-      },
-      {
-        heading: "Token Access After Refund",
-        paragraphs: [
-          "If a refund is issued, the related paid token bundle may be removed from your account or your token balance may be adjusted to reflect the refunded purchase."
-        ]
-      },
-      {
-        heading: "Abuse and Duplicate Requests",
-        paragraphs: [
-          "We may decline refund requests that appear fraudulent, abusive, or inconsistent with this policy, to the extent permitted by law."
-        ]
-      },
-      {
-        heading: "Contact",
-        paragraphs: [
-          "Questions about refunds can be sent to support@askjobi.com."
         ]
       }
     ]

@@ -14,6 +14,14 @@ export const IntakeErrors = {
       "Could not extract text from the uploaded PDF. Please upload a text-based PDF resume."
     ),
 
+  /** PDF parser could not read the uploaded file */
+  pdfExtractionFailed: (details?: unknown) =>
+    error(
+      "PDF_EXTRACTION_FAILED",
+      "Could not read the uploaded PDF. Please try again or upload a different PDF.",
+      details
+    ),
+
   /** Resume parsing failed (AI/model error) */
   parseFailed: (details?: unknown) =>
     error("PARSE_FAILED", "Failed to parse resume content.", details),
@@ -33,14 +41,6 @@ export const IntakeErrors = {
   /** Intake was cancelled before commit point */
   cancelled: () =>
     error("INTAKE_CANCELLED", "The upload was cancelled before completion."),
-
-  /** Resume parsing quota blocks new starts once already exhausted */
-  quotaExceeded: (details?: unknown) =>
-    error(
-      "QUOTA_EXCEEDED",
-      "Resume parsing quota has been reached. Please upgrade or wait for quota to refresh.",
-      details
-    ),
 
   /** Generic internal error fallback */
   internal: (details?: unknown) =>

@@ -1,5 +1,13 @@
 # Vercel 到 Cloudflare 迁移计划
 
+> 2026-08-05 更新：运行时数据层与匿名身份已迁移到 D1/SQLite + 签名 workspace
+> cookie。Supabase secret、Auth callback 与 session 回归项均不再适用；Cloudflare
+> 环境改为配置 `DB` binding 和 `WORKSPACE_COOKIE_SECRET`。
+
+> 2026-07-31 更新：Stripe、landing、pricing 和用户可见的 Supabase Auth 页面已从产品中
+> 移除，本计划中对应 secrets、webhook、redirect 与 UI 回归项不再执行。Cloudflare 环境
+> 需要启用 Supabase anonymous sign-ins，并回归匿名 workspace session 与 ownership 隔离。
+
 **Date:** 2026-06-01
 
 ## 背景

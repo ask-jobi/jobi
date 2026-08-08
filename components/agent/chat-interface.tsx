@@ -23,7 +23,6 @@ import {
 } from "@/lib/store/chat"
 import { ChatPendingActionEffect } from "./chat/chat-pending-action-effect"
 import { useChatThreadLifecycle } from "@/lib/hooks/use-chat-thread-lifecycle"
-import { notifyTokenBalanceUpdated } from "@/lib/token-balance-events"
 
 interface ChatInterfaceProps {
   className?: string
@@ -152,7 +151,6 @@ function ChatInterfaceThread({ className }: ChatInterfaceProps) {
       pendingChatPatchCount === 0
     ) {
       markRunFinished()
-      notifyTokenBalanceUpdated()
     }
   }, [
     chat.status,

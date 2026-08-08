@@ -1,5 +1,4 @@
 import "server-only"
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
 
 export interface Document {
   pageContent: string
@@ -17,6 +16,65 @@ type PdfTextItem = {
   str: string
 }
 
+type PdfJsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs")
+
+class DOMMatrixPolyfill {
+  a = 1
+  b = 0
+  c = 0
+  d = 1
+  e = 0
+  f = 0
+
+  constructor(values?: ArrayLike<number>) {
+    if (!values) return
+    ;[this.a, this.b, this.c, this.d, this.e, this.f] = [
+      values[0] ?? 1,
+      values[1] ?? 0,
+      values[2] ?? 0,
+      values[3] ?? 1,
+      values[4] ?? 0,
+      values[5] ?? 0
+    ]
+  }
+
+  scaleSelf(scaleX = 1, scaleY = scaleX) {
+    this.a *= scaleX
+    this.b *= scaleX
+    this.c *= scaleY
+    this.d *= scaleY
+    return this
+  }
+
+  translateSelf(tx = 0, ty = 0) {
+    this.e += tx
+    this.f += ty
+    return this
+  }
+}
+
+let pdfJsModulePromise: Promise<PdfJsModule> | undefined
+
+async function loadPdfJs(): Promise<PdfJsModule> {
+  if (!pdfJsModulePromise) {
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      Object.defineProperty(globalThis, "DOMMatrix", {
+        configurable: true,
+        value: DOMMatrixPolyfill
+      })
+    }
+
+    pdfJsModulePromise = (async () => {
+      // Register the bundled worker before loading pdf.js. This makes pdf.js use
+      // its in-process worker, which is compatible with Cloudflare Workers.
+      await import("pdfjs-dist/legacy/build/pdf.worker.mjs")
+      return import("pdfjs-dist/legacy/build/pdf.mjs")
+    })()
+  }
+
+  return pdfJsModulePromise
+}
+
 function isPdfTextItem(item: unknown): item is PdfTextItem {
   return (
     typeof item === "object" &&
@@ -27,6 +85,7 @@ function isPdfTextItem(item: unknown): item is PdfTextItem {
 }
 
 async function readPdfPages(data: Uint8Array) {
+  const { getDocument } = await loadPdfJs()
   const loadingTask = getDocument({
     data,
     useWorkerFetch: false,

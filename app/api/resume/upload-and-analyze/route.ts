@@ -3,13 +3,13 @@ import {
   jobInfoFormSchema,
   type JobInfoFormType
 } from "@/lib/job-info-form-schema"
-import { verifyJobApplicationLimit } from "@/server/quota"
+import { verifyJobApplicationLimit } from "@/server/job-application-limit"
 import { runUploadedResumeIntake } from "@/server/intake/orchestrator"
 import { RollbackRegistryImpl } from "@/server/intake/rollback"
 import type { IntakeEvent } from "@/server/intake/types"
 import {
   handleApiError,
-  requireVerifiedAuthContext
+  requireExistingAuthContext
 } from "@/server/auth-helper"
 
 export const dynamic = "force-dynamic"
@@ -93,7 +93,7 @@ function recordSseTransportFailure(input: {
 
 export async function POST(request: NextRequest) {
   try {
-    const { supabase, user } = await requireVerifiedAuthContext()
+    const { db, user } = await requireExistingAuthContext()
 
     // ── Parse multipart ──
     let formData: FormData
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     // ── Application limit guard (peripheral) ──
     try {
-      await verifyJobApplicationLimit(user.id, supabase)
+      await verifyJobApplicationLimit(user.id, db)
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 403 })
     }

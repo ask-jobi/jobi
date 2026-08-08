@@ -1,111 +1,22 @@
 {
-  "login": "登录",
-  "signUp": "免费注册",
-  "pricingPage": "定价",
-  "home": "首页",
   "dashboard": "控制台",
   "jobs": "职位搜索",
   "resume": "简历",
   "jobDescription": "岗位信息",
-
   "exportResumeError": "导出简历失败",
-
   "jd": {
     "saveSuccess": "岗位描述保存成功",
     "saveError": "保存岗位描述失败"
   },
-
-  "landingPage": {
-    "hero": {
-      "slogan": "让每一份简历都命中靶心",
-      "valueProposition": "不用再为每个岗位从头改简历。上传你现有的简历，粘贴职位描述，Jobi 会帮你更快做出更贴岗的版本，把时间留给更值得投的机会。",
-      "startFreeTrial": "开始免费试用",
-      "learnMore": "查看它如何工作"
-    },
-    "problem": {
-      "title": "为什么你投了很多，还是没有回音？",
-      "subtitle": "很多时候，不是你不够努力，而是你把时间花在了低回报的修改上。",
-      "problem1": "你的简历看起来太像群发",
-      "problem1Desc": "HR 很难一眼看出你为什么适合这个岗位，简历很容易在初筛里被快速略过。",
-      "problem2": "你把精力耗在重复改写里",
-      "problem2Desc": "每看到一个新岗位，就要手动删改重写。越投越累，越改越乱，却不一定更有效。",
-      "problem3": "你还没被看到，就先被 ATS 筛掉",
-      "problem3Desc": "关键词、表达方式或结构不够贴岗时，系统和初筛环节就可能先把你挡在外面。",
-      "atsExplanation": "ATS（Applicant Tracking System）是申请者追踪系统，HR 使用它来自动筛选简历。如果你的简历格式不正确或缺少关键词，ATS 会在 HR 看到之前就过滤掉你的简历。"
-    },
-    "features": {
-      "title": "不是把简历改得更长，而是改得更像这个岗位要的人",
-      "description": "Jobi 帮你在已有经历的基础上，快速做出更贴岗、更容易被看见的版本。",
-      "feature1": "一键导入",
-      "feature1Desc": "不用重新填写一遍。上传你已有的 PDF 简历，马上进入可编辑版本，直接开始针对岗位修改。",
-      "feature2": "岗位定制",
-      "feature2Desc": "根据职位描述重写重点经历、关键词和表达方式，让你的简历更像在投这个岗位，而不是一份通用版本。",
-      "feature3": "真实表达",
-      "feature3Desc": "所有建议都围绕你已有的真实经历展开，减少模板感和 AI 味，写出来的内容更像你，也更像一个靠谱候选人。"
-    },
-    "readyToStart": "少一点无效修改，多一点面试机会",
-    "ctaDescription": "领取一次免费的 Token 额度，无需绑卡。先试试看它能不能帮你更快投出更像样的一版。",
-    "getStarted": "领取免费 Token",
-    "copyright": "© 2026 Jobi. 保留所有权利。"
-  },
-
   "language": "语言",
   "chinese": "中文",
   "english": "English",
-
   "settings": "设置",
-  "logout": "登出",
-
-  "credits": "简历额度",
-  "overallOptimized": "整体优化额度",
-
-  "currentPlan": "当前套餐",
-  "tokenHeader": "Token",
-  "tokenTotal": "Token 总量",
-  "tokenUsed": "Token 已用",
-  "tokenRemaining": "Token 剩余",
-  "noPlan": "无套餐",
-  "unknownPlan": "未知套餐",
-  "planFree": "免费",
-  "planLite": "Lite",
-  "planPro": "Pro",
-  "fullOptimization": "整体优化",
-  "blockOptimization": "区块优化",
-  "motivationLetter": "动机信生成",
-  "planExpiry": "套餐有效期至",
-  "noActivePlan": "当前无有效套餐",
-  "usage": "用量",
-  "planDetails": "套餐详情",
-  "subscriptionAndUsage": "套餐与用量",
-  "tokenBalance": "Token 余额",
-  "loadingSubscriptionError": "加载套餐信息时出现错误",
-  "failedToLoadSubscription": "无法加载套餐信息",
-  "loadingTokenBalanceError": "加载 Token 余额时出现错误",
-  "failedToLoadTokenBalance": "无法加载 Token 余额",
-  "subscriptionAndUsageSettings": "套餐与用量设置",
-  "tokenBalanceSettings": "Token 余额设置",
-  "chatTokens": "Chat Token",
-
   "createNewResume": "创建新简历",
-  "paymentSuccess": {
-    "title": "支付成功！",
-    "description": "您购买的 Token 额度已到账，可以继续使用了",
-    "checkingStatus": "正在确认支付状态...",
-    "processingDelay": "我们已收到支付，但 Token 同步比预期更慢。请稍后刷新 Dashboard 查看最新余额。",
-    "orderNumber": "订单号",
-    "nextStepsTitle": "接下来您可以：",
-    "nextStepUseTokens": "继续在聊天和改写流程中消耗 Token",
-    "nextStepViewBalance": "查看当前 Token 余额和使用情况",
-    "nextStepBuyMore": "继续购买新的 Token 套餐来累加余额",
-    "goToDashboard": "进入控制台",
-    "backToHome": "返回首页"
-  },
-
   "form": {
     "stepJobInfo": "岗位信息",
     "stepUpload": "上传简历",
     "stepAnalyze": "分析简历",
-
     "progress": {
       "extract": "提取PDF文本",
       "parse": "解析你的简历",
@@ -113,7 +24,6 @@
       "persist": "保存申请数据",
       "evaluate": "评估简历与岗位的匹配度"
     },
-
     "job": {
       "name": "岗位名称",
       "namePlaceholder": "岗位名称",
@@ -125,87 +35,14 @@
       "descPlaceholder": "岗位简介",
       "descError": "岗位简介不能为空"
     },
-
     "previous": "上一步",
     "next": "下一步",
     "startAnalysis": "开始解析",
     "retryAnalysis": "重新尝试"
   },
-
   "monthPicker": {
     "selectStartEndDate": "请选择起止时间"
   },
-
-  "pricing": {
-    "choosePlan": "选择最适合您的 Token 套餐",
-    "heroTitle": "简单、纯 Token 的",
-    "heroTitleHighlight": "定价",
-    "heroDescription": "每个套餐只由 Token 额度和价格定义。按你的使用量选择最合适的套餐。",
-    "faqTitle": "常见问题",
-    "faqCancelSubscription": "Token 会过期吗？",
-    "faqCancelSubscriptionAnswer": "不会。Token 套餐不会过期，发放后的 Token 会一直保留，直到被用完。",
-    "faqPaymentMethods": "支持哪些支付方式？",
-    "faqPaymentMethodsAnswer": "我们支持支付宝、微信支付、银行卡等多种支付方式。",
-    "faqRefundPolicy": "有退款政策吗？",
-    "faqRefundPolicyAnswer": "我们提供7天无理由退款保证，如果您不满意我们的服务。",
-    "faqEnterpriseCustomization": "Lite 或 Pro 可以重复购买吗？",
-    "faqEnterpriseCustomizationAnswer": "可以。再次购买 Lite 或 Pro 后，新购买的 Token 会直接累加到您当前的余额中。",
-    "ctaTitle": "选择你的 Token 套餐",
-    "ctaDescription": "Free、Lite、Pro 只在 Token 额度和价格上不同。",
-    "ctaButtonLoggedIn": "进入仪表板",
-    "ctaButtonLoggedOut": "立即开始",
-    "mostPopular": "最受欢迎",
-    "loading": "加载中...",
-    "loginToPurchase": "登录后购买",
-    "paymentError": "支付过程中发生错误，请重试",
-    "freePass": {
-      "createSuccess": "免费 Token 额度创建成功",
-      "alreadyExists": "用户已有 Token 余额",
-      "createFailed": "创建免费 Token 额度失败",
-      "createError": "创建免费 Token 额度时出现错误",
-      "alreadyTried": "您已经试用过该产品，请选择付费套餐继续使用"
-    },
-    "plans": {
-      "free": {
-        "title": "免费版",
-        "price": "免费",
-        "tokenAmount": "50,000 个 Token",
-        "description": "适合首次体验，包含一小包 Token。",
-        "features": [],
-        "buttonText": "领取免费额度"
-      },
-      "pro": {
-        "title": "专业版",
-        "price": "€24.99",
-        "tokenAmount": "1,000,000 个 Token",
-        "description": "适合高频、长期使用。",
-        "features": [],
-        "buttonText": "选择专业版"
-      },
-      "lite": {
-        "title": "轻量版",
-        "price": "€19.99",
-        "tokenAmount": "500,000 个 Token",
-        "description": "适合中等强度使用。",
-        "features": [],
-        "buttonText": "选择轻量版"
-      }
-    },
-    "paymentCancelled": {
-      "title": "支付已取消",
-      "description": "您的支付已被取消。您可以随时重新选择套餐进行购买。"
-    },
-    "loginRequired": {
-      "title": "需要登录",
-      "description": "购买 {planName} Token 套餐前，需要先登录您的账户",
-      "benefitsTitle": "登录后您可以：",
-      "benefits": ["安全完成支付", "管理您的 Token 余额", "查看购买历史"],
-      "loginButton": "登录",
-      "signUpButton": "注册",
-      "laterButton": "稍后再说"
-    }
-  },
-
   "rightPanel": {
     "panelTitle": "右侧工作区",
     "panelDescription": "在不离开编辑器的情况下，在分区编辑、AI 对话和评估报告之间快速切换。",
@@ -227,7 +64,6 @@
     "evaluationLoadingTitle": "正在处理你的请求",
     "evaluationLoadingDescription": "请等待结果，不要刷新页面。"
   },
-
   "resumeCanvas": {
     "addSection": "添加板块",
     "emptyHint": "从添加第一个板块开始搭建这份简历。",
@@ -237,7 +73,6 @@
     "startWith": "从这里开始",
     "personalInfoSection": "个人信息"
   },
-
   "evaluation": {
     "refreshEvaluation": "刷新报告",
     "oneClickOptimize": "一键润色简历",
@@ -317,7 +152,6 @@
     "deleteJobAppTitle": "删除简历",
     "deleteJobAppDesc": "你确定要删除该简历吗？该操作不可逆。"
   },
-
   "button": {
     "createEmptyResume": "创建空简历",
     "save": "保存",
@@ -328,13 +162,11 @@
     "aiOptimize": "AI 优化",
     "aiChat": "AI 对话"
   },
-
   "upload": {
     "title": "拖拽文件到这里",
     "desc": "或者点击选择文件，不超过5MB",
     "button": "选择文件"
   },
-
   "chat": {
     "startConversation": "开始对话",
     "askToOptimizeResume": "让我帮您优化简历...",
@@ -345,19 +177,6 @@
     "toolError": "简历工具执行失败",
     "truncate": "撤回",
     "stopGenerating": "停止生成",
-    "tokenUsage": "对话 Token 用量",
-    "tokenUsageDetails": "Token 用量明细",
-    "tokenInput": "输入",
-    "tokenOutput": "输出",
-    "tokenCached": "缓存",
-    "tokenReasoning": "推理",
-    "tokenTotal": "总计",
-    "tokenSessionTotal": "当前对话总计",
-    "tokenSharedUsed": "套餐已用",
-    "tokenLimit": "Token 上限",
-    "tokenSoftLimit": "软上限",
-    "tokenUsageUnavailable": "暂时无法获取 Token 用量",
-    "tokenUsagePercentage": "使用百分比",
     "truncateSuccess": "已回溯到该消息",
     "truncateFailed": "回溯失败",
     "toolOutput": {

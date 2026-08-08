@@ -1,6 +1,6 @@
 import {
   generateUploadedResumeFileName,
-  extractFilePathFromPublicUrl
+  resolveUploadedResumeFilePath
 } from "./utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 
@@ -41,11 +41,17 @@ describe("generateUploadedResumeFileName", () => {
   })
 })
 
-describe("extractFilePathFromPublicUrl", () => {
+describe("resolveUploadedResumeFilePath", () => {
+  it("returns a stored private bucket path", () => {
+    expect(resolveUploadedResumeFilePath("user-123/resume.pdf")).toBe(
+      "user-123/resume.pdf"
+    )
+  })
+
   it("should extract file path from valid public URL", () => {
     const url =
       "https://example.com/storage/v1/object/public/upload-resumes/user-123/resume.pdf"
-    const result = extractFilePathFromPublicUrl(url)
+    const result = resolveUploadedResumeFilePath(url)
 
     expect(result).toBe("user-123/resume.pdf")
   })
@@ -53,7 +59,7 @@ describe("extractFilePathFromPublicUrl", () => {
   it("should handle URL without file", () => {
     const url =
       "https://example.com/storage/v1/object/public/upload-resumes/user-123/"
-    const result = extractFilePathFromPublicUrl(url)
+    const result = resolveUploadedResumeFilePath(url)
 
     expect(result).toBe("user-123/")
   })
@@ -61,19 +67,19 @@ describe("extractFilePathFromPublicUrl", () => {
   it("should return null when bucket name not found", () => {
     const url =
       "https://example.com/storage/v1/object/public/other-bucket/user-123/resume.pdf"
-    const result = extractFilePathFromPublicUrl(url)
+    const result = resolveUploadedResumeFilePath(url)
 
     expect(result).toBeNull()
   })
 
   it("should return null for invalid URL", () => {
-    const result = extractFilePathFromPublicUrl("not-a-url")
+    const result = resolveUploadedResumeFilePath("/not-a-storage-path")
 
     expect(result).toBeNull()
   })
 
   it("should return null when URL throws exception", () => {
-    const result = extractFilePathFromPublicUrl("http://[invalid:url")
+    const result = resolveUploadedResumeFilePath("http://[invalid:url")
 
     expect(result).toBeNull()
   })
@@ -81,7 +87,7 @@ describe("extractFilePathFromPublicUrl", () => {
   it("should handle URL with query parameters", () => {
     const url =
       "https://example.com/storage/v1/object/public/upload-resumes/user-123/resume.pdf?token=abc"
-    const result = extractFilePathFromPublicUrl(url)
+    const result = resolveUploadedResumeFilePath(url)
 
     expect(result).toBe("user-123/resume.pdf")
   })
@@ -89,7 +95,7 @@ describe("extractFilePathFromPublicUrl", () => {
   it("should handle nested paths in filename", () => {
     const url =
       "https://example.com/storage/v1/object/public/upload-resumes/user-123/folder/resume.pdf"
-    const result = extractFilePathFromPublicUrl(url)
+    const result = resolveUploadedResumeFilePath(url)
 
     expect(result).toBe("user-123/folder/resume.pdf")
   })

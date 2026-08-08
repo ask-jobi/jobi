@@ -1,140 +1,83 @@
 /**
  * @vitest-environment node
  */
-import {
-  AuthRetryableFetchError,
-  AuthSessionMissingError
-} from "@supabase/supabase-js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { getDatabase } from "@/lib/db/client"
+import { createWorkspaceToken, workspaceCookie } from "@/lib/workspace/session"
+import { verifySessionOwnership } from "@/server/ai/chat/history"
 import {
-  ApiError,
+  getOptionalExistingUserIdentity,
   getOptionalVerifiedUserIdentity,
+  requireExistingAuthContext,
   requireVerifiedAuthContext,
-  requireVerifiedUserIdentity
+  requireVerifiedUserIdentity,
+  verifyOwnership
 } from "./auth-helper"
-import { createClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn()
-}))
-
+vi.mock("next/headers", () => ({ cookies: vi.fn() }))
+vi.mock("@/lib/db/client", () => ({ getDatabase: vi.fn() }))
 vi.mock("@/server/ai/chat/history", () => ({
   verifySessionOwnership: vi.fn()
 }))
 
-describe("auth-helper", () => {
-  beforeEach(() => {
+function setCookieValue(value: string | undefined) {
+  vi.mocked(cookies).mockResolvedValue({
+    get: vi.fn(() =>
+      value ? { name: workspaceCookie.name, value } : undefined
+    )
+  } as never)
+}
+
+describe("auth-helper workspace identity", () => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+    setCookieValue(await createWorkspaceToken("workspace-1"))
+    vi.mocked(getDatabase).mockResolvedValue({} as never)
   })
 
-  it("returns a verified identity from claims", async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: {
-            claims: {
-              sub: "user-1",
-              email: "user@example.com"
-            }
-          },
-          error: null
-        })
-      }
-    } as any)
-
+  it("returns a verified workspace identity", async () => {
     await expect(requireVerifiedUserIdentity()).resolves.toEqual({
-      id: "user-1",
-      email: "user@example.com"
+      id: "workspace-1"
+    })
+    await expect(getOptionalVerifiedUserIdentity()).resolves.toEqual({
+      id: "workspace-1"
+    })
+    await expect(getOptionalExistingUserIdentity()).resolves.toEqual({
+      id: "workspace-1"
     })
   })
 
-  it("returns null for an anonymous verified identity lookup", async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: null },
-          error: null
-        })
-      }
-    } as any)
+  it("rejects a missing or tampered cookie", async () => {
+    setCookieValue("workspace-1.invalid-signature")
 
-    await expect(getOptionalVerifiedUserIdentity()).resolves.toBeNull()
-  })
-
-  it("maps missing sessions to 401 for required verified auth", async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: null },
-          error: new AuthSessionMissingError()
-        })
-      }
-    } as any)
-
-    await expect(requireVerifiedAuthContext()).rejects.toMatchObject({
+    await expect(requireVerifiedUserIdentity()).rejects.toMatchObject({
       message: "Unauthorized",
       statusCode: 401
     })
+    await expect(getOptionalVerifiedUserIdentity()).resolves.toBeNull()
   })
 
-  it("maps retryable claims failures to 503", async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: null },
-          error: new AuthRetryableFetchError("fetch failed", 503)
-        })
-      }
-    } as any)
-
-    await expect(requireVerifiedAuthContext()).rejects.toMatchObject({
-      message: "Auth service temporarily unavailable",
-      statusCode: 503
-    })
-  })
-
-  it("returns a verified auth context from claims", async () => {
-    const mockSupabase = {
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: {
-            claims: {
-              sub: "user-2",
-              email: "claims@example.com"
-            }
-          },
-          error: null
-        })
-      }
-    }
-
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+  it("returns a database context for the verified workspace", async () => {
+    const db = {} as never
+    vi.mocked(getDatabase).mockResolvedValue(db)
 
     await expect(requireVerifiedAuthContext()).resolves.toEqual({
-      supabase: mockSupabase,
-      user: {
-        id: "user-2",
-        email: "claims@example.com"
-      }
+      db,
+      user: { id: "workspace-1" }
+    })
+    await expect(requireExistingAuthContext()).resolves.toEqual({
+      db,
+      user: { id: "workspace-1" }
     })
   })
 
-  it("converts non-supabase auth errors to a generic 401", async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: null },
-          error: new Error("unexpected auth mock")
-        })
-      }
-    } as any)
+  it("rejects sessions owned by another workspace", async () => {
+    vi.mocked(verifySessionOwnership).mockResolvedValue(false)
 
-    await expect(requireVerifiedAuthContext()).rejects.toEqual(
-      expect.objectContaining<ApiError>({
-        message: "Unauthorized",
-        statusCode: 401
-      })
-    )
+    await expect(
+      verifyOwnership("session-1", "workspace-1")
+    ).rejects.toMatchObject({ statusCode: 403 })
   })
 })

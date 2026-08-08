@@ -68,7 +68,7 @@ export default function ResumeThumbnailCard({
         body: JSON.stringify({ id: applicationId })
       })
 
-      const data = await response.json()
+      const data = (await response.json()) as { error?: string }
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete job application")

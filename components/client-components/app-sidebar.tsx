@@ -11,9 +11,7 @@ import {
   SidebarMenuItem
 } from "../ui/sidebar"
 import { Logo } from "../ui/logo"
-import { LogoutButton } from "./logout-button"
 import { useTranslations } from "next-intl"
-import { CompactPlanDisplay } from "./compact-plan-display"
 
 const items = [
   {
@@ -54,9 +52,6 @@ export default function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <CompactPlanDisplay />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <a href="/settings">
                 <Settings />
@@ -64,7 +59,6 @@ export default function AppSidebar() {
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <LogoutButton />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

@@ -35,18 +35,6 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("link", { name: "settings" })).toBeInTheDocument()
   })
 
-  it("should render logout button", () => {
-    render(TestAppSidebar)
-
-    expect(screen.getByText("logout")).toBeInTheDocument()
-  })
-
-  it("should render compact plan display", () => {
-    render(TestAppSidebar)
-
-    expect(screen.getByText("currentPlan")).toBeInTheDocument()
-  })
-
   it("should have correct href for menu items", () => {
     render(TestAppSidebar)
 

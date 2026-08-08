@@ -5,7 +5,7 @@
 
 ## 实现了什么
 
-对齐 provider、parser、token usage 三者实现与文档的真实一致性。原 gateway-first 策略后续已被 Cloudflare 迁移替换为 direct DeepSeek provider；parser 中虚假 fallback 叙述与死代码已移除，token 统计信任 provider 总量。
+对齐 provider 与 parser 实现及文档。原 gateway-first 策略后续已被 Cloudflare 迁移替换为 direct DeepSeek provider；parser 中虚假 fallback 叙述与死代码已移除。provider token usage 后续已从产品数据模型与请求链路移除。
 
 ## 关键文件
 
@@ -13,8 +13,6 @@
 |---|---|
 | `server/ai/model.ts` | direct DeepSeek provider 模型选择：`DEEPSEEK_MODEL_ID` 默认 `deepseek-v4-flash` |
 | `server/ai/resume-parser.ts` | 移除 `collectErrorMessages` 死代码、`NoObjectGeneratedError` 无用导入、误导性 fallback 日志 |
-| `lib/agent/token-usage.ts` | `totalTokens` 直接信任 provider 总量，不再自算 fallback |
-| `server/token-usage.test.ts` | 对齐新口径：totalTokens 缺失时返回 0 |
 | `server/ai/resume-parser.test.ts` | 对齐新 warning 格式（单一错误 message 而非嵌套 messages 数组） |
 | `.env.example` | 已含 `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL_ID` 说明 |
 
@@ -22,8 +20,6 @@
 
 - **模型选择**: direct DeepSeek provider，默认 `deepseek-v4-flash`，可用 `DEEPSEEK_MODEL_ID` 覆盖
 - **Parser 错误**: 结构化解失败 → `console.warn("Structured resume parsing failed", errorMessage)` → `throw error`
-- **Token 总量**: `parseTokenUsage` 使用 `usage.totalTokens ?? 0`，不再自行计算
-- **Reasoning 展示**: `reasoningTokens` 作为 `outputTokenDetails.reasoningTokens` 的 breakdown 单独记录，不计入总量
 
 ## 数据 / 接口约定
 

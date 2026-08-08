@@ -14,7 +14,7 @@ vi.mock("@/server/ai/tools", () => ({
 }))
 
 vi.mock("@/server/ai/resume-parser", () => ({
-  parseResumeWithTokenUsage: vi.fn()
+  parseResume: vi.fn()
 }))
 
 vi.mock("@/server/resume", () => ({
@@ -29,18 +29,12 @@ vi.mock("./persist", () => ({
   persistApplicationResume: vi.fn()
 }))
 
-vi.mock("./quota", () => ({
-  authorizeUsage: vi.fn(),
-  recordAuthorizedUsage: vi.fn()
-}))
-
 const { runUploadedResumeIntake } = await import("./orchestrator")
 const { loadPdfToDoc } = await import("@/server/ai/tools")
-const { parseResumeWithTokenUsage } = await import("@/server/ai/resume-parser")
+const { parseResume } = await import("@/server/ai/resume-parser")
 const { uploadResumeFile } = await import("@/server/resume")
 const { evaluateAndSaveResume } = await import("@/server/evaluation")
 const { persistApplicationResume } = await import("./persist")
-const { authorizeUsage, recordAuthorizedUsage } = await import("./quota")
 
 const actorId = "user-1"
 
@@ -89,24 +83,18 @@ describe("runUploadedResumeIntake", () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(authorizeUsage).mockResolvedValue({
-      accessPassId: "pass-1",
-      authorized: true,
-      used: 10,
-      limit: 100
-    })
-    vi.mocked(loadPdfToDoc).mockResolvedValue([{ pageContent: "resume text" }])
-    vi.mocked(parseResumeWithTokenUsage).mockResolvedValue({
-      resumeData: { basics: { name: "Alice" } },
-      language: "en",
-      tokenUsage: { totalTokens: 25 }
-    } as any)
-    vi.mocked(recordAuthorizedUsage).mockResolvedValue(undefined)
+    vi.mocked(loadPdfToDoc).mockResolvedValue([
+      { pageContent: "resume text", metadata: { totalPages: 1 } }
+    ])
+    vi.mocked(parseResume).mockResolvedValue([
+      { basics: { name: "Alice" } },
+      "en"
+    ] as any)
     vi.mocked(uploadResumeFile).mockImplementation(async (_file, rollback) => {
       rollback?.register("storage", "delete-upload", async () => {})
       return {
         fileName: "resume.pdf",
-        publicUrl: "https://cdn.example/resume.pdf",
+        filePath: "user-1/resume.pdf",
         userId: actorId
       }
     })
@@ -115,7 +103,15 @@ describe("runUploadedResumeIntake", () => {
       resumeData: { id: "resume-1" },
       applicationData: { id: "app-1" }
     }))
-    vi.mocked(evaluateAndSaveResume).mockResolvedValue(undefined)
+    vi.mocked(evaluateAndSaveResume).mockResolvedValue({
+      gates: {
+        ats: "pass",
+        hr: "pass",
+        hiringManager: "pass"
+      },
+      gaps: [],
+      actions: []
+    })
   })
 
   it("runs the happy path and emits exactly one terminal event", async () => {
@@ -144,34 +140,12 @@ describe("runUploadedResumeIntake", () => {
       "intake.done"
     ])
     expect(terminalEvents(events)).toHaveLength(1)
-    expect(recordAuthorizedUsage).toHaveBeenCalledTimes(1)
-  })
-
-  it("blocks a new intake when quota is already exhausted", async () => {
-    vi.mocked(authorizeUsage).mockResolvedValue({
-      accessPassId: "pass-1",
-      authorized: false,
-      used: 100,
-      limit: 100
-    })
-    const { ctx, events } = createContext()
-
-    const result = await runUploadedResumeIntake(input, ctx)
-
-    expect(result.status).toBe("failed")
-    expect(result.intakeId).toBe("intake-123")
-    if (result.status === "failed") {
-      expect(result.error.code).toBe("QUOTA_EXCEEDED")
-    }
-    expect(loadPdfToDoc).not.toHaveBeenCalled()
-    expect(parseResumeWithTokenUsage).not.toHaveBeenCalled()
-    expect(recordAuthorizedUsage).not.toHaveBeenCalled()
-    expect(eventTypes(events)).toEqual(["intake.start", "intake.failed"])
-    expect(terminalEvents(events)).toHaveLength(1)
   })
 
   it("fails when extract produces no text", async () => {
-    vi.mocked(loadPdfToDoc).mockResolvedValue([{ pageContent: "   " }])
+    vi.mocked(loadPdfToDoc).mockResolvedValue([
+      { pageContent: "   ", metadata: { totalPages: 1 } }
+    ])
 
     const { ctx, events } = createContext()
     const result = await runUploadedResumeIntake(input, ctx)
@@ -191,10 +165,37 @@ describe("runUploadedResumeIntake", () => {
     expect(terminalEvents(events)).toHaveLength(1)
   })
 
-  it("fails when parse fails without recording usage", async () => {
-    vi.mocked(parseResumeWithTokenUsage).mockRejectedValue(
-      new Error("llm down")
+  it("preserves parser failures from the extract step", async () => {
+    vi.mocked(loadPdfToDoc).mockRejectedValue(
+      new Error("DOMMatrix is not defined")
     )
+
+    const { ctx, events } = createContext()
+    const result = await runUploadedResumeIntake(input, ctx)
+
+    expect(result).toMatchObject({
+      status: "failed",
+      intakeId: "intake-123",
+      error: {
+        code: "PDF_EXTRACTION_FAILED",
+        details: "DOMMatrix is not defined"
+      }
+    })
+    expect(events).toContainEqual({
+      type: "step.failed",
+      intakeId: "intake-123",
+      step: "extract",
+      error: {
+        code: "PDF_EXTRACTION_FAILED",
+        userMessage:
+          "Could not read the uploaded PDF. Please try again or upload a different PDF.",
+        details: "DOMMatrix is not defined"
+      }
+    })
+  })
+
+  it("fails when parsing fails", async () => {
+    vi.mocked(parseResume).mockRejectedValue(new Error("llm down"))
 
     const { ctx, events } = createContext()
     const result = await runUploadedResumeIntake(input, ctx)
@@ -203,7 +204,6 @@ describe("runUploadedResumeIntake", () => {
       status: "failed",
       intakeId: "intake-123"
     })
-    expect(recordAuthorizedUsage).not.toHaveBeenCalled()
     expect(eventTypes(events)).toEqual([
       "intake.start",
       "step.start",
@@ -278,7 +278,7 @@ describe("runUploadedResumeIntake", () => {
     expect(terminalEvents(events)).toHaveLength(1)
   })
 
-  it("keeps usage recorded when cancellation happens after parse", async () => {
+  it("cancels after parsing without continuing to upload", async () => {
     const { ctx, events } = createContext({
       onEmit: (event, abort) => {
         if (event.type === "step.done" && event.step === "parse") {
@@ -293,7 +293,6 @@ describe("runUploadedResumeIntake", () => {
       status: "cancelled",
       intakeId: "intake-123"
     })
-    expect(recordAuthorizedUsage).toHaveBeenCalledTimes(1)
     expect(eventTypes(events)).toEqual([
       "intake.start",
       "step.start",
@@ -336,14 +335,14 @@ describe("runUploadedResumeIntake", () => {
     ])
   })
 
-  it("reports rollback quality and keeps token usage recorded on downstream failure", async () => {
+  it("reports rollback quality on downstream failure", async () => {
     vi.mocked(uploadResumeFile).mockImplementation(async (_file, rollback) => {
       rollback?.register("storage", "delete-upload", async () => {
         throw new Error("delete failed")
       })
       return {
         fileName: "resume.pdf",
-        publicUrl: "https://cdn.example/resume.pdf",
+        filePath: "user-1/resume.pdf",
         userId: actorId
       }
     })
@@ -356,7 +355,6 @@ describe("runUploadedResumeIntake", () => {
       status: "failed",
       intakeId: "intake-123"
     })
-    expect(recordAuthorizedUsage).toHaveBeenCalledTimes(1)
     const rollbackDone = events.find((event) => event.type === "rollback.done")
     expect(rollbackDone).toMatchObject({
       type: "rollback.done",

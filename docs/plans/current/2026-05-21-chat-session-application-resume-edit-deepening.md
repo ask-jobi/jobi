@@ -1,5 +1,8 @@
 # Chat Session → Application Resume edit Module Deepening
 
+> 2026-07-31 更新：本计划中关于保留 token 配额逻辑的非目标已失效；当前产品已移除
+> token 统计与配额链路。Chat session、resume edit 与 rollback 设计仍有效。
+
 **Date:** 2026-05-21
 
 ## 背景

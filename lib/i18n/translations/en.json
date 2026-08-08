@@ -1,106 +1,18 @@
 {
-  "login": "Login",
-  "signUp": "Sign Up Free",
-  "pricingPage": "Pricing",
-  "home": "Home",
   "dashboard": "Dashboard",
   "jobs": "Job Search",
   "resume": "Resume",
   "jobDescription": "Job Description",
-
   "exportResumeError": "export resume failed.",
-
   "jd": {
     "saveSuccess": "Job description saved successfully",
     "saveError": "Failed to save job description"
   },
-
-  "landingPage": {
-    "hero": {
-      "slogan": "Make every resume hit the target",
-      "valueProposition": "Stop rewriting your resume from scratch for every job. Upload your current resume, paste the job description, and Jobi helps you turn it into a sharper, more targeted version in minutes.",
-      "startFreeTrial": "Start Free Trial",
-      "learnMore": "See How It Works"
-    },
-    "problem": {
-      "title": "Why are you applying so much and still hearing nothing back?",
-      "subtitle": "Most of the time, the problem is not effort. It is spending too much time on low-return resume edits.",
-      "problem1": "Your resume feels too generic",
-      "problem1Desc": "Recruiters cannot quickly see why you fit this specific role, so your resume gets skimmed and passed over.",
-      "problem2": "You burn energy on repetitive edits",
-      "problem2Desc": "Every new job means more deleting, rewriting, and reshuffling. It takes time, drains focus, and still may not improve your odds.",
-      "problem3": "You get filtered out before a human sees you",
-      "problem3Desc": "If your wording, keywords, or structure do not match the role, ATS and early screening can block you first.",
-      "atsExplanation": "ATS (Applicant Tracking System) is used by HR to automatically screen resumes. If your resume format is incorrect or missing keywords, ATS will filter out your resume before HR even sees it."
-    },
-    "features": {
-      "title": "This is not about making your resume longer. It is about making it feel right for the job.",
-      "description": "Jobi helps you turn your existing experience into a version that feels more relevant, more focused, and easier to shortlist.",
-      "feature1": "One-Click Import",
-      "feature1Desc": "Skip the manual re-entry. Upload your existing PDF resume and start editing a usable version right away.",
-      "feature2": "Job Customization",
-      "feature2Desc": "Rewrite key experience, keywords, and phrasing around the job description so your resume feels tailored instead of reused.",
-      "feature3": "Authentic Expression",
-      "feature3Desc": "Suggestions stay grounded in your real experience, so the final result sounds credible, specific, and still like you."
-    },
-    "readyToStart": "Less busywork. More interview chances.",
-    "ctaDescription": "Claim a one-time free token bundle and see if it helps you send stronger applications faster.",
-    "getStarted": "Claim Free Tokens",
-    "copyright": "© 2026 Jobi. All rights reserved."
-  },
-
   "language": "Language",
   "chinese": "中文",
   "english": "English",
-
   "settings": "Settings",
-  "logout": "Logout",
-
-  "credits": "Credits",
-  "overallOptimized": "Overall Optimized",
-
-  "currentPlan": "Current Plan",
-  "tokenHeader": "Token",
-  "tokenTotal": "Token Total",
-  "tokenUsed": "Token Used",
-  "tokenRemaining": "Token Remaining",
-  "noPlan": "No Plan",
-  "unknownPlan": "Unknown Plan",
-  "planFree": "Free",
-  "planLite": "Lite",
-  "planPro": "Pro",
-  "fullOptimization": "Full Optimization",
-  "blockOptimization": "Block Optimization",
-  "motivationLetter": "Motivation Letter",
-  "planExpiry": "Plan Expiry",
-  "noActivePlan": "No active plan",
-  "usage": "Usage",
-  "planDetails": "Plan Details",
-  "subscriptionAndUsage": "Subscription & Usage",
-  "tokenBalance": "Token Balance",
-  "loadingSubscriptionError": "Error loading subscription information",
-  "failedToLoadSubscription": "Failed to load subscription information",
-  "loadingTokenBalanceError": "Error loading token balance",
-  "failedToLoadTokenBalance": "Failed to load token balance",
-  "subscriptionAndUsageSettings": "Subscription & Usage Settings",
-  "tokenBalanceSettings": "Token Balance Settings",
-  "chatTokens": "Chat tokens",
-
   "createNewResume": "Create New Resume",
-  "paymentSuccess": {
-    "title": "Payment successful!",
-    "description": "Your token bundle has been added successfully and is ready to use.",
-    "checkingStatus": "Checking payment status...",
-    "processingDelay": "Payment was received, but token synchronization is taking longer than expected. Please refresh the dashboard shortly.",
-    "orderNumber": "Order ID",
-    "nextStepsTitle": "What you can do next:",
-    "nextStepUseTokens": "Continue spending tokens in chat and resume rewrite flows",
-    "nextStepViewBalance": "Check your current token balance and usage",
-    "nextStepBuyMore": "Buy another token bundle any time to add more balance",
-    "goToDashboard": "Go to Dashboard",
-    "backToHome": "Back to Home"
-  },
-
   "form": {
     "stepJobInfo": "Job Information",
     "stepUpload": "Upload Resume",
@@ -123,91 +35,14 @@
       "descPlaceholder": "Job description",
       "descError": "岗位名称不能为空"
     },
-
     "previous": "Previous",
     "next": "Next",
     "startAnalysis": "Start Analysis",
     "retryAnalysis": "Retry Analysis"
   },
-
   "monthPicker": {
     "selectStartEndDate": "Select Start/End Date"
   },
-
-  "pricing": {
-    "choosePlan": "Choose the token bundle that best fits your usage",
-    "heroTitle": "Simple, token-based",
-    "heroTitleHighlight": "pricing",
-    "heroDescription": "Each plan is defined only by token allowance and price. Pick the bundle that matches how much you build.",
-    "faqTitle": "Frequently Asked Questions",
-    "faqCancelSubscription": "Do tokens expire?",
-    "faqCancelSubscriptionAnswer": "No. Token bundles do not expire. Once granted, your tokens remain available until they are used up.",
-    "faqPaymentMethods": "What payment methods do you support?",
-    "faqPaymentMethodsAnswer": "We support various payment methods including Alipay, WeChat Pay, bank cards, and more.",
-    "faqRefundPolicy": "Do you have a refund policy?",
-    "faqRefundPolicyAnswer": "Yes, we offer a 7-day no-questions-asked refund guarantee if you're not satisfied with our service.",
-    "faqEnterpriseCustomization": "Can I buy Lite or Pro more than once?",
-    "faqEnterpriseCustomizationAnswer": "Yes. If you buy Lite or Pro again, the new tokens are added to your existing balance.",
-    "ctaTitle": "Pick your token bundle",
-    "ctaDescription": "Free, Lite, and Pro differ only by token allowance and price.",
-    "ctaButtonLoggedIn": "Go to Dashboard",
-    "ctaButtonLoggedOut": "Get Started Now",
-    "mostPopular": "Most Popular",
-    "loading": "Loading...",
-    "loginToPurchase": "Login to Purchase",
-    "paymentError": "An error occurred during payment, please try again",
-    "plans": {
-      "free": {
-        "title": "Free",
-        "price": "Free",
-        "tokenAmount": "50,000 Tokens",
-        "description": "For trying the product with a small token bundle.",
-        "features": [],
-        "buttonText": "Choose Free"
-      },
-      "pro": {
-        "title": "Pro",
-        "price": "€24.99",
-        "tokenAmount": "1,000,000 Tokens",
-        "description": "For regular, high-volume usage.",
-        "features": [],
-        "buttonText": "Choose Pro"
-      },
-      "lite": {
-        "title": "Lite",
-        "price": "€19.99",
-        "tokenAmount": "500,000 Tokens",
-        "description": "For lighter paid usage.",
-        "features": [],
-        "buttonText": "Choose Lite"
-      }
-    },
-    "paymentCancelled": {
-      "title": "Payment Cancelled",
-      "description": "Your payment has been cancelled. You can choose a plan and purchase again at any time."
-    },
-    "loginRequired": {
-      "title": "Login Required",
-      "description": "To purchase the {planName} token bundle, you need to log in to your account first",
-      "benefitsTitle": "After logging in, you can:",
-      "benefits": [
-        "Complete payments securely",
-        "Manage your token balance",
-        "View purchase history"
-      ],
-      "loginButton": "Login",
-      "signUpButton": "Sign Up",
-      "laterButton": "Maybe Later"
-    },
-    "freePass": {
-      "createSuccess": "Free token grant created successfully",
-      "alreadyExists": "User already has token balance",
-      "createFailed": "Failed to create free token grant",
-      "createError": "Error occurred while creating free token grant",
-      "alreadyTried": "You have already tried this product, please choose a paid plan to continue"
-    }
-  },
-
   "rightPanel": {
     "panelTitle": "Resume workspace",
     "panelDescription": "Switch between focused editing, AI chat, and evaluation without leaving the editor.",
@@ -229,7 +64,6 @@
     "evaluationLoadingTitle": "Processing your request",
     "evaluationLoadingDescription": "Please wait while we process your request. Do not refresh the page."
   },
-
   "resumeCanvas": {
     "addSection": "Add Section",
     "emptyHint": "Start building this resume by adding your first section.",
@@ -239,7 +73,6 @@
     "startWith": "Start With",
     "personalInfoSection": "Personal Info"
   },
-
   "evaluation": {
     "refreshEvaluation": "Refresh Evaluation",
     "oneClickOptimize": "One-Click Optimize Resume",
@@ -319,7 +152,6 @@
     "deleteJobAppTitle": "Delete Job Application",
     "deleteJobAppDesc": "Are you sure you want to delete this job application? This action cannot be undone."
   },
-
   "button": {
     "createEmptyResume": "Create Empty Resume",
     "save": "Save",
@@ -330,13 +162,11 @@
     "aiOptimize": "AI Optimize",
     "aiChat": "AI Chat"
   },
-
   "upload": {
     "title": "Drag & drop files here",
     "desc": "Or click to browse one file, up to 5MB",
     "button": "Browse files"
   },
-
   "chat": {
     "startConversation": "Start a conversation",
     "askToOptimizeResume": "Ask me to help optimize your resume...",
@@ -347,19 +177,6 @@
     "toolError": "Resume tool failed",
     "truncate": "Truncate",
     "stopGenerating": "Stop generating",
-    "tokenUsage": "Chat token usage",
-    "tokenUsageDetails": "Token usage details",
-    "tokenInput": "Input",
-    "tokenOutput": "Output",
-    "tokenCached": "Cached",
-    "tokenReasoning": "Reasoning",
-    "tokenTotal": "Total",
-    "tokenSessionTotal": "Chat total",
-    "tokenSharedUsed": "Plan used",
-    "tokenLimit": "Token limit",
-    "tokenSoftLimit": "Soft limit",
-    "tokenUsageUnavailable": "Token usage unavailable",
-    "tokenUsagePercentage": "Usage percentage",
     "truncateSuccess": "Truncated to this message",
     "truncateFailed": "Failed to truncate",
     "toolOutput": {

@@ -96,16 +96,18 @@ function FloatingToolbarAi({
       method: "POST",
       body: JSON.stringify(body)
     })
-    const result = await resp.json()
+    const result = (await resp.json()) as string | { error?: string }
     if (!resp.ok) {
       setLoading(false)
-      toast.error(result.error)
+      toast.error(
+        typeof result === "object" ? result.error : "Failed to rewrite entry"
+      )
       return
     }
 
     // 解析原始内容和AI生成的内容
     const beforeJsonContent = editor.markdown!!.parse(originalContent)
-    const afterJsonContent = editor.markdown!!.parse(result)
+    const afterJsonContent = editor.markdown!!.parse(result as string)
 
     // 计算差异
     const diffContent = calculateDiffJsonContent(

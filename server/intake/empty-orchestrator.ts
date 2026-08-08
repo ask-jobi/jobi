@@ -34,7 +34,7 @@ export async function createEmptyResume(
         jobInfo: input.jobInfo,
         resumeData: emptyResumeData,
         resumeLanguage: language,
-        uploadedResumePublicUrl: null
+        uploadedResumeFilePath: null
       },
       rollback
     )

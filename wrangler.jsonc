@@ -17,6 +17,13 @@
   "browser": {
     "binding": "MYBROWSER"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jobi-local",
+      "migrations_dir": "db/migrations"
+    }
+  ],
   "env": {
     "staging": {
       "name": "jobi-staging",
@@ -28,7 +35,14 @@
       ],
       "browser": {
         "binding": "MYBROWSER"
-      }
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "jobi-staging",
+          "migrations_dir": "db/migrations"
+        }
+      ]
     },
     "production": {
       "name": "jobi",
@@ -40,7 +54,14 @@
       ],
       "browser": {
         "binding": "MYBROWSER"
-      }
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "jobi-production",
+          "migrations_dir": "db/migrations"
+        }
+      ]
     }
   }
 }

@@ -13,7 +13,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { ApplicationTokenUsage } from "@/components/application/application-token-usage"
 import { ResumeExportButton } from "@/components/resumes/resume-export-button"
 
 type NavigationLink = {
@@ -85,9 +84,6 @@ function ApplicationTemplate({ children }: { children: React.ReactNode }) {
             {isResumePage && (
               <ResumeExportButton className="rounded-full" showLabel />
             )}
-            <div className="hidden sm:block">
-              <ApplicationTokenUsage />
-            </div>
           </div>
         </div>
       </header>

@@ -15,7 +15,7 @@
 | `lib/resume/date-ranges.ts` | Agent 日期输入归一化层 |
 | `lib/agent/resume-editor-execution.ts` | Tool execution 中日期归一化与 rollback metadata 持久化 |
 | `server/resume/commit.ts` | `commitResumeOperation()` operation rebase 并发写入 |
-| `supabase/migrations/20260607140052_canonical_resume_chat_sessions.sql` | Canonical session 唯一约束 |
+| `db/migrations/0001_initial.sql` | D1/SQLite schema 与 canonical session 唯一约束 |
 | `app/api/chat/resume/route.ts` | Stream timeout / maxOutputTokens / 可重试错误文案 |
 | `app/api/chat/truncate/route.ts` | Inverse operation rollback + semantic conflict 检测 |
 | `server/ai/chat/history.ts` | `extractAiResumeEditOutputs()` / message count 过滤 truncated |
@@ -26,9 +26,9 @@
 - Rollback 默认走 inverse tool output，不对整份 snapshot 回退
 - 日期输入：agent 可传扁平 `start`/`end`/`date.start`/`date.end`/`isCurrent`，execution 归一化为 canonical；rollback metadata 保存 canonical 格式
 - 并发写入分类：operation-rebase-success（自动重放）、stale-json-conflict（完整 JSON 拒绝覆盖）、semantic-conflict（目标冲突返回 409）
-- Canonical session：`upsert(..., { onConflict: "user_id,resume_id" })`，迁移处理重复 session
+- Canonical session：SQLite 唯一索引约束每份 resume 最多一个 session，冲突时复用现有记录
 - Stream：120s total / 60s step / 30s chunk timeout，2048 max output tokens，错误映射为可重试文案
-- Token usage：message persistence 后 awaited；message count 只统计 `truncated = false`
+- Message count 只统计 `truncated = false`；provider token usage 已从当前数据模型与请求链路移除
 
 ## 数据 / 接口约定
 
@@ -43,5 +43,5 @@
 
 ## 未完成 / 后续
 
-- `pnpm exec tsc --noEmit` 仍有 3 个既有无关测试类型问题（`server/ai/model.test.ts` NODE_ENV、`server/auth-helper.test.ts` ApiError matcher、`server/intake/orchestrator.test.ts` mock type）
+- `pnpm exec tsc --noEmit` 已通过；原有的测试类型问题已在开源清理收尾中修复
 - `generateText` timeout 与 `listSessions` N+1 batch query 保留在 `2026-05-20-ai-subsystem-defect-fixes.md` 追踪

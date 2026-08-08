@@ -4,7 +4,7 @@ import {
   type APIRequestContext,
   type Page
 } from "@playwright/test"
-import { DashboardHelper } from "./helpers/auth-helper"
+import { DashboardHelper } from "./helpers/dashboard-helper"
 
 test.describe.configure({ mode: "serial" })
 
@@ -74,6 +74,13 @@ test.describe("Dashboard页面", () => {
       await route.fulfill({ status: 404, body: "not found" })
     })
     await DashboardHelper.navigateToDashboard(page)
+  })
+
+  test("根路径应该直接进入匿名 workspace 的 dashboard", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+
+    await expect(page).toHaveURL(/.*\/dashboard/)
+    await expect(page.getByText("Create New Resume")).toBeVisible()
   })
 
   test("应该显示dashboard页面标题和布局", async ({ page }) => {

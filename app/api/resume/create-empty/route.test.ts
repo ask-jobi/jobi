@@ -5,16 +5,19 @@ import { POST } from "./route"
 import { NextRequest } from "next/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 
-// Mock Supabase client to avoid cookies() call outside request scope
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn()
-}))
+vi.mock("@/server/auth-helper", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/auth-helper")>()
+  return {
+    ...actual,
+    getOptionalExistingUserIdentity: vi.fn()
+  }
+})
 
 vi.mock("@/server/intake/empty-orchestrator", () => ({
   createEmptyResume: vi.fn()
 }))
 
-const { createClient } = await import("@/lib/supabase/server")
+const { getOptionalExistingUserIdentity } = await import("@/server/auth-helper")
 const { createEmptyResume } = await import("@/server/intake/empty-orchestrator")
 
 describe("POST /api/resume/create-empty", () => {
@@ -23,15 +26,9 @@ describe("POST /api/resume/create-empty", () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Mock authenticated user
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getClaims: vi.fn().mockResolvedValue({
-          data: { claims: { sub: "test-user-id" } },
-          error: null
-        })
-      }
-    } as any)
+    vi.mocked(getOptionalExistingUserIdentity).mockResolvedValue({
+      id: "test-user-id"
+    })
 
     mockCreateEmptyResume = vi.mocked(createEmptyResume)
   })
@@ -50,14 +47,7 @@ describe("POST /api/resume/create-empty", () => {
 
   describe("Authentication", () => {
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(createClient).mockResolvedValue({
-        auth: {
-          getClaims: vi.fn().mockResolvedValue({
-            data: { claims: null },
-            error: null
-          })
-        }
-      } as any)
+      vi.mocked(getOptionalExistingUserIdentity).mockResolvedValue(null)
 
       const request = createMockRequest({
         jobInfo: { name: "Dev", company: "Co", description: "desc" }
@@ -65,6 +55,19 @@ describe("POST /api/resume/create-empty", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(401)
+    })
+
+    it("should return 401 when the claimed user no longer exists", async () => {
+      vi.mocked(getOptionalExistingUserIdentity).mockResolvedValue(null)
+
+      const response = await POST(
+        createMockRequest({
+          jobInfo: { name: "Dev", company: "Co", description: "desc" }
+        })
+      )
+
+      expect(response.status).toBe(401)
+      expect(createEmptyResume).not.toHaveBeenCalled()
     })
   })
 
@@ -74,7 +77,7 @@ describe("POST /api/resume/create-empty", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(400)
-      const data = await response.json()
+      const data = (await response.json()) as any
       expect(data.error).toBe("No job info provided")
     })
 
@@ -106,7 +109,7 @@ describe("POST /api/resume/create-empty", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(200)
-      const data = await response.json()
+      const data = (await response.json()) as any
       expect(data.success).toBe(true)
       expect(data.data).toEqual(mockResult)
       expect(mockCreateEmptyResume).toHaveBeenCalledWith({
@@ -158,7 +161,7 @@ describe("POST /api/resume/create-empty", () => {
       const response = await POST(request)
 
       expect(response.status).toBe(500)
-      const data = await response.json()
+      const data = (await response.json()) as any
       expect(data.error).toBe("Database error")
     })
   })
