@@ -36,4 +36,5 @@ This repo uses a single-context layout centered on a root `CONTEXT.md` and root 
 - 当任务涉及排查 bug、梳理调用链、定位影响范围时，Agent 应优先并行调用适合的辅助 agent 来加速信息收集；例如用 `explorer` 查入口、依赖与影响面
 - 当任务已有明确边界，且可以按页面、模块或文件拆分时，Agent 应考虑并行调用 `worker` 执行互不冲突的实现工作，再统一集成结果
 - 当修改影响 UI 主流程，尤其是列表页、表单、弹窗、登录流、支付流、导航跳转等高风险路径时，Agent 在完成代码后应优先调用 `playwright_tester` 做一次针对性回归，而不只停留在口头建议
+- Agent 运行 Playwright 检查或 E2E 测试后，必须关闭浏览器会话并清理残留实例（`"$PWCLI" --session <name> close` 或 `close-all`，兜底用 `pkill -f playwright_chromiumdev_profile`），避免遗留进程持续占用端口并发出过期请求
 - 禁止在输出中携带emoji,例如 ⚠️警告 等

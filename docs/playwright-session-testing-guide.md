@@ -50,6 +50,36 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 - 只有用户明确要求编写或运行 Playwright test 文件时，才切换到 `@playwright/test` 工作流
 - 不要预制邮箱密码登录态；使用全新的 browser context 验证匿名 session 初始化
 
+## 会话清理（必做）
+
+UI 检查或测试结束后，Agent **必须**关闭 Playwright 浏览器会话并确认无残留实例。遗留的浏览器进程会继续占用端口、加载旧页面并发出过期请求（例如对已删除 API 的轮询导致服务端持续出现 404）。
+
+1. 结束当前 session 的浏览器：
+
+   ```bash
+   "$PWCLI" --session ui-check close
+   ```
+
+   如果同时开过多个 session，可一次性全部关闭：
+
+   ```bash
+   "$PWCLI" close-all
+   ```
+
+2. 无论使用 `PWCLI` 还是 `pnpm e2e-test*` 流程，结束后都应检查并清理残留实例（被中断的运行不会自动关闭浏览器）：
+
+   ```bash
+   pkill -f playwright_chromiumdev_profile
+   ```
+
+3. 确认无残留（无输出即为干净）：
+
+   ```bash
+   ps aux | grep playwright_chromiumdev_profile | grep -v grep
+   ```
+
+残留的临时 profile 位于 `/var/folders/.../T/playwright_chromiumdev_profile-*`，确认没有活跃测试后可直接删除。
+
 ## 优先检查页面
 
 ### 1. 入口 `/`
